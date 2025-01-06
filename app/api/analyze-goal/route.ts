@@ -32,9 +32,34 @@ When creating spaces and assigning mentors:
 - Mentors should have distinct personalities and relevant expertise
 - Content should be practical and actionable
 
-IMPORTANT: Your response must be a valid JSON object containing a 'spaces' array.`;
+IMPORTANT: Your response must be a valid JSON object.`;
 
-const generateSpacePrompt = (goal: string) => `Given the goal: "${goal}"
+const generateQuestionsPrompt = (goal: string) => `Given the goal: "${goal}"
+
+First, I need you to generate up to 5 targeted questions to better understand the user's context and current situation. These questions should help create a more personalized and effective learning plan.
+
+Focus your questions on:
+1. Current experience/knowledge level
+2. Previous attempts or challenges
+3. Available time and resources
+4. Specific interests within the goal area
+5. Practical application needs
+
+You must respond with a valid JSON object using this exact structure:
+{
+  "questions": [
+    {
+      "id": "q1",
+      "question": "Question text here",
+      "purpose": "Brief explanation of why this question is important for goal planning"
+    }
+  ]
+}`;
+
+const generateSpacePrompt = (goal: string, context: any) => `Given the goal: "${goal}"
+
+User Context:
+${Object.entries(context).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}
 
 Analyze this goal and create a structured plan following these steps:
 
@@ -61,27 +86,17 @@ You must respond with a valid JSON object using this exact structure:
       "objectives": ["List", "of", "specific", "learning", "objectives"],
       "prerequisites": ["Any", "required", "background", "knowledge"],
       "time_to_complete": "Time to complete the space",
-      "to_do_list": ["List", "of", "tasks", "to", "complete", "the", "space"],
-      
+      "to_do_list": ["List", "of", "tasks", "to", "complete", "the", "space"]
     }
   ]
-}
-
-Ensure each space:
-- Has clear, measurable objectives
-- Builds logically on prerequisites
-- Has a mentor with relevant expertise
-- Includes practical, actionable content
-
-Remember: Your entire response must be a valid JSON object exactly matching this structure.`;
+}`;
 
 export async function POST(request: Request) {
   try {
-    // Log request details
     console.log('Received POST request to /api/analyze-goal');
     
     const body = await request.json();
-    const { goal } = body;
+    const { goal, answers } = body;
 
     console.log('Goal received:', goal);
 
@@ -99,7 +114,43 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Making OpenAI API call...');
+    // If no answers provided, generate questions first
+    if (!answers) {
+      console.log('Generating questions...');
+      const questionsCompletion = await openai.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: SYSTEM_PROMPT
+          },
+          {
+            role: "user",
+            content: generateQuestionsPrompt(goal)
+          }
+        ],
+        model: "gpt-4-turbo",
+        temperature: 0.7,
+      });
+
+      const questionsResponse = questionsCompletion.choices[0].message.content;
+      if (!questionsResponse) {
+        throw new Error('No response from OpenAI for questions');
+      }
+
+      const parsedQuestions = JSON.parse(questionsResponse);
+      return NextResponse.json(
+        { questions: parsedQuestions.questions },
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+    }
+
+    // If answers are provided, generate spaces
+    console.log('Making OpenAI API call for spaces...');
     const completion = await openai.chat.completions.create({
       messages: [
         {
@@ -108,10 +159,10 @@ export async function POST(request: Request) {
         },
         {
           role: "user",
-          content: generateSpacePrompt(goal)
+          content: generateSpacePrompt(goal, answers)
         }
       ],
-      model: "gpt-4o-mini",
+      model: "gpt-4-turbo",
       temperature: 0.7,
     });
 

@@ -8,17 +8,25 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { useSpaceStore } from '@/lib/store';
+import { useSpaceStore, type Space } from '@/lib/store';
+
+interface Question {
+  id: string;
+  question: string;
+  purpose: string;
+}
 
 export function GoalForm() {
   const router = useRouter();
   const [goal, setGoal] = useState('');
-  const [isLoading, setIsLoading] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   
   const { spaces, setSpaces, setCurrentGoal, todoStates, setTodoStates, toggleTodo } = useSpaceStore();
 
-  const analyzeGoal = async (goalText: string) => {
+  const getQuestions = async (goalText: string) => {
     try {
       setIsLoading(true);
       setError('');
@@ -27,6 +35,29 @@ export function GoalForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ goal: goalText }),
+      });
+
+      if (!response.ok) throw new Error('Failed to get questions');
+      
+      const data = await response.json();
+      setQuestions(data.questions);
+    } catch (err) {
+      setError('Failed to generate questions. Please try again.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const analyzeGoal = async (goalText: string, userAnswers: { [key: string]: string }) => {
+    try {
+      setIsLoading(true);
+      setError('');
+      
+      const response = await fetch('/api/analyze-goal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal: goalText, answers: userAnswers }),
       });
 
       if (!response.ok) throw new Error('Failed to analyze goal');
@@ -54,13 +85,25 @@ export function GoalForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (goal.trim()) {
-      analyzeGoal(goal.trim());
+    if (!goal.trim()) return;
+
+    if (questions.length === 0) {
+      getQuestions(goal.trim());
+    } else {
+      analyzeGoal(goal.trim(), answers);
     }
   };
 
   const handleStartSpace = (spaceId: string) => {
     router.push(`/space/${spaceId}`);
+  };
+
+  const handleReset = () => {
+    setSpaces([]);
+    setGoal('');
+    setTodoStates({});
+    setQuestions([]);
+    setAnswers({});
   };
 
   return (
@@ -73,18 +116,37 @@ export function GoalForm() {
           className="h-12 text-lg"
           disabled={isLoading}
         />
+        {questions.length > 0 && (
+          <div className="space-y-4 mt-4">
+            <h3 className="text-lg font-medium">Help us understand your context better</h3>
+            {questions.map((q) => (
+              <div key={q.id} className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {q.question}
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{q.purpose}</p>
+                </label>
+                <Input
+                  value={answers[q.id] || ''}
+                  onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
+                  placeholder="Your answer..."
+                  className="mt-1"
+                />
+              </div>
+            ))}
+          </div>
+        )}
         <Button 
           type="submit" 
           className="h-12 px-8"
-          disabled={isLoading}
+          disabled={isLoading || (questions.length > 0 && Object.keys(answers).length < questions.length)}
         >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analyzing Goal...
+              {questions.length === 0 ? 'Analyzing Goal...' : 'Generating Plan...'}
             </>
           ) : (
-            'Get AI Guidance'
+            questions.length === 0 ? 'Get AI Guidance' : 'Generate Learning Plan'
           )}
         </Button>
       </form>
@@ -257,11 +319,7 @@ export function GoalForm() {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => {
-              setSpaces([]);
-              setGoal('');
-              setTodoStates({});
-            }}
+            onClick={handleReset}
           >
             Set Another Goal
           </Button>

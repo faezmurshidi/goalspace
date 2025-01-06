@@ -24,7 +24,7 @@ interface Mentor {
   system_prompt: string;
 }
 
-interface Space {
+export interface Space {
   id: string;
   category: string;
   title: string;
