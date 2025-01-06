@@ -9,23 +9,23 @@ export async function POST(req: Request) {
   try {
     const { spaceId, category, title, description, objectives, prerequisites, mentor } = await req.json();
 
-    const prompt = `As ${mentor.name}, an AI mentor with expertise in ${mentor.expertise.join(', ')}, create a detailed learning plan for:
+    const prompt = `As ${mentor.name}, an AI mentor with expertise in ${mentor.expertise.join(', ')}, create a detailed plan for:
 
 Title: ${title}
 Category: ${category}
 Description: ${description}
 
-Learning Objectives:
+Objectives:
 ${objectives.map((obj: string) => `- ${obj}`).join('\n')}
 
 ${prerequisites.length > 0 ? `Prerequisites:
 ${prerequisites.map((pre: string) => `- ${pre}`).join('\n')}` : ''}
 
-Please create a comprehensive markdown-formatted learning plan that includes:
+Please create a comprehensive markdown-formatted plan that includes:
 
 1. Introduction
 2. Detailed breakdown of topics to be covered
-3. Step-by-step learning path
+3. Topics and content (with sections)
 4. Recommended resources and materials
 5. Practice exercises and projects
 6. Assessment methods

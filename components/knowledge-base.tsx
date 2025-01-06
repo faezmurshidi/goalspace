@@ -62,8 +62,8 @@ export function KnowledgeBase({ spaceId }: KnowledgeBaseProps) {
   const selectedDocument = documents.find((doc) => doc.id === selectedDoc);
 
   return (
-    <Card className="flex flex-col h-[600px]">
-      <CardHeader className="flex-none border-b px-4 py-3">
+    <Card>
+      <CardHeader className="border-b px-4 py-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl flex items-center gap-2">
             <Brain className="h-5 w-5 text-blue-500" />
@@ -71,8 +71,8 @@ export function KnowledgeBase({ spaceId }: KnowledgeBaseProps) {
           </CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col p-0">
-        <div className="flex-none p-4 border-b">
+      <CardContent className="p-0">
+        <div className="border-b p-4">
           <div className="flex gap-2 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
@@ -119,73 +119,79 @@ export function KnowledgeBase({ spaceId }: KnowledgeBaseProps) {
             </>
           )}
         </div>
+        
         {documents.length > 0 ? (
-          <div className="flex-1 flex">
-            <div className="w-1/3 border-r">
-              <ScrollArea className="h-full">
-                <div className="p-4 space-y-4">
-                  {filteredDocs.map((doc) => {
-                    const Icon = typeIcons[doc.type];
-                    return (
-                      <div
-                        key={doc.id}
-                        className={cn(
-                          "p-4 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800",
-                          selectedDoc === doc.id && "bg-gray-100 dark:bg-gray-800"
-                        )}
-                        onClick={() => setSelectedDoc(doc.id)}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <Icon className="h-4 w-4 text-blue-500" />
-                          <h3 className="font-medium">{doc.title}</h3>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {doc.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+          <>
+            {/* Document List */}
+            <div className="border-b max-h-[200px] overflow-auto">
+              <div className="p-4 space-y-4">
+                {filteredDocs.map((doc) => {
+                  const Icon = typeIcons[doc.type];
+                  return (
+                    <div
+                      key={doc.id}
+                      className={cn(
+                        "p-4 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800",
+                        selectedDoc === doc.id && "bg-gray-100 dark:bg-gray-800"
+                      )}
+                      onClick={() => setSelectedDoc(doc.id)}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className="h-4 w-4 text-blue-500" />
+                        <h3 className="font-medium">{doc.title}</h3>
                       </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </div>
-            <div className="flex-1">
-              <ScrollArea className="h-full">
-                <div className="p-6">
-                  {selectedDocument ? (
-                    <>
-                      <div className="mb-6">
-                        <h2 className="text-2xl font-bold mb-2">{selectedDocument.title}</h2>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedDocument.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                      <div className="flex flex-wrap gap-2">
+                        {doc.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
-                      <MarkdownContent content={selectedDocument.content} />
-                    </>
-                  ) : (
-                    <div className="text-center text-gray-500 mt-8">
-                      Select a document to view its content
                     </div>
-                  )}
-                </div>
-              </ScrollArea>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+            
+            {/* Document Content */}
+            {selectedDocument ? (
+              <div className="p-6">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-2xl font-bold">{selectedDocument.title}</h2>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSelectedDoc(null)}
+                      className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedDocument.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <MarkdownContent content={selectedDocument.content} />
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 p-8">
+                Select a document to view its content
+              </div>
+            )}
+          </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-center p-8">
+          <div className="flex items-center justify-center text-center p-8">
             <div className="space-y-4">
               <FileQuestion className="h-12 w-12 text-gray-400 mx-auto" />
               <div>

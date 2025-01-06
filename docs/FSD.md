@@ -71,6 +71,17 @@ interface Space {
   mentor: MentorConfig;
   progress: number;
   modules: Module[];
+  uiState?: {
+    isCollapsed: boolean;
+    lastInteraction: Date;
+  };
+}
+
+interface UIState {
+  collapsedCards: {
+    [key: string]: boolean;
+  };
+  // ... other UI state properties
 }
 ```
 
@@ -200,11 +211,18 @@ interface GlobalState {
   activeSpace: Space | null;
   mentorChat: ChatMessage[];
   
+  ui: {
+    collapsedCards: Record<string, boolean>;
+    // ... other UI state
+  };
+  
   actions: {
     setUser: (user: User | null) => void;
     setCurrentGoal: (goal: Goal | null) => void;
     setActiveSpace: (space: Space | null) => void;
     addChatMessage: (message: ChatMessage) => void;
+    toggleCardCollapse: (cardId: string) => void;
+    setCardCollapsed: (cardId: string, isCollapsed: boolean) => void;
   };
 }
 ```

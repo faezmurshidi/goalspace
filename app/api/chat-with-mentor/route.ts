@@ -32,11 +32,23 @@ Remember to:
 1. Stay in character as the mentor
 2. Be encouraging and supportive
 3. Provide detailed, accurate information
-4. Use markdown formatting for better readability
-5. Include code examples when relevant
-6. Break down complex concepts
-7. Reference the learning objectives and plan
-8. Suggest practical exercises when appropriate`;
+4. Include code examples when relevant
+5. Break down complex concepts
+6. Reference the learning objectives and plan
+7. Suggest practical exercises when appropriate
+
+IMPORTANT: If you want to create a knowledge document, format your response as a JSON object with this structure:
+{
+  "type": "document",
+  "document": {
+    "title": "Document title",
+    "content": "Document content in markdown",
+    "type": "tutorial | guide | reference | exercise",
+    "tags": ["tag1", "tag2"]
+  }
+}
+
+Otherwise, respond with normal text.`;
 
     const completion = await openai.chat.completions.create({
       messages: [
@@ -49,14 +61,30 @@ Remember to:
           content: message
         }
       ],
-      model: "gpt-4-1106-preview",
+      model: "gpt-4-turbo",
       temperature: 0.7,
       max_tokens: 2000,
+      response_format: { type: "text" }
     });
 
-    return NextResponse.json({ 
-      message: completion.choices[0].message.content 
-    });
+    const response = completion.choices[0].message.content;
+    let result;
+
+    try {
+      // Try to parse as JSON for document generation
+      const parsed = JSON.parse(response);
+      if (parsed.type === 'document') {
+        result = {
+          message: "I've created a new document for you! You can find it in the Knowledge Base.",
+          document: parsed.document
+        };
+      }
+    } catch {
+      // If not JSON, treat as normal message
+      result = { message: response };
+    }
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error in chat:', error);
     return NextResponse.json(

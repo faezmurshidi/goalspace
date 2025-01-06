@@ -170,3 +170,14 @@ The purpose of this document is to outline the product's goals, features, and sp
 - Frontend Hosting: Vercel
 - Backend Hosting: AWS Lambda or Heroku
 - Monitoring: Sentry, New Relic
+
+# Updates to Section 5.1 Frontend (Next.js)
+
+### UI/UX Updates:
+- Spaces should be displayed in collapsible cards to improve content density
+- Cards should maintain their collapsed/expanded state during the session
+- Visual feedback should be provided for collapse/expand actions
+- Accessibility considerations for collapsible content:
+  - ARIA attributes for collapse state
+  - Keyboard navigation support
+  - Screen reader announcements for state changes

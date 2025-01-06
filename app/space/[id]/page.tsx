@@ -11,13 +11,14 @@ import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MarkdownContent } from '@/components/markdown-content';
 import { ChatWithMentor } from '@/components/chat-with-mentor';
+import { KnowledgeBase } from '@/components/knowledge-base';
 
 export default function SpacePage() {
   const params = useParams();
   const router = useRouter();
   const spaceId = params.id as string;
   
-  const { getSpaceById, todoStates, toggleTodo, setPlan: setStorePlan } = useSpaceStore();
+  const { getSpaceById, todoStates, toggleTodo, setPlan: setStorePlan, addDocument } = useSpaceStore();
   const space = getSpaceById(spaceId);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +46,14 @@ export default function SpacePage() {
       
       const data = await response.json();
       setStorePlan(spaceId, data.plan);
+      
+      // Save plan to knowledge base
+      addDocument(spaceId, {
+        title: `Learning Plan: ${space?.title}`,
+        content: data.plan,
+        type: 'guide',
+        tags: ['learning-plan', space?.category || ''],
+      });
     } catch (err) {
       setError('Failed to generate plan. Please try again.');
       console.error(err);
@@ -80,8 +89,8 @@ export default function SpacePage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <SiteHeader />
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <main className="container-fluid mx-auto px-4 py-8">
+        <div className="max-w-[1600px] mx-auto space-y-8">
           <div className="flex items-center justify-between">
             <Button 
               variant="ghost" 
@@ -100,9 +109,9 @@ export default function SpacePage() {
             </span>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid gap-8 lg:grid-cols-10">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-6 space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -162,6 +171,9 @@ export default function SpacePage() {
                 </CardContent>
               </Card>
 
+               {/* Knowledge Base */}
+               <KnowledgeBase spaceId={spaceId} />
+
                {/* To-Do List Card */}
                <Card>
                 <CardHeader>
@@ -198,7 +210,7 @@ export default function SpacePage() {
               </Card>
 
               {/* Learning Plan Section */}
-              <Card>
+              {/* <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-xl flex items-center gap-2">
@@ -245,13 +257,13 @@ export default function SpacePage() {
                     </div>
                   )}
                 </CardContent>
-              </Card>
+              </Card> */}
 
              
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="lg:col-span-4 space-y-6">
               {/* Mentor Card */}
               <Card>
                 <CardHeader>
@@ -276,6 +288,8 @@ export default function SpacePage() {
                   </div>
                 </CardContent>
               </Card>
+
+             
 
               {/* Chat Section */}
               <div className="lg:sticky lg:top-8">

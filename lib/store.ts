@@ -8,6 +8,14 @@ interface Message {
   timestamp: number;
 }
 
+interface Document {
+  id: string;
+  title: string;
+  content: string;
+  type: 'tutorial' | 'guide' | 'reference' | 'exercise';
+  tags: string[];
+}
+
 interface Mentor {
   name: string;
   expertise: string[];
@@ -31,10 +39,13 @@ interface Space {
 
 interface SpaceStore {
   spaces: Space[];
+  documents: { [key: string]: Document[] };
   currentGoal: string;
   setSpaces: (spaces: Space[]) => void;
   setCurrentGoal: (goal: string) => void;
   getSpaceById: (id: string) => Space | undefined;
+  getDocuments: (spaceId: string) => Document[];
+  addDocument: (spaceId: string, document: Omit<Document, 'id'>) => void;
   todoStates: { [key: string]: { [key: string]: boolean } };
   setTodoStates: (states: { [key: string]: { [key: string]: boolean } }) => void;
   toggleTodo: (spaceId: string, taskIndex: string) => void;
@@ -49,6 +60,7 @@ export const useSpaceStore = create<SpaceStore>()(
   persist(
     (set, get) => ({
       spaces: [],
+      documents: {},
       currentGoal: '',
       todoStates: {},
       chatMessages: {},
@@ -88,6 +100,19 @@ export const useSpaceStore = create<SpaceStore>()(
         spaces: state.spaces.map((space) =>
           space.id === spaceId ? { ...space, plan } : space
         ),
+      })),
+      getDocuments: (spaceId) => get().documents[spaceId] || [],
+      addDocument: (spaceId, document) => set((state) => ({
+        documents: {
+          ...state.documents,
+          [spaceId]: [
+            ...(state.documents[spaceId] || []),
+            {
+              ...document,
+              id: Math.random().toString(36).substring(7),
+            },
+          ],
+        },
       })),
     }),
     {

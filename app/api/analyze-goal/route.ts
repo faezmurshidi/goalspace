@@ -111,7 +111,7 @@ export async function POST(request: Request) {
           content: generateSpacePrompt(goal)
         }
       ],
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       temperature: 0.7,
     });
 

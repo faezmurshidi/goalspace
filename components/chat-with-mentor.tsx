@@ -20,7 +20,7 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { getSpaceById, chatMessages, addMessage, clearChat } = useSpaceStore();
+  const { getSpaceById, chatMessages, addMessage, clearChat, addDocument } = useSpaceStore();
   const space = getSpaceById(spaceId);
   const messages = chatMessages[spaceId] || [];
 
@@ -73,6 +73,11 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
         role: 'assistant',
         content: data.message,
       });
+
+      // If document was created, add it to knowledge base
+      if (data.document) {
+        addDocument(spaceId, data.document);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       addMessage(spaceId, {
