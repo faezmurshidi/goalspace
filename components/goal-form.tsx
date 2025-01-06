@@ -1,55 +1,22 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-
-interface TodoItem {
-  id: string;
-  task: string;
-  completed: boolean;
-}
-
-interface Mentor {
-  name: string;
-  expertise: string[];
-  personality: string;
-  introduction: string;
-  system_prompt: string;
-}
-
-interface Space {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  mentor: Mentor;
-  objectives: string[];
-  prerequisites: string[];
-  time_to_complete: string;
-  to_do_list: string[]; 
-}
+import { useSpaceStore } from '@/lib/store';
 
 export function GoalForm() {
+  const router = useRouter();
   const [goal, setGoal] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [isLoading, setIsLoading] = useState('');
   const [error, setError] = useState('');
-  const [todoStates, setTodoStates] = useState<{ [key: string]: { [key: string]: boolean } }>({});
-
-  const toggleTodo = (spaceId: string, taskIndex: string) => {
-    setTodoStates(prev => ({
-      ...prev,
-      [spaceId]: {
-        ...prev[spaceId],
-        [taskIndex]: !prev[spaceId]?.[taskIndex]
-      }
-    }));
-  };
+  
+  const { spaces, setSpaces, setCurrentGoal, todoStates, setTodoStates, toggleTodo } = useSpaceStore();
 
   const analyzeGoal = async (goalText: string) => {
     try {
@@ -66,6 +33,7 @@ export function GoalForm() {
       
       const data = await response.json();
       setSpaces(data.spaces);
+      setCurrentGoal(goalText);
       
       // Initialize todo states for new spaces
       const initialTodoStates: { [key: string]: { [key: string]: boolean } } = {};
@@ -89,6 +57,10 @@ export function GoalForm() {
     if (goal.trim()) {
       analyzeGoal(goal.trim());
     }
+  };
+
+  const handleStartSpace = (spaceId: string) => {
+    router.push(`/space/${spaceId}`);
   };
 
   return (
@@ -262,6 +234,21 @@ export function GoalForm() {
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Add Get Started Button */}
+                  <div className="pt-4 mt-auto">
+                    <Button
+                      className={cn(
+                        "w-full",
+                        space.category === 'learning'
+                          ? "bg-blue-500 hover:bg-blue-600 text-white"
+                          : "bg-green-500 hover:bg-green-600 text-white"
+                      )}
+                      onClick={() => handleStartSpace(space.id)}
+                    >
+                      Let's Get Started
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
