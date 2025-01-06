@@ -7,7 +7,7 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
-    const { message, spaceId, mentor, context } = await req.json();
+    const { message, spaceId, mentor, context, isFaezPresent } = await req.json();
 
     const systemPrompt = `You are ${mentor.name}, an AI mentor with expertise in ${mentor.expertise.join(', ')}. 
 Your teaching style is ${mentor.personality}.
@@ -27,6 +27,8 @@ ${context.plan ? `Learning Plan:
 ${context.plan}` : ''}
 
 ${mentor.system_prompt}
+
+${isFaezPresent ? `Note: Faez (the goal-setting AI) is present in this conversation. You should collaborate with Faez to provide comprehensive guidance. Faez will add insights about the user's overall progress and goal alignment after your response.` : ''}
 
 Remember to:
 1. Stay in character as the mentor
@@ -67,8 +69,8 @@ Otherwise, respond with normal text.`;
       response_format: { type: "text" }
     });
 
-    const response = completion.choices[0].message.content;
-    let result;
+    const response = completion.choices[0].message.content || '';
+    let result: any = {};
 
     try {
       // Try to parse as JSON for document generation
@@ -82,6 +84,44 @@ Otherwise, respond with normal text.`;
     } catch {
       // If not JSON, treat as normal message
       result = { message: response };
+    }
+
+    // If Faez is present, get Faez's response
+    if (isFaezPresent) {
+      const faezPrompt = `You are Faez, the goal-setting AI assistant. You're collaborating with ${mentor.name} (the mentor) to help the user achieve their goals.
+
+Current Space Context:
+Title: ${context.title}
+Description: ${context.description}
+Objectives: ${context.objectives.join(', ')}
+
+The mentor just said: "${result.message}"
+
+As Faez, your role is to:
+1. Provide insights about how this aligns with the user's overall goal
+2. Track and comment on progress
+3. Suggest adjustments or additional focus areas if needed
+4. Be encouraging but also maintain focus on the bigger picture
+
+Keep your response concise and focused on progress and goal alignment.`;
+
+      const faezCompletion = await openai.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: faezPrompt
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ],
+        model: "gpt-4-turbo",
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      result.faezMessage = faezCompletion.choices[0].message.content;
     }
 
     return NextResponse.json(result);

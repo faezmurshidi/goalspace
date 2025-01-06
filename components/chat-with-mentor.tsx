@@ -20,9 +20,19 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { getSpaceById, chatMessages, addMessage, clearChat, addDocument } = useSpaceStore();
+  const { 
+    getSpaceById, 
+    chatMessages, 
+    addMessage, 
+    clearChat, 
+    addDocument,
+    faezInChat,
+    toggleFaez 
+  } = useSpaceStore();
+  
   const space = getSpaceById(spaceId);
   const messages = chatMessages[spaceId] || [];
+  const isFaezPresent = faezInChat[spaceId] || false;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -61,6 +71,7 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
             prerequisites: space.prerequisites,
             plan: space.plan,
           },
+          isFaezPresent,
         }),
       });
 
@@ -73,6 +84,14 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
         role: 'assistant',
         content: data.message,
       });
+
+      // If Faez is present and has a response
+      if (isFaezPresent && data.faezMessage) {
+        addMessage(spaceId, {
+          role: 'faez',
+          content: data.faezMessage,
+        });
+      }
 
       // If document was created, add it to knowledge base
       if (data.document) {
@@ -98,14 +117,25 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
             <Brain className="h-5 w-5 text-blue-500" />
             Chat with {space?.mentor.name}
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => clearChat(spaceId)}
-            className="h-8 w-8 text-gray-500 hover:text-red-500"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={isFaezPresent ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleFaez(spaceId)}
+              className="gap-2"
+            >
+              <Brain className="h-4 w-4" />
+              {isFaezPresent ? 'Remove Faez' : 'Add Faez'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => clearChat(spaceId)}
+              className="h-8 w-8 text-gray-500 hover:text-red-500"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <div className="flex-1 overflow-hidden">
@@ -120,9 +150,12 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
                   "w-full"
                 )}
               >
-                {msg.role === 'assistant' && (
+                {msg.role !== 'user' && (
                   <div className="flex-none">
-                    <Brain className="h-6 w-6 text-blue-500" />
+                    <Brain className={cn(
+                      "h-6 w-6",
+                      msg.role === 'faez' ? "text-green-500" : "text-blue-500"
+                    )} />
                   </div>
                 )}
                 <div
@@ -130,6 +163,8 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
                     "rounded-lg px-4 py-2 text-sm max-w-[85%] break-words overflow-hidden",
                     msg.role === 'user'
                       ? "bg-blue-500 text-white"
+                      : msg.role === 'faez'
+                      ? "bg-green-100 dark:bg-green-900/20"
                       : "bg-gray-100 dark:bg-gray-800"
                   )}
                 >

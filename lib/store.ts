@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'faez';
   content: string;
   timestamp: number;
 }
@@ -51,8 +51,10 @@ interface SpaceStore {
   toggleTodo: (spaceId: string, taskIndex: string) => void;
   // Chat related state
   chatMessages: { [key: string]: Message[] };
+  faezInChat: { [key: string]: boolean };
   addMessage: (spaceId: string, message: Omit<Message, 'id' | 'timestamp'>) => void;
   clearChat: (spaceId: string) => void;
+  toggleFaez: (spaceId: string) => void;
   setPlan: (spaceId: string, plan: string) => void;
 }
 
@@ -64,6 +66,7 @@ export const useSpaceStore = create<SpaceStore>()(
       currentGoal: '',
       todoStates: {},
       chatMessages: {},
+      faezInChat: {},
       setSpaces: (spaces) => set({ spaces }),
       setCurrentGoal: (goal) => set({ currentGoal: goal }),
       getSpaceById: (id) => get().spaces.find(space => space.id === id),
@@ -113,6 +116,12 @@ export const useSpaceStore = create<SpaceStore>()(
             },
           ],
         },
+      })),
+      toggleFaez: (spaceId) => set((state) => ({
+        faezInChat: {
+          ...state.faezInChat,
+          [spaceId]: !state.faezInChat[spaceId]
+        }
       })),
     }),
     {
