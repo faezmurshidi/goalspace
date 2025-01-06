@@ -17,17 +17,19 @@ interface ChatWithMentorProps {
 export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { getSpaceById, chatMessages, addMessage, clearChat } = useSpaceStore();
   const space = getSpaceById(spaceId);
   const messages = chatMessages[spaceId] || [];
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
-    }
+    scrollToBottom();
   }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,8 +86,8 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
   };
 
   return (
-    <Card className="flex flex-col h-[600px]">
-      <CardHeader className="flex-none">
+    <Card className="flex flex-col h-[800px]">
+      <CardHeader className="flex-none border-b px-4 py-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl flex items-center gap-2">
             <Brain className="h-5 w-5 text-blue-500" />
@@ -101,18 +103,16 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-4">
-        <ScrollArea 
-          ref={scrollAreaRef} 
-          className="flex-1 pr-4"
-        >
-          <div className="space-y-4">
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
+          <div className="p-4 space-y-4">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={cn(
-                  "flex gap-2 max-w-[80%]",
-                  msg.role === 'user' ? "ml-auto" : "mr-auto"
+                  "flex gap-2",
+                  msg.role === 'user' ? "justify-end" : "justify-start",
+                  "w-full"
                 )}
               >
                 {msg.role === 'assistant' && (
@@ -122,7 +122,7 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
                 )}
                 <div
                   className={cn(
-                    "rounded-lg px-4 py-2 text-sm",
+                    "rounded-lg px-4 py-2 text-sm max-w-[85%] break-words overflow-hidden",
                     msg.role === 'user'
                       ? "bg-blue-500 text-white"
                       : "bg-gray-100 dark:bg-gray-800"
@@ -133,7 +133,7 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
               </div>
             ))}
             {isLoading && (
-              <div className="flex gap-2 max-w-[80%]">
+              <div className="flex gap-2">
                 <div className="flex-none">
                   <Brain className="h-6 w-6 text-blue-500" />
                 </div>
@@ -142,9 +142,12 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
-        <form onSubmit={handleSubmit} className="flex-none flex gap-2">
+      </div>
+      <div className="flex-none p-4 border-t bg-background">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             ref={inputRef}
             placeholder="Type your message..."
@@ -157,11 +160,16 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
             type="submit" 
             disabled={!message.trim() || isLoading}
             size="icon"
+            className={cn(
+              space?.category === 'learning'
+                ? "bg-blue-500 hover:bg-blue-600"
+                : "bg-green-500 hover:bg-green-600"
+            )}
           >
             <Send className="h-4 w-4" />
           </Button>
         </form>
-      </CardContent>
+      </div>
     </Card>
   );
 } 
