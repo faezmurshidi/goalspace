@@ -166,16 +166,45 @@ export default function SpacePage() {
                           </div>
                         </div>
                       )}
-
-                     
                     </CardContent>
                   </Card>
 
-                   {/* Knowledge Base */}
-                   <KnowledgeBase spaceId={spaceId} />
+                  {/* Knowledge Base */}
+                  <KnowledgeBase spaceId={spaceId} />
 
-                   {/* To-Do List Card */}
-                   <Card>
+                  {/* Chat with Mentor */}
+                  <ChatWithMentor spaceId={spaceId} />
+                </div>
+
+                {/* Sidebar */}
+                <div className="lg:col-span-4 space-y-6">
+                  {/* Mentor Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-blue-500" />
+                        Your AI Mentor
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <p className="font-medium">{space.mentor.name}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 italic">
+                          "{space.mentor.introduction}"
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Teaching style: {space.mentor.personality}
+                        </p>
+                        <div className="text-sm">
+                          <span className="text-gray-500">Expert in: </span>
+                          {space.mentor.expertise.join(', ')}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* To-Do List Card */}
+                  <Card>
                     <CardHeader>
                       <CardTitle className="text-xl flex items-center gap-2">
                         <List className="h-5 w-5 text-blue-500" />
@@ -208,93 +237,6 @@ export default function SpacePage() {
                       </div>
                     </CardContent>
                   </Card>
-
-                  {/* Learning Plan Section */}
-                  {/* <Card>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-xl flex items-center gap-2">
-                          <Brain className="h-5 w-5 text-blue-500" />
-                          Learning Plan
-                        </CardTitle>
-                        {!space.plan && (
-                          <Button
-                            onClick={generatePlan}
-                            disabled={isGenerating}
-                            className={cn(
-                              "gap-2",
-                              space.category === 'learning'
-                                ? "bg-blue-500 hover:bg-blue-600 text-white"
-                                : "bg-green-500 hover:bg-green-600 text-white"
-                            )}
-                          >
-                            {isGenerating ? (
-                              <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Generating...
-                              </>
-                            ) : (
-                              <>
-                                <Brain className="h-4 w-4" />
-                                Generate Plan
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {error && (
-                        <div className="text-red-500 text-sm mb-4">
-                          {error}
-                        </div>
-                      )}
-                      {space.plan ? (
-                        <MarkdownContent content={space.plan} />
-                      ) : !isGenerating && (
-                        <div className="text-center py-8 text-gray-500">
-                          Click "Generate Plan" to have your AI mentor create a detailed learning plan.
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card> */}
-
-                 
-                </div>
-
-                {/* Sidebar */}
-                <div className="lg:col-span-4 space-y-6">
-                  {/* Mentor Card */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl flex items-center gap-2">
-                        <Brain className="h-5 w-5 text-blue-500" />
-                        Your AI Mentor
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <p className="font-medium">{space.mentor.name}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 italic">
-                          "{space.mentor.introduction}"
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Teaching style: {space.mentor.personality}
-                        </p>
-                        <div className="text-sm">
-                          <span className="text-gray-500">Expert in: </span>
-                          {space.mentor.expertise.join(', ')}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                 
-
-                  {/* Chat Section */}
-                  <div className="lg:sticky lg:top-8">
-                    <ChatWithMentor spaceId={spaceId} />
-                  </div>
                 </div>
               </div>
             </div>
