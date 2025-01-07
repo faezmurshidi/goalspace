@@ -7,8 +7,8 @@ import { Toaster } from '@/components/ui/toaster';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Mentor AI - Your Personal Growth Platform',
-  description: 'Achieve your goals with personalized AI mentors and structured learning spaces',
+  title: 'GoalSpace - AI-Powered Goal Achievement',
+  description: 'Achieve your goals with personalized AI mentorship and structured learning spaces.',
 };
 
 export default function RootLayout({
@@ -19,7 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           {children}
           <Toaster />
         </ThemeProvider>

@@ -35,10 +35,23 @@ export interface Space {
   time_to_complete: string;
   to_do_list: string[];
   plan?: string;
+  progress?: number;
+  isCollapsed?: boolean;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  progress: number;
+  spaces: string[]; // Array of space IDs
+  createdAt: number;
 }
 
 interface SpaceStore {
   spaces: Space[];
+  goals: Goal[];
   documents: { [key: string]: Document[] };
   currentGoal: string;
   setSpaces: (spaces: Space[]) => void;
@@ -56,30 +69,78 @@ interface SpaceStore {
   clearChat: (spaceId: string) => void;
   toggleFaez: (spaceId: string) => void;
   setPlan: (spaceId: string, plan: string) => void;
+  // Dashboard related state and actions
+  toggleSpaceCollapse: (spaceId: string) => void;
+  updateSpaceProgress: (spaceId: string, progress: number) => void;
+  addGoal: (goal: Omit<Goal, 'id' | 'createdAt'>) => void;
+  updateGoalProgress: (goalId: string) => void;
+  // Sidebar state
+  isSidebarCollapsed: boolean;
+  toggleSidebar: () => void;
 }
 
 export const useSpaceStore = create<SpaceStore>()(
   persist(
     (set, get) => ({
       spaces: [],
+      goals: [],
       documents: {},
       currentGoal: '',
       todoStates: {},
       chatMessages: {},
       faezInChat: {},
-      setSpaces: (spaces) => set({ spaces }),
+      setSpaces: (spaces) => {
+        // When setting spaces, create a new goal with these spaces
+        const goalId = Math.random().toString(36).substring(7);
+        const newGoal: Goal = {
+          id: goalId,
+          title: get().currentGoal,
+          description: "Goal created from spaces",
+          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+          progress: 0,
+          spaces: spaces.map(s => s.id),
+          createdAt: Date.now()
+        };
+
+        set((state) => ({
+          spaces: spaces.map(space => ({ ...space, progress: 0, isCollapsed: true })),
+          goals: [...state.goals, newGoal]
+        }));
+      },
       setCurrentGoal: (goal) => set({ currentGoal: goal }),
       getSpaceById: (id) => get().spaces.find(space => space.id === id),
-      setTodoStates: (states) => set({ todoStates: states }),
-      toggleTodo: (spaceId, taskIndex) => set((state) => ({
-        todoStates: {
-          ...state.todoStates,
-          [spaceId]: {
-            ...state.todoStates[spaceId],
-            [taskIndex]: !state.todoStates[spaceId]?.[taskIndex]
-          }
-        }
-      })),
+      setTodoStates: (states) => {
+        set({ todoStates: states });
+        // Update progress when todo states change
+        Object.entries(states).forEach(([spaceId, todos]) => {
+          const completedTodos = Object.values(todos).filter(Boolean).length;
+          const totalTodos = Object.keys(todos).length;
+          const progress = (completedTodos / totalTodos) * 100;
+          get().updateSpaceProgress(spaceId, progress);
+        });
+      },
+      toggleTodo: (spaceId, taskIndex) => {
+        set((state) => {
+          const newTodoStates = {
+            ...state.todoStates,
+            [spaceId]: {
+              ...state.todoStates[spaceId],
+              [taskIndex]: !state.todoStates[spaceId]?.[taskIndex]
+            }
+          };
+
+          // Calculate new progress
+          const todos = newTodoStates[spaceId];
+          const completedTodos = Object.values(todos).filter(Boolean).length;
+          const totalTodos = Object.keys(todos).length;
+          const progress = (completedTodos / totalTodos) * 100;
+
+          // Update space progress
+          get().updateSpaceProgress(spaceId, progress);
+
+          return { todoStates: newTodoStates };
+        });
+      },
       addMessage: (spaceId, message) => set((state) => ({
         chatMessages: {
           ...state.chatMessages,
@@ -122,6 +183,58 @@ export const useSpaceStore = create<SpaceStore>()(
           ...state.faezInChat,
           [spaceId]: !state.faezInChat[spaceId]
         }
+      })),
+      // Dashboard related actions
+      toggleSpaceCollapse: (spaceId) => set((state) => ({
+        spaces: state.spaces.map((space) =>
+          space.id === spaceId
+            ? { ...space, isCollapsed: !space.isCollapsed }
+            : space
+        ),
+      })),
+      updateSpaceProgress: (spaceId, progress) => set((state) => {
+        const newSpaces = state.spaces.map((space) =>
+          space.id === spaceId ? { ...space, progress } : space
+        );
+        
+        // Find the goal containing this space and update its progress
+        const goals = state.goals.map(goal => {
+          if (goal.spaces.includes(spaceId)) {
+            const goalSpaces = newSpaces.filter(space => goal.spaces.includes(space.id));
+            const totalProgress = goalSpaces.reduce((sum, space) => sum + (space.progress || 0), 0);
+            const averageProgress = totalProgress / goalSpaces.length;
+            return { ...goal, progress: averageProgress };
+          }
+          return goal;
+        });
+
+        return { spaces: newSpaces, goals };
+      }),
+      addGoal: (goal) => set((state) => ({
+        goals: [...state.goals, {
+          ...goal,
+          id: Math.random().toString(36).substring(7),
+          createdAt: Date.now()
+        }]
+      })),
+      updateGoalProgress: (goalId) => set((state) => {
+        const goal = state.goals.find(g => g.id === goalId);
+        if (!goal) return state;
+
+        const goalSpaces = state.spaces.filter(space => goal.spaces.includes(space.id));
+        const totalProgress = goalSpaces.reduce((sum, space) => sum + (space.progress || 0), 0);
+        const averageProgress = totalProgress / goalSpaces.length;
+
+        return {
+          goals: state.goals.map(g =>
+            g.id === goalId ? { ...g, progress: averageProgress } : g
+          )
+        };
+      }),
+      // Sidebar state
+      isSidebarCollapsed: false,
+      toggleSidebar: () => set((state) => ({ 
+        isSidebarCollapsed: !state.isSidebarCollapsed 
       })),
     }),
     {
