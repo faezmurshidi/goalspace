@@ -101,10 +101,18 @@ export default function SpacePage() {
               <div className="flex items-center justify-between">
                 <span className={cn(
                   "text-sm px-3 py-1 rounded-full font-medium",
-                  space.category === 'learning'
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                    : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                )}>
+                  space.space_color 
+                    ? `bg-[${space.space_color.secondary}] text-[${space.space_color.main}] dark:bg-[${space.space_color.main}]/20 dark:text-[${space.space_color.main}]`
+                    : space.category === 'learning'
+                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                      : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                )}
+                style={space.space_color ? {
+                  backgroundColor: space.space_color.secondary,
+                  color: space.space_color.main,
+                  '--dark-bg': `${space.space_color.main}20`,
+                  '--dark-text': space.space_color.main,
+                } as any : undefined}>
                   {space.category.charAt(0).toUpperCase() + space.category.slice(1)}
                 </span>
               </div>
@@ -116,9 +124,9 @@ export default function SpacePage() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         {space.category === 'learning' ? (
-                          <Brain className="h-6 w-6 text-blue-500" />
+                          <Brain className="h-6 w-6" style={{ color: space.space_color?.main }} />
                         ) : (
-                          <Target className="h-6 w-6 text-green-500" />
+                          <Target className="h-6 w-6" style={{ color: space.space_color?.main }} />
                         )}
                         {space.title}
                       </CardTitle>
@@ -130,13 +138,13 @@ export default function SpacePage() {
                       {/* Objectives Section */}
                       <div>
                         <h3 className="font-medium mb-3 text-sm flex items-center gap-2">
-                          <Target className="h-4 w-4 text-green-500" />
+                          <Target className="h-4 w-4" style={{ color: space.space_color?.main }} />
                           Learning Objectives
                         </h3>
                         <div className="text-sm space-y-2">
                           {space.objectives.map((objective, index) => (
                             <div key={index} className="flex items-start gap-2">
-                              <span className="text-green-500 text-xs mt-1.5">•</span>
+                              <span className="text-xs mt-1.5" style={{ color: space.space_color?.main }}>•</span>
                               <MarkdownContent 
                                 content={objective}
                                 className="flex-1"
@@ -150,13 +158,13 @@ export default function SpacePage() {
                       {space.prerequisites.length > 0 && (
                         <div>
                           <h3 className="font-medium mb-3 text-sm flex items-center gap-2">
-                            <List className="h-4 w-4 text-orange-500" />
+                            <List className="h-4 w-4" style={{ color: space.space_color?.tertiary }} />
                             Prerequisites
                           </h3>
                           <div className="text-sm space-y-2">
                             {space.prerequisites.map((prerequisite, index) => (
                               <div key={index} className="flex items-start gap-2">
-                                <span className="text-orange-500 text-xs mt-1.5">•</span>
+                                <span className="text-xs mt-1.5" style={{ color: space.space_color?.tertiary }}>•</span>
                                 <MarkdownContent 
                                   content={prerequisite}
                                   className="flex-1"
@@ -169,11 +177,12 @@ export default function SpacePage() {
                     </CardContent>
                   </Card>
 
-                  {/* Knowledge Base */}
-                  <KnowledgeBase spaceId={spaceId} />
+                
 
                   {/* Chat with Mentor */}
+                  <Card>
                   <ChatWithMentor spaceId={spaceId} />
+                  </Card>
                 </div>
 
                 {/* Sidebar */}
@@ -182,7 +191,7 @@ export default function SpacePage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-xl flex items-center gap-2">
-                        <Brain className="h-5 w-5 text-blue-500" />
+                        <Brain className="h-5 w-5" style={{ color: space.space_color?.main }} />
                         Your AI Mentor
                       </CardTitle>
                     </CardHeader>
@@ -207,7 +216,7 @@ export default function SpacePage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-xl flex items-center gap-2">
-                        <List className="h-5 w-5 text-blue-500" />
+                        <List className="h-5 w-5" style={{ color: space.space_color?.main }} />
                         To-Do List
                       </CardTitle>
                     </CardHeader>
@@ -220,6 +229,9 @@ export default function SpacePage() {
                               checked={todoStates[space.id]?.[index] || false}
                               onCheckedChange={() => toggleTodo(space.id, index.toString())}
                               className="mt-0.5"
+                              style={{
+                                '--checkbox-color': space.space_color?.main
+                              } as any}
                             />
                             <label
                               htmlFor={`${space.id}-todo-${index}`}
@@ -237,6 +249,9 @@ export default function SpacePage() {
                       </div>
                     </CardContent>
                   </Card>
+
+                    {/* Knowledge Base */}
+                    <KnowledgeBase spaceId={spaceId} />
                 </div>
               </div>
             </div>

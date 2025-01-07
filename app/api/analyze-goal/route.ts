@@ -65,7 +65,13 @@ You must respond with a valid JSON object using this exact structure:
   "spaces": [
     {
       "id": "unique-id",
-      "category": "learning or goal",
+      "category": "space's category",
+      "space_color": {
+        "main": "space's background color",
+        "secondary": "space's secondary color",
+        "tertiary": "space's tertiary color",
+        "accent": "space's accent color",
+      },
       "title": "Clear and specific space title",
       "description": "Detailed description of what will be learned and why it's important",
       "space_methodology": "Methodology to achieve the goal",

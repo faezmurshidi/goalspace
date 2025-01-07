@@ -1,14 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface Message {
+export interface Message {
   id: string;
   role: 'user' | 'assistant' | 'faez';
   content: string;
   timestamp: number;
 }
 
-interface Document {
+export interface Document {
   id: string;
   title: string;
   content: string;
@@ -37,6 +37,12 @@ export interface Space {
   plan?: string;
   progress?: number;
   isCollapsed?: boolean;
+  space_color?: {
+    main: string;
+    secondary: string;
+    tertiary: string;
+    accent: string;
+  };
 }
 
 export interface Goal {

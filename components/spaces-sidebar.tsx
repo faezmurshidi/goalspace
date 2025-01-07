@@ -45,17 +45,21 @@ export function SpacesSidebar() {
                 "w-full justify-start gap-2",
                 "border-l-2 rounded-none",
                 isSidebarCollapsed ? "px-4" : "px-2",
-                space.category === 'learning' 
-                  ? "border-l-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20" 
-                  : "border-l-green-500 hover:bg-green-50 dark:hover:bg-green-950/20"
+                `border-l-[${space.space_color?.main || '#3b82f6'}]`,
+                `hover:bg-[${space.space_color?.secondary || '#eff6ff'}] dark:hover:bg-[${space.space_color?.main || '#3b82f6'}]/20`
               )}
               onClick={() => router.push(`/space/${space.id}`)}
               title={isSidebarCollapsed ? space.title : undefined}
+              style={{
+                borderLeftColor: space.space_color?.main,
+                '--hover-bg': space.space_color?.secondary,
+                '--hover-bg-dark': `${space.space_color?.main}20`
+              } as any}
             >
               {space.category === 'learning' ? (
-                <Brain className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                <Brain className="h-4 w-4 flex-shrink-0" style={{ color: space.space_color?.main }} />
               ) : (
-                <Target className="h-4 w-4 text-green-500 flex-shrink-0" />
+                <Target className="h-4 w-4 flex-shrink-0" style={{ color: space.space_color?.main }} />
               )}
               {!isSidebarCollapsed && <span className="truncate text-sm">{space.title}</span>}
             </Button>

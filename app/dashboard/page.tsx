@@ -22,6 +22,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { Brain, Target } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -132,7 +133,14 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
-                            <CardTitle className="text-lg">{space.title}</CardTitle>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              {space.category === 'learning' ? (
+                                <Brain className="h-5 w-5" style={{ color: space.space_color?.main }} />
+                              ) : (
+                                <Target className="h-5 w-5" style={{ color: space.space_color?.main }} />
+                              )}
+                              {space.title}
+                            </CardTitle>
                             <CollapsibleTrigger asChild>
                               <Button variant="ghost" size="sm">
                                 {space.isCollapsed ? (
@@ -145,7 +153,13 @@ export default function DashboardPage() {
                             </CollapsibleTrigger>
                           </div>
                           <div className="flex items-center space-x-4">
-                            <Progress value={space.progress} className="flex-1" />
+                            <Progress 
+                              value={space.progress} 
+                              className="flex-1" 
+                              style={{
+                                '--progress-color': space.space_color?.main
+                              } as any}
+                            />
                             <span className="text-sm font-medium">{Math.round(space.progress || 0)}%</span>
                           </div>
                         </div>
@@ -168,6 +182,11 @@ export default function DashboardPage() {
                           <Button 
                             onClick={() => router.push(`/space/${space.id}`)}
                             className="w-full"
+                            style={{
+                              backgroundColor: space.space_color?.main,
+                              borderColor: space.space_color?.main,
+                              '--hover-bg': space.space_color?.tertiary,
+                            } as any}
                           >
                             Go to Space
                           </Button>

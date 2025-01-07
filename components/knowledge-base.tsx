@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, Search, Book, FileText, Code, Dumbbell, Tag, X, FileQuestion } from 'lucide-react';
+import { Brain, Search, Book, FileText, Code, Dumbbell, Tag, X, FileQuestion, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSpaceStore } from '@/lib/store';
 import { MarkdownContent } from './markdown-content';
+import { Badge } from '@/components/ui/badge';
+import type { Document } from '@/lib/store';
 
 interface KnowledgeBaseProps {
   spaceId: string;
@@ -22,126 +24,102 @@ const typeIcons = {
 };
 
 export function KnowledgeBase({ spaceId }: KnowledgeBaseProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const { getDocuments } = useSpaceStore();
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
 
-  const { getDocuments, getSpaceById } = useSpaceStore();
   const documents = getDocuments(spaceId);
-  const space = getSpaceById(spaceId);
 
-  // Get all unique tags
-  const allTags = Array.from(
-    new Set(documents.flatMap((doc) => doc.tags))
-  ).sort();
+  // Get unique tags from all documents
+  const allTags = Array.from(new Set(
+    documents.flatMap(doc => doc.tags || [])
+  ));
 
   // Filter documents based on search, type, and tags
-  const filteredDocs = documents.filter((doc) => {
-    const matchesSearch = 
-      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.content.toLowerCase().includes(searchTerm.toLowerCase());
-    
+  const filteredDocs = documents.filter(doc => {
+    const matchesSearch = !searchQuery || 
+      doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      doc.content.toLowerCase().includes(searchQuery.toLowerCase());
+
     const matchesType = !selectedType || doc.type === selectedType;
-    
-    const matchesTags = 
-      selectedTags.length === 0 ||
-      selectedTags.every((tag) => doc.tags.includes(tag));
+
+    const matchesTags = selectedTags.length === 0 || 
+      selectedTags.every(tag => doc.tags?.includes(tag));
 
     return matchesSearch && matchesType && matchesTags;
   });
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag)
-        ? prev.filter((t) => t !== tag)
-        : [...prev, tag]
-    );
-  };
-
-  const selectedDocument = documents.find((doc) => doc.id === selectedDoc);
-
   return (
     <Card>
-      <CardHeader className="border-b px-4 py-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Brain className="h-5 w-5 text-blue-500" />
-            Knowledge Base
-          </CardTitle>
-        </div>
+      <CardHeader>
+        <CardTitle className="text-xl flex items-center gap-2">
+          <BookOpen className="h-5 w-5" />
+          Knowledge Base
+        </CardTitle>
+        <CardDescription>
+          Search and filter documents
+        </CardDescription>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="border-b p-4">
-          <div className="flex gap-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Search documents..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
+      <CardContent>
+        <div className="space-y-4">
+          {/* Search and Filters */}
+          <div className="space-y-4">
+            <Input
+              placeholder="Search documents..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <div className="flex flex-wrap gap-2">
+              {['tutorial', 'guide', 'reference', 'exercise'].map((type) => (
+                <Button
+                  key={type}
+                  variant={selectedType === type ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedType(selectedType === type ? null : type)}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </Button>
+              ))}
             </div>
-          </div>
-          {documents.length > 0 && (
-            <>
-              <div className="flex gap-2 mb-4">
-                {Object.entries(typeIcons).map(([type, Icon]) => (
+            {allTags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {allTags.map((tag: string) => (
                   <Button
-                    key={type}
-                    variant={selectedType === type ? "default" : "outline"}
+                    key={tag}
+                    variant={selectedTags.includes(tag) ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setSelectedType(selectedType === type ? null : type)}
-                    className="gap-2"
+                    onClick={() => setSelectedTags(prev => 
+                      prev.includes(tag) 
+                        ? prev.filter(t => t !== tag)
+                        : [...prev, tag]
+                    )}
                   >
-                    <Icon className="h-4 w-4" />
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                    {tag}
                   </Button>
                 ))}
               </div>
-              {allTags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {allTags.map((tag) => (
-                    <Button
-                      key={tag}
-                      variant={selectedTags.includes(tag) ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => toggleTag(tag)}
-                      className="gap-2"
-                    >
-                      <Tag className="h-3 w-3" />
-                      {tag}
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-        
-        {documents.length > 0 ? (
-          <>
-            {/* Document List */}
-            <div className="border-b max-h-[200px] overflow-auto">
-              <div className="p-4 space-y-4">
-                {filteredDocs.map((doc) => {
-                  const Icon = typeIcons[doc.type];
-                  return (
-                    <div
-                      key={doc.id}
-                      className={cn(
-                        "p-4 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800",
-                        selectedDoc === doc.id && "bg-gray-100 dark:bg-gray-800"
-                      )}
-                      onClick={() => setSelectedDoc(doc.id)}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Icon className="h-4 w-4 text-blue-500" />
-                        <h3 className="font-medium">{doc.title}</h3>
-                      </div>
+            )}
+          </div>
+
+          {/* Document List */}
+          <div className="space-y-2">
+            {filteredDocs.map((doc) => (
+              <Card 
+                key={doc.id}
+                className={cn(
+                  "cursor-pointer hover:bg-accent transition-colors",
+                  selectedDoc?.id === doc.id && "bg-accent"
+                )}
+                onClick={() => setSelectedDoc(doc)}
+              >
+                <CardHeader className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1.5">
+                      <CardTitle className="text-base">{doc.title}</CardTitle>
                       <div className="flex flex-wrap gap-2">
-                        {doc.tags.map((tag) => (
+                        {doc.tags?.map((tag) => (
                           <span
                             key={tag}
                             className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700"
@@ -151,17 +129,33 @@ export function KnowledgeBase({ spaceId }: KnowledgeBaseProps) {
                         ))}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-            
-            {/* Document Content */}
-            {selectedDocument ? (
-              <div className="p-6">
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h2 className="text-2xl font-bold">{selectedDocument.title}</h2>
+                    <Badge variant="outline">{doc.type}</Badge>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+
+          {/* Document Content */}
+          {selectedDoc && (
+            <Card>
+              <CardHeader className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1.5">
+                    <CardTitle className="text-lg">{selectedDoc.title}</CardTitle>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedDoc.tags?.map((tag: string) => (
+                        <span
+                          key={tag}
+                          className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{selectedDoc.type}</Badge>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -171,38 +165,14 @@ export function KnowledgeBase({ spaceId }: KnowledgeBaseProps) {
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedDocument.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
                 </div>
-                <MarkdownContent content={selectedDocument.content} />
-              </div>
-            ) : (
-              <div className="text-center text-gray-500 p-8">
-                Select a document to view its content
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex items-center justify-center text-center p-8">
-            <div className="space-y-4">
-              <FileQuestion className="h-12 w-12 text-gray-400 mx-auto" />
-              <div>
-                <p className="text-lg font-medium text-gray-900 dark:text-gray-100">No Documents Yet</p>
-                <p className="text-sm text-gray-500">
-                  Chat with your mentor to generate knowledge documents.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
+                <MarkdownContent content={selectedDoc.content} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
