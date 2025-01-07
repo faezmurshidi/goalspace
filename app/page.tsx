@@ -1,5 +1,7 @@
 import { SiteHeader } from '@/components/site-header';
 import { GoalForm } from '@/components/goal-form';
+import { Button } from '@/components/ui/button';
+import { ChartBar } from 'lucide-react';
 
 export default function Home() {
   return (

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Brain, Send, Loader2, MessageSquare, ChevronRight, UserPlus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Brain, Send, Loader2, MessageSquare, ChevronRight, UserPlus, PlusCircle, Trash2 } from 'lucide-react';
 import { useSpaceStore } from '@/lib/store';
+import type { Message } from '@/lib/store';
 import { MarkdownContent } from './markdown-content';
 import { cn } from '@/lib/utils';
-import { Input } from './ui/input';
 
 interface ChatWithMentorProps {
   spaceId: string;
@@ -99,14 +101,44 @@ const PREDEFINED_QA = {
 };
 
 export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
-  const { chatMessages, addMessage, getSpaceById } = useSpaceStore();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { 
+    getSpaceById, 
+    chatMessages, 
+    addMessage, 
+    clearChat, 
+    addDocument,
+    faezInChat,
+    toggleFaez,
+    updateTodoList 
+  } = useSpaceStore();
+  
+  const space = getSpaceById(spaceId);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<QuestionWithAnswers | null>(null);
   const [inputMessage, setInputMessage] = useState('');
-  const [isFaezPresent, setIsFaezPresent] = useState(false);
   const messages = chatMessages[spaceId] || [];
-  const space = getSpaceById(spaceId);
+
+  // If space is not found, show error state
+  if (!space) {
+    return (
+      <Card className="h-[600px] flex flex-col">
+        <CardHeader>
+          <CardTitle className="text-xl">Error</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Space not found</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const addFaezToChat = async () => {
     setIsLoading(true);
@@ -117,7 +149,16 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
         body: JSON.stringify({
           message: "Hi, I'm Faez. I've been analyzing your progress and I'd like to join this conversation to help provide additional insights and guidance. Would that be helpful?",
           spaceId,
-          isFaez: true,
+          mentor: space.mentor,
+          context: {
+            title: space.title,
+            description: space.description,
+            objectives: space.objectives,
+            prerequisites: space.prerequisites,
+            plan: space.plan,
+            to_do_list: space.to_do_list,
+          },
+          isFaezPresent: true,
         }),
       });
 
@@ -129,7 +170,7 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
         content: data.message,
         isFaez: true,
       });
-      setIsFaezPresent(true);
+      toggleFaez(spaceId);
     } catch (error) {
       console.error('Error adding Faez:', error);
     } finally {
@@ -143,6 +184,7 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
     setIsLoading(true);
     if (!isPreset) {
       setShowSuggestions(true);
+      setSelectedQuestion(null);
     }
 
     // Add user message
@@ -158,7 +200,16 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
         body: JSON.stringify({
           message: content,
           spaceId,
-          isFaez: false,
+          mentor: space.mentor,
+          context: {
+            title: space.title,
+            description: space.description,
+            objectives: space.objectives,
+            prerequisites: space.prerequisites,
+            plan: space.plan,
+            to_do_list: space.to_do_list,
+          },
+          isFaezPresent: faezInChat[spaceId],
         }),
       });
 
@@ -173,7 +224,33 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
         isFaez: false,
       });
 
+      // If Faez is present and has a response
+      if (faezInChat[spaceId] && data.faezMessage) {
+        addMessage(spaceId, {
+          role: 'assistant',
+          content: data.faezMessage,
+          isFaez: true,
+        });
+      }
+
+      // If document was created, add it to knowledge base
+      if (data.document) {
+        addDocument(spaceId, data.document);
+      }
+
+      // If to-do list was updated
+      if (data.to_do_list) {
+        updateTodoList(spaceId, data.to_do_list);
+        
+        // Add a system message to indicate the to-do list was updated
+        addMessage(spaceId, {
+          role: 'assistant',
+          content: "I've updated the to-do list based on our discussion. You can check the new tasks in the to-do list section.",
+        });
+      }
+
       setInputMessage('');
+      scrollToBottom();
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
@@ -181,135 +258,153 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
     }
   };
 
-  const handlePresetMessage = (question: string, answer: string) => {
-    const content = `${question}\n\nMy response: ${answer}`;
-    setSelectedQuestion(null);
-    sendMessage(content, true);
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    sendMessage(inputMessage);
+    if (!isLoading && inputMessage.trim()) {
+      sendMessage(inputMessage);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
   };
 
   return (
-    <Card className="relative">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-blue-500" />
-          Chat with {space?.mentor.name}
-        </CardTitle>
-        {!isFaezPresent && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={addFaezToChat}
-            disabled={isLoading}
-            className="flex items-center gap-2"
-          >
-            <UserPlus className="h-4 w-4" />
-            Add Faez to Chat
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {/* Suggested Questions */}
-          <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
-            <p className="text-sm text-gray-500 font-medium mb-3">Suggested Questions:</p>
-            {!selectedQuestion ? (
-              <div className="grid grid-cols-1 gap-2">
-                {PREDEFINED_QA[space?.category as keyof typeof PREDEFINED_QA]?.map((qa, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="justify-between text-left h-auto py-2 px-3 group"
-                    onClick={() => setSelectedQuestion(qa)}
-                    disabled={isLoading}
-                  >
-                    <span className="flex-1">{qa.question}</span>
-                    <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
-                  </Button>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-gray-500 font-medium">{selectedQuestion.question}</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedQuestion(null)}
-                    className="text-sm text-gray-500"
-                  >
-                    Back to questions
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  {selectedQuestion.answers.map((answer, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      className="justify-start text-left h-auto py-2 px-3"
-                      onClick={() => handlePresetMessage(selectedQuestion.question, answer)}
-                      disabled={isLoading}
-                    >
-                      {answer}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+    <Card className="h-[600px] flex flex-col">
+      <CardHeader className="flex-none">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xl flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-blue-500" />
+            Chat with {space.mentor.name}
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {!faezInChat[spaceId] && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1"
+                onClick={addFaezToChat}
+                disabled={isLoading}
+              >
+                <UserPlus className="h-4 w-4" />
+                Add Faez
+              </Button>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => clearChat(spaceId)}
+              className="text-red-500 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
-
-          {/* Messages */}
-          <div className="space-y-4 mb-4 min-h-[300px] max-h-[400px] overflow-y-auto">
+        </div>
+      </CardHeader>
+      <CardContent className="flex-1 flex flex-col gap-4 p-4 overflow-hidden">
+        <ScrollArea className="flex-1 pr-4">
+          <div className="space-y-4">
             {messages.map((message, index) => (
               <div
                 key={index}
                 className={cn(
-                  "flex gap-2 p-2 rounded-lg",
-                  message.role === 'user'
-                    ? "bg-blue-500 text-white ml-auto max-w-[80%]"
-                    : message.isFaez
-                    ? "bg-yellow-50 dark:bg-yellow-900/20 max-w-[80%]"
-                    : "bg-gray-100 dark:bg-gray-800 max-w-[80%]"
+                  "flex gap-2 text-sm",
+                  message.role === 'user' ? "justify-end" : "justify-start"
                 )}
               >
-                {message.role === 'assistant' && (
-                  message.isFaez ? (
-                    <UserPlus className="h-5 w-5 text-yellow-500 shrink-0 mt-1" />
-                  ) : (
-                    <Brain className="h-5 w-5 text-blue-500 shrink-0 mt-1" />
-                  )
-                )}
-                <div className="flex-1">
+                <div
+                  className={cn(
+                    "rounded-lg px-3 py-2 max-w-[80%]",
+                    message.role === 'user'
+                      ? "bg-blue-500 text-white"
+                      : message.isFaez
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-100 dark:bg-gray-800"
+                  )}
+                >
                   <MarkdownContent content={message.content} />
                 </div>
               </div>
             ))}
-            {isLoading && (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Thinking...
-              </div>
-            )}
+            <div ref={messagesEndRef} />
           </div>
+        </ScrollArea>
 
-          {/* Chat Input */}
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1"
-              disabled={isLoading}
-            />
-            <Button type="submit" disabled={isLoading || !inputMessage.trim()}>
+        {/* Suggestions */}
+        {showSuggestions && !selectedQuestion && PREDEFINED_QA[space.category as keyof typeof PREDEFINED_QA] && (
+          <div className="flex-none space-y-2">
+            <p className="text-sm text-gray-500">Suggested questions:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {PREDEFINED_QA[space.category as keyof typeof PREDEFINED_QA].map((qa, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className="justify-start text-left h-auto py-2"
+                  onClick={() => setSelectedQuestion(qa)}
+                >
+                  <span className="truncate">{qa.question}</span>
+                  <ChevronRight className="h-4 w-4 ml-auto flex-none" />
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Answer options */}
+        {selectedQuestion && (
+          <div className="flex-none space-y-2">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-0 h-auto"
+                onClick={() => setSelectedQuestion(null)}
+              >
+                ← Back
+              </Button>
+              <p className="text-sm text-gray-500">{selectedQuestion.question}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {selectedQuestion.answers.map((answer, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className="justify-start text-left h-auto py-2"
+                  onClick={() => sendMessage(answer, true)}
+                >
+                  {answer}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Input */}
+        <form onSubmit={handleSubmit} className="flex-none flex items-center gap-2">
+          <Input
+            ref={inputRef}
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="Type your message..."
+            disabled={isLoading}
+            className="flex-1"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={isLoading || !inputMessage.trim()}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
               <Send className="h-4 w-4" />
-            </Button>
-          </form>
-        </div>
+            )}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );

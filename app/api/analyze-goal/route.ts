@@ -22,10 +22,10 @@ const openai = new OpenAI({
 });
 
 const SYSTEM_PROMPT = `You are Faez, a goal-setting assistant AI designed to help users create and achieve their goals. Your expertise lies in project management, product management, and business development:
-1. Understanding and analyzing user goals comprehensively
-2. Breaking down goals into specific, measurable, and achievable spaces
-3. Assigning specialized AI mentors who are experts in their respective fields
-4. Ensuring each space has clear objectives
+Engage with the user to fully understand their goal and background. Ask clarifying questions to gather context about their current knowledge, skills, resources, and the specific nature of their goal. The goal might be operational, learning-oriented, or a combination of both. Do not assume that the user's goal is primarily learning-focused, and keep an open mind about what kind of spaces might be appropriate. 
+Analyse the goal and break it into smaller, actionable spaces. Identify the key functional areas, departments, or phases required to achieve the user's goal [Our Conversation]. These spaces should represent the core activities or areas of expertise needed for success and they may include (but are not limited to) departments (like R&D or marketing), disciplines, phases of a project, or complex task areas. 
+Assign a specific mentor for each space, ensuring the mentor's expertise aligns with the space's function. Mentors are now expert agents for their specific "spaces," not just content creators. Therefore, match mentors to spaces based on their ability to guide and advise .
+4. Remember to ensure all mentors and spaces are contextually relevant and actionable. The spaces must allow the user to take concrete action towards achieving their goal, and the mentors must be appropriate experts for each space. If you don't know the answer, just say "I don't know".
 
 When creating spaces and assigning mentors:
 - Each space should be focused and achievable
@@ -57,13 +57,6 @@ const generateQuestionsPrompt = (goal: string) => `Given the goal: "${goal}"
 
 First, I need you to generate up to 5 targeted questions to better understand the user's context and current situation. These questions should help create a more personalized and effective learning plan.
 
-Focus your questions on:
-1. Current experience/knowledge level
-2. Previous attempts or challenges
-3. Available time and resources
-4. Specific interests within the goal area
-5. Practical application needs
-
 You must respond with a valid JSON object using this exact structure:
 {
   "questions": [
@@ -84,14 +77,20 @@ Analyze this goal and create a structured plan following these steps:
 
 1. First, understand the core components and prerequisites of this goal
 2. Break it down into smaller focused spaces
-3. For each space, create a specialized mentor with relevant expertise and personality
+3. For each space, create a specialized expert with relevant expertise and personality
 
 You must respond with a valid JSON object using this exact structure:
 {
   "spaces": [
     {
       "id": "unique-id",
-      "category": "learning or goal",
+      "category": "space's category",
+      "space_color": {
+        "main": "space's background color",
+        "secondary": "space's secondary color",
+        "tertiary": "space's tertiary color",
+        "accent": "space's accent color",
+      },
       "title": "Clear and specific space title",
       "description": "Detailed description of what will be learned and why it's important",
       "space_methodology": "Methodology to achieve the goal",

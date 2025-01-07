@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+<<<<<<< HEAD
 import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle, Sparkles } from 'lucide-react';
+=======
+import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle, ChartBar } from 'lucide-react';
+>>>>>>> main
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useSpaceStore, type Space } from '@/lib/store';
@@ -80,6 +84,9 @@ export function GoalForm() {
         });
       });
       setTodoStates(initialTodoStates);
+
+      // Redirect to dashboard after spaces are created
+      router.push('/dashboard');
     } catch (err) {
       setError('Failed to analyze goal. Please try again.');
       console.error(err);
@@ -343,6 +350,14 @@ export function GoalForm() {
             onClick={handleReset}
           >
             Set Another Goal
+          </Button>
+          <Button
+            variant="default"
+            className="w-full"
+            onClick={() => router.push('/dashboard')}
+          >
+            <ChartBar className="mr-2 h-4 w-4" />
+            View Dashboard
           </Button>
         </div>
       )}
