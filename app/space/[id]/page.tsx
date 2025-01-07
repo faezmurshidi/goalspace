@@ -159,9 +159,9 @@ export default function SpacePage() {
             <div className="max-w-[1600px] mx-auto space-y-8">
               <div className="flex items-center justify-between">
                 <span className={cn(
-                  "text-sm px-3 py-1 rounded-full font-medium",
+                  "text-sm px-3 py-1 rounded-full font-medium transition-colors duration-200",
                   space.space_color 
-                    ? `bg-[${space.space_color.secondary}] text-[${space.space_color.main}] dark:bg-[${space.space_color.main}]/20 dark:text-[${space.space_color.main}]`
+                    ? `bg-[${space.space_color.secondary}] text-[${space.space_color.main}] dark:bg-[${space.space_color.main}]/20 dark:text-[${space.space_color.accent}]`
                     : space.category === 'learning'
                       ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
                       : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
@@ -170,51 +170,55 @@ export default function SpacePage() {
                   backgroundColor: space.space_color.secondary,
                   color: space.space_color.main,
                   '--dark-bg': `${space.space_color.main}20`,
-                  '--dark-text': space.space_color.main,
+                  '--dark-text': space.space_color.accent,
                 } as any : undefined}>
                   {space.category.charAt(0).toUpperCase() + space.category.slice(1)}
                 </span>
               </div>
 
               <div className="grid gap-8 lg:grid-cols-10">
-                {/* Main Content */}
+                {/* Chat Section - Now on the left */}
+                <div className="lg:col-span-4 space-y-6">
+                  <ChatWithMentor spaceId={spaceId} />
+                </div>
+
+                {/* Main Content - Now on the right */}
                 <div className="lg:col-span-6 space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        {space.category === 'learning' ? (
-                          <Brain className="h-6 w-6 text-blue-500" />
-                        ) : (
-                          <Target className="h-6 w-6 text-green-500" />
-                        )}
-                        {space.title}
-                      </CardTitle>
-                      <CardDescription className="text-base">
-                        <MarkdownContent content={space.description} />
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <SpaceContentEditor 
-                        space={space}
-                        editable={true}
-                        onUpdate={(content) => {
-                          console.log('Content updated:', content);
-                          // TODO: Implement content update logic
-                        }}
-                      />
-                    </CardContent>
-                  </Card>
+                  <SpaceContentEditor 
+                    space={space}
+                    editable={true}
+                    onUpdate={(content) => {
+                      console.log('Content updated:', content);
+                      // TODO: Implement content update logic
+                    }}
+                  />
 
                   {/* Knowledge Base */}
                   <KnowledgeBase spaceId={spaceId} />
 
                   {/* Learning Plan Section */}
-                  <Card>
+                  <Card className={cn(
+                    "border-l-4 transition-colors duration-200",
+                    space.space_color 
+                      ? `border-l-[${space.space_color.main}]`
+                      : space.category === 'learning'
+                        ? "border-l-blue-500"
+                        : "border-l-green-500"
+                  )}
+                  style={space.space_color ? {
+                    borderLeftColor: space.space_color.main
+                  } : undefined}>
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsPlanCollapsed(!isPlanCollapsed)}>
                           <CardTitle className="text-xl flex items-center gap-2">
-                            <Brain className="h-5 w-5 text-blue-500" />
+                            <Brain className={cn(
+                              "h-5 w-5",
+                              space.space_color 
+                                ? `text-[${space.space_color.main}]`
+                                : "text-blue-500"
+                            )}
+                            style={space.space_color ? { color: space.space_color.main } : undefined} />
                             Learning Plan
                           </CardTitle>
                           {space.plan && (
@@ -247,11 +251,17 @@ export default function SpacePage() {
                               onClick={generatePlan}
                               disabled={isGenerating}
                               className={cn(
-                                "gap-2",
-                                space.category === 'learning'
-                                  ? "bg-blue-500 hover:bg-blue-600"
-                                  : "bg-green-500 hover:bg-green-600"
+                                "gap-2 transition-colors duration-200",
+                                space.space_color 
+                                  ? `bg-[${space.space_color.main}] hover:bg-[${space.space_color.accent}]`
+                                  : space.category === 'learning'
+                                    ? "bg-blue-500 hover:bg-blue-600"
+                                    : "bg-green-500 hover:bg-green-600"
                               )}
+                              style={space.space_color ? {
+                                backgroundColor: space.space_color.main,
+                                '--hover-bg': space.space_color.accent
+                              } as any : undefined}
                             >
                               {isGenerating ? (
                                 <>
@@ -289,12 +299,28 @@ export default function SpacePage() {
                   </Card>
 
                   {/* Research Paper Section */}
-                  <Card>
+                  <Card className={cn(
+                    "border-l-4 transition-colors duration-200",
+                    space.space_color 
+                      ? `border-l-[${space.space_color.main}]`
+                      : space.category === 'learning'
+                        ? "border-l-blue-500"
+                        : "border-l-green-500"
+                  )}
+                  style={space.space_color ? {
+                    borderLeftColor: space.space_color.main
+                  } : undefined}>
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsResearchCollapsed(!isResearchCollapsed)}>
                           <CardTitle className="text-xl flex items-center gap-2">
-                            <Brain className="h-5 w-5 text-blue-500" />
+                            <Brain className={cn(
+                              "h-5 w-5",
+                              space.space_color 
+                                ? `text-[${space.space_color.main}]`
+                                : "text-blue-500"
+                            )}
+                            style={space.space_color ? { color: space.space_color.main } : undefined} />
                             Research Paper
                           </CardTitle>
                           {space.research && (
@@ -327,11 +353,17 @@ export default function SpacePage() {
                               onClick={generateResearch}
                               disabled={isGeneratingResearch}
                               className={cn(
-                                "gap-2",
-                                space.category === 'learning'
-                                  ? "bg-blue-500 hover:bg-blue-600"
-                                  : "bg-green-500 hover:bg-green-600"
+                                "gap-2 transition-colors duration-200",
+                                space.space_color 
+                                  ? `bg-[${space.space_color.main}] hover:bg-[${space.space_color.accent}]`
+                                  : space.category === 'learning'
+                                    ? "bg-blue-500 hover:bg-blue-600"
+                                    : "bg-green-500 hover:bg-green-600"
                               )}
+                              style={space.space_color ? {
+                                backgroundColor: space.space_color.main,
+                                '--hover-bg': space.space_color.accent
+                              } as any : undefined}
                             >
                               {isGeneratingResearch ? (
                                 <>
@@ -367,11 +399,6 @@ export default function SpacePage() {
                       )}
                     </CardContent>
                   </Card>
-                </div>
-
-                {/* Chat Section */}
-                <div className="lg:col-span-4 space-y-6">
-                  <ChatWithMentor spaceId={spaceId} />
                 </div>
               </div>
             </div>

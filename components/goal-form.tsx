@@ -5,11 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-<<<<<<< HEAD
-import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle, Sparkles } from 'lucide-react';
-=======
-import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle, ChartBar } from 'lucide-react';
->>>>>>> main
+import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle, Sparkles, ChartBar, Wand2 } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useSpaceStore, type Space } from '@/lib/store';
@@ -139,7 +135,7 @@ export function GoalForm() {
               htmlFor="advanced-mode"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
             >
-              <Sparkles className="h-4 w-4" />
+              <Wand2 className="h-4 w-4" />
               Advanced Mode (Multi-step Planning)
             </label>
           </div>
@@ -165,7 +161,12 @@ export function GoalForm() {
         )}
         <Button 
           type="submit" 
-          className="h-12 px-8"
+          className={cn(
+            "h-12 px-8",
+            isAdvancedMode
+              ? "bg-blue-500 hover:bg-blue-600"
+              : "bg-green-500 hover:bg-green-600"
+          )}
           disabled={isLoading || (questions.length > 0 && Object.keys(answers).length < questions.length)}
         >
           {isLoading ? (
@@ -193,27 +194,35 @@ export function GoalForm() {
                 key={space.id} 
                 className={cn(
                   "flex flex-col border-l-4 shadow-md hover:shadow-lg transition-shadow",
-                  space.category === 'learning' 
-                    ? "border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/10" 
-                    : "border-l-green-500 bg-green-50/50 dark:bg-green-950/10"
+                  space.space_color
+                    ? `border-l-[${space.space_color.main}] bg-[${space.space_color.secondary}]/10`
+                    : space.category === 'learning'
+                      ? "border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/10"
+                      : "border-l-green-500 bg-green-50/50 dark:bg-green-950/10"
                 )}
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-xl">
                       {space.category === 'learning' ? (
-                        <Brain className="h-5 w-5 text-blue-500" />
+                        <Brain className="h-5 w-5" style={{ color: space.space_color?.main || '#3B82F6' }} />
                       ) : (
-                        <Target className="h-5 w-5 text-green-500" />
+                        <Target className="h-5 w-5" style={{ color: space.space_color?.main || '#22C55E' }} />
                       )}
                       {space.title}
                     </CardTitle>
                     <span className={cn(
                       "text-xs px-2 py-1 rounded-full font-medium",
-                      space.category === 'learning'
-                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                        : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                    )}>
+                      space.space_color
+                        ? `bg-[${space.space_color.secondary}] text-[${space.space_color.main}]`
+                        : space.category === 'learning'
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                          : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                    )}
+                    style={space.space_color ? {
+                      backgroundColor: space.space_color.secondary,
+                      color: space.space_color.main,
+                    } : undefined}>
                       {space.category.charAt(0).toUpperCase() + space.category.slice(1)}
                     </span>
                   </div>
@@ -223,12 +232,17 @@ export function GoalForm() {
                   {/* Mentor Section */}
                   <div className={cn(
                     "p-4 rounded-lg",
-                    space.category === 'learning'
-                      ? "bg-blue-100/50 dark:bg-blue-900/20"
-                      : "bg-green-100/50 dark:bg-green-900/20"
-                  )}>
+                    space.space_color
+                      ? `bg-[${space.space_color.secondary}]/10`
+                      : space.category === 'learning'
+                        ? "bg-blue-100/50 dark:bg-blue-900/20"
+                        : "bg-green-100/50 dark:bg-green-900/20"
+                  )}
+                  style={space.space_color ? {
+                    backgroundColor: `${space.space_color.secondary}20`,
+                  } : undefined}>
                     <h3 className="font-medium mb-3 flex items-center gap-2">
-                      <Brain className="h-4 w-4 text-blue-500" />
+                      <Brain className="h-4 w-4" style={{ color: space.space_color?.main || '#3B82F6' }} />
                       Your AI Mentor
                     </h3>
                     <div className="space-y-2.5">
@@ -249,116 +263,47 @@ export function GoalForm() {
                   {/* System Prompt Section */}
                   <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
                     <h3 className="font-medium mb-2 text-sm flex items-center gap-2">
-                      <Brain className="h-4 w-4 text-blue-500" />
+                      <Brain className="h-4 w-4" style={{ color: space.space_color?.main || '#3B82F6' }} />
                       System Prompt
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">{space.mentor.system_prompt}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {space.mentor.system_prompt}
+                    </p>
                   </div>
 
-                  {/* Objectives Section */}
-                  <div>
-                    <h3 className="font-medium mb-3 text-sm flex items-center gap-2">
-                      <Target className="h-4 w-4 text-green-500" />
-                      Learning Objectives
-                    </h3>
-                    <ul className="text-sm space-y-2">
-                      {space.objectives.map((objective, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="text-green-500 text-xs mt-1">•</span>
-                          <span className="text-gray-600 dark:text-gray-300">{objective}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Prerequisites Section */}
-                  {space.prerequisites.length > 0 && (
-                    <div>
-                      <h3 className="font-medium mb-3 text-sm flex items-center gap-2">
-                        <List className="h-4 w-4 text-orange-500" />
-                        Prerequisites
-                      </h3>
-                      <ul className="text-sm space-y-2">
-                        {space.prerequisites.map((prerequisite, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <span className="text-orange-500 text-xs mt-1">•</span>
-                            <span className="text-gray-600 dark:text-gray-300">{prerequisite}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Time to Complete Section */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4 text-purple-500 flex-shrink-0" />
-                    <span className="text-gray-600 dark:text-gray-300">{space.time_to_complete}</span>
-                  </div>
-
-                  {/* To-Do List Section */}
-                  <div>
-                    <h3 className="font-medium mb-3 text-sm flex items-center gap-2">
-                      <List className="h-4 w-4 text-blue-500" />
-                      To-Do List
-                    </h3>
-                    <div className="space-y-2.5">
-                      {space.to_do_list.map((task, index) => (
-                        <div key={index} className="flex items-start gap-3">
-                          <Checkbox
-                            id={`${space.id}-todo-${index}`}
-                            checked={todoStates[space.id]?.[index] || false}
-                            onCheckedChange={() => toggleTodo(space.id, index.toString())}
-                            className="mt-0.5"
-                          />
-                          <label
-                            htmlFor={`${space.id}-todo-${index}`}
-                            className={cn(
-                              "text-sm flex-1 cursor-pointer",
-                              todoStates[space.id]?.[index]
-                                ? "line-through text-gray-400"
-                                : "text-gray-600 dark:text-gray-300"
-                            )}
-                          >
-                            {task}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Add Get Started Button */}
-                  <div className="pt-4 mt-auto">
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-2 pt-4">
                     <Button
-                      className={cn(
-                        "w-full",
-                        space.category === 'learning'
-                          ? "bg-blue-500 hover:bg-blue-600 text-white"
-                          : "bg-green-500 hover:bg-green-600 text-white"
-                      )}
-                      onClick={() => handleStartSpace(space.id)}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleReset()}
+                      className="text-gray-500"
                     >
-                      Let's Get Started
+                      Reset
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleStartSpace(space.id)}
+                      className={cn(
+                        space.space_color
+                          ? ""
+                          : space.category === 'learning'
+                            ? "bg-blue-500 hover:bg-blue-600"
+                            : "bg-green-500 hover:bg-green-600"
+                      )}
+                      style={space.space_color ? {
+                        backgroundColor: space.space_color.main,
+                        borderColor: space.space_color.main,
+                        '--hover-bg': space.space_color.accent,
+                      } as any : undefined}
+                    >
+                      Start Space
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-          <Button 
-            variant="outline" 
-            className="w-full"
-            onClick={handleReset}
-          >
-            Set Another Goal
-          </Button>
-          <Button
-            variant="default"
-            className="w-full"
-            onClick={() => router.push('/dashboard')}
-          >
-            <ChartBar className="mr-2 h-4 w-4" />
-            View Dashboard
-          </Button>
         </div>
       )}
     </div>

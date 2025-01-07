@@ -111,7 +111,18 @@ You must respond with a valid JSON object using this exact structure:
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured');
+    }
+
     const { goal, answers, isAdvancedMode } = await request.json();
+
+    if (!goal) {
+      return NextResponse.json(
+        { error: 'Goal is required' },
+        { status: 400 }
+      );
+    }
 
     // If no answers provided, generate questions
     if (!answers) {
@@ -127,7 +138,7 @@ export async function POST(request: Request) {
             content: generateQuestionsPrompt(goal)
           }
         ],
-        model: "gpt-4-turbo",
+        model: "gpt-4",
         temperature: 0.7,
       });
 
@@ -136,16 +147,21 @@ export async function POST(request: Request) {
         throw new Error('No response from OpenAI for questions');
       }
 
-      const parsedQuestions = JSON.parse(questionsResponse);
-      return NextResponse.json(
-        { questions: parsedQuestions.questions },
-        {
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
+      try {
+        const parsedQuestions = JSON.parse(questionsResponse);
+        return NextResponse.json(
+          { questions: parsedQuestions.questions },
+          {
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Content-Type': 'application/json',
+            }
           }
-        }
-      );
+        );
+      } catch (parseError) {
+        console.error('Failed to parse questions response:', questionsResponse);
+        throw new Error('Invalid JSON response from OpenAI for questions');
+      }
     }
 
     // If answers are provided, generate spaces
@@ -167,7 +183,7 @@ export async function POST(request: Request) {
             content: `First, analyze this goal step by step: "${goal}"\n\nUser Context:\n${Object.entries(answers).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}`
           }
         ],
-        model: "gpt-4-turbo",
+        model: "gpt-4",
         temperature: 0.7,
       });
 
@@ -189,7 +205,7 @@ export async function POST(request: Request) {
             content: generateSpacePrompt(goal, answers)
           }
         ],
-        model: "gpt-4-turbo",
+        model: "gpt-4",
         temperature: 0.7,
       });
     } else {
@@ -204,7 +220,7 @@ export async function POST(request: Request) {
             content: generateSpacePrompt(goal, answers)
           }
         ],
-        model: "gpt-4-turbo",
+        model: "gpt-4",
         temperature: 0.7,
       });
     }
@@ -238,12 +254,23 @@ export async function POST(request: Request) {
       parsedResponse.reasoning = reasoningResponse;
     }
 
-    return NextResponse.json(parsedResponse);
+    return NextResponse.json(parsedResponse, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json',
+      }
+    });
   } catch (error) {
     console.error('Error in /api/analyze-goal:', error);
     return NextResponse.json(
-      { error: 'Failed to process the request' },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : 'Failed to process the request' },
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        }
+      }
     );
   }
 } 

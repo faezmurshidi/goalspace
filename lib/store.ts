@@ -25,26 +25,87 @@ interface Mentor {
   system_prompt: string;
 }
 
+export type SpaceColor = {
+  main: string;
+  secondary: string;
+  accent: string;
+};
+
+export const SPACE_COLORS: SpaceColor[] = [
+  {
+    main: '#2563eb',     // Vibrant Blue
+    secondary: '#dbeafe',
+    accent: '#60a5fa'
+  },
+  {
+    main: '#dc2626',     // Vibrant Red
+    secondary: '#fee2e2',
+    accent: '#f87171'
+  },
+  {
+    main: '#16a34a',     // Vibrant Green
+    secondary: '#dcfce7',
+    accent: '#4ade80'
+  },
+  {
+    main: '#9333ea',     // Vibrant Purple
+    secondary: '#f3e8ff',
+    accent: '#c084fc'
+  },
+  {
+    main: '#ea580c',     // Vibrant Orange
+    secondary: '#ffedd5',
+    accent: '#fb923c'
+  },
+  {
+    main: '#0d9488',     // Teal
+    secondary: '#ccfbf1',
+    accent: '#2dd4bf'
+  },
+  {
+    main: '#4f46e5',     // Indigo
+    secondary: '#e0e7ff',
+    accent: '#818cf8'
+  },
+  {
+    main: '#b91c1c',     // Ruby Red
+    secondary: '#fee2e2',
+    accent: '#ef4444'
+  },
+  {
+    main: '#c2410c',     // Burnt Orange
+    secondary: '#fff7ed',
+    accent: '#fb923c'
+  },
+  {
+    main: '#7c3aed',     // Electric Purple
+    secondary: '#f3e8ff',
+    accent: '#a78bfa'
+  }
+];
+
 export interface Space {
   id: string;
-  category: string;
   title: string;
+  category: 'learning' | 'goal';
   description: string;
-  mentor: Mentor;
   objectives: string[];
   prerequisites: string[];
-  time_to_complete: string;
   to_do_list: string[];
+  time_to_complete: string;
+  mentor: {
+    name: string;
+    introduction: string;
+    personality: string;
+    expertise: string[];
+    system_prompt: string;
+  };
+  space_color?: SpaceColor;
   plan?: string;
   research?: string;
   progress?: number;
   isCollapsed?: boolean;
-  space_color?: {
-    main: string;
-    secondary: string;
-    tertiary: string;
-    accent: string;
-  };
+  content?: string;
 }
 
 export interface Goal {

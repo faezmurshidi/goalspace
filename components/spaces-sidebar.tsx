@@ -1,33 +1,105 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Brain, Target, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Brain, Target, ChevronLeft, ChevronRight, Loader2, Pause, Play, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSpaceStore } from '@/lib/store';
+import { useState } from 'react';
 
-export function SpacesSidebar() {
+interface SpacesSidebarProps {
+  className?: string;
+}
+
+export function SpacesSidebar({ className }: SpacesSidebarProps) {
   const router = useRouter();
   const { spaces, isSidebarCollapsed, toggleSidebar } = useSpaceStore();
+  const [loadingSpaceId, setLoadingSpaceId] = useState<string | null>(null);
+  const [isGeneratingPodcast, setIsGeneratingPodcast] = useState(false);
+  const [podcastReady, setPodcastReady] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
+
+  const handleSpaceClick = (spaceId: string) => {
+    setLoadingSpaceId(spaceId);
+    router.push(`/space/${spaceId}`);
+  };
+
+  const handlePodcastClick = async (spaceId: string) => {
+    setActiveSpaceId(spaceId);
+    
+    if (podcastReady) {
+      setIsPlaying(!isPlaying);
+      // Add your play/pause logic here
+      return;
+    }
+
+    if (isGeneratingPodcast) return;
+
+    setIsGeneratingPodcast(true);
+    try {
+      // Get the space details
+      const space = spaces.find(s => s.id === spaceId);
+      if (!space) {
+        throw new Error('Space not found');
+      }
+
+      const response = await fetch('/api/make-podcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spaceDetails: space }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate podcast');
+      }
+
+      // Get the audio data as a blob
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Create and play audio
+      const audio = new Audio(audioUrl);
+      audio.addEventListener('play', () => setIsPlaying(true));
+      audio.addEventListener('pause', () => setIsPlaying(false));
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      });
+
+      setPodcastReady(true);
+      audio.play();
+    } catch (error) {
+      console.error('Error generating podcast:', error);
+      setPodcastReady(false);
+      setIsPlaying(false);
+    } finally {
+      setIsGeneratingPodcast(false);
+    }
+  };
 
   return (
-    <div 
+    <div
       className={cn(
-        "fixed left-0 top-14 h-[calc(100vh-3.5rem)] border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300",
-        isSidebarCollapsed ? "w-16" : "w-64"
+        "fixed left-0 top-[57px] z-30 h-[calc(100vh-57px)] w-64 border-r bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-xl transition-all duration-300",
+        isSidebarCollapsed && "w-16",
+        className
       )}
     >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-4">
-          {!isSidebarCollapsed && <h2 className="font-semibold px-2">Spaces</h2>}
+      <div className="flex h-full flex-col gap-4 p-4">
+        <div className="flex items-center justify-between">
+          <h2 className={cn(
+            "text-lg font-semibold transition-all duration-300 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent",
+            isSidebarCollapsed && "opacity-0"
+          )}>
+            Spaces
+          </h2>
           <Button
             variant="ghost"
             size="sm"
-            className={cn(
-              "h-8 w-8 p-0",
-              isSidebarCollapsed && "ml-2"
-            )}
             onClick={toggleSidebar}
+            className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             {isSidebarCollapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -36,33 +108,93 @@ export function SpacesSidebar() {
             )}
           </Button>
         </div>
-        <div className="space-y-1 p-2">
+
+        <div className="space-y-2">
           {spaces.map((space) => (
-            <Button
-              key={space.id}
-              variant="ghost"
-              className={cn(
-                "w-full justify-start gap-2",
-                "border-l-2 rounded-none",
-                isSidebarCollapsed ? "px-4" : "px-2",
-                `border-l-[${space.space_color?.main || '#3b82f6'}]`,
-                `hover:bg-[${space.space_color?.secondary || '#eff6ff'}] dark:hover:bg-[${space.space_color?.main || '#3b82f6'}]/20`
+            <div key={space.id} className="space-y-1 group">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleSpaceClick(space.id)}
+                className={cn(
+                  "w-full justify-start gap-2 relative overflow-hidden transition-all duration-300",
+                  "before:absolute before:inset-0 before:w-1 before:bg-gradient-to-b before:transition-all",
+                  loadingSpaceId === space.id && "animate-pulse",
+                  space.space_color 
+                    ? `hover:bg-[${space.space_color.secondary}] dark:hover:bg-[${space.space_color.main}]/20 before:bg-[${space.space_color.main}]`
+                    : space.category === 'learning'
+                      ? "hover:bg-blue-50 dark:hover:bg-blue-900/20 before:bg-blue-500"
+                      : "hover:bg-green-50 dark:hover:bg-green-900/20 before:bg-green-500"
+                )}
+                style={space.space_color ? {
+                  '--hover-bg': space.space_color.secondary,
+                  '--hover-bg-dark': `${space.space_color.main}20`,
+                  '--border-color': space.space_color.main,
+                } as any : undefined}
+              >
+                {space.category === 'learning' ? (
+                  <Brain 
+                    className="h-4 w-4 transition-transform group-hover:scale-110" 
+                    style={{ color: space.space_color?.main }}
+                  />
+                ) : (
+                  <Target 
+                    className="h-4 w-4 transition-transform group-hover:scale-110"
+                    style={{ color: space.space_color?.main }}
+                  />
+                )}
+                {!isSidebarCollapsed && (
+                  <span className="truncate text-sm font-medium">
+                    {space.title}
+                  </span>
+                )}
+              </Button>
+              
+              {!isSidebarCollapsed && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handlePodcastClick(space.id)}
+                  className={cn(
+                    "w-full justify-start gap-2 ml-4 text-sm transition-all duration-300 group/podcast",
+                    "hover:translate-x-1",
+                    isGeneratingPodcast && activeSpaceId === space.id && "text-red-500 hover:text-red-600 animate-pulse",
+                    podcastReady && !isPlaying && activeSpaceId === space.id && "text-green-500 hover:text-green-600",
+                    isPlaying && activeSpaceId === space.id && "text-amber-500 hover:text-amber-600 animate-bounce",
+                    space.space_color && !isGeneratingPodcast && !podcastReady && `hover:text-[${space.space_color.main}]`
+                  )}
+                  style={space.space_color && !isGeneratingPodcast && !podcastReady ? {
+                    '--hover-text': space.space_color.main,
+                  } as any : undefined}
+                >
+                  {isGeneratingPodcast && activeSpaceId === space.id ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="animate-pulse">Generating...</span>
+                    </>
+                  ) : podcastReady && activeSpaceId === space.id ? (
+                    <>
+                      {isPlaying ? (
+                        <>
+                          <Pause className="h-4 w-4 group-hover/podcast:scale-110 transition-transform" />
+                          <span className="group-hover/podcast:font-medium">Pause</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 group-hover/podcast:scale-110 transition-transform" />
+                          <span className="group-hover/podcast:font-medium">Play</span>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Headphones className="h-4 w-4 group-hover/podcast:scale-110 transition-transform" />
+                      <span className="group-hover/podcast:font-medium">Listen to Podcast</span>
+                    </>
+                  )}
+                </Button>
               )}
-              onClick={() => router.push(`/space/${space.id}`)}
-              title={isSidebarCollapsed ? space.title : undefined}
-              style={{
-                borderLeftColor: space.space_color?.main,
-                '--hover-bg': space.space_color?.secondary,
-                '--hover-bg-dark': `${space.space_color?.main}20`
-              } as any}
-            >
-              {space.category === 'learning' ? (
-                <Brain className="h-4 w-4 flex-shrink-0" style={{ color: space.space_color?.main }} />
-              ) : (
-                <Target className="h-4 w-4 flex-shrink-0" style={{ color: space.space_color?.main }} />
-              )}
-              {!isSidebarCollapsed && <span className="truncate text-sm">{space.title}</span>}
-            </Button>
+            </div>
           ))}
         </div>
       </div>

@@ -17,7 +17,19 @@ const nextConfig = {
         ]
       }
     ]
-  }
-}
+  },
+  webpack: (config, { isServer }) => {
+    // Fixes npm packages that depend on `ws` module
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        ws: false,
+        bufferutil: false,
+        'utf-8-validate': false,
+      };
+    }
+    return config;
+  },
+};
 
 module.exports = nextConfig
