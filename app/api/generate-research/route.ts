@@ -10,30 +10,33 @@ export async function POST(req: Request) {
   try {
     const { spaceId, category, title, description, objectives, prerequisites, mentor, model = 'gpt' } = await req.json();
 
-    const prompt = `As ${mentor.name}, an AI mentor with expertise in ${mentor.expertise.join(', ')}, create a detailed plan for:
+    const prompt = `As ${mentor.name}, an AI mentor with expertise in ${mentor.expertise.join(', ')}, create a detailed research paper for:
 
 Title: ${title}
 Category: ${category}
 Description: ${description}
 
-Objectives:
+Research Objectives:
 ${objectives.map((obj: string) => `- ${obj}`).join('\n')}
 
-${prerequisites.length > 0 ? `Prerequisites:
+${prerequisites.length > 0 ? `Background Knowledge Required:
 ${prerequisites.map((pre: string) => `- ${pre}`).join('\n')}` : ''}
 
-Please create a comprehensive markdown-formatted plan that includes:
+Please create a comprehensive research paper in markdown format that includes:
 
-1. Introduction
-2. Detailed breakdown of topics to be covered
-3. Topics and content (with sections)
-4. Recommended resources and materials
-5. Practice exercises and projects
-6. Assessment methods
-7. Tips for success
-8. Timeline and milestones
+1. Abstract
+2. Introduction
+   - Background
+   - Problem Statement
+   - Research Questions
+3. Literature Review
+4. Methodology
+5. Expected Results
+6. Discussion
+7. Conclusion
+8. References
 
-Use your teaching style (${mentor.personality}) to make the plan engaging and effective.
+Use academic writing style while maintaining your teaching personality (${mentor.personality}).
 Format the response in Markdown with appropriate headers, lists, code blocks, and emphasis.`;
 
     if (model === 'gpt') {
@@ -53,8 +56,8 @@ Format the response in Markdown with appropriate headers, lists, code blocks, an
         max_tokens: 4000,
       });
 
-      const plan = completion.choices[0].message.content;
-      return NextResponse.json({ plan });
+      const research = completion.choices[0].message.content;
+      return NextResponse.json({ research });
     } else {
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
@@ -82,17 +85,17 @@ Format the response in Markdown with appropriate headers, lists, code blocks, an
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Perplexity API error:', errorData);
-        throw new Error('Failed to generate plan');
+        throw new Error('Failed to generate research');
       }
 
       const data = await response.json();
-      const plan = data.choices[0].message.content;
-      return NextResponse.json({ plan });
+      const research = data.choices[0].message.content;
+      return NextResponse.json({ research });
     }
   } catch (error) {
-    console.error('Error generating plan:', error);
+    console.error('Error generating research:', error);
     return NextResponse.json(
-      { error: 'Failed to generate plan' },
+      { error: 'Failed to generate research' },
       { status: 500 }
     );
   }

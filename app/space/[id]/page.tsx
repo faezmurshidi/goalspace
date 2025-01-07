@@ -5,23 +5,32 @@ import { useParams, useRouter } from 'next/navigation';
 import { SiteHeader } from '@/components/site-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Brain, Target, List, Clock, ArrowLeft, Loader2 } from 'lucide-react';
+import { Brain, Target, List, Clock, ArrowLeft, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MarkdownContent } from '@/components/markdown-content';
 import { ChatWithMentor } from '@/components/chat-with-mentor';
 import { KnowledgeBase } from '@/components/knowledge-base';
+import { SpaceContentEditor } from '@/components/space-content-editor';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 export default function SpacePage() {
   const params = useParams();
   const router = useRouter();
   const spaceId = params.id as string;
   
-  const { getSpaceById, todoStates, toggleTodo, setPlan: setStorePlan, addDocument } = useSpaceStore();
+  const { getSpaceById, todoStates, toggleTodo, setPlan: setStorePlan, setResearch, addDocument } = useSpaceStore();
   const space = getSpaceById(spaceId);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGeneratingResearch, setIsGeneratingResearch] = useState(false);
+  const [researchError, setResearchError] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState('gpt');
+  const [selectedPlanModel, setSelectedPlanModel] = useState('gpt');
+  const [isPlanCollapsed, setIsPlanCollapsed] = useState(false);
+  const [isResearchCollapsed, setIsResearchCollapsed] = useState(false);
 
   const generatePlan = async () => {
     try {
@@ -39,6 +48,7 @@ export default function SpacePage() {
           objectives: space?.objectives,
           prerequisites: space?.prerequisites,
           mentor: space?.mentor,
+          model: selectedPlanModel,
         }),
       });
 
@@ -59,6 +69,46 @@ export default function SpacePage() {
       console.error(err);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const generateResearch = async () => {
+    try {
+      setIsGeneratingResearch(true);
+      setResearchError(null);
+      
+      const response = await fetch('/api/generate-research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          spaceId,
+          category: space?.category,
+          title: space?.title,
+          description: space?.description,
+          objectives: space?.objectives,
+          prerequisites: space?.prerequisites,
+          mentor: space?.mentor,
+          model: selectedModel,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate research');
+      
+      const data = await response.json();
+      setResearch(spaceId, data.research);
+      
+      // Save research to knowledge base
+      addDocument(spaceId, {
+        title: `Research Paper: ${space?.title}`,
+        content: data.research,
+        type: 'guide',
+        tags: ['research-paper', space?.category || ''],
+      });
+    } catch (err) {
+      setResearchError('Failed to generate research. Please try again.');
+      console.error(err);
+    } finally {
+      setIsGeneratingResearch(false);
     }
   };
 
@@ -126,124 +176,86 @@ export default function SpacePage() {
                     <MarkdownContent content={space.description} />
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Objectives Section */}
-                  <div>
-                    <h3 className="font-medium mb-3 text-sm flex items-center gap-2">
-                      <Target className="h-4 w-4 text-green-500" />
-                      Learning Objectives
-                    </h3>
-                    <div className="text-sm space-y-2">
-                      {space.objectives.map((objective, index) => (
-                        <div key={index} className="flex items-start gap-2">
-                          <span className="text-green-500 text-xs mt-1.5">•</span>
-                          <MarkdownContent 
-                            content={objective}
-                            className="flex-1"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Prerequisites Section */}
-                  {space.prerequisites.length > 0 && (
-                    <div>
-                      <h3 className="font-medium mb-3 text-sm flex items-center gap-2">
-                        <List className="h-4 w-4 text-orange-500" />
-                        Prerequisites
-                      </h3>
-                      <div className="text-sm space-y-2">
-                        {space.prerequisites.map((prerequisite, index) => (
-                          <div key={index} className="flex items-start gap-2">
-                            <span className="text-orange-500 text-xs mt-1.5">•</span>
-                            <MarkdownContent 
-                              content={prerequisite}
-                              className="flex-1"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                 
+                <CardContent>
+                  <SpaceContentEditor 
+                    space={space}
+                    editable={true}
+                    onUpdate={(content) => {
+                      console.log('Content updated:', content);
+                      // TODO: Implement content update logic
+                    }}
+                  />
                 </CardContent>
               </Card>
 
                {/* Knowledge Base */}
                <KnowledgeBase spaceId={spaceId} />
 
-               {/* To-Do List Card */}
+               {/* Learning Plan Section */}
                <Card>
                 <CardHeader>
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <List className="h-5 w-5 text-blue-500" />
-                    To-Do List
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {space.to_do_list.map((task, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <Checkbox
-                          id={`${space.id}-todo-${index}`}
-                          checked={todoStates[space.id]?.[index] || false}
-                          onCheckedChange={() => toggleTodo(space.id, index.toString())}
-                          className="mt-0.5"
-                        />
-                        <label
-                          htmlFor={`${space.id}-todo-${index}`}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsPlanCollapsed(!isPlanCollapsed)}>
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-blue-500" />
+                        Learning Plan
+                      </CardTitle>
+                      {space.plan && (
+                        <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent">
+                          {isPlanCollapsed ? (
+                            <ChevronDown className="h-5 w-5 text-gray-500" />
+                          ) : (
+                            <ChevronUp className="h-5 w-5 text-gray-500" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                    {!space.plan && (
+                      <div className="flex items-center gap-4">
+                        <RadioGroup
+                          value={selectedPlanModel}
+                          onValueChange={setSelectedPlanModel}
+                          className="flex items-center space-x-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="gpt" id="plan-gpt" />
+                            <Label htmlFor="plan-gpt">GPT-4</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="perplexity" id="plan-perplexity" />
+                            <Label htmlFor="plan-perplexity">Perplexity</Label>
+                          </div>
+                        </RadioGroup>
+                        <Button
+                          onClick={generatePlan}
+                          disabled={isGenerating}
                           className={cn(
-                            "text-sm flex-1 cursor-pointer",
-                            todoStates[space.id]?.[index]
-                              ? "line-through text-gray-400"
-                              : "text-gray-600 dark:text-gray-300"
+                            "gap-2",
+                            space.category === 'learning'
+                              ? "bg-blue-500 hover:bg-blue-600 text-white"
+                              : "bg-green-500 hover:bg-green-600 text-white"
                           )}
                         >
-                          {task}
-                        </label>
+                          {isGenerating ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Brain className="h-4 w-4" />
+                              Generate Plan
+                            </>
+                          )}
+                        </Button>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Learning Plan Section */}
-              {/* <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <Brain className="h-5 w-5 text-blue-500" />
-                      Learning Plan
-                    </CardTitle>
-                    {!space.plan && (
-                      <Button
-                        onClick={generatePlan}
-                        disabled={isGenerating}
-                        className={cn(
-                          "gap-2",
-                          space.category === 'learning'
-                            ? "bg-blue-500 hover:bg-blue-600 text-white"
-                            : "bg-green-500 hover:bg-green-600 text-white"
-                        )}
-                      >
-                        {isGenerating ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <Brain className="h-4 w-4" />
-                            Generate Plan
-                          </>
-                        )}
-                      </Button>
                     )}
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className={cn(
+                  "transition-all duration-200",
+                  isPlanCollapsed ? "h-0 overflow-hidden p-0" : ""
+                )}>
                   {error && (
                     <div className="text-red-500 text-sm mb-4">
                       {error}
@@ -257,7 +269,87 @@ export default function SpacePage() {
                     </div>
                   )}
                 </CardContent>
-              </Card> */}
+              </Card>
+
+              {/* Research Paper Section */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsResearchCollapsed(!isResearchCollapsed)}>
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-blue-500" />
+                        Research Paper
+                      </CardTitle>
+                      {space.research && (
+                        <Button variant="ghost" size="sm" className="p-0 hover:bg-transparent">
+                          {isResearchCollapsed ? (
+                            <ChevronDown className="h-5 w-5 text-gray-500" />
+                          ) : (
+                            <ChevronUp className="h-5 w-5 text-gray-500" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                    {!space.research && (
+                      <div className="flex items-center gap-4">
+                        <RadioGroup
+                          value={selectedModel}
+                          onValueChange={setSelectedModel}
+                          className="flex items-center space-x-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="gpt" id="gpt" />
+                            <Label htmlFor="gpt">GPT-4</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="perplexity" id="perplexity" />
+                            <Label htmlFor="perplexity">Perplexity</Label>
+                          </div>
+                        </RadioGroup>
+                        <Button
+                          onClick={generateResearch}
+                          disabled={isGeneratingResearch}
+                          className={cn(
+                            "gap-2",
+                            space.category === 'learning'
+                              ? "bg-blue-500 hover:bg-blue-600 text-white"
+                              : "bg-green-500 hover:bg-green-600 text-white"
+                          )}
+                        >
+                          {isGeneratingResearch ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Brain className="h-4 w-4" />
+                              Generate Research
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className={cn(
+                  "transition-all duration-200",
+                  isResearchCollapsed ? "h-0 overflow-hidden p-0" : ""
+                )}>
+                  {researchError && (
+                    <div className="text-red-500 text-sm mb-4">
+                      {researchError}
+                    </div>
+                  )}
+                  {space.research ? (
+                    <MarkdownContent content={space.research} />
+                  ) : !isGeneratingResearch && (
+                    <div className="text-center py-8 text-gray-500">
+                      Click "Generate Research" to have your AI mentor create a detailed research paper.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
              
             </div>

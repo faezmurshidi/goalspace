@@ -34,6 +34,25 @@ When creating spaces and assigning mentors:
 
 IMPORTANT: Your response must be a valid JSON object.`;
 
+const ADVANCED_SYSTEM_PROMPT = `You are Faez, a goal-setting assistant AI designed to help users create and achieve their goals. Your expertise lies in project management, product management, and business development.
+
+You approach every goal scientifically and break down your reasoning step by step.
+For each step, provide a title that describes what you're doing in that step, along with the content.
+
+Follow these guidelines exactly:
+1. Break down the goal mathematically where possible
+2. USE AS MANY REASONING STEPS AS POSSIBLE (AT LEAST 4)
+3. BE AWARE OF YOUR LIMITATIONS AND WHAT YOU CAN AND CANNOT DO
+4. INCLUDE EXPLORATION OF ALTERNATIVE APPROACHES
+5. CONSIDER POTENTIAL PITFALLS AND FAILURE POINTS
+6. FULLY TEST ALL POSSIBILITIES
+7. USE MULTIPLE METHODS TO DERIVE THE PLAN
+8. EXPLAIN PROS AND CONS OF EACH APPROACH
+9. Have at least one step where you explain things in detail
+10. USE FIRST PRINCIPLES AND MENTAL MODELS
+
+Your response must be a valid JSON object with spaces that incorporate this detailed analysis.`;
+
 const generateQuestionsPrompt = (goal: string) => `Given the goal: "${goal}"
 
 First, I need you to generate up to 5 targeted questions to better understand the user's context and current situation. These questions should help create a more personalized and effective learning plan.
@@ -93,28 +112,9 @@ You must respond with a valid JSON object using this exact structure:
 
 export async function POST(request: Request) {
   try {
-    console.log('Received POST request to /api/analyze-goal');
-    
-    const body = await request.json();
-    const { goal, answers } = body;
+    const { goal, answers, isAdvancedMode } = await request.json();
 
-    console.log('Goal received:', goal);
-
-    if (!goal) {
-      console.log('Error: No goal provided');
-      return NextResponse.json(
-        { error: 'Goal is required' },
-        { 
-          status: 400,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-          }
-        }
-      );
-    }
-
-    // If no answers provided, generate questions first
+    // If no answers provided, generate questions
     if (!answers) {
       console.log('Generating questions...');
       const questionsCompletion = await openai.chat.completions.create({
@@ -151,20 +151,64 @@ export async function POST(request: Request) {
 
     // If answers are provided, generate spaces
     console.log('Making OpenAI API call for spaces...');
-    const completion = await openai.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: SYSTEM_PROMPT
-        },
-        {
-          role: "user",
-          content: generateSpacePrompt(goal, answers)
-        }
-      ],
-      model: "gpt-4-turbo",
-      temperature: 0.7,
-    });
+    
+    let completion;
+    let reasoningResponse = '';
+    
+    if (isAdvancedMode) {
+      // First, get the reasoning steps
+      const reasoningCompletion = await openai.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: ADVANCED_SYSTEM_PROMPT
+          },
+          {
+            role: "user",
+            content: `First, analyze this goal step by step: "${goal}"\n\nUser Context:\n${Object.entries(answers).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}`
+          }
+        ],
+        model: "gpt-4-turbo",
+        temperature: 0.7,
+      });
+
+      reasoningResponse = reasoningCompletion.choices[0].message.content || '';
+      
+      // Then, generate the spaces with the reasoning included
+      completion = await openai.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: ADVANCED_SYSTEM_PROMPT
+          },
+          {
+            role: "assistant",
+            content: reasoningResponse
+          },
+          {
+            role: "user",
+            content: generateSpacePrompt(goal, answers)
+          }
+        ],
+        model: "gpt-4-turbo",
+        temperature: 0.7,
+      });
+    } else {
+      completion = await openai.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: SYSTEM_PROMPT
+          },
+          {
+            role: "user",
+            content: generateSpacePrompt(goal, answers)
+          }
+        ],
+        model: "gpt-4-turbo",
+        temperature: 0.7,
+      });
+    }
 
     console.log('OpenAI API call completed');
     const response = completion.choices[0].message.content;
@@ -190,33 +234,17 @@ export async function POST(request: Request) {
       throw new Error('Invalid response structure from OpenAI');
     }
 
-    return NextResponse.json(
-      { spaces: parsedResponse.spaces },
-      {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        }
-      }
-    );
+    // Add reasoning steps to the response if in advanced mode
+    if (isAdvancedMode) {
+      parsedResponse.reasoning = reasoningResponse;
+    }
 
-  } catch (err: any) {
-    console.error('Goal analysis error:', err);
-    console.error('Error details:', {
-      name: err.name,
-      message: err.message,
-      stack: err.stack,
-    });
-
+    return NextResponse.json(parsedResponse);
+  } catch (error) {
+    console.error('Error in /api/analyze-goal:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze goal' },
-      { 
-        status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        }
-      }
+      { error: 'Failed to process the request' },
+      { status: 500 }
     );
   }
 } 

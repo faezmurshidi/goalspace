@@ -3,9 +3,10 @@ import { persist } from 'zustand/middleware';
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'faez';
+  role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  isFaez?: boolean;
 }
 
 interface Document {
@@ -35,6 +36,7 @@ export interface Space {
   time_to_complete: string;
   to_do_list: string[];
   plan?: string;
+  research?: string;
 }
 
 interface SpaceStore {
@@ -56,6 +58,7 @@ interface SpaceStore {
   clearChat: (spaceId: string) => void;
   toggleFaez: (spaceId: string) => void;
   setPlan: (spaceId: string, plan: string) => void;
+  setResearch: (spaceId: string, research: string) => void;
 }
 
 export const useSpaceStore = create<SpaceStore>()(
@@ -122,6 +125,11 @@ export const useSpaceStore = create<SpaceStore>()(
           ...state.faezInChat,
           [spaceId]: !state.faezInChat[spaceId]
         }
+      })),
+      setResearch: (spaceId, research) => set((state) => ({
+        spaces: state.spaces.map((space) =>
+          space.id === spaceId ? { ...space, research } : space
+        ),
       })),
     }),
     {

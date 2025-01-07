@@ -72,6 +72,45 @@ const config = {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            'code::before': {
+              content: '""'
+            },
+            'code::after': {
+              content: '""'
+            },
+            'blockquote p:first-of-type::before': {
+              content: '""'
+            },
+            'blockquote p:last-of-type::after': {
+              content: '""'
+            },
+            pre: {
+              backgroundColor: 'transparent',
+              padding: 0,
+              marginTop: 0,
+              marginBottom: 0,
+            },
+            code: {
+              backgroundColor: 'rgb(243 244 246)',
+              padding: '0.25rem 0.4rem',
+              borderRadius: '0.25rem',
+              fontSize: '0.875em',
+            },
+            'code:not(pre code)': {
+              backgroundColor: 'rgb(243 244 246)',
+            },
+            '.dark code': {
+              backgroundColor: 'rgb(31 41 55)',
+            },
+            '.dark code:not(pre code)': {
+              backgroundColor: 'rgb(31 41 55)',
+            },
+          },
+        },
+      },
     },
   },
   plugins: [
