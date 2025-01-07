@@ -3,9 +3,10 @@ import { persist } from 'zustand/middleware';
 
 export interface Message {
   id: string;
-  role: 'user' | 'assistant' | 'faez';
+  role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  isFaez?: boolean;
 }
 
 export interface Document {
@@ -35,6 +36,7 @@ export interface Space {
   time_to_complete: string;
   to_do_list: string[];
   plan?: string;
+  research?: string;
   progress?: number;
   isCollapsed?: boolean;
   space_color?: {
@@ -83,6 +85,7 @@ interface SpaceStore {
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
   setPlan: (spaceId: string, plan: string) => void;
+  setResearch: (spaceId: string, research: string) => void;
   updateTodoList: (spaceId: string, todoList: string[]) => void;
 }
 
@@ -96,6 +99,7 @@ export const useSpaceStore = create<SpaceStore>()(
       todoStates: {},
       chatMessages: {},
       faezInChat: {},
+      isSidebarCollapsed: false,
       setSpaces: (spaces) => {
         // When setting spaces, create a new goal with these spaces
         const goalId = Math.random().toString(36).substring(7);
@@ -116,6 +120,19 @@ export const useSpaceStore = create<SpaceStore>()(
       },
       setCurrentGoal: (goal) => set({ currentGoal: goal }),
       getSpaceById: (id) => get().spaces.find(space => space.id === id),
+      getDocuments: (spaceId) => get().documents[spaceId] || [],
+      addDocument: (spaceId, document) => set((state) => ({
+        documents: {
+          ...state.documents,
+          [spaceId]: [
+            ...(state.documents[spaceId] || []),
+            {
+              ...document,
+              id: Math.random().toString(36).substring(7),
+            },
+          ],
+        },
+      })),
       setTodoStates: (states) => {
         set({ todoStates: states });
         // Update progress when todo states change
@@ -167,31 +184,22 @@ export const useSpaceStore = create<SpaceStore>()(
           [spaceId]: [],
         },
       })),
-      setPlan: (spaceId: string, plan: string) => set((state) => ({
-        spaces: state.spaces.map((space) =>
-          space.id === spaceId ? { ...space, plan } : space
-        ),
-      })),
-      getDocuments: (spaceId) => get().documents[spaceId] || [],
-      addDocument: (spaceId, document) => set((state) => ({
-        documents: {
-          ...state.documents,
-          [spaceId]: [
-            ...(state.documents[spaceId] || []),
-            {
-              ...document,
-              id: Math.random().toString(36).substring(7),
-            },
-          ],
-        },
-      })),
       toggleFaez: (spaceId) => set((state) => ({
         faezInChat: {
           ...state.faezInChat,
           [spaceId]: !state.faezInChat[spaceId]
         }
       })),
-      // Dashboard related actions
+      setPlan: (spaceId, plan) => set((state) => ({
+        spaces: state.spaces.map((space) =>
+          space.id === spaceId ? { ...space, plan } : space
+        ),
+      })),
+      setResearch: (spaceId, research) => set((state) => ({
+        spaces: state.spaces.map((space) =>
+          space.id === spaceId ? { ...space, research } : space
+        ),
+      })),
       toggleSpaceCollapse: (spaceId) => set((state) => ({
         spaces: state.spaces.map((space) =>
           space.id === spaceId
@@ -238,12 +246,10 @@ export const useSpaceStore = create<SpaceStore>()(
           )
         };
       }),
-      // Sidebar state
-      isSidebarCollapsed: false,
       toggleSidebar: () => set((state) => ({ 
         isSidebarCollapsed: !state.isSidebarCollapsed 
       })),
-      updateTodoList: (spaceId: string, todoList: string[]) => set((state) => {
+      updateTodoList: (spaceId, todoList) => set((state) => {
         // Update the space's to-do list
         const newSpaces = state.spaces.map((space) =>
           space.id === spaceId ? { ...space, to_do_list: todoList } : space
@@ -265,7 +271,7 @@ export const useSpaceStore = create<SpaceStore>()(
       }),
     }),
     {
-      name: 'space-storage',
+      name: 'space-store',
     }
   )
 ); 

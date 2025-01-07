@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+<<<<<<< HEAD
+import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle, Sparkles } from 'lucide-react';
+=======
 import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle, ChartBar } from 'lucide-react';
+>>>>>>> main
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { useSpaceStore, type Space } from '@/lib/store';
@@ -23,6 +27,7 @@ export function GoalForm() {
   const [error, setError] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   
   const { spaces, setSpaces, setCurrentGoal, todoStates, setTodoStates, toggleTodo } = useSpaceStore();
 
@@ -57,7 +62,11 @@ export function GoalForm() {
       const response = await fetch('/api/analyze-goal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ goal: goalText, answers: userAnswers }),
+        body: JSON.stringify({ 
+          goal: goalText, 
+          answers: userAnswers,
+          isAdvancedMode 
+        }),
       });
 
       if (!response.ok) throw new Error('Failed to analyze goal');
@@ -112,13 +121,29 @@ export function GoalForm() {
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-        <Input
-          placeholder="Enter your goal (e.g., Learn Python for Data Science)"
-          value={goal}
-          onChange={(e) => setGoal(e.target.value)}
-          className="h-12 text-lg"
-          disabled={isLoading}
-        />
+        <div className="flex flex-col gap-2">
+          <Input
+            placeholder="Enter your goal (e.g., Learn Python for Data Science)"
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+            className="h-12 text-lg"
+            disabled={isLoading}
+          />
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="advanced-mode"
+              checked={isAdvancedMode}
+              onCheckedChange={(checked) => setIsAdvancedMode(checked as boolean)}
+            />
+            <label
+              htmlFor="advanced-mode"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Advanced Mode (Multi-step Planning)
+            </label>
+          </div>
+        </div>
         {questions.length > 0 && (
           <div className="space-y-4 mt-4">
             <h3 className="text-lg font-medium">Help us understand your context better</h3>
