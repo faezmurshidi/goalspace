@@ -28,7 +28,8 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
     clearChat, 
     addDocument,
     faezInChat,
-    toggleFaez 
+    toggleFaez,
+    updateTodoList 
   } = useSpaceStore();
   
   const space = getSpaceById(spaceId);
@@ -71,6 +72,7 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
             objectives: space.objectives,
             prerequisites: space.prerequisites,
             plan: space.plan,
+            to_do_list: space.to_do_list,
           },
           isFaezPresent,
         }),
@@ -97,6 +99,17 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
       // If document was created, add it to knowledge base
       if (data.document) {
         addDocument(spaceId, data.document);
+      }
+
+      // If to-do list was updated
+      if (data.to_do_list) {
+        updateTodoList(spaceId, data.to_do_list);
+        
+        // Add a system message to indicate the to-do list was updated
+        addMessage(spaceId, {
+          role: 'assistant',
+          content: "I've updated the to-do list based on our discussion. You can check the new tasks in the to-do list section.",
+        });
       }
     } catch (error) {
       console.error('Error sending message:', error);

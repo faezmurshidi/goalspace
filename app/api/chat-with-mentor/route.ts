@@ -26,6 +26,9 @@ ${context.prerequisites.map((pre: string) => `- ${pre}`).join('\n')}` : ''}
 ${context.plan ? `Learning Plan:
 ${context.plan}` : ''}
 
+${context.to_do_list ? `To-Do List:
+${context.to_do_list.map((task: string) => `- ${task}`).join('\n')}` : ''}
+
 ${mentor.system_prompt}
 
 ${isFaezPresent ? `Note: Faez (the goal-setting AI) is present in this conversation. You should collaborate with Faez to provide comprehensive guidance. Faez will add insights about the user's overall progress and goal alignment after your response.` : ''}
@@ -48,6 +51,12 @@ IMPORTANT: If you want to create a knowledge document, format your response as a
     "type": "tutorial | guide | reference | exercise",
     "tags": ["tag1", "tag2"]
   }
+}
+
+IF you want to update the to-do list, format your response as a JSON object with this structure. Please do not change the complete list, just add or remove tasks:
+{
+  "type": "update_to_do_list",
+  "to_do_list": ["task1", "task2"]
 }
 
 Otherwise, respond with normal text.`;
@@ -79,6 +88,12 @@ Otherwise, respond with normal text.`;
         result = {
           message: "I've created a new document for you! You can find it in the Knowledge Base.",
           document: parsed.document
+        };
+      }
+      if (parsed.type === 'update_to_do_list') {
+        result = {
+          message: "I've updated the to-do list for you! You can find it in the Knowledge Base.",
+          to_do_list: parsed.to_do_list
         };
       }
     } catch {

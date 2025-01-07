@@ -74,7 +74,6 @@ interface SpaceStore {
   addMessage: (spaceId: string, message: Omit<Message, 'id' | 'timestamp'>) => void;
   clearChat: (spaceId: string) => void;
   toggleFaez: (spaceId: string) => void;
-  setPlan: (spaceId: string, plan: string) => void;
   // Dashboard related state and actions
   toggleSpaceCollapse: (spaceId: string) => void;
   updateSpaceProgress: (spaceId: string, progress: number) => void;
@@ -83,6 +82,8 @@ interface SpaceStore {
   // Sidebar state
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
+  setPlan: (spaceId: string, plan: string) => void;
+  updateTodoList: (spaceId: string, todoList: string[]) => void;
 }
 
 export const useSpaceStore = create<SpaceStore>()(
@@ -166,7 +167,7 @@ export const useSpaceStore = create<SpaceStore>()(
           [spaceId]: [],
         },
       })),
-      setPlan: (spaceId, plan) => set((state) => ({
+      setPlan: (spaceId: string, plan: string) => set((state) => ({
         spaces: state.spaces.map((space) =>
           space.id === spaceId ? { ...space, plan } : space
         ),
@@ -242,6 +243,26 @@ export const useSpaceStore = create<SpaceStore>()(
       toggleSidebar: () => set((state) => ({ 
         isSidebarCollapsed: !state.isSidebarCollapsed 
       })),
+      updateTodoList: (spaceId: string, todoList: string[]) => set((state) => {
+        // Update the space's to-do list
+        const newSpaces = state.spaces.map((space) =>
+          space.id === spaceId ? { ...space, to_do_list: todoList } : space
+        );
+
+        // Initialize new todo states for the updated list
+        const newTodoStates = {
+          ...state.todoStates,
+          [spaceId]: todoList.reduce((acc, _, index) => {
+            acc[index.toString()] = state.todoStates[spaceId]?.[index.toString()] || false;
+            return acc;
+          }, {} as { [key: string]: boolean })
+        };
+
+        return { 
+          spaces: newSpaces,
+          todoStates: newTodoStates
+        };
+      }),
     }),
     {
       name: 'space-storage',
