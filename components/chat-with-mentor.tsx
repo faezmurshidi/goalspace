@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, Send, Loader2, MessageSquare, ChevronRight, UserPlus, PlusCircle, Trash2, Info } from 'lucide-react';
+import { Brain, Send, Loader2, MessageSquare, ChevronRight, UserPlus, PlusCircle, Trash2, Info, X } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 
 interface ChatWithMentorProps {
   spaceId: string;
+  onClose?: () => void;
 }
 
 interface QuestionWithAnswers {
@@ -105,7 +106,7 @@ const PREDEFINED_QA = {
   ]
 };
 
-export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
+export function ChatWithMentor({ spaceId, onClose }: ChatWithMentorProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -327,6 +328,16 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
             >
               <Trash2 className="h-4 w-4" />
             </Button>
+            {onClose && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>

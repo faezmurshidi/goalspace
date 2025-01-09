@@ -1,66 +1,147 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, Search, Book, FileText, Code, Dumbbell, Tag, X, FileQuestion, BookOpen } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 import { useSpaceStore } from '@/lib/store';
+import { cn } from '@/lib/utils';
 import { MarkdownContent } from './markdown-content';
-import { Badge } from '@/components/ui/badge';
-import type { Document } from '@/lib/store';
+import { ModelSelectionDialog } from './model-selection-dialog';
+import { X } from 'lucide-react';
 
 interface KnowledgeBaseProps {
   spaceId: string;
+  onClose?: () => void;
 }
 
-const typeIcons = {
-  tutorial: Book,
-  guide: FileText,
-  reference: Code,
-  exercise: Dumbbell,
-};
-
-export function KnowledgeBase({ spaceId }: KnowledgeBaseProps) {
-  const { getDocuments } = useSpaceStore();
-  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+export function KnowledgeBase({ spaceId, onClose }: KnowledgeBaseProps) {
+  const { getSpaceById, getDocuments, addDocument, setResearch, setPlan } = useSpaceStore();
+  const space = getSpaceById(spaceId);
+  const documents = getDocuments(spaceId);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  const documents = getDocuments(spaceId);
+  const allTags = Array.from(new Set(documents.flatMap(doc => doc.tags || [])));
 
-  // Get unique tags from all documents
-  const allTags = Array.from(new Set(
-    documents.flatMap(doc => doc.tags || [])
-  ));
-
-  // Filter documents based on search, type, and tags
-  const filteredDocs = documents.filter(doc => {
+  const filteredDocuments = documents.filter(doc => {
     const matchesSearch = !searchQuery || 
       doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doc.content.toLowerCase().includes(searchQuery.toLowerCase());
-
+    
     const matchesType = !selectedType || doc.type === selectedType;
-
+    
     const matchesTags = selectedTags.length === 0 || 
       selectedTags.every(tag => doc.tags?.includes(tag));
 
     return matchesSearch && matchesType && matchesTags;
   });
 
+  const generatePlan = async (model: string) => {
+    try {
+      const response = await fetch('/api/generate-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          spaceId,
+          category: space?.category,
+          title: space?.title,
+          description: space?.description,
+          objectives: space?.objectives,
+          prerequisites: space?.prerequisites,
+          mentor: space?.mentor,
+          model,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate plan');
+      
+      const data = await response.json();
+      setPlan(spaceId, data.plan);
+      
+      // Save plan to knowledge base
+      addDocument(spaceId, {
+        title: `Learning Plan: ${space?.title}`,
+        content: data.plan,
+        type: 'guide',
+        tags: ['learning-plan', space?.category || ''],
+      });
+    } catch (err) {
+      console.error('Failed to generate plan:', err);
+      throw err;
+    }
+  };
+
+  const generateResearch = async (model: string) => {
+    try {
+      const response = await fetch('/api/generate-research', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          spaceId,
+          category: space?.category,
+          title: space?.title,
+          description: space?.description,
+          objectives: space?.objectives,
+          prerequisites: space?.prerequisites,
+          mentor: space?.mentor,
+          model,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate research');
+      
+      const data = await response.json();
+      setResearch(spaceId, data.research);
+      
+      // Save research to knowledge base
+      addDocument(spaceId, {
+        title: `Research Paper: ${space?.title}`,
+        content: data.research,
+        type: 'guide',
+        tags: ['research-paper', space?.category || ''],
+      });
+    } catch (err) {
+      console.error('Failed to generate research:', err);
+      throw err;
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
-          <BookOpen className="h-5 w-5" />
-          Knowledge Base
-        </CardTitle>
-        <CardDescription>
-          Search and filter documents
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <CardTitle>Knowledge Base</CardTitle>
+          <div className="flex gap-2">
+            <ModelSelectionDialog
+              title="Generate Learning Plan"
+              description="Choose an AI model to generate a detailed learning plan for your space."
+              onGenerate={generatePlan}
+              buttonText="Generate Plan"
+              spaceColor={space?.space_color}
+              category={space?.category}
+            />
+            <ModelSelectionDialog
+              title="Generate Research Paper"
+              description="Choose an AI model to generate a comprehensive research paper for your space."
+              onGenerate={generateResearch}
+              buttonText="Generate Research"
+              spaceColor={space?.space_color}
+              category={space?.category}
+            />
+            {onClose && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -104,74 +185,38 @@ export function KnowledgeBase({ spaceId }: KnowledgeBaseProps) {
           </div>
 
           {/* Document List */}
-          <div className="space-y-2">
-            {filteredDocs.map((doc) => (
-              <Card 
-                key={doc.id}
-                className={cn(
-                  "cursor-pointer hover:bg-accent transition-colors",
-                  selectedDoc?.id === doc.id && "bg-accent"
-                )}
-                onClick={() => setSelectedDoc(doc)}
-              >
+          <div className="space-y-4">
+            {filteredDocuments.map((doc) => (
+              <Card key={doc.id} className="overflow-hidden">
                 <CardHeader className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1.5">
-                      <CardTitle className="text-base">{doc.title}</CardTitle>
-                      <div className="flex flex-wrap gap-2">
-                        {doc.tags?.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <Badge variant="outline">{doc.type}</Badge>
+                  <CardTitle className="text-lg">{doc.title}</CardTitle>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">
+                      {doc.type}
+                    </span>
+                    {doc.tags?.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
                   </div>
                 </CardHeader>
+                <CardContent className="p-4 pt-0">
+                  <div className="prose dark:prose-invert max-w-none">
+                    <MarkdownContent content={doc.content} />
+                  </div>
+                </CardContent>
               </Card>
             ))}
+            {filteredDocuments.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No documents found. Try adjusting your search or filters.
+              </div>
+            )}
           </div>
-
-          {/* Document Content */}
-          {selectedDoc && (
-            <Card>
-              <CardHeader className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1.5">
-                    <CardTitle className="text-lg">{selectedDoc.title}</CardTitle>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedDoc.tags?.map((tag: string) => (
-                        <span
-                          key={tag}
-                          className="text-xs px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{selectedDoc.type}</Badge>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedDoc(null)}
-                      className="h-8 w-8 text-gray-500 hover:text-gray-700"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <MarkdownContent content={selectedDoc.content} />
-              </CardContent>
-            </Card>
-          )}
         </div>
       </CardContent>
     </Card>

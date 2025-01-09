@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
+import { Extension } from '@tiptap/core';
 import { common, createLowlight } from 'lowlight';
 import 'highlight.js/styles/github-dark.css';
 import '@/styles/editor.css';
@@ -15,6 +16,7 @@ import { Space } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useSpaceStore } from '@/lib/store';
+
 
 const lowlight = createLowlight(common);
 
@@ -52,39 +54,8 @@ const MenuButton = ({
 
 export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssist }: SpaceContentEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const { content: storedContent, setContent } = useSpaceStore();
+  const { content: storedContent, setContent, addDocument } = useSpaceStore();
   const initialContent = storedContent[space.id] || space.content || '';
-
-  // Generate initial content when the component mounts
-  useEffect(() => {
-    const generateContent = async () => {
-      // Skip if no space, or if content already exists
-      if (!space || space.content || storedContent[space.id]) return;
-      
-      setIsGenerating(true);
-      try {
-        const response = await fetch('/api/generate-initial-content', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ spaceDetails: space }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to generate content');
-        }
-
-        const data = await response.json();
-        setContent(space.id, data.content);
-      } catch (error) {
-        console.error('Error generating initial content:', error);
-      } finally {
-        setIsGenerating(false);
-      }
-    };
-
-    generateContent();
-  }, [space, storedContent, setContent]);
 
   const editor = useEditor({
     extensions: [
@@ -162,12 +133,6 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
       attributes: {
         class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-8 py-6',
       },
-      transformPastedText(text) {
-        return text;
-      },
-      transformPastedHTML(html) {
-        return html.replace(/class="[^"]*"/g, '');
-      },
     },
     onUpdate: ({ editor }) => {
       const content = editor.getHTML();
@@ -175,6 +140,45 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
       setContent(space.id, content);
     },
   });
+
+  // Generate initial content when the component mounts
+  useEffect(() => {
+    const generateContent = async () => {
+      // Skip if no space, or if content already exists
+      if (!space || space.content || storedContent[space.id]) return;
+      
+      setIsGenerating(true);
+      try {
+        const response = await fetch('/api/generate-initial-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spaceDetails: space }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to generate content');
+        }
+
+        const data = await response.json();
+        setContent(space.id, data.content);
+
+        // Save the generated content to the knowledge base
+        addDocument(space.id, {
+          title: `Initial Content: ${space.title}`,
+          content: data.content,
+          type: 'guide',
+          tags: ['initial-content', space.category],
+        });
+      } catch (error) {
+        console.error('Error generating initial content:', error);
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    generateContent();
+  }, [space, storedContent, setContent, addDocument]);
 
   // Update editor content when stored content changes
   useEffect(() => {
@@ -264,9 +268,9 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
   }
 
   return (
-    <div className="space-content-editor border rounded-lg bg-white dark:bg-gray-900 shadow-sm">
+    <div className="space-content-editor border rounded-lg bg-white dark:bg-gray-900 shadow-sm h-[calc(100vh-8rem)] flex flex-col">
       {editable && (
-        <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-gray-50 dark:bg-gray-800/50 rounded-t-lg">
+        <div className="flex-none flex flex-wrap items-center gap-1 p-2 border-b bg-gray-50 dark:bg-gray-800/50 rounded-t-lg">
           <MenuButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             isActive={editor.isActive('heading', { level: 2 })}
@@ -338,8 +342,8 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
           </label>
         </div>
       )}
-      <div className="relative">
-        <EditorContent editor={editor} />
+      <div className="relative flex-1 overflow-auto">
+        <EditorContent editor={editor} className="h-full" />
         {isGenerating && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-800 shadow-lg">
