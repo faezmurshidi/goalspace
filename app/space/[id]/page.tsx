@@ -157,9 +157,7 @@ export default function SpacePage() {
 
                   {/* Content Viewer */}
                   <Card className="h-[calc(100vh-8rem)] flex flex-col">
-                    <CardHeader>
-                      <CardTitle>{contentTitle}</CardTitle>
-                    </CardHeader>
+                    
                     <CardContent className="flex-1 overflow-auto p-6">
                       {isGenerating ? (
                         <div className="flex items-center justify-center h-full">

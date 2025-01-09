@@ -23,61 +23,7 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
   const handleSpaceClick = (spaceId: string) => {
     setLoadingSpaceId(spaceId);
     router.push(`/space/${spaceId}`);
-  };
-
-  const handlePodcastClick = async (spaceId: string) => {
-    setActiveSpaceId(spaceId);
-    
-    if (podcastReady) {
-      setIsPlaying(!isPlaying);
-      // Add your play/pause logic here
-      return;
-    }
-
-    if (isGeneratingPodcast) return;
-
-    setIsGeneratingPodcast(true);
-    try {
-      // Get the space details
-      const space = spaces.find(s => s.id === spaceId);
-      if (!space) {
-        throw new Error('Space not found');
-      }
-
-      const response = await fetch('/api/make-podcast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spaceDetails: space }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate podcast');
-      }
-
-      // Get the audio data as a blob
-      const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      // Create and play audio
-      const audio = new Audio(audioUrl);
-      audio.addEventListener('play', () => setIsPlaying(true));
-      audio.addEventListener('pause', () => setIsPlaying(false));
-      audio.addEventListener('ended', () => {
-        setIsPlaying(false);
-        URL.revokeObjectURL(audioUrl);
-      });
-
-      setPodcastReady(true);
-      audio.play();
-    } catch (error) {
-      console.error('Error generating podcast:', error);
-      setPodcastReady(false);
-      setIsPlaying(false);
-    } finally {
-      setIsGeneratingPodcast(false);
-    }
-  };
+  };  
 
   return (
     <div
@@ -150,50 +96,7 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
                 )}
               </Button>
               
-              {!isSidebarCollapsed && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handlePodcastClick(space.id)}
-                  className={cn(
-                    "w-full justify-start gap-2 ml-4 text-sm transition-all duration-300 group/podcast",
-                    "hover:translate-x-1",
-                    isGeneratingPodcast && activeSpaceId === space.id && "text-red-500 hover:text-red-600 animate-pulse",
-                    podcastReady && !isPlaying && activeSpaceId === space.id && "text-green-500 hover:text-green-600",
-                    isPlaying && activeSpaceId === space.id && "text-amber-500 hover:text-amber-600 animate-bounce",
-                    space.space_color && !isGeneratingPodcast && !podcastReady && `hover:text-[${space.space_color.main}]`
-                  )}
-                  style={space.space_color && !isGeneratingPodcast && !podcastReady ? {
-                    '--hover-text': space.space_color.main,
-                  } as any : undefined}
-                >
-                  {isGeneratingPodcast && activeSpaceId === space.id ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="animate-pulse">Generating...</span>
-                    </>
-                  ) : podcastReady && activeSpaceId === space.id ? (
-                    <>
-                      {isPlaying ? (
-                        <>
-                          <Pause className="h-4 w-4 group-hover/podcast:scale-110 transition-transform" />
-                          <span className="group-hover/podcast:font-medium">Pause</span>
-                        </>
-                      ) : (
-                        <>
-                          <Play className="h-4 w-4 group-hover/podcast:scale-110 transition-transform" />
-                          <span className="group-hover/podcast:font-medium">Play</span>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Headphones className="h-4 w-4 group-hover/podcast:scale-110 transition-transform" />
-                      <span className="group-hover/podcast:font-medium">Listen to Podcast</span>
-                    </>
-                  )}
-                </Button>
-              )}
+            
             </div>
           ))}
         </div>

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import fetch from 'node-fetch';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 const ELEVEN_LABS_API_KEY = process.env.ELEVEN_LABS_API_KEY;
@@ -13,9 +13,9 @@ const ELEVEN_LABS_API_URL = 'https://api.elevenlabs.io/v1';
 export async function POST(req: Request) {
   try {
     // Validate API keys
-    if (!process.env.OPENAI_API_KEY || !ELEVEN_LABS_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY || !ELEVEN_LABS_API_KEY) {
       console.error('API Keys:', {
-        openai: !!process.env.OPENAI_API_KEY,
+        anthropic: !!process.env.ANTHROPIC_API_KEY,
         elevenlabs: !!ELEVEN_LABS_API_KEY
       });
       throw new Error('Missing API keys');
@@ -33,27 +33,27 @@ export async function POST(req: Request) {
       objectives: spaceDetails.objectives
     });
 
-    // Generate podcast script using OpenAI
+    // Generate podcast script using Claude
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4",
+      const completion = await anthropic.messages.create({
+        model: "claude-3-haiku-20240307",
+        max_tokens: 4000,
+        temperature: 0.7,
+        system: "You are a podcast script writer. Create a 5-minute podcast script that covers the topic in an engaging and educational way.",
         messages: [
           {
-            role: "system",
-            content: "You are a podcast script writer. Create a 30-minute podcast script that covers the topic in an engaging and educational way."
-          },
-          {
             role: "user",
-            content: `Create a podcast script about: ${spaceDetails.title}\n\nContext:\n${spaceDetails.description}\n\nObjectives:\n${spaceDetails.objectives.join('\n')}`
+            content: `Create a podcast script about: ${spaceDetails.title}\n\nContext:\n${spaceDetails.description}\n\nObjectives:\n${spaceDetails.objectives.join('\n')}\n\nPrerequisites:\n${spaceDetails.prerequisites.join('\n')}\n\nLearning Plan:\n${spaceDetails.plan}\n\nTo-Do List:\n${spaceDetails.to_do_list.join('\n')} in an engaging and educational way.`
           }
         ]
       });
 
-      if (!completion.choices[0]?.message?.content) {
+      const content = completion.content[0];
+      if (!('text' in content)) {
         throw new Error('No script generated');
       }
 
-      const script = completion.choices[0].message.content;
+      const script = content.text;
       console.log('Script generated successfully, length:', script.length);
 
       // Convert script to audio using Eleven Labs
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
         }
       });
     } catch (error: any) {
-      console.error('OpenAI Error Details:', {
+      console.error('Script Generation Error Details:', {
         name: error?.name,
         message: error?.message,
         stack: error?.stack,

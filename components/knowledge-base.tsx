@@ -79,7 +79,7 @@ export function KnowledgeBase({ spaceId, onClose, onDocumentSelect }: KnowledgeB
       </CardHeader>
       <CardContent className="space-y-4 p-6">
         {/* Search input with icon */}
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
@@ -102,12 +102,12 @@ export function KnowledgeBase({ spaceId, onClose, onDocumentSelect }: KnowledgeB
               <ChevronDown className="h-4 w-4 ml-2" />
             )}
           </Button>
-        </div>
+        </div> */}
 
         {/* Filters section */}
-        {showFilters && (
+        {/* {showFilters && (
           <div className="space-y-3">
-            {/* Type filters */}
+            
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Tag className="w-4 h-4" />
@@ -141,7 +141,7 @@ export function KnowledgeBase({ spaceId, onClose, onDocumentSelect }: KnowledgeB
               </div>
             </div>
 
-            {/* Tag filters */}
+            
             {allTags.size > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -177,12 +177,12 @@ export function KnowledgeBase({ spaceId, onClose, onDocumentSelect }: KnowledgeB
               </div>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Document list */}
         <div className={cn(
-          "space-y-2 overflow-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent",
-          showFilters ? "max-h-[calc(50vh-24rem)]" : "max-h-[calc(50vh-14rem)]"
+          "space-y-2 overflow-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent h-full",
+          "max-h-[calc(100%-2rem)]" // Adjust for CardContent padding
         )}>
           {filteredDocuments.map((doc, index) => (
             <div

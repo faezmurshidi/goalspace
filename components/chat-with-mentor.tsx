@@ -200,7 +200,7 @@ export function ChatWithMentor({ spaceId, onClose }: ChatWithMentorProps) {
     });
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat-with-mentor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

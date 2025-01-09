@@ -1,8 +1,8 @@
-import { OpenAI } from 'openai';
 import { NextResponse } from 'next/server';
+import Anthropic from '@anthropic-ai/sdk';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 export async function POST(req: Request) {
@@ -61,24 +61,21 @@ IF you want to update the to-do list, format your response as a JSON object with
 
 Otherwise, respond with normal text.`;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await anthropic.messages.create({
       messages: [
-        {
-          role: "system",
-          content: systemPrompt
-        },
         {
           role: "user",
           content: message
         }
       ],
-      model: "gpt-3.5-turbo",
+      model: "claude-3-haiku-20240307",
       temperature: 0.7,
       max_tokens: 2000,
-      response_format: { type: "text" }
+      system: systemPrompt
     });
 
-    const response = completion.choices[0].message.content || '';
+    const content = completion.content[0];
+    const response = 'text' in content ? content.text : '';
     let result: any = {};
 
     try {
@@ -120,23 +117,21 @@ As Faez, your role is to:
 
 Keep your response concise and focused on progress and goal alignment.`;
 
-      const faezCompletion = await openai.chat.completions.create({
+      const faezCompletion = await anthropic.messages.create({
         messages: [
-          {
-            role: "system",
-            content: faezPrompt
-          },
           {
             role: "user",
             content: message
           }
         ],
-        model: "gpt-3.5-turbo",
+        model: "claude-3-haiku-20240307",
         temperature: 0.7,
         max_tokens: 1000,
+        system: faezPrompt
       });
 
-      result.faezMessage = faezCompletion.choices[0].message.content;
+      const faezContent = faezCompletion.content[0];
+      result.faezMessage = 'text' in faezContent ? faezContent.text : '';
     }
 
     return NextResponse.json(result);

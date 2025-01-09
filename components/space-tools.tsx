@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useSpaceStore } from '@/lib/store';
 import { ModelSelectionDialog } from './model-selection-dialog';
+import { CustomPodcast } from './custom-podcast';
 
 interface SpaceToolsProps {
   spaceId: string;
@@ -268,16 +269,9 @@ export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
               category={space.category}
               className="h-24"
             />
-            <ModelSelectionDialog
-              title="Generate Podcast"
-              description="Choose an AI model to generate a podcast script for your space."
-              onGenerate={generatePodcast}
-              buttonIcon={<Headphones className="h-6 w-6" />}
-              buttonText="Podcast"
-              spaceColor={space.space_color}
-              category={space.category}
-              className="h-24"
-            />
+
+            <CustomPodcast spaceId={spaceId} /> 
+            
             <ModelSelectionDialog
               title="Generate Mind Map"
               description="Choose an AI model to generate a mind map for your space."
@@ -288,6 +282,7 @@ export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
               category={space.category}
               className="h-24 col-span-2"
             />
+            
           </div>
         </CardContent>
       )}
