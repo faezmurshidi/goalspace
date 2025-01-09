@@ -4,52 +4,24 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Brain } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export function MainNav() {
   const pathname = usePathname();
 
-  const routes = [
-    {
-      href: '/dashboard',
-      label: 'Dashboard',
-      active: pathname === '/dashboard',
-    },
-    {
-      href: '/',
-      label: 'Goals',
-      active: pathname === '/',
-    },
-    {
-      href: '/pricing',
-      label: 'Pricing',
-      active: pathname === '/pricing',
-    },
-  ];
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <div className="mr-4 flex">
-          <Link href="/" className="flex items-center space-x-2">
-            <Brain className="h-6 w-6" />
-            <span className="font-bold">GoalSpace</span>
-          </Link>
-        </div>
-        <nav className="flex items-center space-x-6 text-sm font-medium">
-          {routes.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              className={cn(
-                'transition-colors hover:text-foreground/80',
-                route.active ? 'text-foreground' : 'text-foreground/60'
-              )}
-            >
-              {route.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-    </header>
+    <div className="flex items-center gap-6">
+      <motion.div
+        whileHover={{ scale: 1.05 }}
+        className="flex items-center gap-2"
+      >
+        <Link href="/" className="flex items-center gap-2">
+          <Brain className="h-6 w-6 text-rose-500" />
+          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500">
+            GoalSpace
+          </span>
+        </Link>
+      </motion.div>
+    </div>
   );
 }

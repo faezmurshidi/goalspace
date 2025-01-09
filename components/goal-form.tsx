@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Brain, Loader2, Target, List, Clock, CheckCircle2, Circle, Sparkles, ChartBar, Wand2 } from 'lucide-react';
 import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, Wand2, Sparkles } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useSpaceStore, type Space } from '@/lib/store';
+import { useSpaceStore } from '@/lib/store';
+import { motion } from 'framer-motion';
 
 interface Question {
   id: string;
@@ -26,7 +26,7 @@ export function GoalForm() {
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [modelProvider, setModelProvider] = useState<'openai' | 'anthropic'>('openai');
   
-  const { spaces, setSpaces, setCurrentGoal, todoStates, setTodoStates, toggleTodo } = useSpaceStore();
+  const { setSpaces, setCurrentGoal, setTodoStates } = useSpaceStore();
 
   const getQuestions = async (goalText: string) => {
     try {
@@ -78,16 +78,13 @@ export function GoalForm() {
       
       // Initialize todo states for new spaces
       const initialTodoStates: { [key: string]: { [key: string]: boolean } } = {};
-      data.spaces.forEach((space: Space) => {
+      data.spaces.forEach((space: any) => {
         initialTodoStates[space.id] = {};
         space.to_do_list.forEach((_: string, index: number) => {
           initialTodoStates[space.id][index.toString()] = false;
         });
       });
       setTodoStates(initialTodoStates);
-
-      // Redirect to dashboard after spaces are created
-      router.push('/dashboard');
     } catch (err) {
       setError('Failed to analyze goal. Please try again.');
       console.error(err);
@@ -107,243 +104,150 @@ export function GoalForm() {
     }
   };
 
-  const handleStartSpace = (spaceId: string) => {
-    router.push(`/space/${spaceId}`);
-  };
-
-  const handleReset = () => {
-    setSpaces([]);
-    setGoal('');
-    setTodoStates({});
-    setQuestions([]);
-    setAnswers({});
-  };
-
   return (
-    <div className="w-full">
-      <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-        <div className="flex flex-col gap-2">
-          <Input
-            placeholder="Enter your goal (e.g., Learn Python for Data Science)"
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-            className="h-12 text-lg"
-            disabled={isLoading}
-          />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="w-full relative"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="flex flex-col gap-4">
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-500/20 via-purple-500/20 to-cyan-500/20 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200" />
+            <Input
+              placeholder="Enter your goal (e.g., Learn Python for Data Science)"
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              className="relative h-14 text-lg bg-background/50 backdrop-blur-xl border-white/10 shadow-lg ring-1 ring-white/10 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
+              disabled={isLoading}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-xl rounded-lg border border-white/10 shadow-lg">
+            <div className="flex items-center space-x-6">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="flex items-center space-x-2"
+              >
                 <Checkbox
                   id="advanced-mode"
                   checked={isAdvancedMode}
                   onCheckedChange={(checked) => setIsAdvancedMode(checked as boolean)}
+                  className="border-white/20"
                 />
                 <label
                   htmlFor="advanced-mode"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                  className="text-sm font-medium text-white/70 hover:text-white flex items-center gap-2 cursor-pointer"
                 >
                   <Wand2 className="h-4 w-4" />
                   Advanced Mode
                 </label>
-              </div>
+              </motion.div>
 
-              <div className="flex items-center space-x-4 border-l pl-4">
-                <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-6 border-l border-white/10 pl-6">
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center space-x-2"
+                >
                   <input
                     type="radio"
                     id="openai"
                     value="openai"
                     checked={modelProvider === 'openai'}
                     onChange={(e) => setModelProvider(e.target.value as 'openai' | 'anthropic')}
-                    className="h-4 w-4"
+                    className="h-4 w-4 accent-purple-500"
                   />
-                  <label htmlFor="openai" className="text-sm font-medium">
+                  <label htmlFor="openai" className="text-sm font-medium text-white/70 hover:text-white cursor-pointer">
                     GPT-3.5
                   </label>
-                </div>
-                <div className="flex items-center space-x-2">
+                </motion.div>
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center space-x-2"
+                >
                   <input
                     type="radio"
                     id="anthropic"
                     value="anthropic"
                     checked={modelProvider === 'anthropic'}
                     onChange={(e) => setModelProvider(e.target.value as 'openai' | 'anthropic')}
-                    className="h-4 w-4"
+                    className="h-4 w-4 accent-cyan-500"
                   />
-                  <label htmlFor="anthropic" className="text-sm font-medium">
+                  <label htmlFor="anthropic" className="text-sm font-medium text-white/70 hover:text-white cursor-pointer">
                     Claude
                   </label>
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>
         </div>
+
         {questions.length > 0 && (
-          <div className="space-y-4 mt-4">
-            <h3 className="text-lg font-medium">Help us understand your context better</h3>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6 p-6 bg-white/5 backdrop-blur-xl rounded-lg border border-white/10 shadow-lg"
+          >
+            <h3 className="text-xl font-medium text-white flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-500" />
+              Help us understand your context better
+            </h3>
             {questions.map((q) => (
-              <div key={q.id} className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <div key={q.id} className="space-y-3">
+                <label className="block text-white/90">
                   {q.question}
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{q.purpose}</p>
+                  <p className="text-sm text-white/50 mt-1">{q.purpose}</p>
                 </label>
                 <Input
                   value={answers[q.id] || ''}
                   onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
                   placeholder="Your answer..."
-                  className="mt-1"
+                  className="bg-white/5 backdrop-blur-xl border-white/10 focus:ring-2 focus:ring-purple-500/50"
                 />
               </div>
             ))}
-          </div>
+          </motion.div>
         )}
-        <Button 
-          type="submit" 
-          className={cn(
-            "h-12 px-8",
-            isAdvancedMode
-              ? "bg-blue-500 hover:bg-blue-600"
-              : "bg-green-500 hover:bg-green-600"
-          )}
-          disabled={isLoading || (questions.length > 0 && Object.keys(answers).length < questions.length)}
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {questions.length === 0 ? 'Analyzing Goal...' : 'Generating Plan...'}
-            </>
-          ) : (
-            questions.length === 0 ? 'Get AI Guidance' : 'Generate Learning Plan'
-          )}
-        </Button>
+          <Button 
+            type="submit" 
+            className={cn(
+              "w-full h-14 text-lg font-medium shadow-lg backdrop-blur-xl",
+              isAdvancedMode
+                ? "bg-gradient-to-r from-blue-500/80 to-purple-500/80 hover:from-blue-500/90 hover:to-purple-500/90 border border-white/10"
+                : "bg-gradient-to-r from-emerald-500/80 to-cyan-500/80 hover:from-emerald-500/90 hover:to-cyan-500/90 border border-white/10"
+            )}
+            disabled={isLoading || (questions.length > 0 && Object.keys(answers).length < questions.length)}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                {questions.length === 0 ? 'Analyzing Goal...' : 'Generating Plan...'}
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-5 w-5" />
+                {questions.length === 0 ? 'Get AI Guidance' : 'Generate Learning Plan'}
+              </>
+            )}
+          </Button>
+        </motion.div>
+
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-red-400 text-sm p-4 bg-red-500/10 backdrop-blur-xl rounded-lg border border-red-500/20"
+          >
+            {error}
+          </motion.div>
+        )}
       </form>
-
-      {error && (
-        <div className="text-red-500 text-sm mb-4">
-          {error}
-        </div>
-      )}
-
-      {spaces.length > 0 && (
-        <div className="space-y-8">
-          <div className="grid gap-8 md:grid-cols-2">
-            {spaces.map((space) => (
-              <Card 
-                key={space.id} 
-                className={cn(
-                  "flex flex-col border-l-4 shadow-md hover:shadow-lg transition-shadow",
-                  space.space_color
-                    ? `border-l-[${space.space_color.main}] bg-[${space.space_color.secondary}]/10`
-                    : space.category === 'learning'
-                      ? "border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/10"
-                      : "border-l-green-500 bg-green-50/50 dark:bg-green-950/10"
-                )}
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-xl">
-                      {space.category === 'learning' ? (
-                        <Brain className="h-5 w-5" style={{ color: space.space_color?.main || '#3B82F6' }} />
-                      ) : (
-                        <Target className="h-5 w-5" style={{ color: space.space_color?.main || '#22C55E' }} />
-                      )}
-                      {space.title}
-                    </CardTitle>
-                    <span className={cn(
-                      "text-xs px-2 py-1 rounded-full font-medium",
-                      space.space_color
-                        ? `bg-[${space.space_color.secondary}] text-[${space.space_color.main}]`
-                        : space.category === 'learning'
-                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                          : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                    )}
-                    style={space.space_color ? {
-                      backgroundColor: space.space_color.secondary,
-                      color: space.space_color.main,
-                    } : undefined}>
-                      {space.category.charAt(0).toUpperCase() + space.category.slice(1)}
-                    </span>
-                  </div>
-                  <CardDescription className="mt-2.5">{space.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Mentor Section */}
-                  <div className={cn(
-                    "p-4 rounded-lg",
-                    space.space_color
-                      ? `bg-[${space.space_color.secondary}]/10`
-                      : space.category === 'learning'
-                        ? "bg-blue-100/50 dark:bg-blue-900/20"
-                        : "bg-green-100/50 dark:bg-green-900/20"
-                  )}
-                  style={space.space_color ? {
-                    backgroundColor: `${space.space_color.secondary}20`,
-                  } : undefined}>
-                    <h3 className="font-medium mb-3 flex items-center gap-2">
-                      <Brain className="h-4 w-4" style={{ color: space.space_color?.main || '#3B82F6' }} />
-                      Your AI Mentor
-                    </h3>
-                    <div className="space-y-2.5">
-                      <p className="font-medium text-sm">{space.mentor.name}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 italic">
-                        "{space.mentor.introduction}"
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Teaching style: {space.mentor.personality}
-                      </p>
-                      <div className="text-xs">
-                        <span className="text-gray-500 dark:text-gray-400">Expert in: </span>
-                        {space.mentor.expertise.join(', ')}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* System Prompt Section */}
-                  <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                    <h3 className="font-medium mb-2 text-sm flex items-center gap-2">
-                      <Brain className="h-4 w-4" style={{ color: space.space_color?.main || '#3B82F6' }} />
-                      System Prompt
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {space.mentor.system_prompt}
-                    </p>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleReset()}
-                      className="text-gray-500"
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => handleStartSpace(space.id)}
-                      className={cn(
-                        space.space_color
-                          ? ""
-                          : space.category === 'learning'
-                            ? "bg-blue-500 hover:bg-blue-600"
-                            : "bg-green-500 hover:bg-green-600"
-                      )}
-                      style={space.space_color ? {
-                        backgroundColor: space.space_color.main,
-                        borderColor: space.space_color.main,
-                        '--hover-bg': space.space_color.accent,
-                      } as any : undefined}
-                    >
-                      Start Space
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    </motion.div>
   );
 }
