@@ -118,7 +118,7 @@ export interface Goal {
   createdAt: number;
 }
 
-interface SpaceStore {
+export interface SpaceStore {
   spaces: Space[];
   goals: Goal[];
   documents: { [key: string]: Document[] };
@@ -130,7 +130,7 @@ interface SpaceStore {
   addDocument: (spaceId: string, document: Omit<Document, 'id'>) => void;
   todoStates: { [key: string]: { [key: string]: boolean } };
   setTodoStates: (states: { [key: string]: { [key: string]: boolean } }) => void;
-  toggleTodo: (spaceId: string, taskIndex: string) => void;
+  toggleTodo: (spaceId: string, todoIndex: string) => void;
   // Chat related state
   chatMessages: { [key: string]: Message[] };
   faezInChat: { [key: string]: boolean };
@@ -148,6 +148,8 @@ interface SpaceStore {
   setPlan: (spaceId: string, plan: string) => void;
   setResearch: (spaceId: string, research: string) => void;
   updateTodoList: (spaceId: string, todoList: string[]) => void;
+  content: { [key: string]: string };
+  setContent: (spaceId: string, content: string) => void;
 }
 
 export const useSpaceStore = create<SpaceStore>()(
@@ -204,28 +206,16 @@ export const useSpaceStore = create<SpaceStore>()(
           get().updateSpaceProgress(spaceId, progress);
         });
       },
-      toggleTodo: (spaceId, taskIndex) => {
-        set((state) => {
-          const newTodoStates = {
+      toggleTodo: (spaceId, todoIndex) =>
+        set((state) => ({
+          todoStates: {
             ...state.todoStates,
             [spaceId]: {
               ...state.todoStates[spaceId],
-              [taskIndex]: !state.todoStates[spaceId]?.[taskIndex]
-            }
-          };
-
-          // Calculate new progress
-          const todos = newTodoStates[spaceId];
-          const completedTodos = Object.values(todos).filter(Boolean).length;
-          const totalTodos = Object.keys(todos).length;
-          const progress = (completedTodos / totalTodos) * 100;
-
-          // Update space progress
-          get().updateSpaceProgress(spaceId, progress);
-
-          return { todoStates: newTodoStates };
-        });
-      },
+              [todoIndex]: !state.todoStates[spaceId]?.[todoIndex],
+            },
+          },
+        })),
       addMessage: (spaceId, message) => set((state) => ({
         chatMessages: {
           ...state.chatMessages,
@@ -330,6 +320,14 @@ export const useSpaceStore = create<SpaceStore>()(
           todoStates: newTodoStates
         };
       }),
+      content: {},
+      setContent: (spaceId, content) =>
+        set((state) => ({
+          content: {
+            ...state.content,
+            [spaceId]: content,
+          },
+        })),
     }),
     {
       name: 'space-store',

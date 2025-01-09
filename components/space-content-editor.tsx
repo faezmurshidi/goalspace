@@ -10,7 +10,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import { common, createLowlight } from 'lowlight';
 import 'highlight.js/styles/github-dark.css';
 import '@/styles/editor.css';
-import { Bold, Italic, List, ListChecks, Heading2, Code, Quote, Sparkles, Loader2 } from 'lucide-react';
+import { Bold, Italic, List, ListChecks, Heading2, Code, Quote, Sparkles, Loader2, FileDown, FileUp } from 'lucide-react';
 import { Space } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -52,14 +52,14 @@ const MenuButton = ({
 
 export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssist }: SpaceContentEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [initialContent, setInitialContent] = useState(space?.content || '');
-  const { setContent } = useSpaceStore();
+  const { content: storedContent, setContent } = useSpaceStore();
+  const initialContent = storedContent[space.id] || space.content || '';
 
   // Generate initial content when the component mounts
   useEffect(() => {
     const generateContent = async () => {
       // Skip if no space, or if content already exists
-      if (!space || space.content || initialContent) return;
+      if (!space || space.content || storedContent[space.id]) return;
       
       setIsGenerating(true);
       try {
@@ -75,9 +75,6 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
         }
 
         const data = await response.json();
-        setInitialContent(data.content);
-        
-        // Save the generated content to the space
         setContent(space.id, data.content);
       } catch (error) {
         console.error('Error generating initial content:', error);
@@ -87,7 +84,7 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
     };
 
     generateContent();
-  }, [space, initialContent, setContent]);
+  }, [space, storedContent, setContent]);
 
   const editor = useEditor({
     extensions: [
@@ -165,8 +162,10 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
       attributes: {
         class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-8 py-6',
       },
+      transformPastedText(text) {
+        return text;
+      },
       transformPastedHTML(html) {
-        // Clean and format pasted content
         return html.replace(/class="[^"]*"/g, '');
       },
     },
@@ -177,22 +176,87 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
     },
   });
 
+  // Update editor content when stored content changes
   useEffect(() => {
-    if (editor && initialContent) {
-      editor.commands.setContent(initialContent);
+    if (editor && storedContent[space.id]) {
+      editor.commands.setContent(storedContent[space.id]);
     }
-  }, [editor, initialContent]);
+  }, [editor, space.id, storedContent]);
 
   const handleAIAssist = async () => {
     if (!editor || !onAIAssist) return;
     
+    setIsGenerating(true);
     const currentContent = editor.getHTML();
     try {
       const enhancedContent = await onAIAssist(currentContent);
       editor.commands.setContent(enhancedContent);
     } catch (error) {
       console.error('Error using AI assist:', error);
+    } finally {
+      setIsGenerating(false);
     }
+  };
+
+  const handleExportMarkdown = () => {
+    if (!editor) return;
+    const content = editor.getHTML();
+    // Convert HTML to Markdown
+    const markdown = content
+      .replace(/<h1>(.*?)<\/h1>/g, '# $1\n\n')
+      .replace(/<h2>(.*?)<\/h2>/g, '## $1\n\n')
+      .replace(/<h3>(.*?)<\/h3>/g, '### $1\n\n')
+      .replace(/<p>(.*?)<\/p>/g, '$1\n\n')
+      .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
+      .replace(/<em>(.*?)<\/em>/g, '*$1*')
+      .replace(/<code>(.*?)<\/code>/g, '`$1`')
+      .replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, '```\n$1\n```\n\n')
+      .replace(/<blockquote>([\s\S]*?)<\/blockquote>/g, '> $1\n\n')
+      .replace(/<ul>([\s\S]*?)<\/ul>/g, '$1\n')
+      .replace(/<ol>([\s\S]*?)<\/ol>/g, '$1\n')
+      .replace(/<li>(.*?)<\/li>/g, '- $1\n')
+      .replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\n\n+/g, '\n\n')
+      .trim();
+
+    // Create and download markdown file
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${space.title.toLowerCase().replace(/\s+/g, '-')}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportMarkdown = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !editor) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const markdown = e.target?.result as string;
+      // Convert Markdown to HTML
+      const html = markdown
+        .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+        .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+        .replace(/^\> (.*$)/gm, '<blockquote>$1</blockquote>')
+        .replace(/^\- (.*$)/gm, '<li>$1</li>')
+        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^(.+)$/gm, '<p>$1</p>');
+
+      editor.commands.setContent(html);
+    };
+    reader.readAsText(file);
   };
 
   if (!editor) {
@@ -257,6 +321,21 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
               <Sparkles className="h-4 w-4" />
             )}
           </MenuButton>
+          <div className="w-px h-4 bg-border mx-2" />
+          <MenuButton onClick={handleExportMarkdown}>
+            <FileDown className="h-4 w-4" />
+          </MenuButton>
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              accept=".md"
+              className="hidden"
+              onChange={handleImportMarkdown}
+            />
+            <MenuButton onClick={() => {}}>
+              <FileUp className="h-4 w-4" />
+            </MenuButton>
+          </label>
         </div>
       )}
       <div className="relative">

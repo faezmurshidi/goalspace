@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.7",
+    "@anthropic-ai/sdk": "^0.33.1",
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "13.5.1",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -50,7 +52,7 @@
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
     "@types/ws": "^8.5.13",
-    "ai": "^2.2.31",
+    "ai": "^4.0.30",
     "autoprefixer": "10.4.15",
     "bufferutil": "^4.0.9",
     "class-variance-authority": "^0.7.0",

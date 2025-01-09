@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { generateObject } from 'ai';
+import { z } from 'zod';
 
 // Configure route options
 export const runtime = 'nodejs';
@@ -17,8 +20,13 @@ export async function OPTIONS(request: Request) {
   });
 }
 
+// Initialize providers
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+});
+
+const anthropicClient = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
 const SYSTEM_PROMPT = `You are Faez, a goal-setting assistant AI designed to help users create and achieve their goals. Your expertise lies in project management, product management, and business development:
@@ -109,13 +117,33 @@ You must respond with a valid JSON object using this exact structure:
   ]
 }`;
 
+async function generateWithOpenAI(messages: any[]) {
+  const completion = await openai.chat.completions.create({
+    messages,
+    model: "gpt-3.5-turbo",
+    temperature: 0.7,
+  });
+  return completion.choices[0].message.content;
+}
+
+async function generateWithAnthropic(prompt: string) {
+  const message = await anthropicClient.messages.create({
+    model: "claude-3-5-sonnet-20240620",
+    max_tokens: 4000,
+    temperature: 0.7,
+    system: SYSTEM_PROMPT,
+    messages: [{ role: "user", content: prompt }],
+  });
+  return message.content[0].text;
+}
+
 export async function POST(request: Request) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OpenAI API key is not configured');
+    if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+      throw new Error('No API keys configured');
     }
 
-    const { goal, answers, isAdvancedMode } = await request.json();
+    const { goal, answers, isAdvancedMode, modelProvider = 'openai' } = await request.json();
 
     if (!goal) {
       return NextResponse.json(
@@ -127,8 +155,12 @@ export async function POST(request: Request) {
     // If no answers provided, generate questions
     if (!answers) {
       console.log('Generating questions...');
-      const questionsCompletion = await openai.chat.completions.create({
-        messages: [
+      let questionsResponse;
+
+      if (modelProvider === 'anthropic') {
+        questionsResponse = await generateWithAnthropic(generateQuestionsPrompt(goal));
+      } else {
+        questionsResponse = await generateWithOpenAI([
           {
             role: "system",
             content: SYSTEM_PROMPT
@@ -137,14 +169,11 @@ export async function POST(request: Request) {
             role: "user",
             content: generateQuestionsPrompt(goal)
           }
-        ],
-        model: "gpt-4",
-        temperature: 0.7,
-      });
+        ]);
+      }
 
-      const questionsResponse = questionsCompletion.choices[0].message.content;
       if (!questionsResponse) {
-        throw new Error('No response from OpenAI for questions');
+        throw new Error('No response from AI provider');
       }
 
       try {
@@ -160,93 +189,101 @@ export async function POST(request: Request) {
         );
       } catch (parseError) {
         console.error('Failed to parse questions response:', questionsResponse);
-        throw new Error('Invalid JSON response from OpenAI for questions');
+        throw new Error('Invalid JSON response from AI provider');
       }
     }
 
     // If answers are provided, generate spaces
-    console.log('Making OpenAI API call for spaces...');
+    console.log('Making AI API call for spaces...');
     
-    let completion;
+    let response;
     let reasoningResponse = '';
     
     if (isAdvancedMode) {
       // First, get the reasoning steps
-      const reasoningCompletion = await openai.chat.completions.create({
-        messages: [
-          {
-            role: "system",
-            content: ADVANCED_SYSTEM_PROMPT
-          },
-          {
-            role: "user",
-            content: `First, analyze this goal step by step: "${goal}"\n\nUser Context:\n${Object.entries(answers).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}`
-          }
-        ],
-        model: "gpt-4",
-        temperature: 0.7,
-      });
+      if (modelProvider === 'anthropic') {
+        reasoningResponse = await generateWithAnthropic(
+          `First, analyze this goal step by step: "${goal}"\n\nUser Context:\n${Object.entries(answers).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}`
+        );
+        
+        response = await generateWithAnthropic(generateSpacePrompt(goal, answers));
+      } else {
+        const reasoningCompletion = await openai.chat.completions.create({
+          messages: [
+            {
+              role: "system",
+              content: ADVANCED_SYSTEM_PROMPT
+            },
+            {
+              role: "user",
+              content: `First, analyze this goal step by step: "${goal}"\n\nUser Context:\n${Object.entries(answers).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}`
+            }
+          ],
+          model: "gpt-3.5-turbo",
+          temperature: 0.7,
+        });
 
-      reasoningResponse = reasoningCompletion.choices[0].message.content || '';
-      
-      // Then, generate the spaces with the reasoning included
-      completion = await openai.chat.completions.create({
-        messages: [
-          {
-            role: "system",
-            content: ADVANCED_SYSTEM_PROMPT
-          },
-          {
-            role: "assistant",
-            content: reasoningResponse
-          },
-          {
-            role: "user",
-            content: generateSpacePrompt(goal, answers)
-          }
-        ],
-        model: "gpt-4",
-        temperature: 0.7,
-      });
+        reasoningResponse = reasoningCompletion.choices[0].message.content || '';
+        
+        const completion = await openai.chat.completions.create({
+          messages: [
+            {
+              role: "system",
+              content: ADVANCED_SYSTEM_PROMPT
+            },
+            {
+              role: "assistant",
+              content: reasoningResponse
+            },
+            {
+              role: "user",
+              content: generateSpacePrompt(goal, answers)
+            }
+          ],
+          model: "gpt-3.5-turbo",
+          temperature: 0.7,
+        });
+        
+        response = completion.choices[0].message.content;
+      }
     } else {
-      completion = await openai.chat.completions.create({
-        messages: [
-          {
-            role: "system",
-            content: SYSTEM_PROMPT
-          },
-          {
-            role: "user",
-            content: generateSpacePrompt(goal, answers)
-          }
-        ],
-        model: "gpt-4",
-        temperature: 0.7,
-      });
+      if (modelProvider === 'anthropic') {
+        response = await generateWithAnthropic(generateSpacePrompt(goal, answers));
+      } else {
+        const completion = await openai.chat.completions.create({
+          messages: [
+            {
+              role: "system",
+              content: SYSTEM_PROMPT
+            },
+            {
+              role: "user",
+              content: generateSpacePrompt(goal, answers)
+            }
+          ],
+          model: "gpt-3.5-turbo",
+          temperature: 0.7,
+        });
+        response = completion.choices[0].message.content;
+      }
     }
-
-    console.log('OpenAI API call completed');
-    const response = completion.choices[0].message.content;
     
     if (!response) {
-      console.log('Error: No response from OpenAI');
-      throw new Error('No response from OpenAI');
+      throw new Error('No response from AI provider');
     }
 
-    console.log('Parsing OpenAI response...');
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(response);
-      console.log('Response parsed successfully');
     } catch (parseError) {
       console.error('JSON parse error:', parseError);
       console.error('Raw response:', response);
-      throw new Error('Failed to parse OpenAI response as JSON');
+      throw new Error('Failed to parse AI provider response as JSON');
     }
 
     if (!parsedResponse.spaces || !Array.isArray(parsedResponse.spaces)) {
       console.error('Invalid response structure:', parsedResponse);
-      throw new Error('Invalid response structure from OpenAI');
+      throw new Error('Invalid response structure from AI provider');
     }
 
     // Add reasoning steps to the response if in advanced mode

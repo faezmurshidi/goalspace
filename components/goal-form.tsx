@@ -24,6 +24,7 @@ export function GoalForm() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
+  const [modelProvider, setModelProvider] = useState<'openai' | 'anthropic'>('openai');
   
   const { spaces, setSpaces, setCurrentGoal, todoStates, setTodoStates, toggleTodo } = useSpaceStore();
 
@@ -35,7 +36,10 @@ export function GoalForm() {
       const response = await fetch('/api/analyze-goal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ goal: goalText }),
+        body: JSON.stringify({ 
+          goal: goalText,
+          modelProvider 
+        }),
       });
 
       if (!response.ok) throw new Error('Failed to get questions');
@@ -61,7 +65,8 @@ export function GoalForm() {
         body: JSON.stringify({ 
           goal: goalText, 
           answers: userAnswers,
-          isAdvancedMode 
+          isAdvancedMode,
+          modelProvider
         }),
       });
 
@@ -125,19 +130,52 @@ export function GoalForm() {
             className="h-12 text-lg"
             disabled={isLoading}
           />
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="advanced-mode"
-              checked={isAdvancedMode}
-              onCheckedChange={(checked) => setIsAdvancedMode(checked as boolean)}
-            />
-            <label
-              htmlFor="advanced-mode"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
-            >
-              <Wand2 className="h-4 w-4" />
-              Advanced Mode (Multi-step Planning)
-            </label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="advanced-mode"
+                  checked={isAdvancedMode}
+                  onCheckedChange={(checked) => setIsAdvancedMode(checked as boolean)}
+                />
+                <label
+                  htmlFor="advanced-mode"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  Advanced Mode
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-4 border-l pl-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="openai"
+                    value="openai"
+                    checked={modelProvider === 'openai'}
+                    onChange={(e) => setModelProvider(e.target.value as 'openai' | 'anthropic')}
+                    className="h-4 w-4"
+                  />
+                  <label htmlFor="openai" className="text-sm font-medium">
+                    GPT-3.5
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="anthropic"
+                    value="anthropic"
+                    checked={modelProvider === 'anthropic'}
+                    onChange={(e) => setModelProvider(e.target.value as 'openai' | 'anthropic')}
+                    className="h-4 w-4"
+                  />
+                  <label htmlFor="anthropic" className="text-sm font-medium">
+                    Claude
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         {questions.length > 0 && (

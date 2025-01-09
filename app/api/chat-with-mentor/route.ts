@@ -72,7 +72,7 @@ Otherwise, respond with normal text.`;
           content: message
         }
       ],
-      model: "gpt-4-turbo",
+      model: "gpt-3.5-turbo",
       temperature: 0.7,
       max_tokens: 2000,
       response_format: { type: "text" }
@@ -131,7 +131,7 @@ Keep your response concise and focused on progress and goal alignment.`;
             content: message
           }
         ],
-        model: "gpt-4-turbo",
+        model: "gpt-3.5-turbo",
         temperature: 0.7,
         max_tokens: 1000,
       });

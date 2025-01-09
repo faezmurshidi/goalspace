@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
 // Configure route options
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const anthropicClient = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
 const SYSTEM_PROMPT = `You are an expert content generator. Your task is to create comprehensive, well-structured content for learning spaces. 
@@ -83,8 +84,8 @@ Please generate the content following this structure and proper markdown formatt
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OpenAI API key is not configured');
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error('Anthropic API key is not configured');
     }
 
     const { spaceDetails } = await request.json();
@@ -96,26 +97,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Generate initial content using OpenAI
-    const contentCompletion = await openai.chat.completions.create({
+    // Generate initial content using Anthropic
+    const contentCompletion = await anthropicClient.messages.create({
       messages: [
-        {
-          role: "system",
-          content: SYSTEM_PROMPT
-        },
         {
           role: "user",
           content: generateContentPrompt(spaceDetails)
         }
       ],
-      model: "gpt-4",
+      model: "claude-3-sonnet-20240229",
       temperature: 0.7,
       max_tokens: 4000,
+      system: SYSTEM_PROMPT
     });
 
-    const contentResponse = contentCompletion.choices[0].message.content;
+    // Get the first content block
+    const contentBlock = contentCompletion.content[0];
+    const contentResponse = typeof contentBlock === 'object' && 'text' in contentBlock 
+      ? contentBlock.text 
+      : '';
+      
     if (!contentResponse) {
-      throw new Error('No response from OpenAI for content generation');
+      throw new Error('No response from Anthropic for content generation');
     }
 
     // Process and format the content

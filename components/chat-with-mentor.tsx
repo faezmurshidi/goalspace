@@ -5,7 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, Send, Loader2, MessageSquare, ChevronRight, UserPlus, PlusCircle, Trash2 } from 'lucide-react';
+import { Brain, Send, Loader2, MessageSquare, ChevronRight, UserPlus, PlusCircle, Trash2, Info } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useSpaceStore } from '@/lib/store';
 import type { Message } from '@/lib/store';
 import { MarkdownContent } from './markdown-content';
@@ -279,6 +284,27 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
           <CardTitle className="text-xl flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-blue-500" />
             Chat with {space.mentor.name}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 p-0">
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-2">
+                  <h4 className="font-medium">{space.mentor.name}</h4>
+                  <p className="text-sm text-muted-foreground italic">"{space.mentor.introduction}"</p>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Teaching style: </span>
+                    {space.mentor.personality}
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Expertise: </span>
+                    {space.mentor.expertise.join(', ')}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </CardTitle>
           <div className="flex items-center gap-2">
             {!faezInChat[spaceId] && (
