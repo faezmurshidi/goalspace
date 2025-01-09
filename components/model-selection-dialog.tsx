@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Button } from './ui/button';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Label } from './ui/label';
 import { Brain, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FancyButton } from './ui/fancy-button';
 
 interface ModelSelectionDialogProps {
   title: string;
@@ -50,26 +50,54 @@ export function ModelSelectionDialog({
     }
   };
 
+  const getButtonColors = () => {
+    if (spaceColor) {
+      return {
+        top: spaceColor.main,
+        middle: spaceColor.main,
+        bottom: spaceColor.accent,
+      };
+    }
+    return category === 'learning' ? {
+      top: '#3B82F6',
+      middle: '#2563EB',
+      bottom: '#1D4ED8',
+    } : {
+      top: '#22C55E',
+      middle: '#16A34A',
+      bottom: '#15803D',
+    };
+  };
+
+  const getButtonStroke = () => {
+    if (spaceColor) {
+      return {
+        color: spaceColor.accent,
+        opacity: 0.75,
+        width: 0.5,
+      };
+    }
+    return {
+      color: category === 'learning' ? '#2563EB' : '#16A34A',
+      opacity: 0.75,
+      width: 0.5,
+    };
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button
-          className={cn(
-            "gap-2 transition-colors duration-200",
-            spaceColor 
-              ? `bg-[${spaceColor.main}] hover:bg-[${spaceColor.accent}]`
-              : category === 'learning'
-                ? "bg-blue-500 hover:bg-blue-600"
-                : "bg-green-500 hover:bg-green-600"
-          )}
-          style={spaceColor ? {
-            backgroundColor: spaceColor.main,
-            '--hover-bg': spaceColor.accent
-          } as any : undefined}
-        >
-          <Brain className="h-4 w-4" />
-          {buttonText}
-        </Button>
+        <div>
+          <FancyButton
+            text={buttonText}
+            className="gap-2"
+            fillColors={getButtonColors()}
+            stroke={getButtonStroke()}
+            textColor="#FFFFFF"
+          >
+            <Brain className="h-4 w-4" />
+          </FancyButton>
+        </div>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -92,34 +120,23 @@ export function ModelSelectionDialog({
               </div>
             ))}
           </RadioGroup>
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating}
-            className={cn(
-              "w-full gap-2",
-              spaceColor 
-                ? `bg-[${spaceColor.main}] hover:bg-[${spaceColor.accent}]`
-                : category === 'learning'
-                  ? "bg-blue-500 hover:bg-blue-600"
-                  : "bg-green-500 hover:bg-green-600"
-            )}
-            style={spaceColor ? {
-              backgroundColor: spaceColor.main,
-              '--hover-bg': spaceColor.accent
-            } as any : undefined}
-          >
-            {isGenerating ? (
-              <>
+          <div>
+            <FancyButton
+              text={isGenerating ? "Generating..." : "Generate"}
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="w-full gap-2"
+              fillColors={getButtonColors()}
+              stroke={getButtonStroke()}
+              textColor="#FFFFFF"
+            >
+              {isGenerating ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
+              ) : (
                 <Brain className="h-4 w-4" />
-                Generate
-              </>
-            )}
-          </Button>
+              )}
+            </FancyButton>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

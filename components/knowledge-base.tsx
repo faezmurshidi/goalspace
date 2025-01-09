@@ -3,222 +3,213 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
-import { Button } from './ui/button';
+import { X, Search, BookOpen, Tag, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { MarkdownContent } from './markdown-content';
-import { ModelSelectionDialog } from './model-selection-dialog';
-import { X } from 'lucide-react';
+import { Button } from './ui/button';
+
+type DocumentType = 'tutorial' | 'guide' | 'reference' | 'exercise';
+
+const documentTypes: Record<DocumentType, string> = {
+  tutorial: 'Tutorial',
+  guide: 'Guide',
+  reference: 'Reference',
+  exercise: 'Exercise'
+};
 
 interface KnowledgeBaseProps {
   spaceId: string;
-  onClose?: () => void;
+  onClose: () => void;
+  onDocumentSelect: (doc: { title: string; content: string }) => void;
 }
 
-export function KnowledgeBase({ spaceId, onClose }: KnowledgeBaseProps) {
-  const { getSpaceById, getDocuments, addDocument, setResearch, setPlan } = useSpaceStore();
+export function KnowledgeBase({ spaceId, onClose, onDocumentSelect }: KnowledgeBaseProps) {
+  const { getSpaceById, getDocuments } = useSpaceStore();
   const space = getSpaceById(spaceId);
   const documents = getDocuments(spaceId);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  const allTags = Array.from(new Set(documents.flatMap(doc => doc.tags || [])));
+  const [selectedTypes, setSelectedTypes] = useState<DocumentType[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(true);
+
+  const allTags = new Set(documents.flatMap(doc => doc.tags || []));
+
+  const toggleType = (type: DocumentType) => {
+    setSelectedTypes(prev => 
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const resetTypes = () => setSelectedTypes([]);
+  const resetTags = () => setSelectedTags([]);
 
   const filteredDocuments = documents.filter(doc => {
+    const matchesType = selectedTypes.length === 0 || (doc.type && selectedTypes.includes(doc.type as DocumentType));
+    const matchesTags = selectedTags.length === 0 || (doc.tags && selectedTags.every(tag => doc.tags.includes(tag)));
     const matchesSearch = !searchQuery || 
       doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       doc.content.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesType = !selectedType || doc.type === selectedType;
-    
-    const matchesTags = selectedTags.length === 0 || 
-      selectedTags.every(tag => doc.tags?.includes(tag));
-
-    return matchesSearch && matchesType && matchesTags;
+    return matchesType && matchesTags && matchesSearch;
   });
 
-  const generatePlan = async (model: string) => {
-    try {
-      const response = await fetch('/api/generate-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          spaceId,
-          category: space?.category,
-          title: space?.title,
-          description: space?.description,
-          objectives: space?.objectives,
-          prerequisites: space?.prerequisites,
-          mentor: space?.mentor,
-          model,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate plan');
-      
-      const data = await response.json();
-      setPlan(spaceId, data.plan);
-      
-      // Save plan to knowledge base
-      addDocument(spaceId, {
-        title: `Learning Plan: ${space?.title}`,
-        content: data.plan,
-        type: 'guide',
-        tags: ['learning-plan', space?.category || ''],
-      });
-    } catch (err) {
-      console.error('Failed to generate plan:', err);
-      throw err;
-    }
-  };
-
-  const generateResearch = async (model: string) => {
-    try {
-      const response = await fetch('/api/generate-research', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          spaceId,
-          category: space?.category,
-          title: space?.title,
-          description: space?.description,
-          objectives: space?.objectives,
-          prerequisites: space?.prerequisites,
-          mentor: space?.mentor,
-          model,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate research');
-      
-      const data = await response.json();
-      setResearch(spaceId, data.research);
-      
-      // Save research to knowledge base
-      addDocument(spaceId, {
-        title: `Research Paper: ${space?.title}`,
-        content: data.research,
-        type: 'guide',
-        tags: ['research-paper', space?.category || ''],
-      });
-    } catch (err) {
-      console.error('Failed to generate research:', err);
-      throw err;
-    }
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Knowledge Base</CardTitle>
-          <div className="flex gap-2">
-            <ModelSelectionDialog
-              title="Generate Learning Plan"
-              description="Choose an AI model to generate a detailed learning plan for your space."
-              onGenerate={generatePlan}
-              buttonText="Generate Plan"
-              spaceColor={space?.space_color}
-              category={space?.category}
-            />
-            <ModelSelectionDialog
-              title="Generate Research Paper"
-              description="Choose an AI model to generate a comprehensive research paper for your space."
-              onGenerate={generateResearch}
-              buttonText="Generate Research"
-              spaceColor={space?.space_color}
-              category={space?.category}
-            />
-            {onClose && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+    <Card className="h-[calc(50vh-4rem)] bg-gradient-to-b from-background to-muted/30">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b">
+        <div className="flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-primary" />
+          <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+            Knowledge Base
+          </CardTitle>
         </div>
+        <Button
+          onClick={onClose}
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 p-0 hover:scale-105 transition-transform"
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {/* Search and Filters */}
-          <div className="space-y-4">
+      <CardContent className="space-y-4 p-6">
+        {/* Search input with icon */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Search documents..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 bg-background/50 backdrop-blur-sm border-muted"
             />
-            <div className="flex flex-wrap gap-2">
-              {['tutorial', 'guide', 'reference', 'exercise'].map((type) => (
-                <Button
-                  key={type}
-                  variant={selectedType === type ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedType(selectedType === type ? null : type)}
-                >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </Button>
-              ))}
-            </div>
-            {allTags.length > 0 && (
+          </div>
+          <Button
+            onClick={() => setShowFilters(prev => !prev)}
+            variant="outline"
+            size="default"
+            className="hover:scale-105 transition-transform"
+          >
+            Filters
+            {showFilters ? (
+              <ChevronUp className="h-4 w-4 ml-2" />
+            ) : (
+              <ChevronDown className="h-4 w-4 ml-2" />
+            )}
+          </Button>
+        </div>
+
+        {/* Filters section */}
+        {showFilters && (
+          <div className="space-y-3">
+            {/* Type filters */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Tag className="w-4 h-4" />
+                <span>Document Types</span>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {allTags.map((tag: string) => (
+                {Object.entries(documentTypes).map(([type, label]) => (
                   <Button
-                    key={tag}
-                    variant={selectedTags.includes(tag) ? "default" : "outline"}
+                    key={type}
+                    onClick={() => toggleType(type as DocumentType)}
+                    variant={selectedTypes.includes(type as DocumentType) ? "default" : "secondary"}
                     size="sm"
-                    onClick={() => setSelectedTags(prev => 
-                      prev.includes(tag) 
-                        ? prev.filter(t => t !== tag)
-                        : [...prev, tag]
+                    className={cn(
+                      "transition-all duration-200",
+                      selectedTypes.includes(type as DocumentType) ? "scale-105" : "opacity-75 hover:opacity-100"
                     )}
                   >
-                    {tag}
+                    {label}
                   </Button>
                 ))}
+                {selectedTypes.length > 0 && (
+                  <Button
+                    onClick={resetTypes}
+                    variant="destructive"
+                    size="sm"
+                    className="hover:scale-105 transition-transform"
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Document List */}
-          <div className="space-y-4">
-            {filteredDocuments.map((doc) => (
-              <Card key={doc.id} className="overflow-hidden">
-                <CardHeader className="p-4">
-                  <CardTitle className="text-lg">{doc.title}</CardTitle>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <span className="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">
-                      {doc.type}
-                    </span>
-                    {doc.tags?.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 pt-0">
-                  <div className="prose dark:prose-invert max-w-none">
-                    <MarkdownContent content={doc.content} />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {filteredDocuments.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No documents found. Try adjusting your search or filters.
+            {/* Tag filters */}
+            {allTags.size > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Tag className="w-4 h-4" />
+                  <span>Tags</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from(allTags).map((tag) => (
+                    <Button
+                      key={tag}
+                      onClick={() => toggleTag(tag)}
+                      variant={selectedTags.includes(tag) ? "default" : "secondary"}
+                      size="sm"
+                      className={cn(
+                        "transition-all duration-200",
+                        selectedTags.includes(tag) ? "scale-105" : "opacity-75 hover:opacity-100"
+                      )}
+                    >
+                      {tag}
+                    </Button>
+                  ))}
+                  {selectedTags.length > 0 && (
+                    <Button
+                      onClick={resetTags}
+                      variant="destructive"
+                      size="sm"
+                      className="hover:scale-105 transition-transform"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </div>
+        )}
+
+        {/* Document list */}
+        <div className={cn(
+          "space-y-2 overflow-auto pr-2 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent",
+          showFilters ? "max-h-[calc(50vh-24rem)]" : "max-h-[calc(50vh-14rem)]"
+        )}>
+          {filteredDocuments.map((doc, index) => (
+            <div
+              key={index}
+              onClick={() => onDocumentSelect(doc)}
+              className="p-4 rounded-lg bg-background/50 hover:bg-accent/10 cursor-pointer transition-all duration-200 hover:scale-[1.02] border border-muted hover:border-accent/50 group"
+            >
+              <h3 className="font-medium mb-2 group-hover:text-primary transition-colors">{doc.title}</h3>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                  {doc.type}
+                </span>
+                {doc.tags?.map((tag) => (
+                  <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+          {filteredDocuments.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground bg-background/50 rounded-lg border border-dashed border-muted">
+              No documents found
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
   );
-} 
+}

@@ -1,18 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { SiteHeader } from '@/components/site-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, Target, ArrowLeft, MessageSquare } from 'lucide-react';
+import { Brain, Target, ArrowLeft, MessageSquare, Loader2, Sparkles } from 'lucide-react';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { MarkdownContent } from '@/components/markdown-content';
 import { ChatWithMentor } from '@/components/chat-with-mentor';
 import { KnowledgeBase } from '@/components/knowledge-base';
-import { SpaceContentEditor } from '@/components/space-content-editor';
 import { SpacesSidebar } from '@/components/spaces-sidebar';
+import { SpaceTools } from '@/components/space-tools';
 
 export default function SpacePage() {
   const params = useParams();
@@ -24,14 +24,70 @@ export default function SpacePage() {
     todoStates, 
     toggleTodo, 
     setPlan: setStorePlan, 
-    setResearch, 
+    setResearch,
     addDocument,
-    isSidebarCollapsed 
+    isSidebarCollapsed,
+    content: storedContent,
+    setContent
   } = useSpaceStore();
   
   const space = getSpaceById(spaceId);
   const [showKnowledgeBase, setShowKnowledgeBase] = useState(true);
   const [showChat, setShowChat] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<{title: string; content: string} | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showTools, setShowTools] = useState(true);
+
+  const currentContent = selectedDocument?.content || storedContent[spaceId] || space?.content || '';
+  const contentTitle = selectedDocument?.title || space?.title || '';
+
+  // Generate initial content when the component mounts
+  useEffect(() => {
+    const generateContent = async () => {
+      // Skip if no space, or if content already exists
+      if (!space || space.content || storedContent[spaceId]) return;
+      
+      setIsGenerating(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/generate-initial-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spaceDetails: space }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to generate content');
+        }
+
+        const data = await response.json();
+        if (!data || !data.content) {
+          throw new Error('Invalid response from server');
+        }
+
+        setContent(spaceId, data.content);
+
+        // Save the generated content to the knowledge base
+        if (space.title && space.category) {
+          addDocument(spaceId, {
+            title: `Initial Content: ${space.title}`,
+            content: data.content,
+            type: 'guide',
+            tags: ['initial-content', space.category],
+          });
+        }
+      } catch (error) {
+        console.error('Error generating initial content:', error);
+        setError(error instanceof Error ? error.message : 'Failed to generate content');
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    generateContent();
+  }, [space, storedContent, spaceId, setContent, addDocument]);
 
   if (!space) {
     return (
@@ -88,25 +144,59 @@ export default function SpacePage() {
               </div>
 
               <div className="grid gap-8 lg:grid-cols-10">
-                {/* Main Content - Editor only */}
-                <div className="lg:col-span-6">
-                  <SpaceContentEditor 
-                    space={space}
-                    editable={true}
-                    onUpdate={(content) => {
-                      console.log('Content updated:', content);
-                      // TODO: Implement content update logic
-                    }}
-                  />
-                </div>
-
-                {/* Right Side - Knowledge Base and Chat */}
-                <div className="lg:col-span-4 space-y-6">
+                {/* Main Content */}
+                <div className="lg:col-span-6 space-y-6">
                   {/* Knowledge Base */}
                   {showKnowledgeBase && (
                     <KnowledgeBase 
                       spaceId={spaceId} 
-                      onClose={() => setShowKnowledgeBase(false)} 
+                      onClose={() => setShowKnowledgeBase(false)}
+                      onDocumentSelect={setSelectedDocument}
+                    />
+                  )}
+
+                  {/* Content Viewer */}
+                  <Card className="h-[calc(100vh-8rem)] flex flex-col">
+                    <CardHeader>
+                      <CardTitle>{contentTitle}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 overflow-auto p-6">
+                      {isGenerating ? (
+                        <div className="flex items-center justify-center h-full">
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-800 shadow-lg">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm text-gray-600 dark:text-gray-300">Generating content...</span>
+                          </div>
+                        </div>
+                      ) : error ? (
+                        <div className="flex items-center justify-center h-full">
+                          <div className="text-center text-red-500">
+                            <p>{error}</p>
+                            <Button
+                              variant="outline"
+                              onClick={() => setError(null)}
+                              className="mt-4"
+                            >
+                              Dismiss
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="prose prose-lg dark:prose-invert max-w-none">
+                          <MarkdownContent content={currentContent} />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Right Side - Tools and Chat */}
+                <div className="lg:col-span-4 space-y-6">
+                  {/* Tools */}
+                  {showTools && (
+                    <SpaceTools
+                      spaceId={spaceId}
+                      onClose={() => setShowTools(false)}
                     />
                   )}
                   
@@ -128,6 +218,16 @@ export default function SpacePage() {
                       >
                         <Brain className="h-4 w-4 mr-2" />
                         Show Knowledge Base
+                      </Button>
+                    )}
+                    {!showTools && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowTools(true)}
+                        className="flex-1"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Show Tools
                       </Button>
                     )}
                     {!showChat && (
