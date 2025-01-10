@@ -270,8 +270,7 @@ export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
               className="h-24"
             />
 
-            <CustomPodcast spaceId={spaceId} /> 
-            
+
             <ModelSelectionDialog
               title="Generate Mind Map"
               description="Choose an AI model to generate a mind map for your space."
@@ -280,8 +279,11 @@ export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
               buttonText="Mind Map"
               spaceColor={space.space_color}
               category={space.category}
-              className="h-24 col-span-2"
+              className="h-24"
             />
+
+            <CustomPodcast spaceId={spaceId} /> 
+            
             
           </div>
         </CardContent>

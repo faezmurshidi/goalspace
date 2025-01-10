@@ -95,15 +95,8 @@ export function CustomPodcast({ spaceId, className }: CustomPodcastProps) {
   if (!space) return null;
 
   return (
-    <Card className={cn("w-full", className)}>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Headphones className="h-5 w-5" style={{ color: space.space_color?.main }} />
-          Podcast Player
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Button
+   <>
+    <Button
           onClick={handlePodcastClick}
           className={cn(
             "w-full justify-start gap-2 relative overflow-hidden transition-all duration-300",
@@ -146,7 +139,6 @@ export function CustomPodcast({ spaceId, className }: CustomPodcastProps) {
         {error && (
           <p className="text-sm text-red-500 mt-2">{error}</p>
         )}
-      </CardContent>
-    </Card>
+        </>
   );
 } 
