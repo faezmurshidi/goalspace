@@ -8,6 +8,7 @@ import { GoalForm } from "@/components/goal-form";
 import { GeneratedSpaces } from "@/components/generated-spaces";
 import { SiteHeader } from "@/components/site-header";
 import { motion } from "framer-motion";
+import { Hero } from "@/components/ui/animated-hero";
 
 export default function Home() {
   return (
@@ -29,42 +30,10 @@ export default function Home() {
           
           <div className="container mx-auto px-4 py-16 md:py-24">
             {/* Hero Section */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center mb-16"
-            >
-              <motion.div 
-                whileHover={{ scale: 1.1 }}
-                className="inline-block p-3 bg-white/10 rounded-full mb-6 backdrop-blur-md ring-1 ring-white/20 shadow-lg"
-              >
-                <Heart className="w-8 h-8 text-rose-500 animate-pulse" />
-              </motion.div>
 
-              <h1 className="text-4xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500 tracking-tight">
-                Idea to app in seconds
-              </h1>
+            <Hero /> 
 
-              <p className="text-xl md:text-2xl text-white/80 max-w-2xl mx-auto mb-12 leading-relaxed">
-                Transform your goals into reality with AI-powered mentorship and structured learning paths.
-              </p>
-
-              {/* Form Section */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-              >
-                <Card className="w-full max-w-[640px] mx-auto bg-white/5 backdrop-blur-xl border-white/10 mb-8 shadow-2xl ring-1 ring-white/20">
-                  <div className="p-4">
-                    <GoalForm />
-                  </div>
-                </Card>
-              </motion.div>
-
-              <GeneratedSpaces />
-            </motion.div>
+            <GeneratedSpaces />
 
             {/* Features Grid */}
             <motion.div 

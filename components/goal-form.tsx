@@ -25,6 +25,7 @@ export function GoalForm() {
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [modelProvider, setModelProvider] = useState<'openai' | 'anthropic'>('openai');
+  const [showGoalForm, setShowGoalForm] = useState(true);
   
   const { setSpaces, setCurrentGoal, setTodoStates } = useSpaceStore();
 
@@ -73,6 +74,8 @@ export function GoalForm() {
       if (!response.ok) throw new Error('Failed to analyze goal');
       
       const data = await response.json();
+
+      // Update local state
       setSpaces(data.spaces);
       setCurrentGoal(goalText);
       
@@ -90,6 +93,7 @@ export function GoalForm() {
       console.error(err);
     } finally {
       setIsLoading(false);
+      setShowGoalForm(false);
     }
   };
 

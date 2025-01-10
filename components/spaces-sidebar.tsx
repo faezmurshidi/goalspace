@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { Brain, Target, ChevronLeft, ChevronRight, Loader2, Plus, LayoutDashboard, Settings, Sun, Moon } from 'lucide-react';
+import { Brain, Target, ChevronLeft, ChevronRight, Loader2, Plus, LayoutDashboard, Settings, Sun, Moon, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSpaceStore } from '@/lib/store';
@@ -11,6 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from 'next-themes';
+import { supabase } from '@/lib/supabase/client';
+import Link from 'next/link';
 
 interface SpacesSidebarProps {
   className?: string;
@@ -24,6 +26,7 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // After mounting, we have access to the theme
   useEffect(() => {
@@ -33,6 +36,22 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
   const handleSpaceClick = (spaceId: string) => {
     setLoadingSpaceId(spaceId);
     router.push(`/space/${spaceId}`);
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      // Clear all local storage data
+      localStorage.clear();
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      // Navigate to main landing page instead of auth page
+      router.push('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const mainNavItems = [
@@ -48,6 +67,13 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
       title: 'Settings',
       icon: Settings,
       href: '/settings',
+    },
+    {
+      title: isLoggingOut ? 'Logging out...' : 'Logout',
+      icon: LogOut,
+      onClick: handleLogout,
+      variant: 'ghost' as const,
+      className: 'text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20',
     },
   ];
 
@@ -222,27 +248,28 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant={pathname === item.href ? "secondary" : "ghost"}
-                    size="sm"
+                    key={item.title}
+                    variant={item.variant || (pathname === item.href ? 'secondary' : 'ghost')}
                     className={cn(
-                      "w-full justify-start gap-2",
-                      pathname === item.href && "bg-muted"
+                      'w-full justify-start',
+                      !isSidebarCollapsed && 'justify-start',
+                      isSidebarCollapsed && 'justify-center',
+                      item.className || ''
                     )}
-                    onClick={() => router.push(item.href)}
+                    onClick={item.onClick}
+                    {...(item.href ? { asChild: true } : {})}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <AnimatePresence>
-                      {!isSidebarCollapsed && (
-                        <motion.span
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -10 }}
-                          className="truncate text-sm font-medium"
-                        >
-                          {item.title}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
+                    {item.href ? (
+                      <Link href={item.href}>
+                        <item.icon className={cn('h-4 w-4', !isSidebarCollapsed && 'mr-2')} />
+                        {!isSidebarCollapsed && item.title}
+                      </Link>
+                    ) : (
+                      <>
+                        <item.icon className={cn('h-4 w-4', !isSidebarCollapsed && 'mr-2')} />
+                        {!isSidebarCollapsed && item.title}
+                      </>
+                    )}
                   </Button>
                 </TooltipTrigger>
                 {isSidebarCollapsed && (
