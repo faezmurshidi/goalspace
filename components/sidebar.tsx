@@ -11,6 +11,7 @@ import {
   User,
   BarChart,
   Sparkles,
+  ChevronLeft,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
@@ -50,13 +51,25 @@ const sidebarItems = [
 
 interface SidebarProps {
   className?: string;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, isOpen, onToggle }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <div className={cn('pb-12 min-h-screen', className)}>
+    <div className={cn('pb-12 min-h-screen bg-background/95 backdrop-blur-md border-r border-border/40', className)}>
+      {/* Toggle Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute -right-10 top-4 h-8 w-8 rounded-full bg-background/95 backdrop-blur-md border border-border/40"
+        onClick={onToggle}
+      >
+        <ChevronLeft className={cn("h-4 w-4 transition-transform", !isOpen && "rotate-180")} />
+      </Button>
+
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <div className="space-y-1">
@@ -77,7 +90,9 @@ export function Sidebar({ className }: SidebarProps) {
                   >
                     <Link href={item.href}>
                       <item.icon className="h-4 w-4" />
-                      {item.title}
+                      <span className={cn("transition-opacity", !isOpen && "opacity-0")}>
+                        {item.title}
+                      </span>
                     </Link>
                   </Button>
                 ))}

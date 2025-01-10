@@ -15,6 +15,23 @@ export function GeneratedSpaces() {
   const { spaces, currentGoal } = useSpaceStore()
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   // Check for pending goals to save after auth
   useEffect(() => {
@@ -286,11 +303,15 @@ export function GeneratedSpaces() {
             </>
           ) : (
             <>
-              Start Your Goal Journey
+              Continue to Dashboard
               <ArrowRight className="h-5 w-5" />
             </>
           )}
         </Button>
+
+        <p className="text-center text-sm text-white/50">
+          {user ? "Your goal will be saved to your dashboard" : "You'll need to sign in to save your goal"}
+        </p>
 
         {error && (
           <div className="text-red-400 text-sm p-4 bg-red-500/10 backdrop-blur-xl rounded-lg border border-red-500/20">

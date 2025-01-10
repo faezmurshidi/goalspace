@@ -3,15 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Brain } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from './ui/button';
+import { AuthDialog } from './auth/auth-dialog';
 
 export function MainNav() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   useEffect(() => {
     // Get initial session
@@ -24,6 +25,9 @@ export function MainNav() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        setShowAuthDialog(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -34,19 +38,8 @@ export function MainNav() {
   };
 
   return (
-    <div className="flex items-center gap-6">
-      <motion.div
-        whileHover={{ scale: 1.05, boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}
-        className="flex items-center gap-2"
-      >
-        <Link href="/" className="flex items-center gap-2">
-          <Brain className="h-6 w-6 text-rose-500" />
-          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500">
-            GoalSpace
-          </span>
-        </Link>
-      </motion.div>
-      <nav className="flex items-center gap-4">
+    <>
+      <div className="flex items-center gap-4">
         {user ? (
           <>
             <Link
@@ -64,14 +57,19 @@ export function MainNav() {
             </Button>
           </>
         ) : (
-          <Link
-            href="/auth"
-            className="text-sm font-medium text-white/70 transition-colors hover:text-white"
+          <Button
+            variant="outline"
+            onClick={() => setShowAuthDialog(true)}
+            className="text-sm font-medium"
           >
             Sign In
-          </Link>
+          </Button>
         )}
-      </nav>
-    </div>
+      </div>
+      <AuthDialog 
+        open={showAuthDialog} 
+        onOpenChange={setShowAuthDialog}
+      />
+    </>
   );
 }

@@ -150,6 +150,7 @@ export interface SpaceStore {
   updateTodoList: (spaceId: string, todoList: string[]) => void;
   content: { [key: string]: string };
   setContent: (spaceId: string, content: string) => void;
+  reset: () => void;
 }
 
 export const useSpaceStore = create<SpaceStore>()(
@@ -328,6 +329,7 @@ export const useSpaceStore = create<SpaceStore>()(
             [spaceId]: content,
           },
         })),
+      reset: () => set({ spaces: [], goals: [], isSidebarCollapsed: false }),
     }),
     {
       name: 'space-store',

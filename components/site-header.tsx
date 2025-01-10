@@ -1,6 +1,8 @@
 import { MainNav } from '@/components/main-nav';
 import { ModeToggle } from '@/components/mode-toggle';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { Brain } from 'lucide-react';
 
 export function SiteHeader() {
   return (
@@ -13,22 +15,33 @@ export function SiteHeader() {
       <div className="absolute inset-0 bg-background/20 backdrop-blur-xl" />
       <div className="container relative mx-auto">
         <div className="flex h-16 items-center justify-between px-4">
-          <MainNav />
-          <div className="flex items-center gap-4">
+          {/* Logo and Brand */}
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-2"
+          >
+            <Link href="/" className="flex items-center gap-2">
+              <Brain className="h-6 w-6 text-rose-500" />
+              <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500">
+                GoalSpace
+              </span>
+            </Link>
+          </motion.div>
+
+          {/* Navigation and Actions */}
+          <div className="flex items-center gap-6">
+            {/* Main Navigation */}
             <nav className="flex items-center gap-6">
-              <a
+              <Link
                 href="/pricing"
                 className="text-sm font-medium text-white/70 transition-colors hover:text-white"
               >
                 Pricing
-              </a>
-              <a
-                href="/dashboard"
-                className="text-sm font-medium text-white/70 transition-colors hover:text-white"
-              >
-                Dashboard
-              </a>
+              </Link>
+              <MainNav />
             </nav>
+
+            {/* Theme Toggle */}
             <div className="flex items-center gap-2">
               <ModeToggle />
             </div>

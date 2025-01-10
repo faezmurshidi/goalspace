@@ -116,7 +116,7 @@ export default function SpacePage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex">
-        <SpacesSidebar />
+       
         <main className={cn(
           "flex-1 transition-[margin] duration-300",
           isSidebarCollapsed ? "ml-16" : "ml-64"
