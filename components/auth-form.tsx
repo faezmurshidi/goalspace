@@ -37,14 +37,12 @@ export function AuthForm() {
   async function onSignIn(data: AuthFormValues) {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (authError) throw authError;
 
       router.push('/dashboard');
       toast({
@@ -52,6 +50,7 @@ export function AuthForm() {
         description: 'You have successfully signed in.',
       });
     } catch (error) {
+      console.error('Signin error:', error);
       toast({
         title: 'Error',
         description: 'Invalid email or password.',
@@ -65,20 +64,26 @@ export function AuthForm() {
   async function onSignUp(data: AuthFormValues) {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          data: {
+            email: data.email,
+          }
+        }
       });
 
-      if (error) {
-        throw error;
-      }
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('No user returned from signup');
 
       toast({
         title: 'Success',
         description: 'Please check your email to verify your account.',
       });
     } catch (error) {
+      console.error('Signup error:', error);
       toast({
         title: 'Error',
         description: 'Something went wrong. Please try again.',
