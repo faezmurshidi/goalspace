@@ -1,15 +1,16 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { Brain, Target, ChevronLeft, ChevronRight, Loader2, Plus, LayoutDashboard, Settings } from 'lucide-react';
+import { Brain, Target, ChevronLeft, ChevronRight, Loader2, Plus, LayoutDashboard, Settings, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSpaceStore } from '@/lib/store';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
+import { useTheme } from 'next-themes';
 
 interface SpacesSidebarProps {
   className?: string;
@@ -21,6 +22,13 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
   const { spaces, isSidebarCollapsed, toggleSidebar } = useSpaceStore();
   const [loadingSpaceId, setLoadingSpaceId] = useState<string | null>(null);
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // After mounting, we have access to the theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSpaceClick = (spaceId: string) => {
     setLoadingSpaceId(spaceId);
@@ -245,6 +253,47 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
               </Tooltip>
             </TooltipProvider>
           ))}
+
+          <Separator className="my-2" />
+
+          {/* Theme Toggle */}
+          {mounted && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2"
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  >
+                    {theme === 'dark' ? (
+                      <Sun className="h-4 w-4" />
+                    ) : (
+                      <Moon className="h-4 w-4" />
+                    )}
+                    <AnimatePresence>
+                      {!isSidebarCollapsed && (
+                        <motion.span
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          className="truncate text-sm font-medium"
+                        >
+                          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </Button>
+                </TooltipTrigger>
+                {isSidebarCollapsed && (
+                  <TooltipContent side="right">
+                    {theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
 
           <Separator className="my-2" />
 

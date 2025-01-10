@@ -115,7 +115,6 @@ export default function SpacePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <SiteHeader />
       <div className="flex">
         <SpacesSidebar />
         <main className={cn(

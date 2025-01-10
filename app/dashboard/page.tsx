@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { useRouter } from 'next/navigation';
 
-import { MainNav } from '@/components/main-nav';
+
 import { SpacesSidebar } from '@/components/spaces-sidebar';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <MainNav />
+      
       <div className="flex-1 flex">
         <SpacesSidebar />
         <main className={cn(
