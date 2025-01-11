@@ -19,7 +19,7 @@ interface SpacesSidebarProps {
 export function SpacesSidebar({ className }: SpacesSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { spaces } = useSpaceStore();
+  const { spaces, loadUserData } = useSpaceStore();
   const [loadingSpaceId, setLoadingSpaceId] = useState<string | null>(null);
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
@@ -30,6 +30,11 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Load user data when sidebar mounts
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
 
   const handleSpaceClick = (spaceId: string) => {
     setLoadingSpaceId(spaceId);
@@ -101,12 +106,12 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
                   label: space.title,
                   href: `/space/${space.id}`,
                   icon: space.category === 'learning' ? (
-                    <Brain 
-                      className="h-4 w-4" 
+                    <Brain
+                      className="h-4 w-4"
                       style={{ color: space.space_color?.main }}
                     />
                   ) : (
-                    <Target 
+                    <Target
                       className="h-4 w-4"
                       style={{ color: space.space_color?.main }}
                     />
@@ -163,4 +168,4 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
       </SidebarBody>
     </Sidebar>
   );
-} 
+}

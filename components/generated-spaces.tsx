@@ -38,7 +38,7 @@ export function GeneratedSpaces() {
     const savePendingGoal = async () => {
       const pendingGoal = localStorage.getItem('pendingGoal')
       const pendingSpaces = localStorage.getItem('pendingSpaces')
-      
+
       if (!pendingGoal || !pendingSpaces) return
 
       try {
@@ -77,12 +77,12 @@ export function GeneratedSpaces() {
               title: space.title,
               description: space.description,
               category: space.category,
-              objectives: space.objectives,
-              prerequisites: space.prerequisites,
-              mentor: space.mentor,
+              objectives: JSON.stringify(space.objectives || []),
+              prerequisites: JSON.stringify(space.prerequisites || []),
+              mentor: JSON.stringify(space.mentor || {}),
               progress: 0,
-              space_color: space.space_color,
-              mentor_type: space.mentor.personality,
+              space_color: JSON.stringify(space.space_color || {}),
+              mentor_type: space.mentor?.personality || 'default',
               order_index: index
             })
             .select()
@@ -118,12 +118,12 @@ export function GeneratedSpaces() {
 
       // Get the current user
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         // Store current goal data in localStorage
         localStorage.setItem('pendingGoal', currentGoal)
         localStorage.setItem('pendingSpaces', JSON.stringify(spaces))
-        
+
         // Redirect to auth page
         router.push('/auth')
         return
@@ -148,30 +148,36 @@ export function GeneratedSpaces() {
 
       // Create spaces in Supabase
       const spacesPromises = spaces.map(async (space, index) => {
-        const { data: spaceData, error: spaceError } = await supabase
+        // Format the data to match the schema
+        const spaceData = {
+          goal_id: goalData.id,
+          user_id: user.id,
+          title: space.title,
+          description: space.description,
+          category: space.category,
+          objectives: JSON.stringify(space.objectives || []),
+          prerequisites: JSON.stringify(space.prerequisites || []),
+          mentor: JSON.stringify(space.mentor || {}),
+          progress: 0,
+          space_color: JSON.stringify(space.space_color || {}),
+          mentor_type: space.mentor?.personality || 'default',
+          order_index: index
+        };
+
+        const { data: savedSpace, error: spaceError } = await supabase
           .from('spaces')
-          .insert({
-            goal_id: goalData.id,
-            user_id: user.id,
-            title: space.title,
-            description: space.description,
-            category: space.category,
-            objectives: space.objectives,
-            prerequisites: space.prerequisites,
-            mentor: space.mentor,
-            progress: 0,
-            space_color: space.space_color,
-            mentor_type: space.mentor.personality,
-            order_index: index
-          })
+          .insert(spaceData)
           .select()
-          .single()
+          .single();
 
-        if (spaceError) throw spaceError
-        return spaceData
-      })
+        if (spaceError) {
+          console.error('Space insertion error:', spaceError);
+          throw spaceError;
+        }
+        return savedSpace;
+      });
 
-      await Promise.all(spacesPromises)
+      await Promise.all(spacesPromises);
 
       // Navigate to dashboard after successful save
       router.push('/dashboard')
@@ -200,7 +206,7 @@ export function GeneratedSpaces() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
           >
-            <Card 
+            <Card
               className={cn(
                 "relative overflow-hidden backdrop-blur-xl border-white/10 shadow-2xl",
                 "bg-white/5 hover:bg-white/10 transition-all duration-300",
@@ -222,7 +228,7 @@ export function GeneratedSpaces() {
                     )}
                     {space.title}
                   </CardTitle>
-                  <motion.span 
+                  <motion.span
                     whileHover={{ scale: 1.05 }}
                     className={cn(
                       "text-xs px-3 py-1.5 rounded-full font-medium",
@@ -281,7 +287,7 @@ export function GeneratedSpaces() {
       </div>
 
       {/* Action Button */}
-      <motion.div 
+      <motion.div
         className="flex flex-col gap-4 pt-4"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -321,4 +327,4 @@ export function GeneratedSpaces() {
       </motion.div>
     </motion.div>
   )
-} 
+}

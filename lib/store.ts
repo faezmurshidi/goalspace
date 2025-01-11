@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '@/lib/supabase/client';
 
 export interface Message {
   id: string;
@@ -151,6 +152,31 @@ export interface SpaceStore {
   content: { [key: string]: string };
   setContent: (spaceId: string, content: string) => void;
   reset: () => void;
+  // New function to load user data
+  loadUserData: () => Promise<void>;
+}
+
+interface SupabaseGoal {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  deadline: string | null;
+  progress: number;
+  created_at: string;
+}
+
+interface SupabaseSpace {
+  id: string;
+  goal_id: string;
+  title: string;
+  category: 'learning' | 'goal';
+  description: string | null;
+  objectives: string | null;
+  prerequisites: string | null;
+  mentor: string | null;
+  progress: number;
+  space_color: string | null;
 }
 
 export const useSpaceStore = create<SpaceStore>()(
@@ -263,7 +289,7 @@ export const useSpaceStore = create<SpaceStore>()(
         const newSpaces = state.spaces.map((space) =>
           space.id === spaceId ? { ...space, progress } : space
         );
-        
+
         // Find the goal containing this space and update its progress
         const goals = state.goals.map(goal => {
           if (goal.spaces.includes(spaceId)) {
@@ -298,8 +324,8 @@ export const useSpaceStore = create<SpaceStore>()(
           )
         };
       }),
-      toggleSidebar: () => set((state) => ({ 
-        isSidebarCollapsed: !state.isSidebarCollapsed 
+      toggleSidebar: () => set((state) => ({
+        isSidebarCollapsed: !state.isSidebarCollapsed
       })),
       updateTodoList: (spaceId, todoList) => set((state) => {
         // Update the space's to-do list
@@ -316,7 +342,7 @@ export const useSpaceStore = create<SpaceStore>()(
           }, {} as { [key: string]: boolean })
         };
 
-        return { 
+        return {
           spaces: newSpaces,
           todoStates: newTodoStates
         };
@@ -330,9 +356,75 @@ export const useSpaceStore = create<SpaceStore>()(
           },
         })),
       reset: () => set({ spaces: [], goals: [], isSidebarCollapsed: false }),
+      // Add loadUserData function
+      loadUserData: async () => {
+        try {
+          // Get current user
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          if (userError) throw userError;
+          if (!user) return;
+
+          // Fetch goals
+          const { data: goalsData, error: goalsError } = await supabase
+            .from('goals')
+            .select('*')
+            .eq('user_id', user.id);
+
+          if (goalsError) throw goalsError;
+
+          // Fetch spaces for each goal
+          const spacesPromises = goalsData.map(async (goal: SupabaseGoal) => {
+            const { data: spacesData, error: spacesError } = await supabase
+              .from('spaces')
+              .select('*')
+              .eq('goal_id', goal.id);
+
+            if (spacesError) throw spacesError;
+            return spacesData;
+          });
+
+          const spacesArrays = await Promise.all(spacesPromises);
+          const allSpaces = spacesArrays.flat();
+
+          // Transform the data to match our store format
+          const formattedGoals: Goal[] = goalsData.map((goal: SupabaseGoal) => ({
+            id: goal.id,
+            title: goal.title,
+            description: goal.description || '',
+            dueDate: goal.deadline || new Date().toISOString(),
+            progress: goal.progress || 0,
+            spaces: allSpaces.filter(space => space.goal_id === goal.id).map(space => space.id),
+            createdAt: new Date(goal.created_at).getTime()
+          }));
+
+          const formattedSpaces: Space[] = allSpaces.map((space: SupabaseSpace) => ({
+            id: space.id,
+            title: space.title,
+            category: space.category,
+            description: space.description || '',
+            objectives: JSON.parse(space.objectives || '[]'),
+            prerequisites: JSON.parse(space.prerequisites || '[]'),
+            to_do_list: [], // We'll need to add this to the schema if needed
+            time_to_complete: '', // We'll need to add this to the schema if needed
+            mentor: JSON.parse(space.mentor || '{}'),
+            space_color: JSON.parse(space.space_color || '{}'),
+            progress: space.progress || 0,
+            isCollapsed: true
+          }));
+
+          // Update the store
+          set({
+            goals: formattedGoals,
+            spaces: formattedSpaces
+          });
+
+        } catch (error) {
+          console.error('Error loading user data:', error);
+        }
+      },
     }),
     {
       name: 'space-store',
     }
   )
-); 
+);

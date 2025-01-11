@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { useRouter } from 'next/navigation';
@@ -25,7 +26,12 @@ import { Brain, Target } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { spaces, goals, toggleSpaceCollapse } = useSpaceStore();
+  const { spaces, goals, toggleSpaceCollapse, loadUserData } = useSpaceStore();
+
+  // Load user data when dashboard mounts
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
 
   const testUserInsert = async () => {
     try {
@@ -86,7 +92,7 @@ export default function DashboardPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           userId: user.id,
           goal: {
             title: 'Test Goal',
@@ -248,9 +254,9 @@ export default function DashboardPage() {
                         </CollapsibleTrigger>
                       </div>
                       <div className="flex items-center space-x-4">
-                        <Progress 
-                          value={space.progress} 
-                          className="flex-1" 
+                        <Progress
+                          value={space.progress}
+                          className="flex-1"
                           style={{
                             '--progress-color': space.space_color?.main
                           } as any}
@@ -274,7 +280,7 @@ export default function DashboardPage() {
                           ))}
                         </ul>
                       </div>
-                      <Button 
+                      <Button
                         onClick={() => router.push(`/space/${space.id}`)}
                         className="w-full"
                         style={{
@@ -294,4 +300,4 @@ export default function DashboardPage() {
       </section>
     </div>
   );
-} 
+}

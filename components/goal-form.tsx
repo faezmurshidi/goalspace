@@ -9,6 +9,7 @@ import { Loader2, Wand2, Sparkles } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useSpaceStore } from '@/lib/store';
 import { motion } from 'framer-motion';
+import { BorderBeam } from './ui/border-beam';
 
 interface Question {
   id: string;
@@ -26,25 +27,25 @@ export function GoalForm() {
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [modelProvider, setModelProvider] = useState<'openai' | 'anthropic'>('openai');
   const [showGoalForm, setShowGoalForm] = useState(true);
-  
+
   const { setSpaces, setCurrentGoal, setTodoStates } = useSpaceStore();
 
   const getQuestions = async (goalText: string) => {
     try {
       setIsLoading(true);
       setError('');
-      
+
       const response = await fetch('/api/analyze-goal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           goal: goalText,
-          modelProvider 
+          modelProvider
         }),
       });
 
       if (!response.ok) throw new Error('Failed to get questions');
-      
+
       const data = await response.json();
       setQuestions(data.questions);
     } catch (err) {
@@ -59,12 +60,12 @@ export function GoalForm() {
     try {
       setIsLoading(true);
       setError('');
-      
+
       const response = await fetch('/api/analyze-goal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          goal: goalText, 
+        body: JSON.stringify({
+          goal: goalText,
           answers: userAnswers,
           isAdvancedMode,
           modelProvider
@@ -72,13 +73,13 @@ export function GoalForm() {
       });
 
       if (!response.ok) throw new Error('Failed to analyze goal');
-      
+
       const data = await response.json();
 
       // Update local state
       setSpaces(data.spaces);
       setCurrentGoal(goalText);
-      
+
       // Initialize todo states for new spaces
       const initialTodoStates: { [key: string]: { [key: string]: boolean } } = {};
       data.spaces.forEach((space: any) => {
@@ -109,12 +110,7 @@ export function GoalForm() {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="w-full relative"
-    >
+    <div className="relative">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="flex flex-col gap-4">
           <div className="relative group">
@@ -127,10 +123,10 @@ export function GoalForm() {
               disabled={isLoading}
             />
           </div>
-          
+
           <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-xl rounded-lg border border-white/10 shadow-lg">
             <div className="flex items-center space-x-6">
-              <motion.div 
+              <motion.div
                 whileHover={{ scale: 1.05 }}
                 className="flex items-center space-x-2"
               >
@@ -150,7 +146,7 @@ export function GoalForm() {
               </motion.div>
 
               <div className="flex items-center space-x-6 border-l border-white/10 pl-6">
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center space-x-2"
                 >
@@ -166,7 +162,7 @@ export function GoalForm() {
                     GPT-3.5
                   </label>
                 </motion.div>
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center space-x-2"
                 >
@@ -188,7 +184,7 @@ export function GoalForm() {
         </div>
 
         {questions.length > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6 p-6 bg-white/5 backdrop-blur-xl rounded-lg border border-white/10 shadow-lg"
@@ -218,8 +214,8 @@ export function GoalForm() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className={cn(
               "w-full h-14 text-lg font-medium shadow-lg backdrop-blur-xl",
               isAdvancedMode
@@ -240,10 +236,11 @@ export function GoalForm() {
               </>
             )}
           </Button>
+
         </motion.div>
 
         {error && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-red-400 text-sm p-4 bg-red-500/10 backdrop-blur-xl rounded-lg border border-red-500/20"
@@ -252,6 +249,7 @@ export function GoalForm() {
           </motion.div>
         )}
       </form>
-    </motion.div>
+
+      </div>
   );
 }

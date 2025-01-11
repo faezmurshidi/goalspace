@@ -4,6 +4,7 @@ import { MoveRight, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GoalForm } from "../goal-form";
 import { Card } from "./card";
+import { BorderBeam } from "./border-beam";
 
 function Hero() {
   const [titleNumber, setTitleNumber] = useState(0);
@@ -65,17 +66,13 @@ function Hero() {
             Transform your goals into reality with AI-powered mentorship and structured learning paths.
             </p>
           </div>
-          <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.8 }}
-              >
-                <Card className="w-full max-w-2xl mx-auto bg-white/5 backdrop-blur-xl border-white/10 mb-8 shadow-2xl ring-1 ring-white/20">
-                  <div className="p-4">
-                    <GoalForm />
-                  </div>
-                </Card>
-              </motion.div>
+          <div className="w-full">
+            <Card className="w-full max-w-2xl mx-auto bg-white/5 backdrop-blur-xl border-white/10 mb-8 shadow-2xl ring-1 ring-white/20">
+              <div className="p-4">
+                <GoalForm />
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

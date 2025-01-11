@@ -69,6 +69,7 @@ export function AuthForm() {
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             email: data.email,
           }
@@ -78,9 +79,28 @@ export function AuthForm() {
       if (authError) throw authError;
       if (!authData.user) throw new Error('No user returned from signup');
 
+      if (authData.user.identities?.length === 0) {
+        toast({
+          title: 'Account exists',
+          description: 'An account with this email already exists. Please sign in instead.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (authData.session === null) {
+        toast({
+          title: 'Verify your email',
+          description: 'Please check your email to verify your account before signing in.',
+        });
+        return;
+      }
+
+      // If we have a session (email verification is disabled), proceed with user creation
+      router.push('/dashboard');
       toast({
         title: 'Success',
-        description: 'Please check your email to verify your account.',
+        description: 'Your account has been created successfully.',
       });
     } catch (error) {
       console.error('Signup error:', error);
@@ -183,4 +203,4 @@ export function AuthForm() {
       </CardFooter>
     </Card>
   );
-} 
+}
