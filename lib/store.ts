@@ -16,6 +16,9 @@ export interface Document {
   content: string;
   type: 'tutorial' | 'guide' | 'reference' | 'exercise';
   tags: string[];
+  metadata?: any;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Mentor {
@@ -154,6 +157,7 @@ export interface SpaceStore {
   reset: () => void;
   // New function to load user data
   loadUserData: () => Promise<void>;
+  loadDocuments: (spaceId: string) => Promise<void>;
 }
 
 interface SupabaseGoal {
@@ -211,18 +215,48 @@ export const useSpaceStore = create<SpaceStore>()(
       setCurrentGoal: (goal) => set({ currentGoal: goal }),
       getSpaceById: (id) => get().spaces.find(space => space.id === id),
       getDocuments: (spaceId) => get().documents[spaceId] || [],
-      addDocument: (spaceId, document) => set((state) => ({
-        documents: {
-          ...state.documents,
-          [spaceId]: [
-            ...(state.documents[spaceId] || []),
-            {
-              ...document,
-              id: Math.random().toString(36).substring(7),
+      addDocument: async (spaceId: string, document: Omit<Document, 'id'>) => {
+        try {
+          // Get the current user
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error('Not authenticated');
+
+          // Save to Supabase
+          const { data: savedDoc, error } = await supabase
+            .from('documents')
+            .insert({
+              space_id: spaceId,
+              title: document.title,
+              content: document.content,
+              type: document.type,
+              tags: document.tags || [],
+              metadata: document.metadata || {}
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Update local state
+          set((state) => ({
+            documents: {
+              ...state.documents,
+              [spaceId]: [
+                ...(state.documents[spaceId] || []),
+                {
+                  ...document,
+                  id: savedDoc.id,
+                  created_at: savedDoc.created_at,
+                  updated_at: savedDoc.updated_at,
+                },
+              ],
             },
-          ],
-        },
-      })),
+          }));
+        } catch (error) {
+          console.error('Error saving document:', error);
+          throw error;
+        }
+      },
       setTodoStates: (states) => {
         set({ todoStates: states });
         // Update progress when todo states change
@@ -420,6 +454,27 @@ export const useSpaceStore = create<SpaceStore>()(
 
         } catch (error) {
           console.error('Error loading user data:', error);
+        }
+      },
+      loadDocuments: async (spaceId: string) => {
+        try {
+          const { data: documents, error } = await supabase
+            .from('documents')
+            .select('*')
+            .eq('space_id', spaceId);
+
+          if (error) throw error;
+
+          // Update local state with fetched documents
+          set((state) => ({
+            documents: {
+              ...state.documents,
+              [spaceId]: documents || [],
+            },
+          }));
+        } catch (error) {
+          console.error('Error loading documents:', error);
+          throw error;
         }
       },
     }),
