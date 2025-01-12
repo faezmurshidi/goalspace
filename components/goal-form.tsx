@@ -112,19 +112,19 @@ export function GoalForm() {
   return (
     <div className="relative">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="flex flex-col gap-4">
+        {questions.length === 0 && <div className="flex flex-col gap-4">
           <div className="relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-rose-500/20 via-purple-500/20 to-cyan-500/20 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200" />
             <Input
               placeholder="Enter your goal (e.g., Learn Python for Data Science)"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
-              className="relative h-14 text-lg bg-background/50 backdrop-blur-xl border-white/10 shadow-lg ring-1 ring-white/10 focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
+              className="relative h-14 text-lg bg-background/50 backdrop-blur-xl border-border shadow-lg ring-1 ring-border focus:ring-2 focus:ring-purple-500/50 transition-all duration-300"
               disabled={isLoading}
             />
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-white/5 backdrop-blur-xl rounded-lg border border-white/10 shadow-lg">
+          <div className="flex items-center justify-between p-4 bg-card backdrop-blur-xl rounded-lg border border-border shadow-lg">
             <div className="flex items-center space-x-6">
               <motion.div
                 whileHover={{ scale: 1.05 }}
@@ -134,18 +134,18 @@ export function GoalForm() {
                   id="advanced-mode"
                   checked={isAdvancedMode}
                   onCheckedChange={(checked) => setIsAdvancedMode(checked as boolean)}
-                  className="border-white/20"
+                  className="border-border"
                 />
                 <label
                   htmlFor="advanced-mode"
-                  className="text-sm font-medium text-white/70 hover:text-white flex items-center gap-2 cursor-pointer"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-2 cursor-pointer"
                 >
                   <Wand2 className="h-4 w-4" />
                   Advanced Mode
                 </label>
               </motion.div>
 
-              <div className="flex items-center space-x-6 border-l border-white/10 pl-6">
+              <div className="flex items-center space-x-6 border-l border-border pl-6">
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center space-x-2"
@@ -158,7 +158,7 @@ export function GoalForm() {
                     onChange={(e) => setModelProvider(e.target.value as 'openai' | 'anthropic')}
                     className="h-4 w-4 accent-purple-500"
                   />
-                  <label htmlFor="openai" className="text-sm font-medium text-white/70 hover:text-white cursor-pointer">
+                  <label htmlFor="openai" className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer">
                     GPT-3.5
                   </label>
                 </motion.div>
@@ -174,36 +174,36 @@ export function GoalForm() {
                     onChange={(e) => setModelProvider(e.target.value as 'openai' | 'anthropic')}
                     className="h-4 w-4 accent-cyan-500"
                   />
-                  <label htmlFor="anthropic" className="text-sm font-medium text-white/70 hover:text-white cursor-pointer">
+                  <label htmlFor="anthropic" className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer">
                     Claude
                   </label>
                 </motion.div>
               </div>
             </div>
           </div>
-        </div>
+        </div>}
 
         {questions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-6 p-6 bg-white/5 backdrop-blur-xl rounded-lg border border-white/10 shadow-lg"
+            className="space-y-6 p-6 bg-card backdrop-blur-xl rounded-lg border border-border shadow-lg"
           >
-            <h3 className="text-xl font-medium text-white flex items-center gap-2">
+            <h3 className="text-xl font-medium text-foreground flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-purple-500" />
               Help us understand your context better
             </h3>
             {questions.map((q) => (
               <div key={q.id} className="space-y-3">
-                <label className="block text-white/90">
+                <label className="block text-foreground">
                   {q.question}
-                  <p className="text-sm text-white/50 mt-1">{q.purpose}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{q.purpose}</p>
                 </label>
                 <Input
                   value={answers[q.id] || ''}
                   onChange={(e) => setAnswers(prev => ({ ...prev, [q.id]: e.target.value }))}
                   placeholder="Your answer..."
-                  className="bg-white/5 backdrop-blur-xl border-white/10 focus:ring-2 focus:ring-purple-500/50"
+                  className="bg-background/50 backdrop-blur-xl border-border focus:ring-2 focus:ring-purple-500/50"
                 />
               </div>
             ))}
@@ -217,10 +217,10 @@ export function GoalForm() {
           <Button
             type="submit"
             className={cn(
-              "w-full h-14 text-lg font-medium shadow-lg backdrop-blur-xl",
+              "w-full h-14 text-lg font-medium shadow-lg backdrop-blur-xl text-primary-foreground",
               isAdvancedMode
-                ? "bg-gradient-to-r from-blue-500/80 to-purple-500/80 hover:from-blue-500/90 hover:to-purple-500/90 border border-white/10"
-                : "bg-gradient-to-r from-emerald-500/80 to-cyan-500/80 hover:from-emerald-500/90 hover:to-cyan-500/90 border border-white/10"
+                ? "bg-gradient-to-r from-blue-500/80 to-purple-500/80 hover:from-blue-500/90 hover:to-purple-500/90 border border-border"
+                : "bg-gradient-to-r from-emerald-500/80 to-cyan-500/80 hover:from-emerald-500/90 hover:to-cyan-500/90 border border-border"
             )}
             disabled={isLoading || (questions.length > 0 && Object.keys(answers).length < questions.length)}
           >
@@ -236,14 +236,13 @@ export function GoalForm() {
               </>
             )}
           </Button>
-
         </motion.div>
 
         {error && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-red-400 text-sm p-4 bg-red-500/10 backdrop-blur-xl rounded-lg border border-red-500/20"
+            className="text-destructive text-sm p-4 bg-destructive/10 backdrop-blur-xl rounded-lg border border-destructive/20"
           >
             {error}
           </motion.div>

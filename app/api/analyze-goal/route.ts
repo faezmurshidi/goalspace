@@ -30,8 +30,8 @@ const anthropicClient = new Anthropic({
 });
 
 const SYSTEM_PROMPT = `You are Faez, a goal-setting assistant AI designed to help users create and achieve their goals. Your expertise lies in project management, product management, and business development:
-Engage with the user to fully understand their goal and background. Ask clarifying questions to gather context about their current knowledge, skills, resources, and the specific nature of their goal. The goal might be operational, learning-oriented, or a combination of both. Do not assume that the user's goal is primarily learning-focused, and keep an open mind about what kind of spaces might be appropriate. 
-Analyse the goal and break it into smaller, actionable spaces. Identify the key functional areas, departments, or phases required to achieve the user's goal [Our Conversation]. These spaces should represent the core activities or areas of expertise needed for success and they may include (but are not limited to) departments (like R&D or marketing), disciplines, phases of a project, or complex task areas. 
+Engage with the user to fully understand their goal and background. Ask clarifying questions to gather context about their current knowledge, skills, resources, and the specific nature of their goal. The goal might be operational, learning-oriented, or a combination of both. Do not assume that the user's goal is primarily learning-focused, and keep an open mind about what kind of spaces might be appropriate.
+Analyse the goal and break it into smaller, actionable spaces. Identify the key functional areas, departments, or phases required to achieve the user's goal [Our Conversation]. These spaces should represent the core activities or areas of expertise needed for success and they may include (but are not limited to) departments (like R&D or marketing), disciplines, phases of a project, or complex task areas.
 Assign a specific mentor for each space, ensuring the mentor's expertise aligns with the space's function. Mentors are now expert agents for their specific "spaces," not just content creators. Therefore, match mentors to spaces based on their ability to guide and advise .
 4. Remember to ensure all mentors and spaces are contextually relevant and actionable. The spaces must allow the user to take concrete action towards achieving their goal, and the mentors must be appropriate experts for each space. If you don't know the answer, just say "I don't know".
 
@@ -39,7 +39,7 @@ When creating spaces and assigning mentors:
 - Each space should be focused and achievable
 - Mentors should have distinct personalities and relevant expertise
 - Content should be practical and actionable
-
+- The language of the spaces should be in the language of the user
 IMPORTANT: Your response must be a valid JSON object.`;
 
 const ADVANCED_SYSTEM_PROMPT = `You are Faez, a goal-setting assistant AI designed to help users create and achieve their goals. Your expertise lies in project management, product management, and business development.
@@ -63,7 +63,7 @@ Your response must be a valid JSON object with spaces that incorporate this deta
 
 const generateQuestionsPrompt = (goal: string) => `Given the goal: "${goal}"
 
-First, I need you to generate up to 5 targeted questions to better understand the user's context and current situation. These questions should help create a more personalized and effective learning plan.
+First, I need you to generate up to 5 targeted questions (in the language of the user) to better understand the user's context and current situation. These questions should help create a more personalized and effective learning plan.
 
 You must respond with a valid JSON object using this exact structure:
 {
@@ -92,6 +92,7 @@ You must respond with a valid JSON object using this exact structure:
   "spaces": [
     {
       "id": "unique-id",
+      "language": "language",
       "category": "space's category",
       "space_color": {
         "main": "space's background color",
@@ -107,7 +108,7 @@ You must respond with a valid JSON object using this exact structure:
         "expertise": ["Primary expertise", "Related skills"],
         "personality": "Brief description of mentor's teaching style and approach",
         "introduction": "A short, personalized welcome message from the mentor",
-        "system_prompt": "Hi, I'm your mentor {mentor_name + backround}. I'm here to help you achieve your goal {goal}. Objective of this space is {space_objective}. I'm going to help you achieve this by {space_methodology}."
+        "system_prompt": "You are {mentor_name + backround}. You are the expert for this space. You are going to help the user achieve their goal {goal}. Objective of this space is {space_objective}. You are going to help them achieve this by {space_methodology}."
       },
       "objectives": ["List", "of", "specific", "learning", "objectives"],
       "prerequisites": ["Any", "required", "background", "knowledge"],
@@ -195,17 +196,17 @@ export async function POST(request: Request) {
 
     // If answers are provided, generate spaces
     console.log('Making AI API call for spaces...');
-    
+
     let response;
     let reasoningResponse = '';
-    
+
     if (isAdvancedMode) {
       // First, get the reasoning steps
       if (modelProvider === 'anthropic') {
         reasoningResponse = await generateWithAnthropic(
           `First, analyze this goal step by step: "${goal}"\n\nUser Context:\n${Object.entries(answers).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}`
         );
-        
+
         response = await generateWithAnthropic(generateSpacePrompt(goal, answers));
       } else {
         const reasoningCompletion = await openai.chat.completions.create({
@@ -224,7 +225,7 @@ export async function POST(request: Request) {
         });
 
         reasoningResponse = reasoningCompletion.choices[0].message.content || '';
-        
+
         const completion = await openai.chat.completions.create({
           messages: [
             {
@@ -243,7 +244,7 @@ export async function POST(request: Request) {
           model: "gpt-3.5-turbo",
           temperature: 0.7,
         });
-        
+
         response = completion.choices[0].message.content;
       }
     } else {
@@ -267,7 +268,7 @@ export async function POST(request: Request) {
         response = completion.choices[0].message.content;
       }
     }
-    
+
     if (!response) {
       throw new Error('No response from AI provider');
     }
@@ -301,7 +302,7 @@ export async function POST(request: Request) {
     console.error('Error in /api/analyze-goal:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to process the request' },
-      { 
+      {
         status: 500,
         headers: {
           'Access-Control-Allow-Origin': '*',
@@ -310,4 +311,4 @@ export async function POST(request: Request) {
       }
     );
   }
-} 
+}

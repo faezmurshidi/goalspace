@@ -129,6 +129,19 @@ export function GeneratedSpaces() {
         return
       }
 
+      //if the same goal is already saved, redirect to dashboard
+      const { data: existingGoalData, error: existingGoalError } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('title', currentGoal)
+        .single()
+
+      if (existingGoalData) {
+        router.push('/dashboard')
+        return
+      }
+
       // If user is already authenticated, save directly
       const { data: goalData, error: goalError } = await supabase
         .from('goals')
@@ -208,8 +221,8 @@ export function GeneratedSpaces() {
           >
             <Card
               className={cn(
-                "relative overflow-hidden backdrop-blur-xl border-white/10 shadow-2xl",
-                "bg-white/5 hover:bg-white/10 transition-all duration-300",
+                "relative overflow-hidden backdrop-blur-xl border-border shadow-2xl",
+                "bg-card hover:bg-card-hover transition-all duration-300",
                 "group hover:shadow-xl hover:-translate-y-1"
               )}
             >
@@ -220,7 +233,7 @@ export function GeneratedSpaces() {
 
               <CardHeader className="pb-4 relative">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-xl font-bold text-white">
+                  <CardTitle className="flex items-center gap-2 text-xl font-bold text-foreground">
                     {space.category === 'learning' ? (
                       <Brain className="h-5 w-5 text-purple-500" />
                     ) : (
@@ -232,7 +245,7 @@ export function GeneratedSpaces() {
                     whileHover={{ scale: 1.05 }}
                     className={cn(
                       "text-xs px-3 py-1.5 rounded-full font-medium",
-                      "bg-white/10 backdrop-blur-md border border-white/10",
+                      "bg-muted backdrop-blur-md border border-border",
                       space.category === 'learning'
                         ? "text-purple-300"
                         : "text-cyan-300"
@@ -241,28 +254,65 @@ export function GeneratedSpaces() {
                     {space.category.charAt(0).toUpperCase() + space.category.slice(1)}
                   </motion.span>
                 </div>
-                <CardDescription className="mt-2.5 text-white/70">{space.description}</CardDescription>
+                <CardDescription className="mt-2.5 text-muted-foreground">{space.description}</CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6 relative">
+
+                {/* Objective Section */}
+                <div className="p-4 rounded-lg bg-card backdrop-blur-md border border-border">
+                  <h3 className="font-medium mb-2 text-sm flex items-center gap-2 text-foreground">
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                    Objective
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{space.objectives.join(', ')}</p>
+                </div>
+
+                {/* Prerequisites Section */}
+                <div className="p-4 rounded-lg bg-card backdrop-blur-md border border-border">
+                  <h3 className="font-medium mb-2 text-sm flex items-center gap-2 text-foreground">
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                    Prerequisites
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{space.prerequisites.join(', ')}</p>
+                </div>
+
+                {/* Time to Complete Section */}
+                <div className="p-4 rounded-lg bg-card backdrop-blur-md border border-border">
+                  <h3 className="font-medium mb-2 text-sm flex items-center gap-2 text-foreground">
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                    Time to Complete
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{space.time_to_complete}</p>
+                </div>
+
+                {/* To Do List Section */}
+                <div className="p-4 rounded-lg bg-card backdrop-blur-md border border-border">
+                  <h3 className="font-medium mb-2 text-sm flex items-center gap-2 text-foreground">
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                    To Do List
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{space.to_do_list.join(', ')}</p>
+                </div>
+
                 {/* Mentor Section */}
                 {space.mentor && (
-                  <div className="p-4 rounded-lg bg-white/5 backdrop-blur-md border border-white/10">
-                    <h3 className="font-medium mb-3 flex items-center gap-2 text-white">
+                  <div className="p-4 rounded-lg bg-card backdrop-blur-md border border-border">
+                    <h3 className="font-medium mb-3 flex items-center gap-2 text-foreground">
                       <Sparkles className="h-4 w-4 text-purple-500" />
                       Your AI Mentor
                     </h3>
                     <div className="space-y-2.5">
-                      <p className="font-medium text-sm text-white">{space.mentor.name}</p>
-                      <p className="text-sm text-white/70 italic">
+                      <p className="font-medium text-sm text-foreground">{space.mentor.name}</p>
+                      <p className="text-sm text-muted-foreground italic">
                         "{space.mentor.introduction}"
                       </p>
-                      <p className="text-xs text-white/50">
+                      <p className="text-xs text-muted-foreground">
                         Teaching style: {space.mentor.personality}
                       </p>
-                      <div className="text-xs text-white/50">
+                      <div className="text-xs text-muted-foreground">
                         <span>Expert in: </span>
-                        <span className="text-white/70">{space.mentor.expertise.join(', ')}</span>
+                        <span className="text-muted-foreground">{space.mentor.expertise.join(', ')}</span>
                       </div>
                     </div>
                   </div>
@@ -270,16 +320,17 @@ export function GeneratedSpaces() {
 
                 {/* System Prompt Section */}
                 {space.mentor?.system_prompt && (
-                  <div className="p-4 rounded-lg bg-white/5 backdrop-blur-md border border-white/10">
-                    <h3 className="font-medium mb-2 text-sm flex items-center gap-2 text-white">
+                  <div className="p-4 rounded-lg bg-card backdrop-blur-md border border-border">
+                    <h3 className="font-medium mb-2 text-sm flex items-center gap-2 text-foreground">
                       <Brain className="h-4 w-4 text-purple-500" />
                       System Prompt
                     </h3>
-                    <p className="text-sm text-white/70">
+                    <p className="text-sm text-muted-foreground">
                       {space.mentor.system_prompt}
                     </p>
                   </div>
                 )}
+
               </CardContent>
             </Card>
           </motion.div>
