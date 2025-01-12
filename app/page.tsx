@@ -10,6 +10,8 @@ import { SiteHeader } from "@/components/site-header";
 import { motion } from "framer-motion";
 import { Hero } from "@/components/ui/animated-hero";
 import { cn } from "@/lib/utils";
+import PricingPage from "./pricing/page";
+import { FAQ } from "@/components/ui/faq-section";
 
 export default function Home() {
   return (
@@ -17,7 +19,7 @@ export default function Home() {
       <div className="relative min-h-screen overflow-hidden">
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background/50 to-background/80 backdrop-blur-[2px]" />
-        
+
         {/* Animated Gradient Orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-purple-500/30 rounded-full blur-[100px] animate-pulse" />
@@ -27,15 +29,15 @@ export default function Home() {
 
         <div className="relative">
           <SiteHeader />
-          
+
           <div className="container mx-auto px-4 py-16 md:py-24">
             {/* Hero Section */}
-            <Hero /> 
+            <Hero />
 
             <GeneratedSpaces />
 
             {/* Features Grid */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
@@ -69,8 +71,14 @@ export default function Home() {
               ))}
             </motion.div>
 
+            {/* Pricing */}
+            <PricingPage />
+
+            {/* FAQ */}
+            <FAQ />
+
             {/* Social Proof */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -81,9 +89,9 @@ export default function Home() {
               </h2>
               <div className="flex justify-center gap-6">
                 <motion.div whileHover={{ scale: 1.1 }}>
-                  <Button 
-                    variant="ghost" 
-                    size="lg" 
+                  <Button
+                    variant="ghost"
+                    size="lg"
                     className={cn(
                       "gap-3 px-6 backdrop-blur-xl",
                       "text-foreground/80 hover:text-foreground dark:text-white/80 dark:hover:text-white",
@@ -96,9 +104,9 @@ export default function Home() {
                   </Button>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.1 }}>
-                  <Button 
-                    variant="ghost" 
-                    size="lg" 
+                  <Button
+                    variant="ghost"
+                    size="lg"
                     className={cn(
                       "gap-3 px-6 backdrop-blur-xl",
                       "text-foreground/80 hover:text-foreground dark:text-white/80 dark:hover:text-white",

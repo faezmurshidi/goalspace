@@ -68,7 +68,7 @@ interface SidebarLinkProps {
 
 export function SidebarLink({ link }: SidebarLinkProps) {
   const { open } = React.useContext(SidebarContext);
-  
+
   return (
     <Link
       href={link.href}
