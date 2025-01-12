@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
-import { LayoutDashboard, Target, Settings, LogOut, Moon, Sun, Brain } from 'lucide-react';
-import { useSpaceStore } from '@/lib/store';
-import { cn } from '@/lib/utils';
-import { signOut } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { useTheme } from "next-themes";
+import { Brain, LayoutDashboard, LogOut, Moon, Settings, Sun, Target } from 'lucide-react';
+import { useTheme } from 'next-themes';
+
 import { Button } from '@/components/ui/button';
+import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
+import { signOut } from '@/lib/auth';
+import { useSpaceStore } from '@/lib/store';
+import { cn } from '@/lib/utils';
 
 interface Link {
   label: string;
@@ -18,11 +19,7 @@ interface Link {
   onClick?: () => void | Promise<void>;
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
@@ -31,21 +28,21 @@ export default function DashboardLayout({
 
   const mainLinks: Link[] = [
     {
-      label: "Dashboard",
-      href: "/dashboard",
+      label: 'Dashboard',
+      href: '/dashboard',
       icon: <LayoutDashboard className="h-5 w-5 flex-shrink-0" />,
     },
   ];
 
   const bottomLinks: Link[] = [
     {
-      label: "Settings",
-      href: "/settings",
+      label: 'Settings',
+      href: '/settings',
       icon: <Settings className="h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: "Logout",
-      href: "#",
+      label: 'Logout',
+      href: '#',
       icon: <LogOut className="h-5 w-5 flex-shrink-0" />,
       onClick: async () => {
         await signOut();
@@ -55,15 +52,15 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="h-screen flex bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       <motion.div
         onMouseEnter={() => !open && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         animate={{ width: open || isHovered ? 256 : 64 }}
         transition={{ duration: 0.2 }}
       >
-        <Sidebar open={open || isHovered} setOpen={setOpen} className="h-screen">
-          <SidebarBody className="flex flex-col h-full">
+        <Sidebar open={open || isHovered} setOpen={setOpen} className="h-full">
+          <SidebarBody className="flex h-full flex-col">
             <div className="flex-1">
               <Logo open={open || isHovered} />
               <div className="mt-8 flex flex-col gap-2">
@@ -73,11 +70,13 @@ export default function DashboardLayout({
               </div>
               {spaces.length > 0 && (
                 <>
-                  <div className="mt-8 mb-4 px-2">
-                    <h2 className={cn(
-                      "text-xs uppercase text-muted-foreground font-semibold",
-                      !(open || isHovered) && "sr-only"
-                    )}>
+                  <div className="mb-4 mt-8 px-2">
+                    <h2
+                      className={cn(
+                        'text-xs font-semibold uppercase text-muted-foreground',
+                        !(open || isHovered) && 'sr-only'
+                      )}
+                    >
                       Your Spaces
                     </h2>
                   </div>
@@ -88,7 +87,12 @@ export default function DashboardLayout({
                         link={{
                           label: space.title,
                           href: `/space/${space.id}`,
-                          icon: <Brain className="h-5 w-5 flex-shrink-0" style={{ color: space.space_color?.main }} />,
+                          icon: (
+                            <Brain
+                              className="h-5 w-5 flex-shrink-0"
+                              style={{ color: space.space_color?.main }}
+                            />
+                          ),
                         }}
                       />
                     ))}
@@ -105,7 +109,7 @@ export default function DashboardLayout({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                    onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                     className="rounded-lg"
                   >
                     <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -118,7 +122,7 @@ export default function DashboardLayout({
                       animate={{ opacity: 1 }}
                       className="text-sm font-medium"
                     >
-                      {theme === "light" ? "Dark" : "Light"} mode
+                      {theme === 'light' ? 'Dark' : 'Light'} mode
                     </motion.span>
                   )}
                 </div>
@@ -127,10 +131,8 @@ export default function DashboardLayout({
           </SidebarBody>
         </Sidebar>
       </motion.div>
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8">
-          {children}
-        </div>
+      <main className="flex-1 overflow-auto">
+        <div className="h-full p-8">{children}</div>
       </main>
     </div>
   );
@@ -144,7 +146,7 @@ const Logo = ({ open }: { open: boolean }) => {
         <motion.span
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="font-semibold text-xl"
+          className="text-xl font-semibold"
         >
           GoalSpace
         </motion.span>

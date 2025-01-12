@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -21,9 +21,10 @@ export async function POST(req: Request) {
       prerequisites,
       mentor,
       model,
+      knowledge,
     } = await req.json();
 
-    const prompt = `Create a comprehensive mind map for the topic "${title}". 
+    const prompt = `Create a comprehensive mind map for the topic "${title}".
 The mind map should be formatted in Mermaid.js mindmap syntax.
 
 Context:
@@ -32,7 +33,7 @@ Context:
 - Objectives: ${objectives}
 - Prerequisites: ${prerequisites}
 - Mentor/Expert: ${mentor}
-
+- Knowledge: ${knowledge}
 Requirements:
 1. Use Mermaid.js mindmap syntax (e.g., "mindmap\\n  root((Main Topic))\\n    A[Subtopic]\\n      B[Detail]")
 2. Create a hierarchical structure with main concepts and sub-concepts
@@ -60,16 +61,17 @@ Please generate a mind map that helps understand ${title} in a structured and co
 
     if (model === 'gpt4') {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4-turbo-preview",
+        model: 'gpt-4-turbo-preview',
         messages: [
           {
-            role: "system",
-            content: "You are a mind map expert who creates clear, structured, and comprehensive mind maps using Mermaid.js syntax. Focus on creating hierarchical relationships that are easy to understand."
+            role: 'system',
+            content:
+              'You are a mind map expert who creates clear, structured, and comprehensive mind maps using Mermaid.js syntax. Focus on creating hierarchical relationships that are easy to understand.',
           },
           {
-            role: "user",
-            content: prompt
-          }
+            role: 'user',
+            content: prompt,
+          },
         ],
         temperature: 0.7,
       });
@@ -77,16 +79,17 @@ Please generate a mind map that helps understand ${title} in a structured and co
       mindmapContent = completion.choices[0].message.content || '';
     } else if (model === 'claude') {
       const message = await anthropic.messages.create({
-        model: "claude-3-opus-20240229",
+        model: 'claude-3-opus-20240229',
         max_tokens: 4000,
         temperature: 0.7,
-        system: "You are a mind map expert who creates clear, structured, and comprehensive mind maps using Mermaid.js syntax. Focus on creating hierarchical relationships that are easy to understand.",
+        system:
+          'You are a mind map expert who creates clear, structured, and comprehensive mind maps using Mermaid.js syntax. Focus on creating hierarchical relationships that are easy to understand.',
         messages: [
           {
-            role: "user",
-            content: prompt
-          }
-        ]
+            role: 'user',
+            content: prompt,
+          },
+        ],
       });
 
       if (message.content[0].type === 'text') {
@@ -132,9 +135,6 @@ This mind map was generated using AI and may be refined or expanded based on spe
     return NextResponse.json({ mindmap: formattedContent });
   } catch (error) {
     console.error('Error generating mind map:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate mind map' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to generate mind map' }, { status: 500 });
   }
-} 
+}

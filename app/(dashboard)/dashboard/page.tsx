@@ -1,28 +1,33 @@
 'use client';
 
-import { useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase/client';
-import { getCurrentUser } from '@/lib/auth';
+import { Brain, ChevronDown, ChevronUp, Target } from 'lucide-react';
+import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+
+import { ChatWindow } from '@/components/chat-window';
+import { ActivityCard } from '@/components/ui/activity-card';
+import type { Goal, Metric } from '@/components/ui/activity-card';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Progress } from '@/components/ui/progress';
+import { getCurrentUser } from '@/lib/auth';
 import { useSpaceStore } from '@/lib/store';
+import { supabase } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { Brain, Target } from 'lucide-react';
+
+const INITIAL_METRICS: Metric[] = [
+  { label: 'Move', value: '420', trend: 85, unit: 'cal' },
+  { label: 'Exercise', value: '35', trend: 70, unit: 'min' },
+  { label: 'Stand', value: '10', trend: 83, unit: 'hrs' },
+];
+
+const INITIAL_GOALS: Goal[] = [
+  { id: '1', title: '30min Morning Yoga', isCompleted: true },
+  { id: '2', title: '10k Steps', isCompleted: false },
+  { id: '3', title: 'Drink 2L Water', isCompleted: true },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -32,6 +37,28 @@ export default function DashboardPage() {
   useEffect(() => {
     loadUserData();
   }, [loadUserData]);
+
+  const [activityGoals, setActivityGoals] = useState<Goal[]>(INITIAL_GOALS);
+  const [activityMetrics, setActivityMetrics] = useState<Metric[]>(INITIAL_METRICS);
+
+  const handleToggleGoal = (goalId: string) => {
+    setActivityGoals((prev) =>
+      prev.map((goal) => (goal.id === goalId ? { ...goal, isCompleted: !goal.isCompleted } : goal))
+    );
+  };
+
+  const handleAddGoal = () => {
+    const newGoal: Goal = {
+      id: `goal-${activityGoals.length + 1}`,
+      title: `New Goal ${activityGoals.length + 1}`,
+      isCompleted: false,
+    };
+    setActivityGoals((prev) => [...prev, newGoal]);
+  };
+
+  const handleViewDetails = () => {
+    console.log('Viewing details');
+  };
 
   const testUserInsert = async () => {
     try {
@@ -97,8 +124,8 @@ export default function DashboardPage() {
           goal: {
             title: 'Test Goal',
             description: 'This is a test goal',
-            category: 'learning'
-          }
+            category: 'learning',
+          },
         }),
       });
 
@@ -132,13 +159,14 @@ export default function DashboardPage() {
   const sortedGoals = [...goals].sort((a, b) => b.createdAt - a.createdAt);
 
   // Prepare data for the line chart
-  const chartData = sortedGoals.map(goal => ({
+  const chartData = sortedGoals.map((goal) => ({
     title: goal.title,
     progress: goal.progress,
   }));
 
   return (
-    <div className="space-y-8">
+    <div className="flex h-full flex-col space-y-8 overflow-y-auto p-8">
+      {/* Header Section */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <div className="space-x-4">
@@ -152,152 +180,182 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Goals Overview */}
-      <section aria-labelledby="goals-heading">
-        <h2 id="goals-heading" className="text-xl font-semibold mb-4">
-          Goals Overview
-        </h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {sortedGoals.map((goal) => (
-            <Card key={goal.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{goal.title}</CardTitle>
-                <CardDescription>Due: {goal.dueDate}</CardDescription>
+      {/* Bento Grid Layout */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Activity Card */}
+        <section aria-labelledby="activity-heading">
+          <h2 id="activity-heading" className="mb-4 text-xl font-semibold">
+            Recent Activity
+          </h2>
+          <ActivityCard
+            metrics={activityMetrics}
+            dailyGoals={activityGoals}
+            onAddGoal={handleAddGoal}
+            onToggleGoal={handleToggleGoal}
+            onViewDetails={handleViewDetails}
+          />
+        </section>
+
+        {/* Chat Window */}
+        <section aria-labelledby="chat-heading" className="lg:col-span-2">
+          <h2 id="chat-heading" className="mb-4 text-xl font-semibold">
+            Chat Assistant
+          </h2>
+          <ChatWindow />
+        </section>
+
+        {/* Goals Overview */}
+        <section aria-labelledby="goals-heading" className="lg:col-span-3">
+          <h2 id="goals-heading" className="mb-4 text-xl font-semibold">
+            Goals Overview
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {sortedGoals.map((goal) => (
+              <Card key={goal.id}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">{goal.title}</CardTitle>
+                  <CardDescription>Due: {goal.dueDate}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-4">
+                    <Progress value={goal.progress} className="flex-1" />
+                    <span className="text-sm font-medium">{Math.round(goal.progress)}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        {/* Progress Chart */}
+        {goals.length > 0 && (
+          <section aria-labelledby="progress-heading" className="lg:col-span-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Progress Over Time</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center space-x-4">
-                  <Progress value={goal.progress} className="flex-1" />
-                  <span className="text-sm font-medium">{Math.round(goal.progress)}%</span>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                      <XAxis
+                        dataKey="title"
+                        stroke="#888888"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="#888888"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `${value}%`}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="progress"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      </section>
+          </section>
+        )}
 
-      {/* Progress Chart */}
-      {goals.length > 0 && (
-        <section aria-labelledby="progress-heading">
-          <Card>
-            <CardHeader>
-              <CardTitle>Progress Over Time</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={chartData}
-                    margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
-                  >
-                    <XAxis
-                      dataKey="title"
-                      stroke="#888888"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      stroke="#888888"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => `${value}%`}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="progress"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
-
-      {/* Learning Spaces */}
-      <section aria-labelledby="spaces-heading">
-        <h2 id="spaces-heading" className="text-xl font-semibold mb-4">
-          Learning Spaces
-        </h2>
-        <div className="grid gap-4">
-          {spaces.map((space) => (
-            <Collapsible
-              key={space.id}
-              open={!space.isCollapsed}
-              onOpenChange={() => toggleSpaceCollapse(space.id)}
-            >
-              <Card>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          {space.category === 'learning' ? (
-                            <Brain className="h-5 w-5" style={{ color: space.space_color?.main }} />
-                          ) : (
-                            <Target className="h-5 w-5" style={{ color: space.space_color?.main }} />
-                          )}
-                          {space.title}
-                        </CardTitle>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            {space.isCollapsed ? (
-                              <ChevronDown className="h-4 w-4" />
+        {/* Learning Spaces */}
+        <section aria-labelledby="spaces-heading" className="lg:col-span-3">
+          <h2 id="spaces-heading" className="mb-4 text-xl font-semibold">
+            Learning Spaces
+          </h2>
+          <div className="grid gap-4">
+            {spaces.map((space) => (
+              <Collapsible
+                key={space.id}
+                open={!space.isCollapsed}
+                onOpenChange={() => toggleSpaceCollapse(space.id)}
+              >
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="mb-2 flex items-center justify-between">
+                          <CardTitle className="flex items-center gap-2 text-lg">
+                            {space.category === 'learning' ? (
+                              <Brain
+                                className="h-5 w-5"
+                                style={{ color: space.space_color?.main }}
+                              />
                             ) : (
-                              <ChevronUp className="h-4 w-4" />
+                              <Target
+                                className="h-5 w-5"
+                                style={{ color: space.space_color?.main }}
+                              />
                             )}
-                            <span className="sr-only">Toggle space content</span>
-                          </Button>
-                        </CollapsibleTrigger>
+                            {space.title}
+                          </CardTitle>
+                          <CollapsibleTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              {space.isCollapsed ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronUp className="h-4 w-4" />
+                              )}
+                              <span className="sr-only">Toggle space content</span>
+                            </Button>
+                          </CollapsibleTrigger>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <Progress
+                            value={space.progress}
+                            className="flex-1"
+                            style={
+                              {
+                                '--progress-color': space.space_color?.main,
+                              } as any
+                            }
+                          />
+                          <span className="text-sm font-medium">
+                            {Math.round(space.progress || 0)}%
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <Progress
-                          value={space.progress}
-                          className="flex-1"
+                    </div>
+                  </CardHeader>
+                  <CollapsibleContent>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">{space.description}</p>
+                        <div>
+                          <h4 className="mb-2 text-sm font-medium">Objectives:</h4>
+                          <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+                            {space.objectives.map((objective, index) => (
+                              <li key={index}>{objective}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <Button
+                          onClick={() => router.push(`/space/${space.id}`)}
+                          className="w-full"
                           style={{
-                            '--progress-color': space.space_color?.main
-                          } as any}
-                        />
-                        <span className="text-sm font-medium">{Math.round(space.progress || 0)}%</span>
+                            backgroundColor: space.space_color?.main,
+                            borderColor: space.space_color?.main,
+                          }}
+                        >
+                          Go to Space
+                        </Button>
                       </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CollapsibleContent>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        {space.description}
-                      </p>
-                      <div>
-                        <h4 className="font-medium text-sm mb-2">Objectives:</h4>
-                        <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                          {space.objectives.map((objective, index) => (
-                            <li key={index}>{objective}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <Button
-                        onClick={() => router.push(`/space/${space.id}`)}
-                        className="w-full"
-                        style={{
-                          backgroundColor: space.space_color?.main,
-                          borderColor: space.space_color?.main,
-                        }}
-                      >
-                        Go to Space
-                      </Button>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          ))}
-        </div>
-      </section>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
