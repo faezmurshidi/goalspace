@@ -109,7 +109,8 @@ export function GoalForm() {
 
     if (questions.length === 0) {
       getQuestions(goal.trim());
-    } else {
+    } else if (Object.keys(answers).length === questions.length) {
+      // Only proceed if all questions are answered
       analyzeGoal(goal.trim(), answers);
     }
   };
@@ -195,7 +196,18 @@ export function GoalForm() {
           />
         )}
 
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{
+            opacity:
+              questions.length === 0 || Object.keys(answers).length === questions.length ? 1 : 0,
+            y: questions.length === 0 || Object.keys(answers).length === questions.length ? 0 : 20,
+          }}
+          transition={{ duration: 0.3 }}
+          className={cn(
+            questions.length > 0 && Object.keys(answers).length < questions.length && 'hidden'
+          )}
+        >
           <Button
             type="submit"
             className={cn(
@@ -204,9 +216,7 @@ export function GoalForm() {
                 ? 'border border-border bg-gradient-to-r from-blue-500/80 to-purple-500/80 hover:from-blue-500/90 hover:to-purple-500/90'
                 : 'border border-border bg-gradient-to-r from-emerald-500/80 to-cyan-500/80 hover:from-emerald-500/90 hover:to-cyan-500/90'
             )}
-            disabled={
-              isLoading || (questions.length > 0 && Object.keys(answers).length < questions.length)
-            }
+            disabled={isLoading}
           >
             {isLoading ? (
               <>
