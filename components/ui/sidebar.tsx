@@ -64,15 +64,26 @@ interface SidebarLinkProps {
     icon: React.ReactNode;
     onClick?: () => void;
   };
+  onClick?: () => void;
 }
 
-export function SidebarLink({ link }: SidebarLinkProps) {
+export function SidebarLink({ link, onClick }: SidebarLinkProps) {
   const { open } = React.useContext(SidebarContext);
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      e.preventDefault();
+      onClick();
+    } else if (link.onClick) {
+      e.preventDefault();
+      link.onClick();
+    }
+  };
 
   return (
     <Link
       href={link.href}
-      onClick={link.onClick}
+      onClick={handleClick}
       className="flex items-center gap-2 text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-lg hover:bg-neutral-200/50 dark:hover:bg-neutral-700/50 transition-colors"
     >
       {link.icon}

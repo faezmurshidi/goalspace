@@ -1,82 +1,50 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
-import { generateObject } from 'ai';
-import { z } from 'zod';
 
-// Configure route options
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-// CORS configuration
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+// Add CORS preflight
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   });
 }
 
-// Initialize providers
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const SYSTEM_PROMPT = `You are an AI goal analysis expert. Your role is to help users break down their goals into achievable steps and create a structured learning plan.`;
 
-const anthropicClient = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
-
-const SYSTEM_PROMPT = `You are Faez, a goal-setting assistant AI designed to help users create and achieve their goals. Your expertise lies in project management, product management, and business development:
-Engage with the user to fully understand their goal and background. Ask clarifying questions to gather context about their current knowledge, skills, resources, and the specific nature of their goal. The goal might be operational, learning-oriented, or a combination of both. Do not assume that the user's goal is primarily learning-focused, and keep an open mind about what kind of spaces might be appropriate.
-Analyse the goal and break it into smaller, actionable spaces. Identify the key functional areas, departments, or phases required to achieve the user's goal [Our Conversation]. These spaces should represent the core activities or areas of expertise needed for success and they may include (but are not limited to) departments (like R&D or marketing), disciplines, phases of a project, or complex task areas.
-Assign a specific mentor for each space, ensuring the mentor's expertise aligns with the space's function. Mentors are now expert agents for their specific "spaces," not just content creators. Therefore, match mentors to spaces based on their ability to guide and advise .
-4. Remember to ensure all mentors and spaces are contextually relevant and actionable. The spaces must allow the user to take concrete action towards achieving their goal, and the mentors must be appropriate experts for each space. If you don't know the answer, just say "I don't know".
-
-When creating spaces and assigning mentors:
-- Each space should be focused and achievable
-- Mentors should have distinct personalities and relevant expertise
-- Content should be practical and actionable
-- The language of the spaces should be in the language of the user
-IMPORTANT: Your response must be a valid JSON object.`;
-
-const ADVANCED_SYSTEM_PROMPT = `You are Faez, a goal-setting assistant AI designed to help users create and achieve their goals. Your expertise lies in project management, product management, and business development.
-
-You approach every goal scientifically and break down your reasoning step by step.
-For each step, provide a title that describes what you're doing in that step, along with the content.
-
-Follow these guidelines exactly:
-1. Break down the goal mathematically where possible
-2. USE AS MANY REASONING STEPS AS POSSIBLE (AT LEAST 4)
-3. BE AWARE OF YOUR LIMITATIONS AND WHAT YOU CAN AND CANNOT DO
-4. INCLUDE EXPLORATION OF ALTERNATIVE APPROACHES
-5. CONSIDER POTENTIAL PITFALLS AND FAILURE POINTS
-6. FULLY TEST ALL POSSIBILITIES
-7. USE MULTIPLE METHODS TO DERIVE THE PLAN
-8. EXPLAIN PROS AND CONS OF EACH APPROACH
-9. Have at least one step where you explain things in detail
-10. USE FIRST PRINCIPLES AND MENTAL MODELS
-
-Your response must be a valid JSON object with spaces that incorporate this detailed analysis.`;
+type ChatMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
 
 const generateQuestionsPrompt = (goal: string) => `Given the goal: "${goal}"
 
-First, I need you to generate up to 5 targeted questions (in the language of the user) to better understand the user's context and current situation. These questions should help create a more personalized and effective learning plan.
+Generate 3-5 questions that will help understand the user's context better. Each question should help tailor the learning plan to the user's specific needs.
 
-You must respond with a valid JSON object using this exact structure:
+Return the response in this exact JSON format:
 {
   "questions": [
     {
-      "id": "q1",
-      "question": "Question text here",
-      "purpose": "Brief explanation of why this question is important for goal planning"
+      "id": "unique-id",
+      "question": "The question text",
+      "purpose": "Brief explanation of why this question is important"
     }
   ]
 }`;
 
-const generateSpacePrompt = (goal: string, context: any) => `Given the goal: "${goal}"
+const generateSpacePrompt = (goal: string, context: Record<string, string>) => `Given the goal: "${goal}"
 
 User Context:
 ${Object.entries(context).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}
@@ -98,7 +66,7 @@ You must respond with a valid JSON object using this exact structure:
         "main": "space's background color",
         "secondary": "space's secondary color",
         "tertiary": "space's tertiary color",
-        "accent": "space's accent color",
+        "accent": "space's accent color"
       },
       "title": "Clear and specific space title",
       "description": "Detailed description of what will be learned and why it's important",
@@ -118,24 +86,29 @@ You must respond with a valid JSON object using this exact structure:
   ]
 }`;
 
-async function generateWithOpenAI(messages: any[]) {
+async function generateWithOpenAI(messages: ChatMessage[]) {
   const completion = await openai.chat.completions.create({
-    messages,
+    messages: messages as any,
     model: "gpt-3.5-turbo",
     temperature: 0.7,
   });
-  return completion.choices[0].message.content;
+  return completion.choices[0].message.content || '';
 }
 
 async function generateWithAnthropic(prompt: string) {
-  const message = await anthropicClient.messages.create({
-    model: "claude-3-5-sonnet-20240620",
+  const message = await anthropic.messages.create({
+    model: "claude-3-opus-20240229",
     max_tokens: 4000,
     temperature: 0.7,
-    system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }],
   });
-  return message.content[0].text;
+
+  const textBlock = message.content.find(block => block.type === 'text');
+  if (!textBlock || !('text' in textBlock)) {
+    throw new Error('No text content found in Claude response');
+  }
+  
+  return textBlock.text;
 }
 
 export async function POST(request: Request) {
@@ -209,63 +182,42 @@ export async function POST(request: Request) {
 
         response = await generateWithAnthropic(generateSpacePrompt(goal, answers));
       } else {
-        const reasoningCompletion = await openai.chat.completions.create({
-          messages: [
-            {
-              role: "system",
-              content: ADVANCED_SYSTEM_PROMPT
-            },
-            {
-              role: "user",
-              content: `First, analyze this goal step by step: "${goal}"\n\nUser Context:\n${Object.entries(answers).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}`
-            }
-          ],
-          model: "gpt-3.5-turbo",
-          temperature: 0.7,
-        });
+        reasoningResponse = await generateWithOpenAI([
+          {
+            role: "system",
+            content: SYSTEM_PROMPT
+          },
+          {
+            role: "user",
+            content: `First, analyze this goal step by step: "${goal}"\n\nUser Context:\n${Object.entries(answers).map(([question, answer]) => `Q: ${question}\nA: ${answer}`).join('\n')}`
+          }
+        ]);
 
-        reasoningResponse = reasoningCompletion.choices[0].message.content || '';
-
-        const completion = await openai.chat.completions.create({
-          messages: [
-            {
-              role: "system",
-              content: ADVANCED_SYSTEM_PROMPT
-            },
-            {
-              role: "assistant",
-              content: reasoningResponse
-            },
-            {
-              role: "user",
-              content: generateSpacePrompt(goal, answers)
-            }
-          ],
-          model: "gpt-3.5-turbo",
-          temperature: 0.7,
-        });
-
-        response = completion.choices[0].message.content;
+        response = await generateWithOpenAI([
+          {
+            role: "system",
+            content: SYSTEM_PROMPT
+          },
+          {
+            role: "user",
+            content: generateSpacePrompt(goal, answers)
+          }
+        ]);
       }
     } else {
       if (modelProvider === 'anthropic') {
         response = await generateWithAnthropic(generateSpacePrompt(goal, answers));
       } else {
-        const completion = await openai.chat.completions.create({
-          messages: [
-            {
-              role: "system",
-              content: SYSTEM_PROMPT
-            },
-            {
-              role: "user",
-              content: generateSpacePrompt(goal, answers)
-            }
-          ],
-          model: "gpt-3.5-turbo",
-          temperature: 0.7,
-        });
-        response = completion.choices[0].message.content;
+        response = await generateWithOpenAI([
+          {
+            role: "system",
+            content: SYSTEM_PROMPT
+          },
+          {
+            role: "user",
+            content: generateSpacePrompt(goal, answers)
+          }
+        ]);
       }
     }
 
@@ -273,42 +225,29 @@ export async function POST(request: Request) {
       throw new Error('No response from AI provider');
     }
 
-    let parsedResponse;
     try {
-      parsedResponse = JSON.parse(response);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      console.error('Raw response:', response);
-      throw new Error('Failed to parse AI provider response as JSON');
-    }
-
-    if (!parsedResponse.spaces || !Array.isArray(parsedResponse.spaces)) {
-      console.error('Invalid response structure:', parsedResponse);
-      throw new Error('Invalid response structure from AI provider');
-    }
-
-    // Add reasoning steps to the response if in advanced mode
-    if (isAdvancedMode) {
-      parsedResponse.reasoning = reasoningResponse;
-    }
-
-    return NextResponse.json(parsedResponse, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json',
-      }
-    });
-  } catch (error) {
-    console.error('Error in /api/analyze-goal:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to process the request' },
-      {
-        status: 500,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
+      const parsedResponse = JSON.parse(response);
+      return NextResponse.json(
+        {
+          spaces: parsedResponse.spaces,
+          reasoning: reasoningResponse
+        },
+        {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          }
         }
-      }
+      );
+    } catch (parseError) {
+      console.error('Failed to parse spaces response:', response);
+      throw new Error('Invalid JSON response from AI provider');
+    }
+  } catch (error) {
+    console.error('Error in analyze-goal:', error);
+    return NextResponse.json(
+      { error: 'Failed to analyze goal' },
+      { status: 500 }
     );
   }
 }

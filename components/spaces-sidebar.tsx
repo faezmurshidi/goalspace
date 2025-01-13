@@ -25,6 +25,7 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   // After mounting, we have access to the theme
   useEffect(() => {
@@ -80,7 +81,7 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
   ];
 
   return (
-    <Sidebar>
+    <Sidebar open={isOpen} setOpen={setIsOpen}>
       <SidebarBody className={cn("fixed left-0 top-[57px] z-30 h-[calc(100vh-57px)]", className)}>
         {/* Top Navigation */}
         <div className="space-y-2">
@@ -88,10 +89,6 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
             <SidebarLink
               key={item.href}
               link={item}
-              className={cn(
-                "w-full",
-                pathname === item.href && "bg-neutral-200 dark:bg-neutral-700"
-              )}
             />
           ))}
         </div>
@@ -117,11 +114,6 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
                     />
                   ),
                 }}
-                className={cn(
-                  "w-full",
-                  activeSpaceId === space.id && "bg-neutral-200 dark:bg-neutral-700",
-                  loadingSpaceId === space.id && "animate-pulse"
-                )}
               />
             ))}
           </div>
@@ -131,28 +123,25 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
         <div className="space-y-2 mt-auto pt-6 border-t dark:border-neutral-700">
           {/* Theme Toggle */}
           {mounted && (
-            <SidebarLink
-              link={{
-                label: theme === 'dark' ? 'Light Mode' : 'Dark Mode',
-                href: '#',
-                icon: theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />,
-              }}
-              className="w-full"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            />
+            <div className="w-full text-left">
+              <SidebarLink
+                link={{
+                  label: theme === 'dark' ? 'Light Mode' : 'Dark Mode',
+                  href: '#',
+                  icon: theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />,
+                  onClick: () => setTheme(theme === 'dark' ? 'light' : 'dark')
+                }}
+              />
+            </div>
           )}
 
           {/* Bottom Nav Items */}
           {bottomNavItems.map((item) => (
-            <SidebarLink
-              key={item.href}
-              link={item}
-              className={cn(
-                "w-full",
-                item.label.includes('Logout') && "text-red-500 hover:text-red-600"
-              )}
-              onClick={item.onClick}
-            />
+            <button key={item.href} onClick={item.onClick} className="w-full text-left">
+              <SidebarLink
+                link={item}
+              />
+            </button>
           ))}
 
           {/* New Space Button */}
@@ -162,7 +151,6 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
               href: '/new-space',
               icon: <Plus className="h-4 w-4" />,
             }}
-            className="w-full mt-4"
           />
         </div>
       </SidebarBody>

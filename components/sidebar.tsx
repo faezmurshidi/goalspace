@@ -76,28 +76,7 @@ export function Sidebar({ className, isOpen, onToggle }: SidebarProps) {
             <h2 className="mb-4 px-4 text-xl font-semibold tracking-tight">
               Navigation
             </h2>
-            <ScrollArea className="h-[calc(100vh-10rem)] px-1">
-              <div className="space-y-1">
-                {sidebarItems.map((item) => (
-                  <Button
-                    key={item.href}
-                    asChild
-                    variant={pathname === item.href ? 'secondary' : 'ghost'}
-                    className={cn(
-                      'w-full justify-start gap-2',
-                      pathname === item.href && 'bg-primary/10'
-                    )}
-                  >
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span className={cn("transition-opacity", !isOpen && "opacity-0")}>
-                        {item.title}
-                      </span>
-                    </Link>
-                  </Button>
-                ))}
-              </div>
-            </ScrollArea>
+           
           </div>
         </div>
       </div>
