@@ -97,7 +97,7 @@ async function generateWithOpenAI(messages: ChatMessage[]) {
 
 async function generateWithAnthropic(prompt: string) {
   const message = await anthropic.messages.create({
-    model: "claude-3-opus-20240229",
+    model: "claude-3-5-sonnet-20240620",
     max_tokens: 4000,
     temperature: 0.7,
     messages: [{ role: "user", content: prompt }],
