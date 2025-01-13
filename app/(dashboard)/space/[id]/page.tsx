@@ -1,19 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { SiteHeader } from '@/components/site-header';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, Target, ArrowLeft, MessageSquare, Loader2, Sparkles } from 'lucide-react';
-import { useSpaceStore } from '@/lib/store';
-import { cn } from '@/lib/utils';
-import { MarkdownContent } from '@/components/markdown-content';
+import { ArrowLeft, Brain, Loader2, MessageSquare, Sparkles, Target } from 'lucide-react';
+
 import { ChatWithMentor } from '@/components/chat-with-mentor';
 import { KnowledgeBase } from '@/components/knowledge-base';
-import { SpacesSidebar } from '@/components/spaces-sidebar';
+import { MarkdownContent } from '@/components/markdown-content';
+import { SiteHeader } from '@/components/site-header';
 import { SpaceTools } from '@/components/space-tools';
+import { SpacesSidebar } from '@/components/spaces-sidebar';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useSpaceStore } from '@/lib/store';
+import { cn } from '@/lib/utils';
 
 export default function SpacePage() {
   const params = useParams();
@@ -29,18 +30,22 @@ export default function SpacePage() {
     addDocument,
     isSidebarCollapsed,
     content: storedContent,
-    setContent
+    setContent,
   } = useSpaceStore();
 
   const space = getSpaceById(spaceId);
   const [showKnowledgeBase, setShowKnowledgeBase] = useState(true);
   const [showChat, setShowChat] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<{title: string; content: string} | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<{
+    title: string;
+    content: string;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showTools, setShowTools] = useState(true);
 
-  const currentContent = selectedDocument?.content || storedContent[spaceId] || space?.content || '';
+  const currentContent =
+    selectedDocument?.content || storedContent[spaceId] || space?.content || '';
   const contentTitle = selectedDocument?.title || space?.title || '';
 
   // Generate initial content when the component mounts
@@ -87,23 +92,19 @@ export default function SpacePage() {
       }
     };
 
-    generateContent();
+    //generateContent();
   }, [space, storedContent, spaceId, setContent, addDocument]);
 
   if (!space) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-8">
-          <Button
-            variant="ghost"
-            className="mb-4"
-            onClick={() => router.back()}
-          >
+        <div className="mx-auto max-w-6xl space-y-8">
+          <Button variant="ghost" className="mb-4" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-2">Space Not Found</h1>
+            <h1 className="mb-2 text-2xl font-bold">Space Not Found</h1>
             <p className="text-muted-foreground">This space doesn't exist or has been removed.</p>
           </div>
         </div>
@@ -117,16 +118,18 @@ export default function SpacePage() {
       <div>
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">{space.title}</h2>
-          <span className={cn(
-            "text-sm px-3 py-1.5 rounded-full font-medium",
-            space.category === 'learning'
-              ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-              : "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
-          )}>
+          <span
+            className={cn(
+              'rounded-full px-3 py-1.5 text-sm font-medium',
+              space.category === 'learning'
+                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300'
+            )}
+          >
             {space.category.charAt(0).toUpperCase() + space.category.slice(1)}
           </span>
         </div>
-        <p className="text-muted-foreground mt-2">{space.description}</p>
+        <p className="mt-2 text-muted-foreground">{space.description}</p>
       </div>
 
       <Separator />
@@ -134,7 +137,7 @@ export default function SpacePage() {
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-10">
         {/* Left Column - Main Content */}
-        <div className="lg:col-span-6 space-y-6">
+        <div className="space-y-6 lg:col-span-6">
           {/* Knowledge Base */}
           {showKnowledgeBase && (
             <KnowledgeBase
@@ -151,27 +154,23 @@ export default function SpacePage() {
             </CardHeader>
             <CardContent className="h-full overflow-auto p-6">
               {isGenerating ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-card shadow-lg">
+                <div className="flex h-full items-center justify-center">
+                  <div className="flex items-center gap-2 rounded-full bg-card px-4 py-2 shadow-lg">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-sm text-muted-foreground">Generating content...</span>
                   </div>
                 </div>
               ) : error ? (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex h-full items-center justify-center">
                   <div className="text-center text-destructive">
                     <p>{error}</p>
-                    <Button
-                      variant="outline"
-                      onClick={() => setError(null)}
-                      className="mt-4"
-                    >
+                    <Button variant="outline" onClick={() => setError(null)} className="mt-4">
                       Dismiss
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div className="prose prose-lg dark:prose-invert max-w-none">
+                <div className="prose prose-lg max-w-none dark:prose-invert">
                   <MarkdownContent content={currentContent} />
                 </div>
               )}
@@ -180,22 +179,12 @@ export default function SpacePage() {
         </div>
 
         {/* Right Column - Tools and Chat */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="space-y-6 lg:col-span-4">
           {/* Tools */}
-          {showTools && (
-            <SpaceTools
-              spaceId={spaceId}
-              onClose={() => setShowTools(false)}
-            />
-          )}
+          {showTools && <SpaceTools spaceId={spaceId} onClose={() => setShowTools(false)} />}
 
           {/* Chat Section */}
-          {showChat && (
-            <ChatWithMentor
-              spaceId={spaceId}
-              onClose={() => setShowChat(false)}
-            />
-          )}
+          {showChat && <ChatWithMentor spaceId={spaceId} onClose={() => setShowChat(false)} />}
 
           {/* Toggle buttons when components are hidden */}
           <div className="flex flex-wrap gap-2">
@@ -205,27 +194,19 @@ export default function SpacePage() {
                 onClick={() => setShowKnowledgeBase(true)}
                 className="flex-1"
               >
-                <Brain className="h-4 w-4 mr-2" />
+                <Brain className="mr-2 h-4 w-4" />
                 Show Knowledge Base
               </Button>
             )}
             {!showTools && (
-              <Button
-                variant="outline"
-                onClick={() => setShowTools(true)}
-                className="flex-1"
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
+              <Button variant="outline" onClick={() => setShowTools(true)} className="flex-1">
+                <Sparkles className="mr-2 h-4 w-4" />
                 Show Tools
               </Button>
             )}
             {!showChat && (
-              <Button
-                variant="outline"
-                onClick={() => setShowChat(true)}
-                className="flex-1"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
+              <Button variant="outline" onClick={() => setShowChat(true)} className="flex-1">
+                <MessageSquare className="mr-2 h-4 w-4" />
                 Show Chat
               </Button>
             )}

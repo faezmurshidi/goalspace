@@ -1,22 +1,35 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import TaskList from '@tiptap/extension-task-list';
-import TaskItem from '@tiptap/extension-task-item';
+import { useCallback, useEffect, useState } from 'react';
 import { Extension } from '@tiptap/core';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import Link from '@tiptap/extension-link';
+import TaskItem from '@tiptap/extension-task-item';
+import TaskList from '@tiptap/extension-task-list';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
+
 import 'highlight.js/styles/github-dark.css';
 import '@/styles/editor.css';
-import { Bold, Italic, List, ListChecks, Heading2, Code, Quote, Sparkles, Loader2, FileDown, FileUp } from 'lucide-react';
-import { Space } from '@/lib/store';
+
+import {
+  Bold,
+  Code,
+  FileDown,
+  FileUp,
+  Heading2,
+  Italic,
+  List,
+  ListChecks,
+  Loader2,
+  Quote,
+  Sparkles,
+} from 'lucide-react';
+
+import { Space, useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-import { useSpaceStore } from '@/lib/store';
-
 
 const lowlight = createLowlight(common);
 
@@ -27,13 +40,13 @@ interface SpaceContentEditorProps {
   onAIAssist?: (content: string) => Promise<string>;
 }
 
-const MenuButton = ({ 
-  onClick, 
-  isActive = false, 
+const MenuButton = ({
+  onClick,
+  isActive = false,
   disabled = false,
-  children 
-}: { 
-  onClick: () => void; 
+  children,
+}: {
+  onClick: () => void;
   isActive?: boolean;
   disabled?: boolean;
   children: React.ReactNode;
@@ -43,16 +56,18 @@ const MenuButton = ({
     size="sm"
     onClick={onClick}
     disabled={disabled}
-    className={cn(
-      "h-8 px-3",
-      isActive && "bg-muted"
-    )}
+    className={cn('h-8 px-3', isActive && 'bg-muted')}
   >
     {children}
   </Button>
 );
 
-export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssist }: SpaceContentEditorProps) {
+export function SpaceContentEditor({
+  space,
+  onUpdate,
+  editable = true,
+  onAIAssist,
+}: SpaceContentEditorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const { content: storedContent, setContent, addDocument } = useSpaceStore();
   const initialContent = storedContent[space.id] || space.content || '';
@@ -99,20 +114,23 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
         },
         blockquote: {
           HTMLAttributes: {
-            class: 'border-l-4 border-gray-200 dark:border-gray-700 pl-6 py-1 my-6 text-gray-600 dark:text-gray-400',
+            class:
+              'border-l-4 border-gray-200 dark:border-gray-700 pl-6 py-1 my-6 text-gray-600 dark:text-gray-400',
           },
         },
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline decoration-blue-400/30 hover:decoration-blue-400 transition-colors',
+          class:
+            'text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline decoration-blue-400/30 hover:decoration-blue-400 transition-colors',
         },
       }),
       CodeBlockLowlight.configure({
         lowlight,
         HTMLAttributes: {
-          class: 'block bg-gray-100 dark:bg-gray-800/50 rounded-xl p-6 mb-6 text-sm font-mono overflow-x-auto border border-gray-200 dark:border-gray-700',
+          class:
+            'block bg-gray-100 dark:bg-gray-800/50 rounded-xl p-6 mb-6 text-sm font-mono overflow-x-auto border border-gray-200 dark:border-gray-700',
         },
       }),
       TaskList.configure({
@@ -131,7 +149,8 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
     editable,
     editorProps: {
       attributes: {
-        class: 'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-8 py-6',
+        class:
+          'prose prose-lg dark:prose-invert max-w-none focus:outline-none min-h-[300px] px-8 py-6',
       },
     },
     onUpdate: ({ editor }) => {
@@ -146,7 +165,7 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
     const generateContent = async () => {
       // Skip if no space, or if content already exists
       if (!space || space.content || storedContent[space.id]) return;
-      
+
       setIsGenerating(true);
       try {
         const response = await fetch('/api/generate-initial-content', {
@@ -177,7 +196,7 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
       }
     };
 
-    generateContent();
+    // generateContent();
   }, [space, storedContent, setContent, addDocument]);
 
   // Update editor content when stored content changes
@@ -189,7 +208,7 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
 
   const handleAIAssist = async () => {
     if (!editor || !onAIAssist) return;
-    
+
     setIsGenerating(true);
     const currentContent = editor.getHTML();
     try {
@@ -268,9 +287,9 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
   }
 
   return (
-    <div className="space-content-editor border rounded-lg bg-white dark:bg-gray-900 shadow-sm h-[calc(100vh-8rem)] flex flex-col">
+    <div className="space-content-editor flex h-[calc(100vh-8rem)] flex-col rounded-lg border bg-white shadow-sm dark:bg-gray-900">
       {editable && (
-        <div className="flex-none flex flex-wrap items-center gap-1 p-2 border-b bg-gray-50 dark:bg-gray-800/50 rounded-t-lg">
+        <div className="flex flex-none flex-wrap items-center gap-1 rounded-t-lg border-b bg-gray-50 p-2 dark:bg-gray-800/50">
           <MenuButton
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             isActive={editor.isActive('heading', { level: 2 })}
@@ -295,7 +314,7 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
           >
             <Code className="h-4 w-4" />
           </MenuButton>
-          <div className="w-px h-4 bg-border mx-2" />
+          <div className="mx-2 h-4 w-px bg-border" />
           <MenuButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             isActive={editor.isActive('bulletList')}
@@ -314,28 +333,20 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
           >
             <Quote className="h-4 w-4" />
           </MenuButton>
-          <div className="w-px h-4 bg-border mx-2" />
-          <MenuButton
-            onClick={handleAIAssist}
-            disabled={!onAIAssist || isGenerating}
-          >
+          <div className="mx-2 h-4 w-px bg-border" />
+          <MenuButton onClick={handleAIAssist} disabled={!onAIAssist || isGenerating}>
             {isGenerating ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
           </MenuButton>
-          <div className="w-px h-4 bg-border mx-2" />
+          <div className="mx-2 h-4 w-px bg-border" />
           <MenuButton onClick={handleExportMarkdown}>
             <FileDown className="h-4 w-4" />
           </MenuButton>
           <label className="cursor-pointer">
-            <input
-              type="file"
-              accept=".md"
-              className="hidden"
-              onChange={handleImportMarkdown}
-            />
+            <input type="file" accept=".md" className="hidden" onChange={handleImportMarkdown} />
             <MenuButton onClick={() => {}}>
               <FileUp className="h-4 w-4" />
             </MenuButton>
@@ -345,10 +356,12 @@ export function SpaceContentEditor({ space, onUpdate, editable = true, onAIAssis
       <div className="relative flex-1 overflow-auto">
         <EditorContent editor={editor} className="h-full" />
         {isGenerating && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-800 shadow-lg">
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+            <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-lg dark:bg-gray-800">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm text-gray-600 dark:text-gray-300">Generating content...</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                Generating content...
+              </span>
             </div>
           </div>
         )}
