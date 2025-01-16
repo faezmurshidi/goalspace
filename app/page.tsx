@@ -8,6 +8,7 @@ import { HowItWorksSection } from '@/components/sections/how-it-works-section';
 import { TestimonialsSection } from '@/components/sections/testimonials-section';
 import { SiteHeader } from '@/components/site-header';
 import { Hero } from '@/components/ui/animated-hero';
+import { FAQ } from '@/components/ui/faq-section';
 import PricingPage from './pricing/page';
 
 export default function Home() {
@@ -38,17 +39,20 @@ export default function Home() {
           {/* Features Section */}
           <FeaturesSection />
 
-          {/* How It Works */}
-          <HowItWorksSection />
-
           {/* Testimonials */}
           <TestimonialsSection />
+
+          {/* How It Works */}
+          <HowItWorksSection />
 
           {/* Pricing */}
           <PricingPage />
 
           {/* CTA Section */}
           <CTASection />
+
+          {/* FAQ */}
+          <FAQ />
 
           {/* Footer */}
           <FooterSection />

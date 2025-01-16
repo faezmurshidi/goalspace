@@ -6,12 +6,13 @@ import { ArrowLeft, Brain, Loader2, MessageSquare, Sparkles, Target } from 'luci
 
 import { ChatWithMentor } from '@/components/chat-with-mentor';
 import { KnowledgeBase } from '@/components/knowledge-base';
-import { MarkdownContent } from '@/components/markdown-content';
 import { SiteHeader } from '@/components/site-header';
 import { SpaceTools } from '@/components/space-tools';
 import { SpacesSidebar } from '@/components/spaces-sidebar';
+import { TodoList } from '@/components/todo-list';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MarkdownContent } from '@/components/ui/markdown-content';
 import { Separator } from '@/components/ui/separator';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -171,7 +172,7 @@ export default function SpacePage() {
                 </div>
               ) : (
                 <div className="prose prose-lg max-w-none dark:prose-invert">
-                  <MarkdownContent content={currentContent} />
+                  <MarkdownContent content={currentContent} id={spaceId} />
                 </div>
               )}
             </CardContent>
@@ -182,6 +183,9 @@ export default function SpacePage() {
         <div className="space-y-6 lg:col-span-4">
           {/* Tools */}
           {showTools && <SpaceTools spaceId={spaceId} onClose={() => setShowTools(false)} />}
+
+          {/* todo */}
+          <TodoList spaceId={spaceId} />
 
           {/* Chat Section */}
           {showChat && <ChatWithMentor spaceId={spaceId} onClose={() => setShowChat(false)} />}
