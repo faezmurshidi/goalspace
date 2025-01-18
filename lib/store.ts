@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+
 import { supabase } from '@/lib/supabase/client';
 
 export interface Message {
@@ -37,55 +38,55 @@ export type SpaceColor = {
 
 export const SPACE_COLORS: SpaceColor[] = [
   {
-    main: '#2563eb',     // Vibrant Blue
+    main: '#2563eb', // Vibrant Blue
     secondary: '#dbeafe',
-    accent: '#60a5fa'
+    accent: '#60a5fa',
   },
   {
-    main: '#dc2626',     // Vibrant Red
+    main: '#dc2626', // Vibrant Red
     secondary: '#fee2e2',
-    accent: '#f87171'
+    accent: '#f87171',
   },
   {
-    main: '#16a34a',     // Vibrant Green
+    main: '#16a34a', // Vibrant Green
     secondary: '#dcfce7',
-    accent: '#4ade80'
+    accent: '#4ade80',
   },
   {
-    main: '#9333ea',     // Vibrant Purple
+    main: '#9333ea', // Vibrant Purple
     secondary: '#f3e8ff',
-    accent: '#c084fc'
+    accent: '#c084fc',
   },
   {
-    main: '#ea580c',     // Vibrant Orange
+    main: '#ea580c', // Vibrant Orange
     secondary: '#ffedd5',
-    accent: '#fb923c'
+    accent: '#fb923c',
   },
   {
-    main: '#0d9488',     // Teal
+    main: '#0d9488', // Teal
     secondary: '#ccfbf1',
-    accent: '#2dd4bf'
+    accent: '#2dd4bf',
   },
   {
-    main: '#4f46e5',     // Indigo
+    main: '#4f46e5', // Indigo
     secondary: '#e0e7ff',
-    accent: '#818cf8'
+    accent: '#818cf8',
   },
   {
-    main: '#b91c1c',     // Ruby Red
+    main: '#b91c1c', // Ruby Red
     secondary: '#fee2e2',
-    accent: '#ef4444'
+    accent: '#ef4444',
   },
   {
-    main: '#c2410c',     // Burnt Orange
+    main: '#c2410c', // Burnt Orange
     secondary: '#fff7ed',
-    accent: '#fb923c'
+    accent: '#fb923c',
   },
   {
-    main: '#7c3aed',     // Electric Purple
+    main: '#7c3aed', // Electric Purple
     secondary: '#f3e8ff',
-    accent: '#a78bfa'
-  }
+    accent: '#a78bfa',
+  },
 ];
 
 export interface Space {
@@ -200,25 +201,27 @@ export const useSpaceStore = create<SpaceStore>()(
         const newGoal: Goal = {
           id: goalId,
           title: get().currentGoal,
-          description: "Goal created from spaces",
+          description: 'Goal created from spaces',
           dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
           progress: 0,
-          spaces: spaces.map(s => s.id),
-          createdAt: Date.now()
+          spaces: spaces.map((s) => s.id),
+          createdAt: Date.now(),
         };
 
         set((state) => ({
-          spaces: spaces.map(space => ({ ...space, progress: 0, isCollapsed: true })),
-          goals: [...state.goals, newGoal]
+          spaces: spaces.map((space) => ({ ...space, progress: 0, isCollapsed: true })),
+          goals: [...state.goals, newGoal],
         }));
       },
       setCurrentGoal: (goal) => set({ currentGoal: goal }),
-      getSpaceById: (id) => get().spaces.find(space => space.id === id),
+      getSpaceById: (id) => get().spaces.find((space) => space.id === id),
       getDocuments: (spaceId) => get().documents[spaceId] || [],
       addDocument: async (spaceId: string, document: Omit<Document, 'id'>) => {
         try {
           // Get the current user
-          const { data: { user } } = await supabase.auth.getUser();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
           if (!user) throw new Error('Not authenticated');
 
           // Save to Supabase
@@ -230,7 +233,7 @@ export const useSpaceStore = create<SpaceStore>()(
               content: document.content,
               type: document.type,
               tags: document.tags || [],
-              metadata: document.metadata || {}
+              metadata: document.metadata || {},
             })
             .select()
             .single();
@@ -277,110 +280,126 @@ export const useSpaceStore = create<SpaceStore>()(
             },
           },
         })),
-      addMessage: (spaceId, message) => set((state) => ({
-        chatMessages: {
-          ...state.chatMessages,
-          [spaceId]: [
-            ...(state.chatMessages[spaceId] || []),
+      addMessage: (spaceId, message) =>
+        set((state) => ({
+          chatMessages: {
+            ...state.chatMessages,
+            [spaceId]: [
+              ...(state.chatMessages[spaceId] || []),
+              {
+                ...message,
+                id: Math.random().toString(36).substring(7),
+                timestamp: Date.now(),
+              },
+            ],
+          },
+        })),
+      clearChat: (spaceId) =>
+        set((state) => ({
+          chatMessages: {
+            ...state.chatMessages,
+            [spaceId]: [],
+          },
+        })),
+      toggleFaez: (spaceId) =>
+        set((state) => ({
+          faezInChat: {
+            ...state.faezInChat,
+            [spaceId]: !state.faezInChat[spaceId],
+          },
+        })),
+      setPlan: (spaceId, plan) =>
+        set((state) => ({
+          spaces: state.spaces.map((space) => (space.id === spaceId ? { ...space, plan } : space)),
+        })),
+      setResearch: (spaceId, research) =>
+        set((state) => ({
+          spaces: state.spaces.map((space) =>
+            space.id === spaceId ? { ...space, research } : space
+          ),
+        })),
+      toggleSpaceCollapse: (spaceId) =>
+        set((state) => ({
+          spaces: state.spaces.map((space) =>
+            space.id === spaceId ? { ...space, isCollapsed: !space.isCollapsed } : space
+          ),
+        })),
+      updateSpaceProgress: (spaceId, progress) =>
+        set((state) => {
+          const newSpaces = state.spaces.map((space) =>
+            space.id === spaceId ? { ...space, progress } : space
+          );
+
+          // Find the goal containing this space and update its progress
+          const goals = state.goals.map((goal) => {
+            if (goal.spaces.includes(spaceId)) {
+              const goalSpaces = newSpaces.filter((space) => goal.spaces.includes(space.id));
+              const totalProgress = goalSpaces.reduce(
+                (sum, space) => sum + (space.progress || 0),
+                0
+              );
+              const averageProgress = totalProgress / goalSpaces.length;
+              return { ...goal, progress: averageProgress };
+            }
+            return goal;
+          });
+
+          return { spaces: newSpaces, goals };
+        }),
+      addGoal: (goal) =>
+        set((state) => ({
+          goals: [
+            ...state.goals,
             {
-              ...message,
+              ...goal,
               id: Math.random().toString(36).substring(7),
-              timestamp: Date.now(),
+              createdAt: Date.now(),
             },
           ],
-        },
-      })),
-      clearChat: (spaceId) => set((state) => ({
-        chatMessages: {
-          ...state.chatMessages,
-          [spaceId]: [],
-        },
-      })),
-      toggleFaez: (spaceId) => set((state) => ({
-        faezInChat: {
-          ...state.faezInChat,
-          [spaceId]: !state.faezInChat[spaceId]
-        }
-      })),
-      setPlan: (spaceId, plan) => set((state) => ({
-        spaces: state.spaces.map((space) =>
-          space.id === spaceId ? { ...space, plan } : space
-        ),
-      })),
-      setResearch: (spaceId, research) => set((state) => ({
-        spaces: state.spaces.map((space) =>
-          space.id === spaceId ? { ...space, research } : space
-        ),
-      })),
-      toggleSpaceCollapse: (spaceId) => set((state) => ({
-        spaces: state.spaces.map((space) =>
-          space.id === spaceId
-            ? { ...space, isCollapsed: !space.isCollapsed }
-            : space
-        ),
-      })),
-      updateSpaceProgress: (spaceId, progress) => set((state) => {
-        const newSpaces = state.spaces.map((space) =>
-          space.id === spaceId ? { ...space, progress } : space
-        );
+        })),
+      updateGoalProgress: (goalId) =>
+        set((state) => {
+          const goal = state.goals.find((g) => g.id === goalId);
+          if (!goal) return state;
 
-        // Find the goal containing this space and update its progress
-        const goals = state.goals.map(goal => {
-          if (goal.spaces.includes(spaceId)) {
-            const goalSpaces = newSpaces.filter(space => goal.spaces.includes(space.id));
-            const totalProgress = goalSpaces.reduce((sum, space) => sum + (space.progress || 0), 0);
-            const averageProgress = totalProgress / goalSpaces.length;
-            return { ...goal, progress: averageProgress };
-          }
-          return goal;
-        });
+          const goalSpaces = state.spaces.filter((space) => goal.spaces.includes(space.id));
+          const totalProgress = goalSpaces.reduce((sum, space) => sum + (space.progress || 0), 0);
+          const averageProgress = totalProgress / goalSpaces.length;
 
-        return { spaces: newSpaces, goals };
-      }),
-      addGoal: (goal) => set((state) => ({
-        goals: [...state.goals, {
-          ...goal,
-          id: Math.random().toString(36).substring(7),
-          createdAt: Date.now()
-        }]
-      })),
-      updateGoalProgress: (goalId) => set((state) => {
-        const goal = state.goals.find(g => g.id === goalId);
-        if (!goal) return state;
+          return {
+            goals: state.goals.map((g) =>
+              g.id === goalId ? { ...g, progress: averageProgress } : g
+            ),
+          };
+        }),
+      toggleSidebar: () =>
+        set((state) => ({
+          isSidebarCollapsed: !state.isSidebarCollapsed,
+        })),
+      updateTodoList: (spaceId, todoList) =>
+        set((state) => {
+          // Update the space's to-do list
+          const newSpaces = state.spaces.map((space) =>
+            space.id === spaceId ? { ...space, to_do_list: todoList } : space
+          );
 
-        const goalSpaces = state.spaces.filter(space => goal.spaces.includes(space.id));
-        const totalProgress = goalSpaces.reduce((sum, space) => sum + (space.progress || 0), 0);
-        const averageProgress = totalProgress / goalSpaces.length;
+          // Initialize new todo states for the updated list
+          const newTodoStates = {
+            ...state.todoStates,
+            [spaceId]: todoList.reduce(
+              (acc, _, index) => {
+                acc[index.toString()] = state.todoStates[spaceId]?.[index.toString()] || false;
+                return acc;
+              },
+              {} as { [key: string]: boolean }
+            ),
+          };
 
-        return {
-          goals: state.goals.map(g =>
-            g.id === goalId ? { ...g, progress: averageProgress } : g
-          )
-        };
-      }),
-      toggleSidebar: () => set((state) => ({
-        isSidebarCollapsed: !state.isSidebarCollapsed
-      })),
-      updateTodoList: (spaceId, todoList) => set((state) => {
-        // Update the space's to-do list
-        const newSpaces = state.spaces.map((space) =>
-          space.id === spaceId ? { ...space, to_do_list: todoList } : space
-        );
-
-        // Initialize new todo states for the updated list
-        const newTodoStates = {
-          ...state.todoStates,
-          [spaceId]: todoList.reduce((acc, _, index) => {
-            acc[index.toString()] = state.todoStates[spaceId]?.[index.toString()] || false;
-            return acc;
-          }, {} as { [key: string]: boolean })
-        };
-
-        return {
-          spaces: newSpaces,
-          todoStates: newTodoStates
-        };
-      }),
+          return {
+            spaces: newSpaces,
+            todoStates: newTodoStates,
+          };
+        }),
       content: {},
       setContent: (spaceId, content) =>
         set((state) => ({
@@ -394,7 +413,10 @@ export const useSpaceStore = create<SpaceStore>()(
       loadUserData: async () => {
         try {
           // Get current user
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          const {
+            data: { user },
+            error: userError,
+          } = await supabase.auth.getUser();
           if (userError) throw userError;
           if (!user) return;
 
@@ -427,8 +449,8 @@ export const useSpaceStore = create<SpaceStore>()(
             description: goal.description || '',
             dueDate: goal.deadline || new Date().toISOString(),
             progress: goal.progress || 0,
-            spaces: allSpaces.filter(space => space.goal_id === goal.id).map(space => space.id),
-            createdAt: new Date(goal.created_at).getTime()
+            spaces: allSpaces.filter((space) => space.goal_id === goal.id).map((space) => space.id),
+            createdAt: new Date(goal.created_at).getTime(),
           }));
 
           const formattedSpaces: Space[] = allSpaces.map((space: SupabaseSpace) => ({
@@ -443,15 +465,14 @@ export const useSpaceStore = create<SpaceStore>()(
             mentor: JSON.parse(space.mentor || '{}'),
             space_color: JSON.parse(space.space_color || '{}'),
             progress: space.progress || 0,
-            isCollapsed: true
+            isCollapsed: true,
           }));
 
           // Update the store
           set({
             goals: formattedGoals,
-            spaces: formattedSpaces
+            spaces: formattedSpaces,
           });
-
         } catch (error) {
           console.error('Error loading user data:', error);
         }

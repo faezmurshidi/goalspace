@@ -1,120 +1,125 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
-import { motion } from "framer-motion";
+import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 
-const SidebarContext = React.createContext<{ open: boolean }>({ open: true });
+import { cn } from '@/lib/utils';
+
+const sidebarMenuButtonVariants = cva(
+  'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+  {
+    variants: {
+      size: {
+        default: 'h-9',
+        sm: 'h-8',
+        lg: 'h-10',
+      },
+    },
+    defaultVariants: {
+      size: 'default',
+    },
+  }
+);
+
+export interface SidebarMenuButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof sidebarMenuButtonVariants> {}
+
+const SidebarMenuButton = React.forwardRef<HTMLButtonElement, SidebarMenuButtonProps>(
+  ({ className, size, ...props }, ref) => (
+    <button ref={ref} className={cn(sidebarMenuButtonVariants({ size, className }))} {...props} />
+  )
+);
+SidebarMenuButton.displayName = 'SidebarMenuButton';
+
+const SidebarMenu = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn('px-3', className)} {...props} />
+);
+SidebarMenu.displayName = 'SidebarMenu';
+
+const SidebarMenuItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => <div ref={ref} className={cn('pb-1', className)} {...props} />
+);
+SidebarMenuItem.displayName = 'SidebarMenuItem';
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  children?: React.ReactNode;
+  open?: boolean;
+  setOpen?: (open: boolean) => void;
 }
 
-export function Sidebar({ open, setOpen, className, children }: SidebarProps) {
-  return (
-    <SidebarContext.Provider value={{ open }}>
-      <aside
-        className={cn(
-          "h-full relative border-r border-neutral-200 dark:border-neutral-700 bg-gray-100/40 dark:bg-neutral-800/40 backdrop-blur-xl",
-          open ? "w-64" : "w-16",
-          className
-        )}
-      >
-        <button
-          onClick={() => setOpen(!open)}
-          className="h-6 w-6 absolute -right-3 top-5 bg-neutral-200 dark:bg-neutral-700 rounded-full flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform"
-        >
-          <motion.div
-            animate={{ rotate: open ? 180 : 0 }}
-            className="w-4 h-4 flex items-center justify-center"
-          >
-            <ChevronIcon />
-          </motion.div>
-        </button>
+const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
+  ({ className, open = true, setOpen, children, ...props }, ref) => {
+    return (
+      <div ref={ref} className={cn('relative', className)} {...props}>
         {children}
-      </aside>
-    </SidebarContext.Provider>
-  );
-}
+      </div>
+    );
+  }
+);
+Sidebar.displayName = 'Sidebar';
 
-interface SidebarBodyProps extends React.HTMLAttributes<HTMLDivElement> {
-  children?: React.ReactNode;
-}
+const SidebarBody = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn('flex flex-col', className)} {...props} />
+  )
+);
+SidebarBody.displayName = 'SidebarBody';
 
-export function SidebarBody({ className, children }: SidebarBodyProps) {
-  return (
-    <div
-      className={cn(
-        "h-full flex flex-col p-4",
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
-interface SidebarLinkProps {
+interface SidebarLinkProps extends React.HTMLAttributes<HTMLAnchorElement> {
   link: {
     label: string;
     href: string;
-    icon: React.ReactNode;
-    onClick?: () => void;
+    icon?: React.ReactNode;
+    onClick?: () => void | Promise<void>;
   };
-  onClick?: () => void;
+  onClick?: () => void | Promise<void>;
 }
 
-export function SidebarLink({ link, onClick }: SidebarLinkProps) {
-  const { open } = React.useContext(SidebarContext);
+const SidebarLink = React.forwardRef<HTMLAnchorElement, SidebarLinkProps>(
+  ({ className, link, onClick, ...props }, ref) => {
+    const handleClick = async (e: React.MouseEvent) => {
+      if (link.onClick) {
+        e.preventDefault();
+        await link.onClick();
+      }
+      if (onClick) {
+        await onClick();
+      }
+    };
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (onClick) {
-      e.preventDefault();
-      onClick();
-    } else if (link.onClick) {
-      e.preventDefault();
-      link.onClick();
-    }
-  };
+    return (
+      <a
+        ref={ref}
+        href={link.href}
+        onClick={handleClick}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
+          className
+        )}
+        {...props}
+      >
+        {link.icon}
+        <span>{link.label}</span>
+      </a>
+    );
+  }
+);
+SidebarLink.displayName = 'SidebarLink';
 
-  return (
-    <Link
-      href={link.href}
-      onClick={handleClick}
-      className="flex items-center gap-2 text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-lg hover:bg-neutral-200/50 dark:hover:bg-neutral-700/50 transition-colors"
-    >
-      {link.icon}
-      {open && (
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-sm font-medium whitespace-pre overflow-hidden"
-        >
-          {link.label}
-        </motion.span>
-      )}
-    </Link>
-  );
-}
+const SidebarContext = React.createContext<{ isMobile: boolean }>({
+  isMobile: false,
+});
 
-const ChevronIcon = () => {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={1.5}
-      stroke="currentColor"
-      className="h-3 w-3"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M8.25 4.5l7.5 7.5-7.5 7.5"
-      />
-    </svg>
-  );
+export const useSidebar = () => React.useContext(SidebarContext);
+
+export const SidebarProvider = ({
+  children,
+  isMobile = false,
+}: {
+  children: React.ReactNode;
+  isMobile?: boolean;
+}) => {
+  return <SidebarContext.Provider value={{ isMobile }}>{children}</SidebarContext.Provider>;
 };
+
+export { Sidebar, SidebarBody, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarLink };
