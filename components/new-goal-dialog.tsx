@@ -18,6 +18,12 @@ interface NewGoalDialogProps {
 }
 
 export function NewGoalDialog({ open, onOpenChange }: NewGoalDialogProps) {
+  const handleSubmit = async (answers: { [key: string]: string }) => {
+    // Here you can handle the form submission
+    // For now, we'll just close the dialog
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
@@ -28,7 +34,7 @@ export function NewGoalDialog({ open, onOpenChange }: NewGoalDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
-          <GoalForm onSuccess={() => onOpenChange(false)} />
+          <GoalForm onSubmit={handleSubmit} />
         </div>
       </DialogContent>
     </Dialog>
