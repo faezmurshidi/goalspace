@@ -107,7 +107,7 @@ export async function GET(request: Request) {
 
     // Get metrics for the specified time range
     const timeSeriesKey = `prompt:metrics:${variant}:${promptType}`;
-    const performanceIds = await kv.zrangebyscore(timeSeriesKey, startTime, now);
+    const performanceIds = (await kv.zrange(timeSeriesKey, 0, -1)).filter(String);
 
     // Get success rates
     const successKey = `prompt:success:${variant}:${promptType}`;
