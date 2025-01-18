@@ -9,6 +9,7 @@ export interface Message {
   content: string;
   timestamp: number;
   isFaez?: boolean;
+  metadata?: any;
 }
 
 export interface Document {
@@ -139,8 +140,11 @@ export interface SpaceStore {
   // Chat related state
   chatMessages: { [key: string]: Message[] };
   faezInChat: { [key: string]: boolean };
-  addMessage: (spaceId: string, message: Omit<Message, 'id' | 'timestamp'>) => void;
-  clearChat: (spaceId: string) => void;
+  isLoadingMessages: { [key: string]: boolean };
+  hasMoreMessages: { [key: string]: boolean };
+  addMessage: (spaceId: string, message: Omit<Message, 'id' | 'timestamp'>) => Promise<void>;
+  loadMessages: (spaceId: string, limit?: number, offset?: number) => Promise<void>;
+  clearChat: (spaceId: string) => Promise<void>;
   toggleFaez: (spaceId: string) => void;
   // Dashboard related state and actions
   toggleSpaceCollapse: (spaceId: string) => void;
@@ -194,6 +198,8 @@ export const useSpaceStore = create<SpaceStore>()(
       todoStates: {},
       chatMessages: {},
       faezInChat: {},
+      isLoadingMessages: {},
+      hasMoreMessages: {},
       isSidebarCollapsed: false,
       setSpaces: (spaces) => {
         // When setting spaces, create a new goal with these spaces
@@ -280,27 +286,121 @@ export const useSpaceStore = create<SpaceStore>()(
             },
           },
         })),
-      addMessage: (spaceId, message) =>
-        set((state) => ({
-          chatMessages: {
-            ...state.chatMessages,
-            [spaceId]: [
-              ...(state.chatMessages[spaceId] || []),
-              {
-                ...message,
-                id: Math.random().toString(36).substring(7),
-                timestamp: Date.now(),
-              },
-            ],
-          },
-        })),
-      clearChat: (spaceId) =>
-        set((state) => ({
-          chatMessages: {
-            ...state.chatMessages,
-            [spaceId]: [],
-          },
-        })),
+      addMessage: async (spaceId, message) => {
+        try {
+          // Get the current user
+          const {
+            data: { user },
+            error: userError,
+          } = await supabase.auth.getUser();
+          if (userError) throw userError;
+          if (!user) throw new Error('Not authenticated');
+
+          // Add message to Supabase
+          const { data, error } = await supabase
+            .from('chat_messages')
+            .insert({
+              space_id: spaceId,
+              user_id: user.id,
+              role: message.role,
+              content: message.content,
+              is_faez: message.isFaez || false,
+              metadata: message.metadata || {},
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Update local state
+          set((state) => ({
+            chatMessages: {
+              ...state.chatMessages,
+              [spaceId]: [
+                ...(state.chatMessages[spaceId] || []),
+                {
+                  id: data.id,
+                  role: data.role,
+                  content: data.content,
+                  timestamp: new Date(data.created_at).getTime(),
+                  isFaez: data.is_faez,
+                  metadata: data.metadata,
+                },
+              ],
+            },
+          }));
+        } catch (error) {
+          console.error('Error adding message:', error);
+          throw error;
+        }
+      },
+      loadMessages: async (spaceId, limit = 50, offset = 0) => {
+        try {
+          set((state) => ({
+            isLoadingMessages: { ...state.isLoadingMessages, [spaceId]: true },
+          }));
+
+          const { data, error } = await supabase.rpc('get_chat_history', {
+            p_space_id: spaceId,
+            p_limit: limit,
+            p_offset: offset,
+          });
+
+          if (error) throw error;
+
+          // Transform messages
+          const messages = data.map((msg: any) => ({
+            id: msg.id,
+            role: msg.role,
+            content: msg.content,
+            timestamp: new Date(msg.created_at).getTime(),
+            isFaez: msg.is_faez,
+            metadata: msg.metadata,
+          }));
+
+          // Update local state
+          set((state) => ({
+            chatMessages: {
+              ...state.chatMessages,
+              [spaceId]:
+                offset === 0 ? messages : [...(state.chatMessages[spaceId] || []), ...messages],
+            },
+            hasMoreMessages: {
+              ...state.hasMoreMessages,
+              [spaceId]: data.length === limit,
+            },
+            isLoadingMessages: {
+              ...state.isLoadingMessages,
+              [spaceId]: false,
+            },
+          }));
+        } catch (error) {
+          console.error('Error loading messages:', error);
+          set((state) => ({
+            isLoadingMessages: { ...state.isLoadingMessages, [spaceId]: false },
+          }));
+          throw error;
+        }
+      },
+      clearChat: async (spaceId) => {
+        try {
+          // Delete messages from Supabase
+          const { error } = await supabase.from('chat_messages').delete().eq('space_id', spaceId);
+
+          if (error) throw error;
+
+          // Clear local state
+          set((state) => ({
+            chatMessages: {
+              ...state.chatMessages,
+              [spaceId]: [],
+            },
+          }));
+        } catch (error) {
+          console.error('Error clearing chat:', error);
+          throw error;
+        }
+      },
       toggleFaez: (spaceId) =>
         set((state) => ({
           faezInChat: {

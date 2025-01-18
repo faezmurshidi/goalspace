@@ -7,9 +7,26 @@ const anthropic = new Anthropic({
 
 export async function POST(req: Request) {
   try {
-    const { message, spaceId, mentor, context, isFaezPresent } = await req.json();
+    const {
+      message,
+      spaceId,
+      mentor,
+      context,
+      messageHistory = [],
+      isFaezPresent,
+    } = await req.json();
 
-    const systemPrompt = `You are ${mentor.name}, an AI mentor with expertise in ${mentor.expertise.join(', ')}. 
+    // Format message history for the AI
+    const formattedHistory = messageHistory
+      .map(
+        (msg: { role: string; content: string }) =>
+          `${msg.role === 'user' ? 'Human' : 'Assistant'}: ${msg.content}`
+      )
+      .join('\n\n');
+
+    console.log('formattedHistory', formattedHistory);
+
+    const systemPrompt = `You are ${mentor.name}, an AI mentor with expertise in ${mentor.expertise.join(', ')}.
 Your teaching style is ${mentor.personality}.
 
 You are helping a student with their learning journey for: "${context.title}"
@@ -20,18 +37,33 @@ ${context.description}
 Learning Objectives:
 ${context.objectives.map((obj: string) => `- ${obj}`).join('\n')}
 
-${context.prerequisites.length > 0 ? `Prerequisites:
-${context.prerequisites.map((pre: string) => `- ${pre}`).join('\n')}` : ''}
+${
+  context.prerequisites.length > 0
+    ? `Prerequisites:
+${context.prerequisites.map((pre: string) => `- ${pre}`).join('\n')}`
+    : ''
+}
 
-${context.plan ? `Learning Plan:
-${context.plan}` : ''}
+${
+  context.plan
+    ? `Learning Plan:
+${context.plan}`
+    : ''
+}
 
-${context.to_do_list ? `To-Do List:
-${context.to_do_list.map((task: string) => `- ${task}`).join('\n')}` : ''}
+${
+  context.to_do_list
+    ? `To-Do List:
+${context.to_do_list.map((task: string) => `- ${task}`).join('\n')}`
+    : ''
+}
 
 ${mentor.system_prompt}
 
 ${isFaezPresent ? `Note: Faez (the goal-setting AI) is present in this conversation. You should collaborate with Faez to provide comprehensive guidance. Faez will add insights about the user's overall progress and goal alignment after your response.` : ''}
+
+Previous conversation context:
+${formattedHistory}
 
 Remember to:
 1. Stay in character as the mentor
@@ -41,8 +73,9 @@ Remember to:
 5. Break down complex concepts
 6. Reference the learning objectives and plan
 7. Suggest practical exercises when appropriate
+8. Maintain continuity with the previous conversation
 
-IMPORTANT: If you want to create a knowledge document, format your response as a JSON object with this structure:
+IMPORTANT: If you want to create a knowledge document, format your response ONLY as a JSON object with this structure:
 {
   "type": "document",
   "document": {
@@ -53,7 +86,7 @@ IMPORTANT: If you want to create a knowledge document, format your response as a
   }
 }
 
-IF you want to update the to-do list, format your response as a JSON object with this structure. Please do not change the complete list, just add or remove tasks:
+IF you want to update the to-do list, format your response ONLY as a JSON object with this structure. Please do not change the complete list, just add or remove tasks:
 {
   "type": "update_to_do_list",
   "to_do_list": ["task1", "task2"]
@@ -61,17 +94,19 @@ IF you want to update the to-do list, format your response as a JSON object with
 
 Otherwise, respond with normal text.`;
 
+    console.log('systemPrompt', systemPrompt);
+
     const completion = await anthropic.messages.create({
       messages: [
         {
-          role: "user",
-          content: message
-        }
+          role: 'user',
+          content: message,
+        },
       ],
-      model: "claude-3-haiku-20240307",
+      model: 'claude-3-5-sonnet-20240620',
       temperature: 0.7,
       max_tokens: 2000,
-      system: systemPrompt
+      system: systemPrompt,
     });
 
     const content = completion.content[0];
@@ -84,13 +119,13 @@ Otherwise, respond with normal text.`;
       if (parsed.type === 'document') {
         result = {
           message: "I've created a new document for you! You can find it in the Knowledge Base.",
-          document: parsed.document
+          document: parsed.document,
         };
       }
       if (parsed.type === 'update_to_do_list') {
         result = {
           message: "I've updated the to-do list for you! You can find it in the Knowledge Base.",
-          to_do_list: parsed.to_do_list
+          to_do_list: parsed.to_do_list,
         };
       }
     } catch {
@@ -107,6 +142,9 @@ Title: ${context.title}
 Description: ${context.description}
 Objectives: ${context.objectives.join(', ')}
 
+Previous conversation context:
+${formattedHistory}
+
 The mentor just said: "${result.message}"
 
 As Faez, your role is to:
@@ -114,20 +152,21 @@ As Faez, your role is to:
 2. Track and comment on progress
 3. Suggest adjustments or additional focus areas if needed
 4. Be encouraging but also maintain focus on the bigger picture
+5. Reference relevant parts of the previous conversation when appropriate
 
 Keep your response concise and focused on progress and goal alignment.`;
 
       const faezCompletion = await anthropic.messages.create({
         messages: [
           {
-            role: "user",
-            content: message
-          }
+            role: 'user',
+            content: message,
+          },
         ],
-        model: "claude-3-haiku-20240307",
+        model: 'claude-3-haiku-20240307',
         temperature: 0.7,
         max_tokens: 1000,
-        system: faezPrompt
+        system: faezPrompt,
       });
 
       const faezContent = faezCompletion.content[0];
@@ -137,9 +176,6 @@ Keep your response concise and focused on progress and goal alignment.`;
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error in chat:', error);
-    return NextResponse.json(
-      { error: 'Failed to process message' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to process message' }, { status: 500 });
   }
-} 
+}
