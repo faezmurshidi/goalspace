@@ -61,6 +61,15 @@ export type Space = {
   progress: number;
   space_color: SpaceColor | null;
   order_index: number;
+  objectives: string[];
+  prerequisites: string[];
+  mentor: {
+    name: string;
+    expertise: string[];
+    personality: string;
+    introduction: string;
+    system_prompt: string;
+  };
   created_at: string;
   updated_at: string;
 };

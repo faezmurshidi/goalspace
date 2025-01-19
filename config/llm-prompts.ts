@@ -112,6 +112,7 @@ Return a JSON response:
 
 // Server-side A/B testing logic
 export type PromptVariant = keyof typeof DEFAULT_PROMPTS;
+export type PromptType = 'system' | 'question' | 'space' | 'plan' | 'research' | 'mindmap' | 'podcast';
 
 export function getPromptVariant(userId?: string): PromptVariant {
   if (!userId) {
@@ -151,7 +152,7 @@ type PromptMetrics = {
 // Analytics helper (you can implement this with your preferred analytics solution)
 export async function trackPromptPerformance(
   variant: PromptVariant,
-  promptType: 'system' | 'question' | 'space',
+  promptType: PromptType,
   metrics: PromptMetrics
 ) {
   // Example: Send to your analytics service

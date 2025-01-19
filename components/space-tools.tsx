@@ -16,8 +16,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSpaceStore } from '@/lib/store';
+import { generateContent } from '@/lib/utils/ai-generate';
 import { ModelSelectionDialog } from './model-selection-dialog';
 import { CustomPodcast } from './custom-podcast';
+import { toast } from 'sonner';
 
 interface SpaceToolsProps {
   spaceId: string;
@@ -26,181 +28,44 @@ interface SpaceToolsProps {
 
 export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
   const [showTools, setShowTools] = useState(true);
-  const { getSpaceById, addDocument, setContent } = useSpaceStore();
+  const { getSpaceById, setPlan, setResearch, addDocument } = useSpaceStore();
   const space = getSpaceById(spaceId);
 
-  // Ensure we have required space data
-  if (!space || !space.title) {
+  if (!space) {
     return null;
   }
 
-  const generateInitialContent = async (model: string) => {
-    if (!space) return;
+  const handleGenerate = async (useCase: 'plan' | 'research' | 'mindmap' | 'podcast', model: string) => {
     try {
-      const response = await fetch('/api/generate-initial-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          spaceDetails: space,
-          model 
-        }),
-      });
+      const content = await generateContent(
+        useCase,
+        model as 'gpt' | 'claude' | 'perplexity',
+        space
+      );
 
-      if (!response.ok) throw new Error('Failed to generate content');
-      
-      const data = await response.json();
-      setContent(spaceId, data.content);
-      
       // Save to knowledge base
       addDocument(spaceId, {
-        title: `Initial Content: ${space.title}`,
-        content: data.content,
-        type: 'guide',
-        tags: ['initial-content', space.category || ''],
-      });
-    } catch (err) {
-      console.error('Failed to generate content:', err);
-      throw err;
-    }
-  };
-
-  const generatePlan = async (model: string) => {
-    if (!space) return;
-    try {
-      const response = await fetch('/api/generate-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          spaceId,
-          category: space.category,
-          title: space.title,
-          description: space.description,
-          objectives: space.objectives,
-          prerequisites: space.prerequisites,
-          mentor: space.mentor,
-          model,
-        }),
+        title: `${useCase.charAt(0).toUpperCase() + useCase.slice(1)}: ${space.title}`,
+        content,
+        type: useCase === 'plan' ? 'guide' : 'tutorial',
+        tags: [useCase, space.category],
       });
 
-      if (!response.ok) throw new Error('Failed to generate plan');
-      
-      const data = await response.json();
-      
-      // Save plan to knowledge base
-      addDocument(spaceId, {
-        title: `Learning Plan: ${space.title}`,
-        content: data.plan,
-        type: 'guide',
-        tags: ['learning-plan', space.category || ''],
-      });
-    } catch (err) {
-      console.error('Failed to generate plan:', err);
-      throw err;
-    }
-  };
+      // Update specific state based on use case
+      switch (useCase) {
+        case 'plan':
+          setPlan(spaceId, content);
+          break;
+        case 'research':
+          setResearch(spaceId, content);
+          break;
+        // Add other cases as needed
+      }
 
-  const generateResearch = async (model: string) => {
-    if (!space) return;
-    try {
-      const response = await fetch('/api/generate-research', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          spaceId,
-          category: space.category,
-          title: space.title,
-          description: space.description,
-          objectives: space.objectives,
-          prerequisites: space.prerequisites,
-          mentor: space.mentor,
-          model,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate research');
-      
-      const data = await response.json();
-      
-      // Save research to knowledge base
-      addDocument(spaceId, {
-        title: `Research Paper: ${space.title}`,
-        content: data.research,
-        type: 'guide',
-        tags: ['research-paper', space.category || ''],
-      });
-    } catch (err) {
-      console.error('Failed to generate research:', err);
-      throw err;
-    }
-  };
-
-  const generatePodcast = async (model: string) => {
-    if (!space) return;
-    try {
-      const response = await fetch('/api/generate-podcast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          spaceId,
-          category: space.category,
-          title: space.title,
-          description: space.description,
-          objectives: space.objectives,
-          prerequisites: space.prerequisites,
-          mentor: space.mentor,
-          model,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate podcast');
-      
-      const data = await response.json();
-      
-      // Save podcast to knowledge base
-      addDocument(spaceId, {
-        title: `Podcast Script: ${space.title}`,
-        content: data.podcast,
-        type: 'guide',
-        tags: ['podcast', space.category || ''],
-      });
-    } catch (err) {
-      console.error('Failed to generate podcast:', err);
-      throw err;
-    }
-  };
-
-  const generateMindMap = async (model: string) => {
-    if (!space) return;
-    try {
-      const response = await fetch('/api/generate-mindmap', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          spaceId,
-          category: space.category,
-          title: space.title,
-          description: space.description,
-          objectives: space.objectives,
-          prerequisites: space.prerequisites,
-          mentor: space.mentor,
-          model,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to generate mind map');
-      
-      const data = await response.json();
-      
-      // Save mind map to knowledge base
-      addDocument(spaceId, {
-        title: `Mind Map: ${space.title}`,
-        content: data.mindmap,
-        type: 'guide',
-        tags: ['mind-map', space.category || ''],
-      });
-    } catch (err) {
-      console.error('Failed to generate mind map:', err);
-      throw err;
+      toast.success(`${useCase.charAt(0).toUpperCase() + useCase.slice(1)} generated successfully`);
+    } catch (error) {
+      console.error(`Error generating ${useCase}:`, error);
+      toast.error(`Failed to generate ${useCase}`);
     }
   };
 
@@ -240,51 +105,42 @@ export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
         <CardContent className="p-6">
           <div className="grid grid-cols-2 gap-4">
             <ModelSelectionDialog
-              title="Generate Initial Content"
-              description="Choose an AI model to generate initial content for your space."
-              onGenerate={generateInitialContent}
-              buttonIcon={<Lightbulb className="h-6 w-6" />}
-              buttonText="Generate Content"
-              spaceColor={space.space_color}
-              category={space.category}
-              className="h-24"
-            />
-            <ModelSelectionDialog
               title="Generate Learning Plan"
-              description="Choose an AI model to generate a detailed learning plan for your space."
-              onGenerate={generatePlan}
-              buttonIcon={<BookOpen className="h-6 w-6" />}
+              description="Generate a structured learning plan for this space using AI."
+              onGenerate={(model) => handleGenerate('plan', model)}
               buttonText="Learning Plan"
               spaceColor={space.space_color}
               category={space.category}
-              className="h-24"
             />
+
             <ModelSelectionDialog
-              title="Generate Research Paper"
-              description="Choose an AI model to generate a comprehensive research paper for your space."
-              onGenerate={generateResearch}
-              buttonIcon={<FileText className="h-6 w-6" />}
+              title="Generate Research"
+              description="Generate a comprehensive research paper for this topic using AI."
+              onGenerate={(model) => handleGenerate('research', model)}
               buttonText="Research Paper"
               spaceColor={space.space_color}
               category={space.category}
-              className="h-24"
             />
-
 
             <ModelSelectionDialog
               title="Generate Mind Map"
-              description="Choose an AI model to generate a mind map for your space."
-              onGenerate={generateMindMap}
-              buttonIcon={<Network className="h-6 w-6" />}
+              description="Generate a visual mind map to understand the topic better."
+              onGenerate={(model) => handleGenerate('mindmap', model)}
               buttonText="Mind Map"
               spaceColor={space.space_color}
               category={space.category}
-              className="h-24"
+            />
+
+            <ModelSelectionDialog
+              title="Generate Podcast Script"
+              description="Generate an engaging podcast script about this topic."
+              onGenerate={(model) => handleGenerate('podcast', model)}
+              buttonText="Podcast Script"
+              spaceColor={space.space_color}
+              category={space.category}
             />
 
             <CustomPodcast spaceId={spaceId} /> 
-            
-            
           </div>
         </CardContent>
       )}

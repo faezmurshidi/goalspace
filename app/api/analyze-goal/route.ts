@@ -155,6 +155,7 @@ export async function POST(request: Request) {
 
       if (modelProvider === 'anthropic') {
         questionsResponse = await generateWithAnthropic(generateQuestionsPrompt(goal));
+        console.log('Questions response:', questionsResponse);
       } else {
         questionsResponse = await generateWithOpenAI([
           {

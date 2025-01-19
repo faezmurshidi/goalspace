@@ -68,12 +68,7 @@ function Hero() {
           <div className="w-full">
             <Card className="mx-auto mb-8 w-full max-w-2xl border-white/10 bg-white/5 shadow-2xl ring-1 ring-white/20 backdrop-blur-xl">
               <div className="p-4">
-                <GoalForm
-                  onSubmit={async (answers) => {
-                    // Handle form submission in the hero section
-                    console.log('Hero form submission:', answers);
-                  }}
-                />
+                <GoalForm/>
               </div>
             </Card>
           </div>
