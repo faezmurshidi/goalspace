@@ -43,8 +43,8 @@ export type Goal = {
   user_id: string;
   title: string;
   description: string | null;
-  category: 'learning' | 'achievement';
-  status: 'active' | 'completed' | 'archived';
+  category: string;
+  status: string;
   progress: number;
   deadline: string | null;
   created_at: string;
@@ -56,7 +56,7 @@ export type Space = {
   goal_id: string;
   title: string;
   description: string | null;
-  category: 'learning' | 'achievement';
+  category: string;
   mentor_type: string;
   progress: number;
   space_color: SpaceColor | null;
@@ -79,7 +79,7 @@ export type Document = {
   space_id: string;
   title: string;
   content: string;
-  type: 'guide' | 'research' | 'mindmap' | 'plan';
+  type: string;
   tags: string[];
   metadata: Record<string, any> | null;
   created_at: string;

@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { useSpaceTheme } from '@/components/providers/space-theme-provider';
+import { SpaceModule } from '@/components/space-module';
 
 export default function SpacePage() {
   const params = useParams();
@@ -46,6 +47,11 @@ export default function SpacePage() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showTools, setShowTools] = useState(true);
+  const [showModules, setShowModules] = useState(true);
+
+  const handleModuleSelect = (content: string, title: string) => {
+    setSelectedDocument({ title, content });
+  };
 
   const currentContent =
     selectedDocument?.content || storedContent[spaceId] || space?.content || '';
@@ -108,6 +114,10 @@ export default function SpacePage() {
     //generateContent();
   }, [space, storedContent, spaceId, setContent, addDocument]);
 
+  const handleModuleComplete = (moduleId: string) => {
+    console.log('Module completed:', moduleId);
+  };
+
   if (!space) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -149,6 +159,16 @@ export default function SpacePage() {
       <div className="grid gap-6 lg:grid-cols-10">
         {/* Left Column - Main Content */}
         <div className="space-y-6 lg:col-span-6">
+          {/* Modules Section */}
+          {showModules && (
+            <SpaceModule
+              spaceId={spaceId}
+              onClose={() => setShowModules(false)}
+              onModuleComplete={handleModuleComplete}
+              onModuleSelect={handleModuleSelect}
+            />
+          )}
+
           {/* Knowledge Base */}
           {showKnowledgeBase && (
             <KnowledgeBase
@@ -206,6 +226,16 @@ export default function SpacePage() {
 
           {/* Toggle buttons when components are hidden */}
           <div className="flex flex-wrap gap-2">
+            {!showModules && (
+              <Button
+                variant="default"
+                onClick={() => setShowModules(true)}
+                className="flex-1 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
+              >
+                <Brain className="mr-2 h-4 w-4" />
+                Show Modules
+              </Button>
+            )}
             {!showKnowledgeBase && (
               <Button
                 variant="default"
