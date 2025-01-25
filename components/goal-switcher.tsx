@@ -130,12 +130,15 @@ export function GoalSwitcher({
           <DropdownMenuTrigger asChild disabled={isLoading}>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className={cn(
+                "w-full justify-start hover:bg-muted px-3 py-2 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground",
+                isLoading && "pointer-events-none opacity-50"
+              )}
             >
               <div className="size-8 bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square items-center justify-center rounded-lg">
                 <Target className="size-4" />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-left text-sm leading-tight ml-2">
                 <span className="truncate font-semibold">
                   {activeGoal?.title || 'Select a Goal'}
                 </span>
@@ -147,7 +150,7 @@ export function GoalSwitcher({
                     : `${Math.round(activeGoal?.progress || 0)}% Complete`}
                 </span>
               </div>
-              <ChevronsUpDown className={cn('ml-auto', isLoading && 'animate-pulse')} />
+              <ChevronsUpDown className={cn('ml-auto size-4', isLoading && 'animate-pulse')} />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent

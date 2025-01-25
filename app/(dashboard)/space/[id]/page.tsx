@@ -16,11 +16,13 @@ import { MarkdownContent } from '@/components/ui/markdown-content';
 import { Separator } from '@/components/ui/separator';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { useSpaceTheme } from '@/components/providers/space-theme-provider';
 
 export default function SpacePage() {
   const params = useParams();
   const router = useRouter();
   const spaceId = params.id as string;
+  const { setColors } = useSpaceTheme();
 
   const {
     getSpaceById,
@@ -48,6 +50,16 @@ export default function SpacePage() {
   const currentContent =
     selectedDocument?.content || storedContent[spaceId] || space?.content || '';
   const contentTitle = selectedDocument?.title || space?.title || '';
+
+  // Set space theme colors
+  useEffect(() => {
+    if (space?.space_color) {
+      setColors(space.space_color);
+    }
+    return () => setColors(null);
+  }, [space?.space_color, setColors]);
+
+  console.log('space', space);
 
   // Generate initial content when the component mounts
   useEffect(() => {
@@ -116,15 +128,13 @@ export default function SpacePage() {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div>
+      <div className="rounded-lg bg-[var(--space-primary-50)] p-6">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">{space.title}</h2>
           <span
             className={cn(
               'rounded-full px-3 py-1.5 text-sm font-medium',
-              space.category === 'learning'
-                ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300'
+              'bg-[var(--space-primary)] text-white'
             )}
           >
             {space.category.charAt(0).toUpperCase() + space.category.slice(1)}
@@ -150,22 +160,26 @@ export default function SpacePage() {
 
           {/* Content Viewer */}
           <Card className="h-[calc(100vh-16rem)]">
-            <CardHeader>
+            <CardHeader className="border-b bg-[var(--space-primary-50)]">
               <CardTitle>{contentTitle}</CardTitle>
             </CardHeader>
             <CardContent className="h-full overflow-auto p-6">
               {isGenerating ? (
                 <div className="flex h-full items-center justify-center">
-                  <div className="flex items-center gap-2 rounded-full bg-card px-4 py-2 shadow-lg">
+                  <div className="flex items-center gap-2 rounded-full bg-[var(--space-primary-50)] px-4 py-2 shadow-lg">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-muted-foreground">Generating content...</span>
+                    <span className="text-sm">Generating content...</span>
                   </div>
                 </div>
               ) : error ? (
                 <div className="flex h-full items-center justify-center">
                   <div className="text-center text-destructive">
                     <p>{error}</p>
-                    <Button variant="outline" onClick={() => setError(null)} className="mt-4">
+                    <Button 
+                      variant="default" 
+                      onClick={() => setError(null)} 
+                      className="mt-4 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
+                    >
                       Dismiss
                     </Button>
                   </div>
@@ -194,22 +208,30 @@ export default function SpacePage() {
           <div className="flex flex-wrap gap-2">
             {!showKnowledgeBase && (
               <Button
-                variant="outline"
+                variant="default"
                 onClick={() => setShowKnowledgeBase(true)}
-                className="flex-1"
+                className="flex-1 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
               >
                 <Brain className="mr-2 h-4 w-4" />
                 Show Knowledge Base
               </Button>
             )}
             {!showTools && (
-              <Button variant="outline" onClick={() => setShowTools(true)} className="flex-1">
+              <Button 
+                variant="default"
+                onClick={() => setShowTools(true)} 
+                className="flex-1 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
+              >
                 <Sparkles className="mr-2 h-4 w-4" />
                 Show Tools
               </Button>
             )}
             {!showChat && (
-              <Button variant="outline" onClick={() => setShowChat(true)} className="flex-1">
+              <Button 
+                variant="default"
+                onClick={() => setShowChat(true)} 
+                className="flex-1 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
+              >
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Show Chat
               </Button>
