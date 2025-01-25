@@ -87,6 +87,7 @@ Provide your response in the following JSON format:
         "accent": "space's accent color"
       },
       "title": "Clear and specific space title",
+      "title_short": "Short title for the space (in sidebar)",
       "description": "Detailed description of what will be learned and why it's important",
       "space_methodology": "Methodology to achieve the goal",
       "mentor": {

@@ -16,6 +16,8 @@ import {
   Target,
 } from "lucide-react"
 import { useTheme } from "next-themes"
+import { cn } from "@/lib/utils"
+import { cva } from "class-variance-authority"
 
 import { GoalSwitcher } from "@/components/goal-switcher"
 import type { Goal } from "@/components/goal-switcher"
@@ -29,7 +31,6 @@ import {
 } from "@/components/ui/sidebar"
 import { signOut } from "@/lib/auth"
 import { useSpaceStore } from "@/lib/store"
-import { cn } from "@/lib/utils"
 import { space } from "postcss/lib/list"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
@@ -39,6 +40,34 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   initialGoalId?: string
   children: React.ReactNode
 }
+
+// Add these new style variants above the AppSidebar component
+const sidebarVariants = cva(
+  "fixed left-0 top-0 z-40 h-screen bg-background/95 backdrop-blur-lg border-r border-border/50",
+  {
+    variants: {
+      expanded: {
+        true: "shadow-xl",
+        false: "shadow-sm"
+      }
+    }
+  }
+)
+
+const navItemVariants = cva(
+  "flex items-center transition-all duration-200 hover:bg-accent/50 rounded-lg",
+  {
+    variants: {
+      size: {
+        compact: "h-10 w-10 p-2 justify-center",
+        default: "w-full px-3 py-2.5 justify-start"
+      }
+    },
+    defaultVariants: {
+      size: "default"
+    }
+  }
+)
 
 export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, children, className, ...props }: AppSidebarProps) {
   const [open, setOpen] = useState(true)
@@ -90,30 +119,42 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
     <div className="flex min-h-screen">
       <SidebarProvider>
         <motion.div
-          className="fixed left-0 top-0 z-40 h-screen"
+          className={sidebarVariants({ expanded: isExpanded })}
           onMouseEnter={() => !open && setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          animate={{ width: isExpanded ? 256 : 64 }}
-          transition={{ duration: 0.2 }}
+          animate={{ width: isExpanded ? 280 : 72 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
-          <Sidebar collapsible="icon" className={cn("h-full border-r bg-background flex flex-col", className)} {...props}>
+          <Sidebar collapsible="icon" className="h-full flex flex-col" {...props}>
             <SidebarHeader>
               <div className="flex items-center justify-between px-4 py-4">
-                {/* <Logo open={isExpanded} /> */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isExpanded ? 1 : 0 }}
+                  className="flex items-center gap-2"
+                >
+                  <div className="h-8 w-8 rounded-lg bg-primary/80" />
+                  <span className="text-lg font-semibold tracking-tight">GoalSpace</span>
+                </motion.div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9 hover:bg-accent/50"
                   onClick={() => setOpen(!open)}
                 >
-                  {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  {open ? (
+                    <ChevronLeft className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
                   <span className="sr-only">Toggle sidebar</span>
                 </Button>
               </div>
             </SidebarHeader>
-            <SidebarContent className="flex-1">
-              {/* Goal Switcher */}
-              <div className={cn("mb-2", isExpanded ? "px-4" : "px-2")}>
+
+            <SidebarContent className="flex-1 space-y-6 px-2 py-4">
+              {/* Goal Switcher Section */}
+              <div className="mb-4">
                 {isExpanded ? (
                   <GoalSwitcher
                     goals={goals}
@@ -122,31 +163,33 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
                     initialGoalId={activeGoal?.id}
                   />
                 ) : (
-                  <Button
-                    variant="ghost"
-                    className="h-10 w-10 p-2"
-                    onClick={() => setOpen(true)}
-                  >
-                    <Target className="h-5 w-5" />
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="ghost"
+                      className="h-11 w-11 p-2 hover:bg-accent/50"
+                      onClick={() => setOpen(true)}
+                    >
+                      <Target className="h-5 w-5" />
+                    </Button>
+                  </motion.div>
                 )}
               </div>
 
-              {/* Main Links (Dashboard) */}
-              <div className={cn("mb-6", isExpanded ? "px-4" : "px-2")}>
+              {/* Main Navigation */}
+              <div className="space-y-1">
                 <NavItem
                   label={isExpanded ? "Dashboard" : ""}
                   href="/dashboard"
-                  icon={<LayoutDashboard className="h-5 w-5 flex-shrink-0" />}
+                  icon={<LayoutDashboard className="h-5 w-5 text-foreground/80" />}
                 />
               </div>
 
-              {/* Goal Spaces */}
+              {/* Goal Spaces Section */}
               {filteredSpaces.length > 0 && (
-                <div className={cn("space-y-2", isExpanded ? "px-4" : "px-2")} >
+                <div className="space-y-2">
                   {isExpanded && (
-                    <h2 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
-                      Goal Spaces
+                    <h2 className="px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      Active Spaces
                     </h2>
                   )}
                   <div className="space-y-1">
@@ -156,31 +199,39 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
                         color={space.space_color?.main}
                         label={isExpanded ? space.title : ""}
                         href={`/space/${space.id}`}
-                        icon={space.category === "learning" ? (
-                          <Brain 
-                            className="h-5 w-5 flex-shrink-0" 
-                            style={{ color: space.space_color?.main }}
-                          />
-                        ) : (
-                          <Target 
-                            className="h-5 w-5 flex-shrink-0" 
-                            style={{ color: space.space_color?.main }}
-                          />
-                        )}
+                        icon={
+                          <div className="relative">
+                            {space.category === "learning" ? (
+                              <Brain className="h-5 w-5" />
+                            ) : (
+                              <Target className="h-5 w-5" />
+                            )}
+                            {!isExpanded && (
+                              <div 
+                                className="absolute -right-1 -top-1 h-2 w-2 rounded-full border-2 border-background"
+                                style={{ backgroundColor: space.space_color?.main }}
+                              />
+                            )}
+                          </div>
+                        }
                       />
                     ))}
                   </div>
                 </div>
               )}
             </SidebarContent>
-            <SidebarFooter>
-              {/* Bottom Links */}
-              <div className={cn("space-y-1 border-t pt-4", isExpanded ? "px-4" : "px-2")}>
+
+            {/* Updated Footer Section */}
+            <SidebarFooter className="border-t border-border/30">
+              <div className="space-y-1 px-2 py-4">
                 {bottomLinks.map((link) => (
                   <NavItem
                     key={link.href + link.label}
                     {...link}
                     label={isExpanded ? link.label : ""}
+                    icon={React.cloneElement(link.icon, {
+                      className: cn(link.icon.props.className, "text-foreground/80")
+                    })}
                   />
                 ))}
               </div>
@@ -191,7 +242,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
       <motion.div
         className="flex-1"
         animate={{
-          marginLeft: isExpanded ? "256px" : "64px",
+          marginLeft: isExpanded ? "280px" : "72px",
         }}
         transition={{ duration: 0.2 }}
       >
@@ -214,18 +265,29 @@ function NavItem({ label, href, icon, color, onClick }: { label: string, href: s
   }
 
   return (
-    <Button
-      variant="ghost"
-      className={cn(
-        "w-full justify-start hover:bg-muted",
-        label ? "px-3 py-2" : "h-10 w-10 p-2",
-        color ? color : "" // Fixed: changed from { color: color } to color
-      )}
-      onClick={handleClick}
-    >
-      {icon}
-      {label && <span className="ml-2 flex-1 truncate">{label}</span>}
-    </Button>
+    <motion.div whileHover={{ scale: 0.98 }} whileTap={{ scale: 0.95 }}>
+      <Button
+        variant="ghost"
+        className={navItemVariants({
+          size: label ? "default" : "compact",
+          className: cn(
+            "group",
+            color && label && `bg-[${color}/10] hover:bg-[${color}/20]`,
+            color && `text-[${color}]`
+          )
+        })}
+        onClick={handleClick}
+      >
+        <span className={cn("transition-colors", color && `text-[${color}]`)}>
+          {icon}
+        </span>
+        {label && (
+          <span className="ml-3 flex-1 truncate text-sm font-medium">
+            {label}
+          </span>
+        )}
+      </Button>
+    </motion.div>
   )
 }
 
