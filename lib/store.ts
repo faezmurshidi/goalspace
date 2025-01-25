@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { supabase } from '@/lib/supabase/client';
+import { Module } from '@/components/space-module';
 
 export interface Message {
   id: string;
@@ -107,6 +108,7 @@ export interface Space {
     system_prompt: string;
   };
   space_color?: SpaceColor;
+  modules?: Module[];
   plan?: string;
   research?: string;
   progress?: number;
@@ -163,6 +165,13 @@ export interface SpaceStore {
   // New function to load user data
   loadUserData: () => Promise<void>;
   loadDocuments: (spaceId: string) => Promise<void>;
+  setModules: (spaceId: string, modules: Module[]) => Promise<void>;
+  updateModule: (spaceId: string, moduleId: string, updates: Partial<Module>) => Promise<void>;
+  getModules: (spaceId: string) => Promise<Module[]>;
+  setGoals: (goals: Goal[]) => void;
+  setActiveGoal: (goal: Goal) => void;
+  currentUser: { id: string } | null;
+  activeGoal: Goal | null;
 }
 
 interface SupabaseGoal {
@@ -201,6 +210,8 @@ export const useSpaceStore = create<SpaceStore>()(
       isLoadingMessages: {},
       hasMoreMessages: {},
       isSidebarCollapsed: false,
+      currentUser: null,
+      activeGoal: null,
       setSpaces: (spaces) => {
         // When setting spaces, create a new goal with these spaces
         const goalId = Math.random().toString(36).substring(7);
@@ -598,6 +609,87 @@ export const useSpaceStore = create<SpaceStore>()(
           throw error;
         }
       },
+      setModules: async (spaceId: string, modules: Module[]) => {
+        try {
+          // First, delete existing modules for this space
+          await supabase
+            .from('modules')
+            .delete()
+            .eq('space_id', spaceId);
+
+          // Then insert the new modules
+          const { error } = await supabase
+            .from('modules')
+            .insert(
+              modules.map((module, index) => ({
+                space_id: spaceId,
+                user_id: get().currentUser?.id,
+                title: module.title,
+                content: module.content,
+                order_index: index,
+                is_completed: module.isCompleted || false,
+              }))
+            );
+
+          if (error) throw error;
+
+          // Update the store
+          set((state) => ({
+            spaces: state.spaces.map((space) =>
+              space.id === spaceId ? { ...space, modules } : space
+            ),
+          }));
+        } catch (error) {
+          console.error('Error setting modules:', error);
+          throw error;
+        }
+      },
+      updateModule: async (spaceId: string, moduleId: string, updates: Partial<Module>) => {
+        try {
+          const { error } = await supabase
+            .from('modules')
+            .update(updates)
+            .eq('id', moduleId)
+            .eq('space_id', spaceId);
+
+          if (error) throw error;
+
+          // Update the store
+          set((state) => ({
+            spaces: state.spaces.map((space) =>
+              space.id === spaceId
+                ? {
+                    ...space,
+                    modules: space.modules?.map((module) =>
+                      module.id === moduleId ? { ...module, ...updates } : module
+                    ),
+                  }
+                : space
+            ),
+          }));
+        } catch (error) {
+          console.error('Error updating module:', error);
+          throw error;
+        }
+      },
+      getModules: async (spaceId: string) => {
+        try {
+          const { data, error } = await supabase
+            .from('modules')
+            .select('*')
+            .eq('space_id', spaceId)
+            .order('order_index');
+
+          if (error) throw error;
+
+          return data as Module[];
+        } catch (error) {
+          console.error('Error getting modules:', error);
+          throw error;
+        }
+      },
+      setGoals: (goals) => set({ goals }),
+      setActiveGoal: (goal) => set({ activeGoal: goal }),
     }),
     {
       name: 'space-store',

@@ -17,7 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { useSpaceTheme } from '@/components/providers/space-theme-provider';
-import { SpaceModule } from '@/components/space-module';
+import { SpaceModule, type Module } from '@/components/space-module';
 
 export default function SpacePage() {
   const params = useParams();
@@ -35,12 +35,15 @@ export default function SpacePage() {
     isSidebarCollapsed,
     content: storedContent,
     setContent,
+    setModules: setStoreModules,
+    updateModule,
   } = useSpaceStore();
 
   const space = getSpaceById(spaceId);
   const [showKnowledgeBase, setShowKnowledgeBase] = useState(true);
   const [showChat, setShowChat] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [modules, setModules] = useState<Module[]>(space?.modules || []);
   const [selectedDocument, setSelectedDocument] = useState<{
     title: string;
     content: string;
@@ -93,6 +96,9 @@ export default function SpacePage() {
         }
 
         setContent(spaceId, data.content);
+        if (data.modules) {
+          setModules(data.modules);
+        }
 
         // Save the generated content to the knowledge base
         if (space.title && space.category) {
@@ -111,11 +117,56 @@ export default function SpacePage() {
       }
     };
 
-    //generateContent();
-  }, [space, storedContent, spaceId, setContent, addDocument]);
+    const generateModules = async () => {
+      if (!space) return;
+      if(space.modules && space.modules.length > 0) {
+        setModules(space.modules);
+        return;
+      }
+
+      try {
+        setIsGenerating(true);
+        const response = await fetch('/api/generate-modules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spaceDetails: space }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to generate modules');
+        }
+
+        const data = await response.json();
+        if (!data || !data.modules) {
+          throw new Error('Invalid response from server');
+        }
+
+        // Save modules to database
+        await setStoreModules(spaceId, data.modules);
+        setModules(data.modules);
+
+      } catch (error) {
+        console.error('Error generating modules:', error);
+        setError(error instanceof Error ? error.message : 'Failed to generate modules');
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    generateContent();
+    generateModules();
+  }, [space, storedContent, spaceId, setContent, addDocument, setStoreModules]);
 
   const handleModuleComplete = (moduleId: string) => {
-    console.log('Module completed:', moduleId);
+    setModules(prevModules => 
+      prevModules.map(module => 
+        module.id === moduleId 
+          ? { ...module, isCompleted: true }
+          : module
+      )
+    );
+    updateModule(spaceId, moduleId, { isCompleted: true });
   };
 
   if (!space) {
@@ -163,6 +214,7 @@ export default function SpacePage() {
           {showModules && (
             <SpaceModule
               spaceId={spaceId}
+              modules={modules}
               onClose={() => setShowModules(false)}
               onModuleComplete={handleModuleComplete}
               onModuleSelect={handleModuleSelect}

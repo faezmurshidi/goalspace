@@ -70,6 +70,12 @@ export type Space = {
     introduction: string;
     system_prompt: string;
   };
+  modules: {
+    id: string;
+    title: string;
+    content: string;
+    isCompleted: boolean;
+  }[];
   created_at: string;
   updated_at: string;
 };
@@ -108,6 +114,18 @@ export type ChatMessage = {
   created_at: string;
   updated_at: string;
 };
+
+export interface Module {
+  id: string;
+  space_id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  order_index: number;
+  is_completed: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export type Database = {
   public: {
@@ -156,6 +174,11 @@ export type Database = {
         Row: ChatMessage;
         Insert: Omit<ChatMessage, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<ChatMessage, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      modules: {
+        Row: Module;
+        Insert: Omit<Module, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Module, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };
