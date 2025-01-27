@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 
 interface SpaceToolsProps {
   spaceId: string;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
@@ -71,79 +71,47 @@ export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
 
   return (
     <Card className="bg-gradient-to-b from-background to-muted/30">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-            Tools
-          </CardTitle>
+      <CardContent className="p-6">
+        <div className="grid grid-cols-2 gap-4">
+          <ModelSelectionDialog
+            title="Generate Learning Plan"
+            description="Generate a structured learning plan for this space using AI."
+            onGenerate={(model) => handleGenerate('plan', model)}
+            buttonText="Learning Plan"
+            spaceColor={space.space_color}
+            category={space.category}
+          />
+
+          <ModelSelectionDialog
+            title="Generate Research"
+            description="Generate a comprehensive research paper for this topic using AI."
+            onGenerate={(model) => handleGenerate('research', model)}
+            buttonText="Research Paper"
+            spaceColor={space.space_color}
+            category={space.category}
+          />
+
+          <ModelSelectionDialog
+            title="Generate Mind Map"
+            description="Generate a visual mind map to understand the topic better."
+            onGenerate={(model) => handleGenerate('mindmap', model)}
+            buttonText="Mind Map"
+            spaceColor={space.space_color}
+            category={space.category}
+          />
+
+          <ModelSelectionDialog
+            title="Generate Podcast Script"
+            description="Generate an engaging podcast script about this topic."
+            onGenerate={(model) => handleGenerate('podcast', model)}
+            buttonText="Podcast Script"
+            spaceColor={space.space_color}
+            category={space.category}
+          />
+
+          <CustomPodcast spaceId={spaceId} /> 
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setShowTools(prev => !prev)}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-          >
-            {showTools ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </Button>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-      {showTools && (
-        <CardContent className="p-6">
-          <div className="grid grid-cols-2 gap-4">
-            <ModelSelectionDialog
-              title="Generate Learning Plan"
-              description="Generate a structured learning plan for this space using AI."
-              onGenerate={(model) => handleGenerate('plan', model)}
-              buttonText="Learning Plan"
-              spaceColor={space.space_color}
-              category={space.category}
-            />
-
-            <ModelSelectionDialog
-              title="Generate Research"
-              description="Generate a comprehensive research paper for this topic using AI."
-              onGenerate={(model) => handleGenerate('research', model)}
-              buttonText="Research Paper"
-              spaceColor={space.space_color}
-              category={space.category}
-            />
-
-            <ModelSelectionDialog
-              title="Generate Mind Map"
-              description="Generate a visual mind map to understand the topic better."
-              onGenerate={(model) => handleGenerate('mindmap', model)}
-              buttonText="Mind Map"
-              spaceColor={space.space_color}
-              category={space.category}
-            />
-
-            <ModelSelectionDialog
-              title="Generate Podcast Script"
-              description="Generate an engaging podcast script about this topic."
-              onGenerate={(model) => handleGenerate('podcast', model)}
-              buttonText="Podcast Script"
-              spaceColor={space.space_color}
-              category={space.category}
-            />
-
-            <CustomPodcast spaceId={spaceId} /> 
-          </div>
-        </CardContent>
-      )}
+      </CardContent>
     </Card>
   );
 } 

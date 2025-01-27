@@ -18,6 +18,9 @@ import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { useSpaceTheme } from '@/components/providers/space-theme-provider';
 import { SpaceModule, type Module } from '@/components/space-module';
+import { SpaceNavbar } from '@/components/space-navbar';
+import { SpaceToolsWindow } from '@/components/space-tools-window';
+import { CircularProgress } from '@/components/ui/circular-progress';
 
 export default function SpacePage() {
   const params = useParams();
@@ -51,6 +54,8 @@ export default function SpacePage() {
   const [error, setError] = useState<string | null>(null);
   const [showTools, setShowTools] = useState(true);
   const [showModules, setShowModules] = useState(true);
+  const [showTodo, setShowTodo] = useState(true);
+  const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
 
   const handleModuleSelect = (content: string, title: string) => {
     setSelectedDocument({ title, content });
@@ -154,7 +159,7 @@ export default function SpacePage() {
       }
     };
 
-    generateContent();
+    //generateContent();
     generateModules();
   }, [space, storedContent, spaceId, setContent, addDocument, setStoreModules]);
 
@@ -187,137 +192,61 @@ export default function SpacePage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Section */}
-      <div className="rounded-lg bg-[var(--space-primary-50)] p-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">{space.title}</h2>
-          <span
-            className={cn(
-              'rounded-full px-3 py-1.5 text-sm font-medium',
-              'bg-[var(--space-primary)] text-white'
-            )}
+    <div className="relative h-screen w-screen overflow-hidden bg-white dark:bg-slate-900">
+      {/* Header */}
+      <div className="fixed left-0 right-0 top-0 z-30 border-b bg-white/50 px-4 py-2 backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/50">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
           >
-            {space.category.charAt(0).toUpperCase() + space.category.slice(1)}
-          </span>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-xl font-medium">{space.title}</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{space.description}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <CircularProgress 
+              value={(currentModuleIndex / modules.length) * 100}
+              className="h-8 w-8"
+              strokeWidth={2}
+            />
+            <span className="text-sm text-slate-600 dark:text-slate-400">
+              {Math.round((currentModuleIndex / modules.length) * 100)}% Complete
+            </span>
+          </div>
         </div>
-        <p className="mt-2 text-muted-foreground">{space.description}</p>
       </div>
 
-      <Separator />
-
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-10">
-        {/* Left Column - Main Content */}
-        <div className="space-y-6 lg:col-span-6">
-          {/* Modules Section */}
-          {showModules && (
-            <SpaceModule
-              spaceId={spaceId}
-              modules={modules}
-              onClose={() => setShowModules(false)}
-              onModuleComplete={handleModuleComplete}
-              onModuleSelect={handleModuleSelect}
-            />
-          )}
-
-          {/* Knowledge Base */}
-          {showKnowledgeBase && (
-            <KnowledgeBase
-              spaceId={spaceId}
-              onClose={() => setShowKnowledgeBase(false)}
-              onDocumentSelect={setSelectedDocument}
-            />
-          )}
-
-          {/* Content Viewer */}
-          <Card className="h-[calc(100vh-16rem)]">
-            <CardHeader className="border-b bg-[var(--space-primary-50)]">
-              <CardTitle>{contentTitle}</CardTitle>
-            </CardHeader>
-            <CardContent className="h-full overflow-auto p-6">
-              {isGenerating ? (
-                <div className="flex h-full items-center justify-center">
-                  <div className="flex items-center gap-2 rounded-full bg-[var(--space-primary-50)] px-4 py-2 shadow-lg">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">Generating content...</span>
-                  </div>
-                </div>
-              ) : error ? (
-                <div className="flex h-full items-center justify-center">
-                  <div className="text-center text-destructive">
-                    <p>{error}</p>
-                    <Button 
-                      variant="default" 
-                      onClick={() => setError(null)} 
-                      className="mt-4 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
-                    >
-                      Dismiss
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="prose prose-lg max-w-none dark:prose-invert">
-                  <MarkdownContent content={currentContent} id={spaceId} />
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      {/* Main Content */}
+      <div className="grid h-[calc(100vh-56px)] grid-cols-12 gap-6 pt-14 px-6">
+        {/* Content Area */}
+        <div className="col-span-8 h-full overflow-y-auto">
+          <div className="prose prose-slate mx-auto max-w-4xl px-8 py-12 dark:prose-invert">
+            <MarkdownContent content={currentContent} id={spaceId} />
+          </div>
         </div>
 
-        {/* Right Column - Tools and Chat */}
-        <div className="space-y-6 lg:col-span-4">
-          {/* Tools */}
-          {showTools && <SpaceTools spaceId={spaceId} onClose={() => setShowTools(false)} />}
+        {/* Sidebar */}
+        <div className="col-span-4 h-full">
+          <div className="sticky top-[4.5rem] space-y-4">
+            {/* Tools Section - 40% height */}
+            <Card className="h-[calc((100vh-7rem)*0.4)] overflow-hidden border-none bg-white/50 shadow-sm backdrop-blur-xl dark:bg-slate-900/50">
+              <SpaceToolsWindow
+                spaceId={spaceId}
+                modules={modules}
+                onModuleComplete={handleModuleComplete}
+                onModuleSelect={handleModuleSelect}
+                onDocumentSelect={setSelectedDocument}
+              />
+            </Card>
 
-          {/* todo */}
-          <TodoList spaceId={spaceId} />
-
-          {/* Chat Section */}
-          {showChat && <ChatWithMentor spaceId={spaceId} onClose={() => setShowChat(false)} />}
-
-          {/* Toggle buttons when components are hidden */}
-          <div className="flex flex-wrap gap-2">
-            {!showModules && (
-              <Button
-                variant="default"
-                onClick={() => setShowModules(true)}
-                className="flex-1 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
-              >
-                <Brain className="mr-2 h-4 w-4" />
-                Show Modules
-              </Button>
-            )}
-            {!showKnowledgeBase && (
-              <Button
-                variant="default"
-                onClick={() => setShowKnowledgeBase(true)}
-                className="flex-1 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
-              >
-                <Brain className="mr-2 h-4 w-4" />
-                Show Knowledge Base
-              </Button>
-            )}
-            {!showTools && (
-              <Button 
-                variant="default"
-                onClick={() => setShowTools(true)} 
-                className="flex-1 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Show Tools
-              </Button>
-            )}
-            {!showChat && (
-              <Button 
-                variant="default"
-                onClick={() => setShowChat(true)} 
-                className="flex-1 bg-[var(--space-primary)] hover:bg-[var(--space-accent)]"
-              >
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Show Chat
-              </Button>
-            )}
+            {/* Chat Section - 60% height */}
+            <div className="h-[calc((100vh-7rem)*0.6-1rem)] overflow-hidden rounded-lg bg-white/50 backdrop-blur-xl dark:bg-slate-900/50">
+              <ChatWithMentor spaceId={spaceId} />
+            </div>
           </div>
         </div>
       </div>

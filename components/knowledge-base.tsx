@@ -19,8 +19,8 @@ const documentTypes: Record<DocumentType, string> = {
 
 interface KnowledgeBaseProps {
   spaceId: string;
-  onClose: () => void;
-  onDocumentSelect: (doc: { title: string; content: string }) => void;
+  onClose?: () => void;
+  onDocumentSelect: (document: { title: string; content: string }) => void;
 }
 
 export function KnowledgeBase({ spaceId, onClose, onDocumentSelect }: KnowledgeBaseProps) {
@@ -81,22 +81,6 @@ export function KnowledgeBase({ spaceId, onClose, onDocumentSelect }: KnowledgeB
 
   return (
     <Card className="h-[calc(50vh-4rem)] bg-gradient-to-b from-background to-muted/30">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-primary" />
-          <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-            Knowledge Base
-          </CardTitle>
-        </div>
-        <Button
-          onClick={onClose}
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 p-0 hover:scale-105 transition-transform"
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </CardHeader>
       <CardContent className="space-y-4 p-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">

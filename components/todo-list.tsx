@@ -44,14 +44,8 @@ export function TodoList({ spaceId }: TodoListProps) {
   };
 
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
-          <ListChecks className="h-5 w-5 text-blue-500" />
-          To-Do List
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Card className="h-[calc(50vh-4rem)] bg-gradient-to-b from-background to-muted/30">
+      <CardContent className="p-6">
         <div className="space-y-4">
           <div className="flex gap-2">
             <Input

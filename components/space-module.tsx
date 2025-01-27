@@ -62,6 +62,14 @@ export function SpaceModule({
   }, [modules]); // Re-run when modules change
 
   const loadModuleContent = async (module: Module) => {
+    if (!module) return;
+    
+    // If module already has content, use it directly
+    if (module.content) {
+      onModuleSelect?.(module.content, module.title);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch('/api/generate-module-content', {
@@ -111,32 +119,48 @@ export function SpaceModule({
   if (modules.length === 0) {
     return (
       <Card className="relative overflow-hidden bg-gradient-to-b from-[var(--space-primary-50)] to-background/95 backdrop-blur-lg shadow-xl">
-        <CardHeader className="sticky top-0 z-20 border-b border-border/50 bg-background/80">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-[var(--space-primary)] to-primary bg-clip-text text-transparent">
-              Learning Journey
-            </CardTitle>
-            {onClose && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onClose}
-                className="rounded-full hover:bg-accent/50"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            )}
-          </div>
-        </CardHeader>
         <CardContent className="p-6">
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-lg font-medium text-muted-foreground">
-              Curriculum in Progress
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Our team is crafting an amazing learning journey for you
-            </p>
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                opacity: [1, 0.8, 1]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <p className="text-lg font-medium text-muted-foreground">
+                Curriculum in Progress
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Our team is crafting an amazing learning journey for you
+              </p>
+            </motion.div>
+            <motion.div
+              className="mt-4 flex gap-1"
+              animate={{ 
+                opacity: [0.5, 1, 0.5],
+              }}
+              transition={{ 
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <div className="h-2 w-2 rounded-full bg-muted-foreground" />
+              <div className="h-2 w-2 rounded-full bg-muted-foreground" />
+              <div className="h-2 w-2 rounded-full bg-muted-foreground" />
+            </motion.div>
           </div>
         </CardContent>
       </Card>
@@ -145,7 +169,6 @@ export function SpaceModule({
 
   return (
     <Card className="relative overflow-hidden bg-gradient-to-b from-[var(--space-primary-50)] to-background/95 backdrop-blur-lg shadow-xl">
-    
       <CardContent className="p-6">
         <ScrollArea className="h-[calc(100vh-18rem)] pr-4">
           <div className="space-y-3">
@@ -204,15 +227,30 @@ export function SpaceModule({
                     
                     {isCurrent && (
                       <div className="flex items-center gap-2 ml-4">
-                        {currentModuleIndex < modules.length - 1 && (
+                        {isLoading ? (
+                          <motion.div
+                            animate={{ 
+                              opacity: [0.5, 1, 0.5],
+                            }}
+                            transition={{ 
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                            className="flex items-center gap-2 text-sm text-muted-foreground"
+                          >
+                            <div className="h-1.5 w-1.5 rounded-full bg-current" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-current" />
+                            <div className="h-1.5 w-1.5 rounded-full bg-current" />
+                          </motion.div>
+                        ) : currentModuleIndex < modules.length - 1 && (
                           <Button 
                             size="sm"
                             onClick={handleNextModule}
                             disabled={isLoading}
                             className={cn(
                               "rounded-full bg-background text-[var(--space-primary)]",
-                              "hover:bg-background/90 shadow-sm",
-                              isLoading && "animate-pulse"
+                              "hover:bg-background/90 shadow-sm"
                             )}
                           >
                             Continue
