@@ -188,16 +188,6 @@ export default function SpacePage() {
           await setStoreModules(spaceId, data.modules);
         }
 
-        // Add to knowledge base if successful
-        if (isMounted && space.title && space.category) {
-          addDocument(spaceId, {
-            title: `Generated Modules: ${space.title}`,
-            content: JSON.stringify(data.modules, null, 2),
-            type: 'guide',
-            tags: ['modules', space.category],
-          });
-        }
-
       } catch (error) {
         console.error('Module generation error:', error);
         
