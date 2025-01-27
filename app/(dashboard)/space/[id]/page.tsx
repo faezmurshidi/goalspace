@@ -145,7 +145,7 @@ export default function SpacePage() {
 
       // Client-side validation
       const requiredFields = ['title', 'category', 'description'];
-      if (requiredFields.some(field => !space[field])) {
+      if (requiredFields.some(field => !(field in space))) {
         setError('Missing required fields for module generation');
         return;
       }
@@ -193,7 +193,7 @@ export default function SpacePage() {
           addDocument(spaceId, {
             title: `Generated Modules: ${space.title}`,
             content: JSON.stringify(data.modules, null, 2),
-            type: 'system',
+            type: 'guide',
             tags: ['modules', space.category],
           });
         }
@@ -213,11 +213,6 @@ export default function SpacePage() {
         // Fallback to empty modules
         if (isMounted) {
           setModules([]);
-        }
-        
-        // Log to error tracking service
-        if (process.env.NODE_ENV === 'production') {
-          captureException(error);
         }
 
       } finally {
