@@ -31,7 +31,7 @@ const SYSTEM_PROMPT = (spaceDetails: any) => `You are an expert mentor creating 
 
 **Success Outcomes:**  
 By completion, you'll master:  
-${spaceDetails.objectives.map(o => `- ${o}`).join('\n')}
+${spaceDetails.objectives.map((o: string) => `- ${o}`).join('\n')}
 
 ---
 

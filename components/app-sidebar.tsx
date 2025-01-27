@@ -125,7 +125,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
           animate={{ width: isExpanded ? 280 : 72 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
-          <Sidebar collapsible="icon" className="h-full flex flex-col" {...props}>
+          <Sidebar className="h-full flex flex-col" {...props}>
             <SidebarHeader>
               <div className="flex items-center justify-between px-4 py-4">
                 <motion.div

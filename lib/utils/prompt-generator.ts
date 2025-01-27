@@ -64,7 +64,6 @@ ${space.prerequisites?.length ? `**Prerequisites:** ${space.prerequisites.join('
 ---
 
 ### **📅 Expected Commitment**  
-- Total Time: ${space.estimatedDuration || '4-6 hours'}  
 - Assessments: 3 skill checks  
 - Final Project: [Project deliverable description]
 

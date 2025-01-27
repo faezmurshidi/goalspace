@@ -122,13 +122,15 @@ export default function SpacePage() {
       }
     };
 
-    const generateModules = async (retryCount = 0) => {
+    const generateModules = async () => {
       if (!space) {
         setError('Space configuration not found');
         return;
       }
 
-      // Check if modules are already present and valid
+      let isMounted = true;
+      const controller = new AbortController();
+
       const shouldGenerate = !space.modules?.length && 
         !storedContent[spaceId] && 
         !currentContent.trim().length;
@@ -153,7 +155,6 @@ export default function SpacePage() {
       setError(null);
       
       try {
-        const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
         const response = await fetch('/api/generate-modules', {
@@ -171,36 +172,31 @@ export default function SpacePage() {
         }
 
         const data = await response.json();
-        
+
+        console.log('data', data);
         if (!data?.modules) {
           throw new Error('Invalid module structure received');
         }
 
-        // Validate module structure
-        const isValid = data.modules.every((module: any) => 
-          module.title && 
-          module.description && 
-          module.learningOutcomes &&
-          Array.isArray(module.learningOutcomes)
-        );
-
-        if (!isValid) {
-          throw new Error('Invalid module structure received');
-        }
-
         // Optimistic update
-        setModules(data.modules);
+        if (isMounted) {
+          setModules(data.modules);
+        }
         
         // Persist to store and database
-        await setStoreModules(spaceId, data.modules);
+        if (isMounted) {
+          await setStoreModules(spaceId, data.modules);
+        }
 
         // Add to knowledge base if successful
-        addDocument(spaceId, {
-          title: `Generated Modules: ${space.title}`,
-          content: JSON.stringify(data.modules, null, 2),
-          type: 'system',
-          tags: ['modules', space.category],
-        });
+        if (isMounted && space.title && space.category) {
+          addDocument(spaceId, {
+            title: `Generated Modules: ${space.title}`,
+            content: JSON.stringify(data.modules, null, 2),
+            type: 'system',
+            tags: ['modules', space.category],
+          });
+        }
 
       } catch (error) {
         console.error('Module generation error:', error);
@@ -210,10 +206,14 @@ export default function SpacePage() {
           typeof error === 'string' ? error :
           'Module generation failed';
 
-        setError(errorMessage);
+        if (isMounted) {
+          setError(errorMessage);
+        }
         
         // Fallback to empty modules
-        setModules([]);
+        if (isMounted) {
+          setModules([]);
+        }
         
         // Log to error tracking service
         if (process.env.NODE_ENV === 'production') {
@@ -221,13 +221,19 @@ export default function SpacePage() {
         }
 
       } finally {
-        setIsGenerating(false);
+        if (isMounted) {
+          setIsGenerating(false);
+        }
       }
+
+      return () => {
+        isMounted = false;
+        controller.abort();
+      };
     };
 
-    //generateContent();
     generateModules();
-  }, [space, storedContent, spaceId, setContent, addDocument, setStoreModules]);
+  }, [space?.modules, storedContent, spaceId, currentContent, setContent, addDocument, setStoreModules]);
 
   const handleModuleComplete = (moduleId: string) => {
     setModules(prevModules => 

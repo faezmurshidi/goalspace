@@ -39,7 +39,7 @@ export default function DigitalClock() {
               audio.play()
               return !prevBreak
             })
-            return prevBreak ? 25 * 60 : 5 * 60
+            return !isBreak ? 25 * 60 : 5 * 60
           }
           return prev - 1
         })

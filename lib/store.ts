@@ -299,24 +299,17 @@ export const useSpaceStore = create<SpaceStore>()(
         })),
       addMessage: async (spaceId, message) => {
         try {
-          // Get the current user
-          const {
-            data: { user },
-            error: userError,
-          } = await supabase.auth.getUser();
-          if (userError) throw userError;
-          if (!user) throw new Error('Not authenticated');
-
           // Add message to Supabase
           const { data, error } = await supabase
             .from('chat_messages')
             .insert({
               space_id: spaceId,
-              user_id: user.id,
               role: message.role,
               content: message.content,
-              is_faez: message.isFaez || false,
-              metadata: message.metadata || {},
+              metadata: {
+                ...message.metadata,
+                isFaez: message.isFaez || false
+              }
             })
             .select()
             .single();
@@ -334,7 +327,7 @@ export const useSpaceStore = create<SpaceStore>()(
                   role: data.role,
                   content: data.content,
                   timestamp: new Date(data.created_at).getTime(),
-                  isFaez: data.is_faez,
+                  isFaez: data.metadata?.isFaez || false,
                   metadata: data.metadata,
                 },
               ],
@@ -351,46 +344,40 @@ export const useSpaceStore = create<SpaceStore>()(
             isLoadingMessages: { ...state.isLoadingMessages, [spaceId]: true },
           }));
 
-          const { data, error } = await supabase.rpc('get_chat_history', {
-            p_space_id: spaceId,
-            p_limit: limit,
-            p_offset: offset,
-          });
+          const { data: messages, error } = await supabase
+            .from('chat_messages')
+            .select('*')
+            .eq('space_id', spaceId)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
 
           if (error) throw error;
-
-          // Transform messages
-          const messages = data.map((msg: any) => ({
-            id: msg.id,
-            role: msg.role,
-            content: msg.content,
-            timestamp: new Date(msg.created_at).getTime(),
-            isFaez: msg.is_faez,
-            metadata: msg.metadata,
-          }));
 
           // Update local state
           set((state) => ({
             chatMessages: {
               ...state.chatMessages,
-              [spaceId]:
-                offset === 0 ? messages : [...(state.chatMessages[spaceId] || []), ...messages],
+              [spaceId]: (messages || []).map((msg) => ({
+                id: msg.id,
+                role: msg.role,
+                content: msg.content,
+                timestamp: new Date(msg.created_at).getTime(),
+                isFaez: msg.metadata?.isFaez || false,
+                metadata: msg.metadata,
+              })),
             },
             hasMoreMessages: {
               ...state.hasMoreMessages,
-              [spaceId]: data.length === limit,
-            },
-            isLoadingMessages: {
-              ...state.isLoadingMessages,
-              [spaceId]: false,
+              [spaceId]: messages?.length === limit,
             },
           }));
         } catch (error) {
           console.error('Error loading messages:', error);
+          throw error;
+        } finally {
           set((state) => ({
             isLoadingMessages: { ...state.isLoadingMessages, [spaceId]: false },
           }));
-          throw error;
         }
       },
       clearChat: async (spaceId) => {
@@ -623,7 +610,6 @@ export const useSpaceStore = create<SpaceStore>()(
             .insert(
               modules.map((module, index) => ({
                 space_id: spaceId,
-                user_id: get().currentUser?.id,
                 title: module.title,
                 content: module.content,
                 order_index: index,

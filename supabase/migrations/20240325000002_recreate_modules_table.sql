@@ -1,17 +1,20 @@
--- Drop existing table if it exists
-DROP TABLE IF EXISTS chat_messages CASCADE;
+-- First, drop the existing table and its dependencies
+DROP TABLE IF EXISTS modules CASCADE;
 
--- Create chat_messages table
-CREATE TABLE chat_messages (
+-- Create the modules table
+CREATE TABLE modules (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     space_id UUID NOT NULL,
+    title TEXT NOT NULL,
     content TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
-    metadata JSONB DEFAULT '{}'::jsonb,
+    description TEXT,
+    learning_outcomes TEXT[] DEFAULT '{}',
+    order_index INTEGER DEFAULT 0,
+    is_completed BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     CONSTRAINT fk_space
-        FOREIGN KEY(space_id)
+        FOREIGN KEY(space_id) 
         REFERENCES spaces(id)
         ON DELETE CASCADE
 );
@@ -26,32 +29,32 @@ END;
 $$ language 'plpgsql';
 
 -- Create the trigger
-CREATE TRIGGER update_chat_messages_updated_at
-    BEFORE UPDATE ON chat_messages
+CREATE TRIGGER update_modules_updated_at
+    BEFORE UPDATE ON modules
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Enable RLS
-ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE modules ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS Policies
--- Allow users to view messages in spaces they have access to
-CREATE POLICY "Users can view messages in their spaces"
-ON chat_messages FOR SELECT
+-- Allow users to view modules in spaces they have access to
+CREATE POLICY "Users can view modules in their spaces"
+ON modules FOR SELECT
 TO authenticated
 USING (
     EXISTS (
         SELECT 1
         FROM spaces s
         JOIN goals g ON s.goal_id = g.id
-        WHERE s.id = chat_messages.space_id
+        WHERE s.id = modules.space_id
         AND g.user_id = auth.uid()
     )
 );
 
--- Allow users to insert messages in spaces they have access to
-CREATE POLICY "Users can insert messages in their spaces"
-ON chat_messages FOR INSERT
+-- Allow users to insert modules for spaces they have access to
+CREATE POLICY "Users can insert modules in their spaces"
+ON modules FOR INSERT
 TO authenticated
 WITH CHECK (
     EXISTS (
@@ -63,37 +66,37 @@ WITH CHECK (
     )
 );
 
--- Allow users to update messages in their spaces
-CREATE POLICY "Users can update messages in their spaces"
-ON chat_messages FOR UPDATE
+-- Allow users to update modules in spaces they have access to
+CREATE POLICY "Users can update modules in their spaces"
+ON modules FOR UPDATE
 TO authenticated
 USING (
     EXISTS (
         SELECT 1
         FROM spaces s
         JOIN goals g ON s.goal_id = g.id
-        WHERE s.id = chat_messages.space_id
+        WHERE s.id = modules.space_id
         AND g.user_id = auth.uid()
     )
 );
 
--- Allow users to delete messages in their spaces
-CREATE POLICY "Users can delete messages in their spaces"
-ON chat_messages FOR DELETE
+-- Allow users to delete modules in their spaces
+CREATE POLICY "Users can delete modules in their spaces"
+ON modules FOR DELETE
 TO authenticated
 USING (
     EXISTS (
         SELECT 1
         FROM spaces s
         JOIN goals g ON s.goal_id = g.id
-        WHERE s.id = chat_messages.space_id
+        WHERE s.id = modules.space_id
         AND g.user_id = auth.uid()
     )
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_chat_messages_space_id ON chat_messages(space_id);
-CREATE INDEX idx_chat_messages_created_at ON chat_messages(created_at);
+CREATE INDEX idx_modules_space_id ON modules(space_id);
+CREATE INDEX idx_modules_order_index ON modules(order_index);
 
 -- Grant necessary permissions to authenticated users
-GRANT ALL ON chat_messages TO authenticated;
+GRANT ALL ON modules TO authenticated; 

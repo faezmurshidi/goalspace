@@ -90,6 +90,8 @@ export async function POST(request: Request) {
       system: SYSTEM_PROMPT(spaceDetails)
     });
 
+    console.log('completion', completion);
+
     // Get the first content block
     const contentBlock = completion.content[0];
     const contentResponse = typeof contentBlock === 'object' && 'text' in contentBlock 

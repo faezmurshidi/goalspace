@@ -1,166 +1,148 @@
--- Enable UUID extension
+-- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Create users table
-CREATE TABLE IF NOT EXISTS users (
+-- Create ENUM types
+CREATE TYPE goal_status AS ENUM ('active', 'paused', 'completed', 'archived');
+CREATE TYPE task_status AS ENUM ('pending', 'in_progress', 'blocked', 'completed');
+CREATE TYPE theme_type AS ENUM ('dark', 'light', 'system');
+CREATE TYPE document_type AS ENUM ('guide', 'note', 'resource', 'system');
+
+-- Create users table with improved constraints
+CREATE TABLE users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT UNIQUE NOT NULL,
-  full_name TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+  email TEXT NOT NULL CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
+  full_name TEXT NOT NULL CHECK (char_length(full_name) BETWEEN 1 AND 128),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT valid_creation CHECK (created_at <= updated_at)
 );
 
--- Create user settings table
-CREATE TABLE IF NOT EXISTS user_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  theme TEXT DEFAULT 'dark' NOT NULL,
-  api_calls_count INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  UNIQUE(user_id)
+-- User settings with optimized storage
+CREATE TABLE user_settings (
+  user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  theme theme_type NOT NULL DEFAULT 'dark',
+  api_calls_count INTEGER NOT NULL DEFAULT 0 CHECK (api_calls_count >= 0),
+  timezone TEXT NOT NULL DEFAULT 'UTC' CHECK (timezone ~ '^[A-Za-z_/]+$'),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create goals table
-CREATE TABLE IF NOT EXISTS goals (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  category TEXT DEFAULT 'learning' NOT NULL,
-  status TEXT DEFAULT 'active' NOT NULL,
-  progress INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+-- Goals with status ENUM and progress validation
+CREATE TABLE goals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 128),
+  description TEXT CHECK (char_length(description) <= 1024),
+  category TEXT NOT NULL DEFAULT 'learning' CHECK (category ~ '^[a-z_]+$'),
+  status goal_status NOT NULL DEFAULT 'active',
+  progress INTEGER NOT NULL DEFAULT 0 CHECK (progress BETWEEN 0 AND 100),
+  target_date TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT reasonable_dates CHECK (target_date > created_at)
 );
 
--- Create spaces table
-CREATE TABLE IF NOT EXISTS spaces (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  goal_id UUID REFERENCES goals(id) ON DELETE CASCADE NOT NULL,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  category TEXT DEFAULT 'learning' NOT NULL,
-  objectives JSONB,
-  prerequisites JSONB,
-  mentor JSONB,
-  progress INTEGER DEFAULT 0,
-  space_color JSONB,
-  mentor_type TEXT,
-  order_index INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+-- Spaces with improved JSON validation
+CREATE TABLE spaces (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  goal_id UUID NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 128),
+  description TEXT CHECK (char_length(description) <= 1024),
+  category TEXT NOT NULL DEFAULT 'learning' CHECK (category ~ '^[a-z_]+$'),
+  objectives JSONB NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_array_length(objectives) > 0),
+  prerequisites JSONB NOT NULL DEFAULT '[]'::jsonb,
+  mentor JSONB CHECK (mentor ?& array['name', 'type']),
+  progress INTEGER NOT NULL DEFAULT 0 CHECK (progress BETWEEN 0 AND 100),
+  color_theme JSONB CHECK (color_theme ?& array['primary', 'secondary']),
+  order_index INTEGER NOT NULL DEFAULT 0 CHECK (order_index >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create tasks table
-CREATE TABLE IF NOT EXISTS tasks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  space_id UUID REFERENCES spaces(id) ON DELETE CASCADE NOT NULL,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT,
-  status TEXT DEFAULT 'pending' NOT NULL,
-  due_date TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+-- Tasks with ENUM status and date constraints
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 128),
+  description TEXT CHECK (char_length(description) <= 512),
+  status task_status NOT NULL DEFAULT 'pending',
+  due_date TIMESTAMPTZ CHECK (due_date > created_at),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Enable Row Level Security (RLS)
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE spaces ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+-- Documents table for knowledge base
+CREATE TABLE documents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  space_id UUID NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 128),
+  content TEXT NOT NULL CHECK (content != ''),
+  type document_type NOT NULL DEFAULT 'note',
+  tags TEXT[] CHECK (array_length(tags, 1) <= 10),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
--- Create policies
-CREATE POLICY "Users can view own data" ON users
-  FOR SELECT USING (auth.uid() = id);
+-- Index optimization
+CREATE INDEX idx_goals_user_status ON goals(user_id, status);
+CREATE INDEX idx_spaces_goal_user ON spaces(goal_id, user_id);
+CREATE INDEX idx_tasks_space_status ON tasks(space_id, status);
+CREATE INDEX idx_documents_space_type ON documents(space_id, type);
 
-CREATE POLICY "Users can update own data" ON users
-  FOR UPDATE USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own data" ON users
-  FOR INSERT WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can view own settings" ON user_settings
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own settings" ON user_settings
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can create own settings" ON user_settings
-  FOR INSERT WITH CHECK (auth.uid() = user_id OR EXISTS (
-    SELECT 1 FROM auth.users WHERE auth.users.id = user_id AND auth.users.id = auth.uid()
-  ));
-
-CREATE POLICY "Users can view own goals" ON goals
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can create own goals" ON goals
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own goals" ON goals
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own goals" ON goals
-  FOR DELETE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can view own spaces" ON spaces
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can create own spaces" ON spaces
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own spaces" ON spaces
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own spaces" ON spaces
-  FOR DELETE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can view own tasks" ON tasks
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can create own tasks" ON tasks
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own tasks" ON tasks
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own tasks" ON tasks
-  FOR DELETE USING (auth.uid() = user_id);
-
--- Create functions to handle updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+-- Single trigger function for all tables
+CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
--- Create triggers for updated_at
-CREATE TRIGGER update_users_updated_at
-  BEFORE UPDATE ON users
-  FOR EACH ROW
-  EXECUTE PROCEDURE update_updated_at_column();
+-- Apply triggers using loop
+DO $$
+DECLARE
+  tbl text;
+BEGIN
+  FOR tbl IN 
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    AND table_name IN ('users', 'user_settings', 'goals', 'spaces', 'tasks', 'documents')
+  LOOP
+    EXECUTE format('CREATE TRIGGER %I BEFORE UPDATE ON %I FOR EACH ROW EXECUTE FUNCTION update_updated_at()', 
+                  'update_' || tbl || '_timestamp',
+                  tbl);
+  END LOOP;
+END;
+$$;
 
-CREATE TRIGGER update_user_settings_updated_at
-  BEFORE UPDATE ON user_settings
-  FOR EACH ROW
-  EXECUTE PROCEDURE update_updated_at_column();
+-- Enhanced RLS policies
+CREATE POLICY "User data isolation" ON users
+  USING (auth.uid() = id);
 
-CREATE TRIGGER update_goals_updated_at
-  BEFORE UPDATE ON goals
-  FOR EACH ROW
-  EXECUTE PROCEDURE update_updated_at_column();
+CREATE POLICY "User settings isolation" ON user_settings
+  USING (auth.uid() = user_id);
 
-CREATE TRIGGER update_spaces_updated_at
-  BEFORE UPDATE ON spaces
-  FOR EACH ROW
-  EXECUTE PROCEDURE update_updated_at_column();
+CREATE POLICY "User goals access" ON goals
+  USING (auth.uid() = user_id);
 
-CREATE TRIGGER update_tasks_updated_at
-  BEFORE UPDATE ON tasks
-  FOR EACH ROW
-  EXECUTE PROCEDURE update_updated_at_column(); 
+CREATE POLICY "User spaces access" ON spaces
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "User tasks access" ON tasks
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "User documents access" ON documents
+  USING (auth.uid() = user_id);
+
+-- Enable RLS for all tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE spaces ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY; 
