@@ -122,38 +122,104 @@ export default function SpacePage() {
       }
     };
 
-    const generateModules = async () => {
-      if (!space) return;
-      if(space.modules && space.modules.length > 0) {
-        setModules(space.modules);
+    const generateModules = async (retryCount = 0) => {
+      if (!space) {
+        setError('Space configuration not found');
         return;
       }
 
+      // Check if modules are already present and valid
+      const shouldGenerate = !space.modules?.length && 
+        !storedContent[spaceId] && 
+        !currentContent.trim().length;
+
+      if (!shouldGenerate) {
+        console.log('Modules/content already exist - skipping generation');
+        if (space.modules?.length) {
+          setModules(space.modules);
+        }
+        return;
+      }
+
+      // Client-side validation
+      const requiredFields = ['title', 'category', 'description'];
+      if (requiredFields.some(field => !space[field])) {
+        setError('Missing required fields for module generation');
+        return;
+      }
+
+      // Rest of your existing generation logic
+      setIsGenerating(true);
+      setError(null);
+      
       try {
-        setIsGenerating(true);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
         const response = await fetch('/api/generate-modules', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ spaceDetails: space }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to generate modules');
+          throw new Error(errorData.error || `HTTP ${response.status} - ${response.statusText}`);
         }
 
         const data = await response.json();
-        if (!data || !data.modules) {
-          throw new Error('Invalid response from server');
+        
+        if (!data?.modules) {
+          throw new Error('Invalid module structure received');
         }
 
-        // Save modules to database
-        await setStoreModules(spaceId, data.modules);
+        // Validate module structure
+        const isValid = data.modules.every((module: any) => 
+          module.title && 
+          module.description && 
+          module.learningOutcomes &&
+          Array.isArray(module.learningOutcomes)
+        );
+
+        if (!isValid) {
+          throw new Error('Invalid module structure received');
+        }
+
+        // Optimistic update
         setModules(data.modules);
+        
+        // Persist to store and database
+        await setStoreModules(spaceId, data.modules);
+
+        // Add to knowledge base if successful
+        addDocument(spaceId, {
+          title: `Generated Modules: ${space.title}`,
+          content: JSON.stringify(data.modules, null, 2),
+          type: 'system',
+          tags: ['modules', space.category],
+        });
 
       } catch (error) {
-        console.error('Error generating modules:', error);
-        setError(error instanceof Error ? error.message : 'Failed to generate modules');
+        console.error('Module generation error:', error);
+        
+        // Error handling with type check
+        const errorMessage = error instanceof Error ? error.message :
+          typeof error === 'string' ? error :
+          'Module generation failed';
+
+        setError(errorMessage);
+        
+        // Fallback to empty modules
+        setModules([]);
+        
+        // Log to error tracking service
+        if (process.env.NODE_ENV === 'production') {
+          captureException(error);
+        }
+
       } finally {
         setIsGenerating(false);
       }
