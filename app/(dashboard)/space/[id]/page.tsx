@@ -289,7 +289,6 @@ export default function SpacePage() {
                       currentModuleIndex={currentModuleIndex}
                       onModuleComplete={handleModuleComplete}
                       onModuleSelect={handleModuleSelect}
-                      onDocumentSelect={setSelectedDocument}
                     />
                   </TabsContent>
 
