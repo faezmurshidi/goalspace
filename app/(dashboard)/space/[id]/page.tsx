@@ -1,69 +1,51 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Brain, Loader2, MessageSquare, Sparkles, Target } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 import { ChatWithMentor } from '@/components/chat-with-mentor';
-import { KnowledgeBase } from '@/components/knowledge-base';
-import { SiteHeader } from '@/components/site-header';
-import { SpaceTools } from '@/components/space-tools';
-import { SpacesSidebar } from '@/components/spaces-sidebar';
-import { TodoList } from '@/components/todo-list';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { MarkdownContent } from '@/components/ui/markdown-content';
-import { Separator } from '@/components/ui/separator';
 import { useSpaceStore } from '@/lib/store';
-import { cn } from '@/lib/utils';
 import { useSpaceTheme } from '@/components/providers/space-theme-provider';
-import { SpaceModule, type Module } from '@/components/space-module';
-import { SpaceNavbar } from '@/components/space-navbar';
 import { SpaceToolsWindow } from '@/components/space-tools-window';
 import { CircularProgress } from '@/components/ui/circular-progress';
+import { type Module } from '@/lib/types/module';
 
 export default function SpacePage() {
   const params = useParams();
   const router = useRouter();
   const spaceId = params.id as string;
   const { setColors } = useSpaceTheme();
+  const initializingRef = useRef(false);
 
   const {
     getSpaceById,
-    todoStates,
-    toggleTodo,
-    setPlan: setStorePlan,
-    setResearch,
-    addDocument,
-    isSidebarCollapsed,
     content: storedContent,
     setContent,
-    setModules: setStoreModules,
+    fetchModules,
+    modulesBySpaceId,
+    currentModuleIndexBySpaceId,
+    setCurrentModuleIndex,
     updateModule,
+    getCurrentModule,
+    createModule,
+    addDocument
   } = useSpaceStore();
 
   const space = getSpaceById(spaceId);
-  const [showKnowledgeBase, setShowKnowledgeBase] = useState(true);
-  const [showChat, setShowChat] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [modules, setModules] = useState<Module[]>(space?.modules || []);
   const [selectedDocument, setSelectedDocument] = useState<{
     title: string;
     content: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showTools, setShowTools] = useState(true);
-  const [showModules, setShowModules] = useState(true);
-  const [showTodo, setShowTodo] = useState(true);
-  const [currentModuleIndex, setCurrentModuleIndex] = useState(0);
 
-  const handleModuleSelect = (content: string, title: string) => {
-    setSelectedDocument({ title, content });
-  };
-
-  const currentContent =
-    selectedDocument?.content || storedContent[spaceId] || space?.content || '';
-  const contentTitle = selectedDocument?.title || space?.title || '';
+  const modules = modulesBySpaceId[spaceId] || [];
+  const currentModuleIndex = currentModuleIndexBySpaceId[spaceId] || 0;
+  const currentModule = getCurrentModule(spaceId);
 
   // Set space theme colors
   useEffect(() => {
@@ -73,162 +55,130 @@ export default function SpacePage() {
     return () => setColors(null);
   }, [space?.space_color, setColors]);
 
-  console.log('space', space);
-
-  // Generate initial content when the component mounts
+  // Initialize modules
   useEffect(() => {
-    const generateContent = async () => {
-      // Skip if no space, or if content already exists
-      if (!space || space.content || storedContent[spaceId]) return;
+    const initializeModules = async () => {
+      if (!spaceId || !space || initializingRef.current) return;
 
-      setIsGenerating(true);
-      setError(null);
       try {
-        const response = await fetch('/api/generate-initial-content', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ spaceDetails: space }),
-        });
+        initializingRef.current = true;
+        
+        // First try to fetch existing modules
+        const existingModules = await fetchModules(spaceId);
+        if (existingModules.length > 0) return;
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to generate content');
-        }
-
-        const data = await response.json();
-        if (!data || !data.content) {
-          throw new Error('Invalid response from server');
-        }
-
-        setContent(spaceId, data.content);
-        if (data.modules) {
-          setModules(data.modules);
-        }
-
-        // Save the generated content to the knowledge base
-        if (space.title && space.category) {
-          addDocument(spaceId, {
-            title: `Initial Content: ${space.title}`,
-            content: data.content,
-            type: 'guide',
-            tags: ['initial-content', space.category],
-          });
-        }
-      } catch (error) {
-        console.error('Error generating initial content:', error);
-        setError(error instanceof Error ? error.message : 'Failed to generate content');
-      } finally {
-        setIsGenerating(false);
-      }
-    };
-
-    const generateModules = async () => {
-      if (!space) {
-        setError('Space configuration not found');
-        return;
-      }
-
-      let isMounted = true;
-      const controller = new AbortController();
-
-      const shouldGenerate = !space.modules?.length && 
-        !storedContent[spaceId] && 
-        !currentContent.trim().length;
-
-      if (!shouldGenerate) {
-        console.log('Modules/content already exist - skipping generation');
-        if (space.modules?.length) {
-          setModules(space.modules);
-        }
-        return;
-      }
-
-      // Client-side validation
-      const requiredFields = ['title', 'category', 'description'];
-      if (requiredFields.some(field => !(field in space))) {
-        setError('Missing required fields for module generation');
-        return;
-      }
-
-      // Rest of your existing generation logic
-      setIsGenerating(true);
-      setError(null);
-      
-      try {
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+        // If no modules exist, start generation
+        setIsGenerating(true);
+        setError(null);
 
         const response = await fetch('/api/generate-modules', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ spaceDetails: space }),
-          signal: controller.signal,
         });
-
-        clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `HTTP ${response.status} - ${response.statusText}`);
+          throw new Error(errorData.error || 'Failed to generate modules');
         }
 
         const data = await response.json();
-
-        console.log('data', data);
-        if (!data?.modules) {
-          throw new Error('Invalid module structure received');
+        if (!data?.modules || !Array.isArray(data.modules)) {
+          throw new Error('Invalid module data received');
         }
 
-        // Optimistic update
-        if (isMounted) {
-          setModules(data.modules);
+        // Create modules in sequence
+        for (const [index, moduleData] of data.modules.entries()) {
+          await createModule({
+            space_id: spaceId,
+            title: moduleData.title,
+            content: moduleData.content,
+            description: '',
+            order_index: index,
+            is_completed: false,
+          });
         }
-        
-        // Persist to store and database
-        if (isMounted) {
-          await setStoreModules(spaceId, data.modules);
-        }
+
+        // Fetch the newly created modules
+        await fetchModules(spaceId);
 
       } catch (error) {
-        console.error('Module generation error:', error);
-        
-        // Error handling with type check
-        const errorMessage = error instanceof Error ? error.message :
-          typeof error === 'string' ? error :
-          'Module generation failed';
-
-        if (isMounted) {
-          setError(errorMessage);
-        }
-        
-        // Fallback to empty modules
-        if (isMounted) {
-          setModules([]);
-        }
-
+        console.error('Error initializing modules:', error);
+        setError(error instanceof Error ? error.message : 'Failed to initialize modules');
       } finally {
-        if (isMounted) {
-          setIsGenerating(false);
-        }
+        setIsGenerating(false);
       }
-
-      return () => {
-        isMounted = false;
-        controller.abort();
-      };
     };
 
-    generateModules();
-  }, [space?.modules, storedContent, spaceId, currentContent, setContent, addDocument, setStoreModules]);
+    initializeModules();
+  }, [spaceId, space, fetchModules, createModule]);
 
-  const handleModuleComplete = (moduleId: string) => {
-    setModules(prevModules => 
-      prevModules.map(module => 
-        module.id === moduleId 
-          ? { ...module, isCompleted: true }
-          : module
-      )
-    );
-    updateModule(spaceId, moduleId, { isCompleted: true });
+  // Add effect to check and generate module content when current module changes
+  useEffect(() => {
+    const generateModuleContent = async () => {
+      if (!currentModule || !space || currentModule.description || isGenerating) return;
+
+      try {
+        setIsGenerating(true);
+        setError(null);
+
+        const response = await fetch('/api/generate-module-content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            spaceDetails: space,
+            moduleInfo: {
+              title: currentModule.title,
+              content: currentModule.content
+            }
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate module content');
+        }
+
+        const { content: generatedContent } = await response.json();
+
+        // Update module with generated content
+        await updateModule(spaceId, currentModule.id, {
+          description: generatedContent
+        });
+
+        // Save to documents with correct type
+        await addDocument(spaceId, {
+          title: currentModule.title,
+          content: generatedContent,
+          type: 'guide',
+          tags: ['module-content', space.category],
+        });
+
+      } catch (error) {
+        console.error('Error generating module content:', error);
+        setError(error instanceof Error ? error.message : 'Failed to generate module content');
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    generateModuleContent();
+  }, [currentModule, space, spaceId, isGenerating, updateModule, addDocument]);
+
+  const handleModuleComplete = async (moduleId: string) => {
+    try {
+      const module = modules.find(m => m.id === moduleId);
+      if (!module || !space) return;
+
+      // Just mark as complete, content generation is handled by the effect
+      await updateModule(spaceId, moduleId, { is_completed: true });
+    } catch (error) {
+      console.error('Error completing module:', error);
+      setError(error instanceof Error ? error.message : 'Failed to complete module');
+    }
+  };
+
+  const handleModuleSelect = (moduleIndex: number) => {
+    setCurrentModuleIndex(spaceId, moduleIndex);
   };
 
   if (!space) {
@@ -248,6 +198,9 @@ export default function SpacePage() {
     );
   }
 
+  const completedModules = modules.filter(m => m.is_completed).length;
+  const progress = modules.length > 0 ? (completedModules / modules.length) * 100 : 0;
+
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-white dark:bg-slate-900">
       {/* Header */}
@@ -266,12 +219,12 @@ export default function SpacePage() {
           </div>
           <div className="flex items-center gap-2">
             <CircularProgress 
-              value={(currentModuleIndex / modules.length) * 100}
+              value={progress}
               className="h-8 w-8"
               strokeWidth={2}
             />
             <span className="text-sm text-slate-600 dark:text-slate-400">
-              {Math.round((currentModuleIndex / modules.length) * 100)}% Complete
+              {Math.round(progress)}% Complete
             </span>
           </div>
         </div>
@@ -282,7 +235,22 @@ export default function SpacePage() {
         {/* Content Area */}
         <div className="col-span-8 h-full overflow-y-auto">
           <div className="prose prose-slate mx-auto max-w-4xl px-8 py-12 dark:prose-invert">
-            <MarkdownContent content={currentContent} id={spaceId} />
+            {isGenerating ? (
+              <div className="flex items-center justify-center space-x-2">
+                <CircularProgress value={undefined} className="h-6 w-6" />
+                <span>Generating content...</span>
+              </div>
+            ) : error ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+                <h3 className="text-lg font-medium">Error</h3>
+                <p>{error}</p>
+              </div>
+            ) : (
+              <MarkdownContent 
+                content={currentModule?.description || currentModule?.content || space.content || ''} 
+                id={spaceId} 
+              />
+            )}
           </div>
         </div>
 
@@ -294,6 +262,7 @@ export default function SpacePage() {
               <SpaceToolsWindow
                 spaceId={spaceId}
                 modules={modules}
+                currentModuleIndex={currentModuleIndex}
                 onModuleComplete={handleModuleComplete}
                 onModuleSelect={handleModuleSelect}
                 onDocumentSelect={setSelectedDocument}

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { supabase } from '@/lib/supabase/client';
-import { Module } from '@/components/space-module';
+import { Module, ModuleUpdate, ModuleCreate } from '@/lib/types/module';
 
 export interface Message {
   id: string;
@@ -17,7 +17,7 @@ export interface Document {
   id: string;
   title: string;
   content: string;
-  type: 'tutorial' | 'guide' | 'reference' | 'exercise';
+  type: string;
   tags: string[];
   metadata?: any;
   created_at?: string;
@@ -108,7 +108,6 @@ export interface Space {
     system_prompt: string;
   };
   space_color?: SpaceColor;
-  modules?: Module[];
   plan?: string;
   research?: string;
   progress?: number;
@@ -131,6 +130,7 @@ export interface SpaceStore {
   goals: Goal[];
   documents: { [key: string]: Document[] };
   currentGoal: string;
+  modules: Module[];
   setSpaces: (spaces: Space[]) => void;
   setCurrentGoal: (goal: string) => void;
   getSpaceById: (id: string) => Space | undefined;
@@ -165,13 +165,22 @@ export interface SpaceStore {
   // New function to load user data
   loadUserData: () => Promise<void>;
   loadDocuments: (spaceId: string) => Promise<void>;
-  setModules: (spaceId: string, modules: Module[]) => Promise<void>;
-  updateModule: (spaceId: string, moduleId: string, updates: Partial<Module>) => Promise<void>;
+  setModules: (spaceId: string, modules: Module[]) => void;
+  updateModule: (spaceId: string, moduleId: string, updates: Partial<ModuleUpdate>) => Promise<void>;
   getModules: (spaceId: string) => Promise<Module[]>;
   setGoals: (goals: Goal[]) => void;
   setActiveGoal: (goal: Goal) => void;
   currentUser: { id: string } | null;
   activeGoal: Goal | null;
+  currentModuleIndex: number;
+  setCurrentModuleIndex: (spaceId: string, index: number) => void;
+  modulesBySpaceId: Record<string, Module[]>;
+  currentModuleIndexBySpaceId: Record<string, number>;
+  fetchModules: (spaceId: string) => Promise<Module[]>;
+  generateSpaceModules: (spaceId: string) => Promise<Module[]>;
+  createModule: (moduleData: ModuleCreate) => Promise<Module>;
+  deleteModule: (spaceId: string, moduleId: string) => Promise<void>;
+  getCurrentModule: (spaceId: string) => Module | undefined;
 }
 
 interface SupabaseGoal {
@@ -203,6 +212,7 @@ export const useSpaceStore = create<SpaceStore>()(
       spaces: [],
       goals: [],
       documents: {},
+      modules: [],
       currentGoal: '',
       todoStates: {},
       chatMessages: {},
@@ -212,6 +222,9 @@ export const useSpaceStore = create<SpaceStore>()(
       isSidebarCollapsed: false,
       currentUser: null,
       activeGoal: null,
+      currentModuleIndex: 0,
+      modulesBySpaceId: {},
+      currentModuleIndexBySpaceId: {},
       setSpaces: (spaces) => {
         // When setting spaces, create a new goal with these spaces
         const goalId = Math.random().toString(36).substring(7);
@@ -596,41 +609,15 @@ export const useSpaceStore = create<SpaceStore>()(
           throw error;
         }
       },
-      setModules: async (spaceId: string, modules: Module[]) => {
-        try {
-          // First, delete existing modules for this space
-          await supabase
-            .from('modules')
-            .delete()
-            .eq('space_id', spaceId);
-
-          // Then insert the new modules
-          const { error } = await supabase
-            .from('modules')
-            .insert(
-              modules.map((module, index) => ({
-                space_id: spaceId,
-                title: module.title,
-                content: module.content,
-                order_index: index,
-                is_completed: module.isCompleted || false,
-              }))
-            );
-
-          if (error) throw error;
-
-          // Update the store
-          set((state) => ({
-            spaces: state.spaces.map((space) =>
-              space.id === spaceId ? { ...space, modules } : space
-            ),
-          }));
-        } catch (error) {
-          console.error('Error setting modules:', error);
-          throw error;
-        }
+      setModules: (spaceId: string, modules: Module[]) => {
+        set(state => ({
+          modulesBySpaceId: {
+            ...state.modulesBySpaceId,
+            [spaceId]: modules
+          }
+        }));
       },
-      updateModule: async (spaceId: string, moduleId: string, updates: Partial<Module>) => {
+      updateModule: async (spaceId: string, moduleId: string, updates: Partial<ModuleUpdate>) => {
         try {
           const { error } = await supabase
             .from('modules')
@@ -640,18 +627,14 @@ export const useSpaceStore = create<SpaceStore>()(
 
           if (error) throw error;
 
-          // Update the store
-          set((state) => ({
-            spaces: state.spaces.map((space) =>
-              space.id === spaceId
-                ? {
-                    ...space,
-                    modules: space.modules?.map((module) =>
-                      module.id === moduleId ? { ...module, ...updates } : module
-                    ),
-                  }
-                : space
-            ),
+          // Only update the store if the database update was successful
+          set(state => ({
+            modulesBySpaceId: {
+              ...state.modulesBySpaceId,
+              [spaceId]: state.modulesBySpaceId[spaceId]?.map(module =>
+                module.id === moduleId ? { ...module, ...updates } : module
+              ) || []
+            }
           }));
         } catch (error) {
           console.error('Error updating module:', error);
@@ -659,6 +642,7 @@ export const useSpaceStore = create<SpaceStore>()(
         }
       },
       getModules: async (spaceId: string) => {
+        console.log('Getting modules for space:', spaceId);
         try {
           const { data, error } = await supabase
             .from('modules')
@@ -676,9 +660,132 @@ export const useSpaceStore = create<SpaceStore>()(
       },
       setGoals: (goals) => set({ goals }),
       setActiveGoal: (goal) => set({ activeGoal: goal }),
+      setCurrentModuleIndex: (spaceId: string, index: number) => {
+        set(state => ({
+          currentModuleIndexBySpaceId: {
+            ...state.currentModuleIndexBySpaceId,
+            [spaceId]: index
+          }
+        }));
+      },
+      fetchModules: async (spaceId: string) => {
+        const state = get();
+        // Return cached modules if they exist
+        if (state.modulesBySpaceId[spaceId]?.length > 0) {
+          return state.modulesBySpaceId[spaceId];
+        }
+
+        try {
+          const { data: modules, error } = await supabase
+            .from('modules')
+            .select('*')
+            .eq('space_id', spaceId)
+            .order('order_index');
+
+          if (error) throw error;
+
+          set(state => ({
+            modulesBySpaceId: {
+              ...state.modulesBySpaceId,
+              [spaceId]: modules
+            }
+          }));
+
+          return modules;
+        } catch (error) {
+          console.error('Error fetching modules:', error);
+          return [];
+        }
+      },
+      generateSpaceModules: async (spaceId) => {
+        const space = get().getSpaceById(spaceId);
+        if (!space) throw new Error('Space not found');
+
+        const response = await fetch('/api/generate-modules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ space })
+        });
+
+        if (!response.ok) throw new Error('Module generation failed');
+        const { modules } = await response.json();
+        
+        // Save to Supabase
+        const { error } = await supabase
+          .from('modules')
+          .insert(modules.map((m: Module, i: number) => ({
+            ...m,
+            space_id: spaceId,
+            order_index: i
+          })));
+
+        if (error) throw error;
+        return modules;
+      },
+      createModule: async (moduleData: ModuleCreate) => {
+        try {
+          const { data, error } = await supabase
+            .from('modules')
+            .insert([moduleData])
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          set(state => ({
+            modulesBySpaceId: {
+              ...state.modulesBySpaceId,
+              [moduleData.space_id]: [
+                ...(state.modulesBySpaceId[moduleData.space_id] || []),
+                data
+              ]
+            }
+          }));
+
+          return data;
+        } catch (error) {
+          console.error('Error creating module:', error);
+          throw error;
+        }
+      },
+      deleteModule: async (spaceId: string, moduleId: string) => {
+        try {
+          const { error } = await supabase
+            .from('modules')
+            .delete()
+            .eq('id', moduleId)
+            .eq('space_id', spaceId);
+
+          if (error) throw error;
+
+          set(state => ({
+            modulesBySpaceId: {
+              ...state.modulesBySpaceId,
+              [spaceId]: state.modulesBySpaceId[spaceId]?.filter(
+                module => module.id !== moduleId
+              ) || []
+            }
+          }));
+        } catch (error) {
+          console.error('Error deleting module:', error);
+          throw error;
+        }
+      },
+      getCurrentModule: (spaceId: string) => {
+        const state = get();
+        const modules = state.modulesBySpaceId[spaceId] || [];
+        const currentIndex = state.currentModuleIndexBySpaceId[spaceId] || 0;
+        return modules[currentIndex];
+      },
     }),
     {
       name: 'space-store',
+      // Only persist these fields
+      partialize: (state) => ({
+        todoStates: state.todoStates,
+        isSidebarCollapsed: state.isSidebarCollapsed,
+        currentModuleIndexBySpaceId: state.currentModuleIndexBySpaceId,
+      }),
     }
   )
 );

@@ -1,271 +1,94 @@
-'use client';
+import { useEffect } from 'react';
+import { Check, ChevronRight } from 'lucide-react';
 
-import * as React from 'react';
-import { ChevronRight, Lock, X, Check } from 'lucide-react';
-import { motion } from 'framer-motion';
-
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { BookOpen } from 'lucide-react';
+import { type Module } from '@/lib/types/module';
 import { useSpaceStore } from '@/lib/store';
-
-export interface Module {
-  id: string;
-  title: string;
-  content: string;
-  isCompleted: boolean;
-}
 
 interface SpaceModuleProps {
   spaceId: string;
-  modules?: Module[];
-  onClose?: () => void;
-  onModuleComplete?: (moduleId: string) => void;
-  onModuleSelect?: (content: string, title: string) => void;
 }
 
-export function SpaceModule({ 
-  spaceId, 
-  modules = [], 
-  onClose, 
-  onModuleComplete, 
-  onModuleSelect 
-}: SpaceModuleProps) {
-  const [currentModuleIndex, setCurrentModuleIndex] = React.useState(0);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const { setModules, updateModule, getModules } = useSpaceStore();
-  const currentModule = modules[currentModuleIndex];
+export function SpaceModule({ spaceId }: SpaceModuleProps) {
+  const {
+    modulesBySpaceId,
+    currentModuleIndexBySpaceId,
+    setCurrentModuleIndex,
+    updateModule,
+    fetchModules,
+  } = useSpaceStore();
 
-  // Load modules from database on mount
-  React.useEffect(() => {
-    const loadModules = async () => {
-      try {
-        const dbModules = await getModules(spaceId);
-        if (dbModules.length > 0) {
-          // Update the local state with database modules
-          onModuleSelect?.(dbModules[0].content, dbModules[0].title);
-        }
-      } catch (error) {
-        console.error('Error loading modules:', error);
-      }
-    };
-    loadModules();
-  }, [spaceId, getModules, onModuleSelect]);
+  const modules = modulesBySpaceId[spaceId] || [];
+  const currentModuleIndex = currentModuleIndexBySpaceId[spaceId] || 0;
 
-  // Initialize the first module content
-  React.useEffect(() => {
-    if (currentModule) {
-      loadModuleContent(currentModule);
-    }
-  }, [modules]); // Re-run when modules change
+  useEffect(() => {
+    fetchModules(spaceId).catch(console.error);
+  }, [spaceId, fetchModules]);
 
-  const loadModuleContent = async (module: Module) => {
-    if (!module) return;
-    
-    // If module already has content, use it directly
-    if (module.content) {
-      onModuleSelect?.(module.content, module.title);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/generate-module-content', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          spaceDetails: { id: spaceId },
-          moduleInfo: module
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to generate module content');
-      }
-
-      const data = await response.json();
-      if (!data || !data.content) {
-        throw new Error('Invalid response from server');
-      }
-
-      // Update the module in the database with the generated content
-      await updateModule(spaceId, module.id, { content: data.content });
-      onModuleSelect?.(data.content, module.title);
-    } catch (error) {
-      console.error('Error loading module content:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleModuleComplete = async (moduleId: string) => {
+    await updateModule(spaceId, moduleId, { is_completed: true });
   };
 
   const handleModuleSelect = (index: number) => {
-    if (!modules[index]) return;
-    setCurrentModuleIndex(index);
-    loadModuleContent(modules[index]);
+    setCurrentModuleIndex(spaceId, index);
   };
-
-  const handleNextModule = async () => {
-    if (currentModuleIndex < modules.length - 1) {
-      // Mark current module as completed in database
-      await updateModule(spaceId, currentModule.id, { isCompleted: true });
-      onModuleComplete?.(currentModule.id);
-      handleModuleSelect(currentModuleIndex + 1);
-    }
-  };
-
-  if (modules.length === 0) {
-    return (
-      <Card className="relative overflow-hidden bg-gradient-to-b from-[var(--space-primary-50)] to-background/95 backdrop-blur-lg shadow-xl">
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <motion.div
-              animate={{ 
-                scale: [1, 1.1, 1],
-                opacity: [1, 0.8, 1]
-              }}
-              transition={{ 
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            >
-              <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <p className="text-lg font-medium text-muted-foreground">
-                Curriculum in Progress
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Our team is crafting an amazing learning journey for you
-              </p>
-            </motion.div>
-            <motion.div
-              className="mt-4 flex gap-1"
-              animate={{ 
-                opacity: [0.5, 1, 0.5],
-              }}
-              transition={{ 
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            >
-              <div className="h-2 w-2 rounded-full bg-muted-foreground" />
-              <div className="h-2 w-2 rounded-full bg-muted-foreground" />
-              <div className="h-2 w-2 rounded-full bg-muted-foreground" />
-            </motion.div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <Card className="relative overflow-hidden bg-gradient-to-b from-[var(--space-primary-50)] to-background/95 backdrop-blur-lg shadow-xl">
-      <CardContent className="p-6">
-        <ScrollArea className="h-[calc(100vh-18rem)] pr-4">
-          <div className="space-y-3">
-            {modules.map((module, index) => {
-              const isCurrent = index === currentModuleIndex;
-              const isLocked = index > currentModuleIndex;
-              const isCompleted = module.isCompleted;
+    <div className="space-y-2">
+      {modules.map((module, index) => {
+        const isCurrent = index === currentModuleIndex;
+        const isLocked = index > currentModuleIndex + 1;
+        const isCompleted = module.is_completed;
+        const isSelectable = !isLocked || isCompleted;
 
-              return (
-                <motion.div 
-                  key={module.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Button
-                    variant={isCurrent ? "default" : "ghost"}
-                    className={cn(
-                      "group h-14 w-full justify-between px-6 rounded-xl transition-all",
-                      "hover:scale-[99%] active:scale-95",
-                      isCurrent && "bg-[var(--space-primary)] shadow-lg hover:bg-[var(--space-accent)]",
-                      isLocked && "opacity-50 cursor-not-allowed",
-                      isLoading && isCurrent && "animate-pulse",
-                      isCompleted && "!bg-emerald-500/10 hover:!bg-emerald-500/20"
-                    )}
-                    disabled={isLocked || isLoading}
-                    onClick={() => !isLocked && handleModuleSelect(index)}
-                  >
-                    <div className="flex items-center gap-4">
-                      {isLocked ? (
-                        <Lock className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
-                      ) : (
-                        <div className="relative">
-                          <div className={cn(
-                            "h-6 w-6 rounded-full flex items-center justify-center",
-                            isCurrent ? "bg-background" : "bg-[var(--space-primary)]"
-                          )}>
-                            <span className={cn(
-                              "text-sm font-semibold",
-                              isCurrent ? "text-[var(--space-primary)]" : "text-background"
-                            )}>
-                              {index + 1}
-                            </span>
-                          </div>
-                          {isCompleted && (
-                            <div className="absolute -right-1 -bottom-1 h-4 w-4 bg-emerald-500 rounded-full border-2 border-background flex items-center justify-center">
-                              <Check className="h-3 w-3 text-background" />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <span className="text-left truncate font-medium">
-                        {module.title}
-                      </span>
-                    </div>
-                    
-                    {isCurrent && (
-                      <div className="flex items-center gap-2 ml-4">
-                        {isLoading ? (
-                          <motion.div
-                            animate={{ 
-                              opacity: [0.5, 1, 0.5],
-                            }}
-                            transition={{ 
-                              duration: 1,
-                              repeat: Infinity,
-                              ease: "easeInOut"
-                            }}
-                            className="flex items-center gap-2 text-sm text-muted-foreground"
-                          >
-                            <div className="h-1.5 w-1.5 rounded-full bg-current" />
-                            <div className="h-1.5 w-1.5 rounded-full bg-current" />
-                            <div className="h-1.5 w-1.5 rounded-full bg-current" />
-                          </motion.div>
-                        ) : currentModuleIndex < modules.length - 1 && (
-                          <Button 
-                            size="sm"
-                            onClick={handleNextModule}
-                            disabled={isLoading}
-                            className={cn(
-                              "rounded-full bg-background text-[var(--space-primary)]",
-                              "hover:bg-background/90 shadow-sm"
-                            )}
-                          >
-                            Continue
-                            <ChevronRight className="ml-2 h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </Button>
-                </motion.div>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+        return (
+          <button
+            key={module.id}
+            onClick={() => isSelectable && handleModuleSelect(index)}
+            className={cn(
+              'flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors',
+              isCurrent ? 'border-primary bg-primary/5' : 'hover:border-primary/50',
+              isCompleted && 'bg-green-50 dark:bg-green-950',
+              !isSelectable && 'cursor-not-allowed opacity-50'
+            )}
+            disabled={!isSelectable}
+          >
+            <div className="flex items-center space-x-3">
+              <div
+                className={cn(
+                  'flex h-6 w-6 items-center justify-center rounded-full border',
+                  isCompleted
+                    ? 'border-green-500 bg-green-500 text-white'
+                    : isCurrent
+                    ? 'border-primary'
+                    : 'border-gray-300'
+                )}
+              >
+                {isCompleted ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <span className="text-xs">{index + 1}</span>
+                )}
+              </div>
+              <span className="text-sm font-medium">{module.title}</span>
+            </div>
+            {!isCompleted && isCurrent && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleModuleComplete(module.id);
+                }}
+                className="rounded-full bg-primary p-1 text-white hover:bg-primary/90"
+              >
+                <Check className="h-4 w-4" />
+              </button>
+            )}
+            {!isCurrent && (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+        );
+      })}
+    </div>
   );
 } 
