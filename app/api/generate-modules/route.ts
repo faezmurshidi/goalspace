@@ -76,6 +76,31 @@ export async function POST(request: Request) {
       );
     }
 
+    //test
+    const sampleContent = '## Hello World';
+    const sampleTitle = 'Hello World';
+    const sampleId = '123';
+    const sampleIsCompleted = false;
+
+    const sampleModule = {
+      id: sampleId,
+      title: sampleTitle,
+      content: sampleContent,
+      isCompleted: sampleIsCompleted
+    };
+
+    const sampleModules = [sampleModule, sampleModule, sampleModule, sampleModule, sampleModule];
+
+    return NextResponse.json(
+      { modules: sampleModules },
+      {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
     // Generate modules using Anthropic
     const completion = await anthropicClient.messages.create({
       messages: [

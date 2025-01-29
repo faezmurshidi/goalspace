@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, BookOpen, ListChecks, MessageSquare, Sparkles } from 'lucide-react';
 
 import { ChatWithMentor } from '@/components/chat-with-mentor';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,9 @@ import { useSpaceTheme } from '@/components/providers/space-theme-provider';
 import { SpaceToolsWindow } from '@/components/space-tools-window';
 import { CircularProgress } from '@/components/ui/circular-progress';
 import { type Module } from '@/lib/types/module';
+import { KnowledgeBase } from '@/components/knowledge-base';
+import { TodoList } from '@/components/todo-list';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function SpacePage() {
   const params = useParams();
@@ -256,23 +259,57 @@ export default function SpacePage() {
 
         {/* Sidebar */}
         <div className="col-span-4 h-full">
-          <div className="sticky top-[4.5rem] space-y-4">
-            {/* Tools Section - 40% height */}
-            <Card className="h-[calc((100vh-7rem)*0.4)] overflow-hidden border-none bg-white/50 shadow-sm backdrop-blur-xl dark:bg-slate-900/50">
-              <SpaceToolsWindow
-                spaceId={spaceId}
-                modules={modules}
-                currentModuleIndex={currentModuleIndex}
-                onModuleComplete={handleModuleComplete}
-                onModuleSelect={handleModuleSelect}
-                onDocumentSelect={setSelectedDocument}
-              />
-            </Card>
+          <div className="sticky top-[4.5rem]">
+            <Card className="h-[calc(100vh-7rem)] overflow-hidden border-none bg-white/50 shadow-sm backdrop-blur-xl dark:bg-slate-900/50">
+              <Tabs defaultValue="modules" className="h-full flex flex-col">
+                <TabsList className="flex w-full justify-start gap-1 border-b px-2 py-1 dark:border-slate-800">
+                  <TabsTrigger value="modules" className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    <span>Modules</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="knowledge" className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Knowledge</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="todo" className="flex items-center gap-2">
+                    <ListChecks className="h-4 w-4" />
+                    <span>Todo</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="chat" className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span>Chat</span>
+                  </TabsTrigger>
+                </TabsList>
 
-            {/* Chat Section - 60% height */}
-            <div className="h-[calc((100vh-7rem)*0.6-1rem)] overflow-hidden rounded-lg bg-white/50 backdrop-blur-xl dark:bg-slate-900/50">
-              <ChatWithMentor spaceId={spaceId} />
-            </div>
+                <div className="flex-1 overflow-hidden">
+                  <TabsContent value="modules" className="h-full m-0 overflow-auto">
+                    <SpaceToolsWindow
+                      spaceId={spaceId}
+                      modules={modules}
+                      currentModuleIndex={currentModuleIndex}
+                      onModuleComplete={handleModuleComplete}
+                      onModuleSelect={handleModuleSelect}
+                      onDocumentSelect={setSelectedDocument}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="knowledge" className="h-full m-0 overflow-auto">
+                    <KnowledgeBase
+                      spaceId={spaceId}
+                      onDocumentSelect={setSelectedDocument}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="todo" className="h-full m-0 overflow-auto">
+                    <TodoList spaceId={spaceId} />
+                  </TabsContent>
+
+                  <TabsContent value="chat" className="h-full m-0 overflow-auto">
+                    <ChatWithMentor spaceId={spaceId} />
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </Card>
           </div>
         </div>
       </div>
