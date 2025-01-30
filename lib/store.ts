@@ -125,6 +125,16 @@ export interface Goal {
   createdAt: number;
 }
 
+export interface Task {
+  id: string;
+  space_id: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface SpaceStore {
   spaces: Space[];
   goals: Goal[];
@@ -181,6 +191,10 @@ export interface SpaceStore {
   createModule: (moduleData: ModuleCreate) => Promise<Module>;
   deleteModule: (spaceId: string, moduleId: string) => Promise<void>;
   getCurrentModule: (spaceId: string) => Module | undefined;
+  generateTasks: (spaceId: string, moduleDoc: any) => Promise<any[]>;
+  tasks: Record<string, Task[]>;
+  fetchTasks: (spaceId: string) => Promise<Task[]>;
+  updateTaskStatus: (taskId: string, status: Task['status']) => Promise<void>;
 }
 
 interface SupabaseGoal {
@@ -225,6 +239,7 @@ export const useSpaceStore = create<SpaceStore>()(
       currentModuleIndex: 0,
       modulesBySpaceId: {},
       currentModuleIndexBySpaceId: {},
+      tasks: {},
       setSpaces: (spaces) => {
         // When setting spaces, create a new goal with these spaces
         const goalId = Math.random().toString(36).substring(7);
@@ -776,6 +791,80 @@ export const useSpaceStore = create<SpaceStore>()(
         const modules = state.modulesBySpaceId[spaceId] || [];
         const currentIndex = state.currentModuleIndexBySpaceId[spaceId] || 0;
         return modules[currentIndex];
+      },
+      generateTasks: async (spaceId: string, moduleDoc: any) => {
+        try {
+          const response = await fetch('/api/tasks', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              moduleDoc: {
+                ...moduleDoc,
+                space_id: spaceId
+              }
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to generate tasks');
+          }
+
+          const data = await response.json();
+          return data.tasks;
+        } catch (error) {
+          console.error('Error generating tasks:', error);
+          throw error;
+        }
+      },
+      fetchTasks: async (spaceId: string) => {
+        try {
+          const { data: tasks, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('space_id', spaceId)
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          set(state => ({
+            tasks: {
+              ...state.tasks,
+              [spaceId]: tasks
+            }
+          }));
+
+          return tasks;
+        } catch (error) {
+          console.error('Error fetching tasks:', error);
+          throw error;
+        }
+      },
+      updateTaskStatus: async (taskId: string, status: Task['status']) => {
+        try {
+          const { error } = await supabase
+            .from('tasks')
+            .update({ status })
+            .eq('id', taskId);
+
+          if (error) throw error;
+
+          // Update local state
+          set(state => ({
+            tasks: Object.fromEntries(
+              Object.entries(state.tasks).map(([spaceId, tasks]) => [
+                spaceId,
+                tasks.map(task => 
+                  task.id === taskId ? { ...task, status } : task
+                )
+              ])
+            )
+          }));
+        } catch (error) {
+          console.error('Error updating task status:', error);
+          throw error;
+        }
       },
     }),
     {

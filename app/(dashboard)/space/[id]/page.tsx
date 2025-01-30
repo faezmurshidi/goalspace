@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, BookOpen, ListChecks, MessageSquare, Sparkles } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 import { ChatWithMentor } from '@/components/chat-with-mentor';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,28 @@ export default function SpacePage() {
   const modules = modulesBySpaceId[spaceId] || [];
   const currentModuleIndex = currentModuleIndexBySpaceId[spaceId] || 0;
   const currentModule = getCurrentModule(spaceId);
+
+  // Function to create tasks from module content
+  const createTask = async (spaceId: string, moduleDoc: any) => {
+    try {
+      const tasks = await useSpaceStore.getState().generateTasks(spaceId, moduleDoc);
+      if (tasks) {
+        toast({
+          title: 'Success',
+          description: 'Tasks generated successfully!',
+        });
+      }
+      return tasks;
+    } catch (error) {
+      console.error('Error generating tasks:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate tasks. Please try again.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+  };
 
   // Set space theme colors
   useEffect(() => {
@@ -148,13 +171,25 @@ export default function SpacePage() {
           description: generatedContent
         });
 
-        // Save to documents with correct type
-        await addDocument(spaceId, {
+        const moduleDoc = {
           title: currentModule.title,
           content: generatedContent,
           type: 'guide',
           tags: ['module-content', space.category],
-        });
+          space_id: spaceId
+        }
+
+        // Save to documents with correct type
+        await addDocument(spaceId, moduleDoc);
+
+        //run in background
+        const tasks = await createTask(spaceId, moduleDoc);
+        if (tasks) {
+          toast({
+            title: 'Success',
+            description: 'Tasks generated successfully!',
+          });
+        }
 
       } catch (error) {
         console.error('Error generating module content:', error);
@@ -180,8 +215,19 @@ export default function SpacePage() {
     }
   };
 
-  const handleModuleSelect = (moduleIndex: number) => {
+  const handleModuleSelect = async (moduleIndex: number) => {
     setCurrentModuleIndex(spaceId, moduleIndex);
+    setSelectedDocument(null);
+    
+    // Generate tasks when a module is selected
+    const moduleDoc = modules[moduleIndex];
+    const tasks = await createTask(spaceId, moduleDoc);
+    if (tasks) {
+      toast({
+        title: 'Success',
+        description: 'Tasks generated successfully!',
+      });
+    }
   };
 
   if (!space) {
@@ -207,34 +253,43 @@ export default function SpacePage() {
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-white dark:bg-slate-900">
       {/* Header */}
-      <div className="fixed left-0 right-0 top-0 z-30 border-b bg-white/50 px-4 py-2 backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/50">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-xl font-medium">{space.title}</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{space.description}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <CircularProgress 
-              value={progress}
-              className="h-8 w-8"
-              strokeWidth={2}
-            />
-            <span className="text-sm text-slate-600 dark:text-slate-400">
-              {Math.round(progress)}% Complete
-            </span>
+      <div className="fixed left-0 right-0 top-0 z-30 border-b bg-white/50 backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/50">
+        <div className="mx-auto max-w-[1600px] px-6">
+          <div className="flex h-16 items-center justify-between gap-4">
+            <div className="flex items-center gap-6">
+              <Button
+                variant="ghost"
+                onClick={() => router.back()}
+                className="rounded-lg p-2.5 text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex flex-col justify-center">
+                <h1 className="text-xl font-semibold tracking-tight">{space.title}</h1>
+                <p className="text-sm text-muted-foreground">{space.description}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 rounded-lg border bg-background/50 px-4 py-2 backdrop-blur-sm">
+                <CircularProgress 
+                  value={progress}
+                  className="h-8 w-8"
+                  strokeWidth={2.5}
+                />
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">Progress</span>
+                  <span className="text-sm text-muted-foreground">
+                    {Math.round(progress)}% Complete
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="grid h-[calc(100vh-56px)] grid-cols-12 gap-6 pt-14 px-6">
+      <div className="grid h-[calc(100vh-4rem)] grid-cols-12 gap-6 px-6 pt-16">
         {/* Content Area */}
         <div className="col-span-8 h-full overflow-y-auto">
           <div className="prose prose-slate mx-auto max-w-4xl px-8 py-12 dark:prose-invert">
@@ -259,8 +314,8 @@ export default function SpacePage() {
 
         {/* Sidebar */}
         <div className="col-span-4 h-full">
-          <div className="sticky top-[4.5rem]">
-            <Card className="h-[calc(100vh-7rem)] overflow-hidden border-none bg-white/50 shadow-sm backdrop-blur-xl dark:bg-slate-900/50">
+          <div className="sticky top-[3.5rem]">
+            <Card className="h-[calc(100vh-4rem)] overflow-hidden border-none bg-white/50 shadow-sm backdrop-blur-xl dark:bg-slate-900/50">
               <Tabs defaultValue="modules" className="h-full flex flex-col">
                 <TabsList className="flex w-full justify-start gap-1 border-b px-2 py-1 dark:border-slate-800">
                   <TabsTrigger value="modules" className="flex items-center gap-2">

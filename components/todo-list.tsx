@@ -1,10 +1,8 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ListChecks, Plus, Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
 import { useSpaceStore } from '@/lib/store';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, Circle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TodoListProps {
@@ -12,87 +10,84 @@ interface TodoListProps {
 }
 
 export function TodoList({ spaceId }: TodoListProps) {
-  const [newTask, setNewTask] = useState('');
-  const { 
-    spaces, 
-    todoStates, 
-    setTodoStates, 
-    toggleTodo,
-    updateTodoList 
-  } = useSpaceStore();
+  const { tasks, fetchTasks, updateTaskStatus } = useSpaceStore();
+  const spaceTasks = tasks[spaceId] || [];
 
-  const space = spaces.find(s => s.id === spaceId);
-  if (!space) return null;
+  useEffect(() => {
+    fetchTasks(spaceId);
+  }, [spaceId, fetchTasks]);
 
-  const handleAddTask = () => {
-    if (!newTask.trim()) return;
-    const updatedTodoList = [...space.to_do_list, newTask.trim()];
-    updateTodoList(spaceId, updatedTodoList);
-    setNewTask('');
+  const handleStatusChange = async (taskId: string, status: 'pending' | 'in_progress' | 'completed') => {
+    try {
+      await updateTaskStatus(taskId, status);
+    } catch (error) {
+      console.error('Error updating task status:', error);
+    }
   };
 
-  const handleRemoveTask = (index: number) => {
-    const updatedTodoList = space.to_do_list.filter((_, i) => i !== index);
-    updateTodoList(spaceId, updatedTodoList);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddTask();
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
+      case 'in_progress':
+        return <Circle className="h-5 w-5 text-blue-500" />;
+      case 'pending':
+        return <Circle className="h-5 w-5 text-gray-400" />;
+      default:
+        return <XCircle className="h-5 w-5 text-red-500" />;
     }
   };
 
   return (
-    <Card className="h-[calc(50vh-4rem)] bg-gradient-to-b from-background to-muted/30">
+    <Card className="h-[calc(100vh-4rem)] bg-gradient-to-b from-background to-muted/30">
       <CardContent className="p-6">
         <div className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Add a new task..."
-              value={newTask}
-              onChange={(e) => setNewTask(e.target.value)}
-              onKeyPress={handleKeyPress}
-            />
-            <Button onClick={handleAddTask} size="icon">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          <h3 className="text-lg font-semibold">Tasks</h3>
           <div className="space-y-2">
-            {space.to_do_list.map((task, index) => (
+            {spaceTasks.map((task) => (
               <div
-                key={index}
+                key={task.id}
                 className={cn(
-                  "flex items-center gap-2 p-2 rounded-lg transition-colors",
-                  todoStates[spaceId]?.[index.toString()]
-                    ? "bg-green-50 dark:bg-green-900/20"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  "flex items-start gap-3 p-3 rounded-lg transition-colors",
+                  task.status === 'completed' ? "bg-green-50 dark:bg-green-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
                 )}
               >
-                <Checkbox
-                  id={`task-${index}`}
-                  checked={todoStates[spaceId]?.[index.toString()] || false}
-                  onCheckedChange={() => toggleTodo(spaceId, index.toString())}
-                />
-                <label
-                  htmlFor={`task-${index}`}
-                  className={cn(
-                    "flex-1 text-sm cursor-pointer",
-                    todoStates[spaceId]?.[index.toString()] && "line-through text-gray-500"
-                  )}
-                >
-                  {task}
-                </label>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  onClick={() => handleRemoveTask(index)}
+                  className="mt-0.5 h-5 w-5 p-0"
+                  onClick={() => {
+                    const nextStatus = {
+                      pending: 'in_progress',
+                      in_progress: 'completed',
+                      completed: 'pending'
+                    }[task.status] as 'pending' | 'in_progress' | 'completed';
+                    handleStatusChange(task.id, nextStatus);
+                  }}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  {getStatusIcon(task.status)}
                 </Button>
+                <div className="flex-1">
+                  <h4 className={cn(
+                    "text-sm font-medium",
+                    task.status === 'completed' && "line-through text-gray-500"
+                  )}>
+                    {task.title}
+                  </h4>
+                  <p className={cn(
+                    "text-sm text-muted-foreground",
+                    task.status === 'completed' && "line-through"
+                  )}>
+                    {task.description}
+                  </p>
+                </div>
               </div>
             ))}
+            {spaceTasks.length === 0 && (
+              <div className="text-center text-muted-foreground py-8">
+                No tasks yet. Select a module to generate tasks.
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

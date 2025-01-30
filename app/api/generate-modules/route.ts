@@ -91,15 +91,15 @@ export async function POST(request: Request) {
 
     const sampleModules = [sampleModule, sampleModule, sampleModule, sampleModule, sampleModule];
 
-    return NextResponse.json(
-      { modules: sampleModules },
-      {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    // return NextResponse.json(
+    //   { modules: sampleModules },
+    //   {
+    //     headers: {
+    //       'Access-Control-Allow-Origin': '*',
+    //       'Content-Type': 'application/json',
+    //     },
+    //   }
+    // );
 
     // Generate modules using Anthropic
     const completion = await anthropicClient.messages.create({

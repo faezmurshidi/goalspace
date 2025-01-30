@@ -91,18 +91,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const sampleContent = '## Hello World';
+    // const sampleContent = '## Hello World';
 
-    //test
-    return NextResponse.json(
-      { content: sampleContent },
-      {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Content-Type': 'application/json',
-        }
-      }
-    );
+    // //test
+    // return NextResponse.json(
+    //   { content: sampleContent },
+    //   {
+    //     headers: {
+    //       'Access-Control-Allow-Origin': '*',
+    //       'Content-Type': 'application/json',
+    //     }
+    //   }
+    // );
 
     // Generate detailed content using Anthropic
     const completion = await anthropicClient.messages.create({
