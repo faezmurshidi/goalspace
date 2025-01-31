@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 import { supabase } from '@/lib/supabase/client';
 import { Module, ModuleUpdate, ModuleCreate } from '@/lib/types/module';
+import { storeDocumentEmbedding } from '@/lib/utils/vector';
 
 export interface Message {
   id: string;
@@ -284,6 +285,9 @@ export const useSpaceStore = create<SpaceStore>()(
             .single();
 
           if (error) throw error;
+
+          // Generate and store embedding
+          await storeDocumentEmbedding(savedDoc.id, document.content);
 
           // Update local state
           set((state) => ({
