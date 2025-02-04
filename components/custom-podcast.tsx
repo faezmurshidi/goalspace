@@ -7,10 +7,11 @@ import { cn } from '@/lib/utils';
 
 interface CustomPodcastProps {
   spaceId: string;
+  content: string;
   className?: string;
 }
 
-export function CustomPodcast({ spaceId, className }: CustomPodcastProps) {
+export function CustomPodcast({ spaceId, content, className }: CustomPodcastProps) {
   const { spaces } = useSpaceStore();
   const space = spaces.find(s => s.id === spaceId);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -58,7 +59,10 @@ export function CustomPodcast({ spaceId, className }: CustomPodcastProps) {
       const response = await fetch('/api/make-podcast', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ spaceDetails: space }),
+        body: JSON.stringify({ 
+          spaceDetails: space,
+          content: content 
+        }),
       });
 
       if (!response.ok) {

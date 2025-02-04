@@ -17,6 +17,7 @@ import { type Module } from '@/lib/types/module';
 import { KnowledgeBase } from '@/components/knowledge-base';
 import { TodoList } from '@/components/todo-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Podcast } from '@/components/podcast';
 
 export default function SpacePage() {
   const params = useParams();
@@ -353,6 +354,10 @@ export default function SpacePage() {
                     <MessageSquare className="h-4 w-4" />
                     <span>Chat</span>
                   </TabsTrigger>
+                  <TabsTrigger value="podcast" className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span>Podcast</span>
+                  </TabsTrigger>
                 </TabsList>
 
                 <div className="flex-1 overflow-hidden">
@@ -379,6 +384,10 @@ export default function SpacePage() {
 
                   <TabsContent value="chat" className="h-full m-0 overflow-auto">
                     <ChatWithMentor spaceId={spaceId} />
+                  </TabsContent>
+
+                  <TabsContent value="podcast" className="h-full m-0 overflow-auto">
+                    <Podcast spaceId={spaceId} />
                   </TabsContent>
                 </div>
               </Tabs>
