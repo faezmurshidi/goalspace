@@ -14,6 +14,9 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   {
+    db: {
+      schema: 'public'
+    },
     auth: {
       autoRefreshToken: false,
       persistSession: false
@@ -63,7 +66,21 @@ export async function POST(req: Request) {
 
       const embedding = embeddingResponse.data[0].embedding;
 
-      // Store embeddings using admin client
+      // First, verify the document exists and belongs to the user
+      const { data: document, error: docError } = await supabase
+        .from('documents')
+        .select('id')
+        .eq('id', documentId)
+        .single();
+
+      if (docError || !document) {
+        return NextResponse.json(
+          { error: 'Document not found or access denied' },
+          { status: 404 }
+        );
+      }
+
+      // Store embeddings using admin client (bypasses RLS)
       const { error: insertError } = await supabaseAdmin
         .from('document_embeddings')
         .insert({
@@ -94,7 +111,7 @@ export async function POST(req: Request) {
 
       const embedding = embeddingResponse.data[0].embedding;
 
-      // Search for similar documents using admin client
+      // Search for similar documents using admin client (bypasses RLS)
       const { data: documents, error: searchError } = await supabaseAdmin.rpc(
         'match_documents',
         {
@@ -112,7 +129,16 @@ export async function POST(req: Request) {
         );
       }
 
-      return NextResponse.json({ documents });
+      // Filter documents based on user access
+      const { data: accessibleDocs } = await supabase
+        .from('documents')
+        .select('id')
+        .in('id', documents.map(doc => doc.id));
+
+      const accessibleDocIds = new Set(accessibleDocs?.map(doc => doc.id));
+      const filteredDocuments = documents.filter(doc => accessibleDocIds.has(doc.id));
+
+      return NextResponse.json({ documents: filteredDocuments });
     }
 
     return NextResponse.json(

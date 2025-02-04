@@ -884,11 +884,18 @@ export const useSpaceStore = create<SpaceStore>()(
     }),
     {
       name: 'space-store',
-      // Only persist these fields
       partialize: (state) => ({
+        spaces: state.spaces,
+        goals: state.goals,
+        documents: state.documents,
+        modules: state.modules,
+        currentGoal: state.currentGoal,
         todoStates: state.todoStates,
         isSidebarCollapsed: state.isSidebarCollapsed,
         currentModuleIndexBySpaceId: state.currentModuleIndexBySpaceId,
+        modulesBySpaceId: state.modulesBySpaceId,
+        activeGoal: state.activeGoal,
+        tasks: state.tasks
       }),
     }
   )

@@ -36,7 +36,10 @@ export default function SpacePage() {
     updateModule,
     getCurrentModule,
     createModule,
-    addDocument
+    addDocument,
+    loadUserData,
+    loadDocuments,
+    fetchTasks
   } = useSpaceStore();
 
   const space = getSpaceById(spaceId);
@@ -215,6 +218,36 @@ export default function SpacePage() {
     setCurrentModuleIndex(spaceId, moduleIndex);
     setSelectedDocument(null);
   };
+
+  // Initialize data
+  useEffect(() => {
+    const initializeData = async () => {
+      if (!spaceId) return;
+      
+      try {
+        // Load user data if not already loaded
+        if (!space) {
+          await loadUserData();
+        }
+        
+        // Load documents for this space
+        await loadDocuments(spaceId);
+        
+        // Load tasks for this space
+        await fetchTasks(spaceId);
+        
+      } catch (error) {
+        console.error('Error initializing space data:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load space data. Please try refreshing the page.',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    initializeData();
+  }, [spaceId, space, loadUserData, loadDocuments, fetchTasks]);
 
   if (!space) {
     return (
