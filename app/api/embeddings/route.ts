@@ -70,7 +70,8 @@ export async function POST(req: Request) {
           document_id: documentId,
           embedding,
           content,
-          user_id: session.user.id
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
 
       if (insertError) {
@@ -99,8 +100,7 @@ export async function POST(req: Request) {
         {
           query_embedding: embedding,
           match_threshold: 0.5,
-          match_count: limit,
-          p_user_id: session.user.id
+          match_count: limit
         }
       );
 

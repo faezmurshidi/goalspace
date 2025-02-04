@@ -55,12 +55,6 @@ export default function SpacePage() {
   const createTask = async (spaceId: string, moduleDoc: any) => {
     try {
       const tasks = await useSpaceStore.getState().generateTasks(spaceId, moduleDoc);
-      if (tasks) {
-        toast({
-          title: 'Success',
-          description: 'Tasks generated successfully!',
-        });
-      }
       return tasks;
     } catch (error) {
       console.error('Error generating tasks:', error);

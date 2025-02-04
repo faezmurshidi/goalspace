@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useSpaceStore } from '@/lib/store';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, XCircle } from 'lucide-react';
+import { CheckCircle2, Circle, XCircle, MessageSquareMore } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 interface TodoListProps {
   spaceId: string;
@@ -11,6 +12,7 @@ interface TodoListProps {
 
 export function TodoList({ spaceId }: TodoListProps) {
   const { tasks, fetchTasks, updateTaskStatus } = useSpaceStore();
+  const router = useRouter();
   const spaceTasks = tasks[spaceId] || [];
 
   useEffect(() => {
@@ -23,6 +25,21 @@ export function TodoList({ spaceId }: TodoListProps) {
     } catch (error) {
       console.error('Error updating task status:', error);
     }
+  };
+
+  const handleAssist = (task: { title: string; description: string }) => {
+    // Format the task content for the chat in a more conversational way
+    const taskContent = `I need help with this task:
+Title: ${task.title}
+Description: ${task.description}
+
+Can you help me break this down into smaller steps and provide guidance on how to complete it effectively?`;
+    
+    // Store the task content in localStorage to be picked up by the chat component
+    localStorage.setItem('assistWithTask', taskContent);
+    
+    // Navigate to the chat window
+    router.push(`/chat/${spaceId}`);
   };
 
   const getStatusIcon = (status: string) => {
@@ -48,7 +65,7 @@ export function TodoList({ spaceId }: TodoListProps) {
               <div
                 key={task.id}
                 className={cn(
-                  "flex items-start gap-3 p-3 rounded-lg transition-colors",
+                  "group flex items-start gap-3 p-3 rounded-lg transition-colors",
                   task.status === 'completed' ? "bg-green-50 dark:bg-green-900/20" : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
                 )}
               >
@@ -81,6 +98,15 @@ export function TodoList({ spaceId }: TodoListProps) {
                     {task.description}
                   </p>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => handleAssist(task)}
+                >
+                  <MessageSquareMore className="h-4 w-4 mr-2" />
+                  Assist
+                </Button>
               </div>
             ))}
             {spaceTasks.length === 0 && (

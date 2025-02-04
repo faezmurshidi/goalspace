@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { createClient } from '@/utils/supabase/client';
 
-import { supabase } from '@/utils/supabase/client';
+// Create a singleton instance for the store
+const supabase = createClient();
+
 import { Module, ModuleUpdate, ModuleCreate } from '@/lib/types/module';
 import { storeDocumentEmbedding } from '@/lib/vector';
 import { cookies } from 'next/headers';
@@ -18,6 +21,7 @@ export interface Message {
 
 export interface Document {
   id: string;
+  space_id: string;
   title: string;
   content: string;
   type: string;
@@ -282,14 +286,21 @@ export const useSpaceStore = create<SpaceStore>()(
               type: document.type,
               tags: document.tags || [],
               metadata: document.metadata || {},
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             })
             .select()
             .single();
 
           if (error) throw error;
 
-          // Generate and store embedding
-          await storeDocumentEmbedding(document);
+          // After successful document storage, generate and store embedding
+          await storeDocumentEmbedding({
+            ...savedDoc,
+            id: savedDoc.id,
+            space_id: spaceId,
+            tags: savedDoc.tags || []
+          });
 
           // Update local state
           set((state) => ({
@@ -298,10 +309,8 @@ export const useSpaceStore = create<SpaceStore>()(
               [spaceId]: [
                 ...(state.documents[spaceId] || []),
                 {
-                  ...document,
-                  id: savedDoc.id,
-                  created_at: savedDoc.created_at,
-                  updated_at: savedDoc.updated_at,
+                  ...savedDoc,
+                  tags: savedDoc.tags || []
                 },
               ],
             },
