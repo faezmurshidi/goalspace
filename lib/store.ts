@@ -142,6 +142,16 @@ export interface Task {
   updated_at?: string;
 }
 
+export interface Podcast {
+  id: string;
+  space_id: string;
+  title: string;
+  audio_url: string;
+  module_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SpaceStore {
   spaces: Space[];
   goals: Goal[];
@@ -202,6 +212,9 @@ export interface SpaceStore {
   tasks: Record<string, Task[]>;
   fetchTasks: (spaceId: string) => Promise<Task[]>;
   updateTaskStatus: (taskId: string, status: Task['status']) => Promise<void>;
+  podcasts: { [spaceId: string]: Podcast[] };
+  savePodcast: (spaceId: string, podcast: Omit<Podcast, 'id' | 'created_at' | 'updated_at'>) => Promise<Podcast>;
+  fetchPodcasts: (spaceId: string) => Promise<Podcast[]>;
 }
 
 interface SupabaseGoal {
@@ -247,6 +260,7 @@ export const useSpaceStore = create<SpaceStore>()(
       modulesBySpaceId: {},
       currentModuleIndexBySpaceId: {},
       tasks: {},
+      podcasts: {},
       setSpaces: (spaces) => {
         // When setting spaces, create a new goal with these spaces
         const goalId = Math.random().toString(36).substring(7);
@@ -881,6 +895,61 @@ export const useSpaceStore = create<SpaceStore>()(
           throw error;
         }
       },
+      savePodcast: async (spaceId: string, podcast) => {
+        try {
+          const { data: savedPodcast, error } = await supabase
+            .from('podcasts')
+            .insert({
+              space_id: spaceId,
+              title: podcast.title,
+              audio_url: podcast.audio_url,
+              module_id: podcast.module_id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          // Update local state
+          set((state) => ({
+            podcasts: {
+              ...state.podcasts,
+              [spaceId]: [...(state.podcasts[spaceId] || []), savedPodcast],
+            },
+          }));
+
+          return savedPodcast;
+        } catch (error) {
+          console.error('Error saving podcast:', error);
+          throw error;
+        }
+      },
+      fetchPodcasts: async (spaceId: string) => {
+        try {
+          const { data: podcasts, error } = await supabase
+            .from('podcasts')
+            .select('*')
+            .eq('space_id', spaceId)
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          // Update local state
+          set((state) => ({
+            podcasts: {
+              ...state.podcasts,
+              [spaceId]: podcasts,
+            },
+          }));
+
+          return podcasts;
+        } catch (error) {
+          console.error('Error fetching podcasts:', error);
+          throw error;
+        }
+      },
     }),
     {
       name: 'space-store',
@@ -895,7 +964,8 @@ export const useSpaceStore = create<SpaceStore>()(
         currentModuleIndexBySpaceId: state.currentModuleIndexBySpaceId,
         modulesBySpaceId: state.modulesBySpaceId,
         activeGoal: state.activeGoal,
-        tasks: state.tasks
+        tasks: state.tasks,
+        podcasts: state.podcasts,
       }),
     }
   )
