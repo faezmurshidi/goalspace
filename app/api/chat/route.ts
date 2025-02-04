@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
-import { OpenAI } from 'openai';
+import { appendResponseMessages, streamText, tool } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { z } from 'zod';
+import { findSimilarDocuments } from '@/lib/vector';
+import { supabase } from '@/utils/supabase/client';
+import { useSpaceStore } from '@/lib/store';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+
 
 const MENTOR_PROMPT = `You are a helpful AI mentor. Your goal is to provide clear, concise, and informative answers.
 The user will ask questions in a structured format with their chosen response.
@@ -25,28 +28,34 @@ Your responses should be:
 
 Use markdown formatting for better readability.`;
 
+
 export async function POST(req: Request) {
   try {
-    const { message, spaceId, isFaez } = await req.json();
+    const { messages, spaceId, isFaez, session } = await req.json();
+    
 
-    const completion = await openai.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: isFaez ? FAEZ_PROMPT : MENTOR_PROMPT
-        },
-        {
-          role: "user",
-          content: message
-        }
-      ],
-      model: "gpt-4-1106-preview",
-      temperature: 0.7,
-      max_tokens: 500,
+    const { addMessage } = useSpaceStore.getState();
+
+
+    console.log("session", session);
+
+    const result = streamText({
+      model: openai('gpt-4o'),
+      messages,
+      system: isFaez ? FAEZ_PROMPT : MENTOR_PROMPT,
+      tools: {
+        getInformation: tool({
+          description: `get information from your knowledge base to answer questions.`,
+          parameters: z.object({
+            question: z.string().describe('the users question'),
+          }),
+          execute: async ({ question }) => findSimilarDocuments(question, session.session),
+        }),
+      },
     });
 
-    const response = completion.choices[0].message.content;
-    return NextResponse.json({ message: response });
+    return result.toDataStreamResponse();
+
   } catch (error) {
     console.error('Error in chat:', error);
     return NextResponse.json(

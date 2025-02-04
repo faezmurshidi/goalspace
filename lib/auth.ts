@@ -1,4 +1,4 @@
-import { supabase } from './supabase/client';
+import { supabase } from '../utils/supabase/client';
 import { useSpaceStore } from './store';
 
 export async function signUp(email: string, password: string) {
@@ -89,6 +89,7 @@ export async function getCurrentUser() {
 }
 
 export async function getSession() {
+  console.log("getSession");
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) throw error;

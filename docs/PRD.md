@@ -1,8 +1,8 @@
 # Product Requirements Document (PRD)
-**Product Name:** [Name TBD]  
+**Product Name:** GoalSpace
 **Version:** 1.0  
-**Owner:** [Your Name/Team]  
-**Last Updated:** [Insert Date]
+**Owner:** Faez
+**Last Updated:** 03/02/2025
 
 ## 1. Introduction
 
@@ -12,8 +12,9 @@ The purpose of this document is to outline the product's goals, features, and sp
 ### 1.2 Objectives
 - Provide a seamless user experience for goal management and tracking
 - Offer AI-driven, personalized guidance tailored to users' goals and profiles
-- Ensure factual accuracy and content quality through external validation tools (e.g., Wolfram Alpha)
+- Ensure factual accuracy and content quality through grounding using perplexity sonar
 - Create a scalable, modular platform that supports growth and future features
+- Equip with function calling to interact with external tools
 
 ## 2. Target Audience
 
@@ -28,18 +29,18 @@ The purpose of this document is to outline the product's goals, features, and sp
 
 ## 3. Key Features
 
-### 3.1 Goal Setting (Faez)
+### 3.1 Goal Setting Agent (Faez)
 - Dynamic Question Flow: Faez asks personalized questions based on the user’s goal to assess their current standing.
-- Profile Integration: Pull user data from external platforms (e.g., LinkedIn) for enhanced context.
+- Profile Integration: Pull user data from browser (location and language)
 - Goal Analysis: Break the goal into smaller, manageable spaces with defined objectives and topics.
 
-### 3.2 Spaces
+### 3.2 Spaces Agent
 - Mentor Assignment: Each space is assigned a specialized AI mentor with a unique character, system prompt, and expertise.
 - Content Modules:
   - Generated content includes explanations, examples, quizzes, and additional resources.
   - Mindmaps for visual representation of topics.
   - To-do lists to track tasks.
-- Validation: Academic content is validated using Wolfram Alpha.
+
 
 ### 3.3 Progress Tracking
 - Real-time progress updates displayed in a dashboard.
@@ -49,6 +50,7 @@ The purpose of this document is to outline the product's goals, features, and sp
 ### 3.4 Chat Functionality
 - Users can interact with mentors for guidance.
 - Faez collaborates with mentors in chats to provide progress insights.
+- Mentors can use function calling to interact with external tools
 
 ### 3.5 User Customization
 - Users can customize their spaces by adding or removing topics.
@@ -58,7 +60,7 @@ The purpose of this document is to outline the product's goals, features, and sp
 
 ### 4.1 Goal Setting
 - As a user, I want Faez to ask me relevant questions so the system understands my current level and goal.
-- As a user, I want Faez to analyze my LinkedIn profile to save time in providing background information.
+
 
 ### 4.2 Space Interaction
 - As a user, I want each space to have a detailed mentor-generated module so I can learn effectively.

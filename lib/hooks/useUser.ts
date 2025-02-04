@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { User, UserSettings, UserApiUsage, UserSubscriptionHistory } from '@/lib/types/database';
-import { supabase } from '@/lib/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export type UserData = {

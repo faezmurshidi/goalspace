@@ -1,8 +1,8 @@
 # Functional Specification Document (FSD)
-**Project Name:** [Name TBD]  
+**Project Name:** GoalSpace
 **Version:** 1.0  
-**Owner:** [Your Name/Team]  
-**Last Updated:** [Insert Date]
+**Owner:** Faez
+**Last Updated:** 03/02/2025
 
 ## 1. System Architecture
 
@@ -19,16 +19,20 @@ The system follows a modern web architecture using Next.js for the frontend and 
   - Authentication Service
   - Goal Management Service
   - AI Mentor Service
-  - Content Validation Service
+  - Content Generation Service
   
 - **Data Layer**
-  - MongoDB for user data and content
-  - Redis for caching and real-time features
+  - postgres for user data and content
+  - Redis for chat history caching and real-time features
+  
+
   
 - **External Services**
   - OpenAI GPT-4 API
-  - Wolfram Alpha API
-  - OAuth providers (LinkedIn, etc.)
+  - Perplexity Sonar for content validation
+  - Anthropic Claude Sonnet 3.5
+  - Deepsek r1 reasoning
+  - OAuth providers supabase
 
 ## 2. Detailed Component Specifications
 

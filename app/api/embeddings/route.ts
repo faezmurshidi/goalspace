@@ -1,29 +1,29 @@
-import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import OpenAI from 'openai';
+import { createClient } from '@supabase/supabase-js';
 
+// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-async function generateEmbedding(text: string): Promise<number[]> {
-  const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: text,
-    encoding_format: "float",
-  });
+// Initialize Supabase admin client for document operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
-  console.log('generated embedding', response.data[0].embedding);
-
-  return response.data[0].embedding;
-}
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const { action, documentId, content, query, limit = 5 } = await request.json();
-
-    // Create server-side Supabase client
+    // Get the authenticated user's session using server client
     const cookieStore = cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,49 +43,82 @@ export async function POST(request: Request) {
       }
     );
 
-    // Get the authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+
+    if (authError || !session) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    switch (action) {
-      case 'store': {
-        const embedding = await generateEmbedding(content);
-        const { error } = await supabase
-          .from('document_embeddings')
-          .insert({
-            document_id: documentId,
-            content,
-            embedding
-          });
+    const { action, documentId, content, query, limit = 5 } = await req.json();
 
-        if (error) throw error;
-        return NextResponse.json({ success: true });
-      }
+    if (action === 'store' && documentId && content) {
+      // Get embeddings from OpenAI
+      const embeddingResponse = await openai.embeddings.create({
+        model: 'text-embedding-ada-002',
+        input: content,
+      });
 
-      case 'search': {
-        const embedding = await generateEmbedding(query);
-        const { data: similarDocs, error } = await supabase
-          .rpc('match_documents', {
-            query_embedding: embedding,
-            match_threshold: 0.7,
-            match_count: limit
-          });
+      const embedding = embeddingResponse.data[0].embedding;
 
-        if (error) throw error;
-        return NextResponse.json({ documents: similarDocs });
-      }
+      // Store embeddings using admin client
+      const { error: insertError } = await supabaseAdmin
+        .from('document_embeddings')
+        .insert({
+          document_id: documentId,
+          embedding,
+          content,
+          user_id: session.user.id
+        });
 
-      default:
+      if (insertError) {
+        console.error('Error storing embedding:', insertError);
         return NextResponse.json(
-          { error: 'Invalid action' },
-          { status: 400 }
+          { error: 'Failed to store embedding' },
+          { status: 500 }
         );
+      }
+
+      return NextResponse.json({ success: true });
     }
+
+    if (action === 'search' && query) {
+      // Get embeddings for the search query
+      const embeddingResponse = await openai.embeddings.create({
+        model: 'text-embedding-ada-002',
+        input: query,
+      });
+
+      const embedding = embeddingResponse.data[0].embedding;
+
+      // Search for similar documents using admin client
+      const { data: documents, error: searchError } = await supabaseAdmin.rpc(
+        'match_documents',
+        {
+          query_embedding: embedding,
+          match_threshold: 0.5,
+          match_count: limit,
+          p_user_id: session.user.id
+        }
+      );
+
+      if (searchError) {
+        console.error('Error searching documents:', searchError);
+        return NextResponse.json(
+          { error: 'Failed to search documents' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ documents });
+    }
+
+    return NextResponse.json(
+      { error: 'Invalid request' },
+      { status: 400 }
+    );
   } catch (error) {
     console.error('Error in embeddings API:', error);
     return NextResponse.json(

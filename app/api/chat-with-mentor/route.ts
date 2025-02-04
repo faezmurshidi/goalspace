@@ -1,69 +1,76 @@
 import { NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { streamText } from 'ai';
+import { anthropic } from "@ai-sdk/anthropic";
+import { cookies } from 'next/headers';
+import { findSimilarDocuments } from '@/lib/vector';
+import { getServerSupabase, getAuthenticatedUser, Document } from '@/lib/store';
+import { Space } from '@/lib/types/space';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const MENTOR_PROMPT = `You are a helpful AI mentor. Your goal is to provide clear, concise, and informative answers.
+The user will ask questions in a structured format with their chosen response.
+Acknowledge their specific response choice and provide a detailed answer that's relevant to their selection.
+Use markdown formatting for better readability.
+Keep responses focused and actionable.`;
 
-export async function POST(req: Request) {
+export const runtime = 'edge';
+
+export async function POST(request: Request) {
   try {
-    const {
-      message,
-      spaceId,
-      mentor,
-      context,
-      messageHistory = [],
-      isFaezPresent,
-    } = await req.json();
+    const { messages, space }: { messages: any[], space: Space } = await request.json();
+    
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: 'Invalid messages format' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
-    // Format message history for the AI
-    const formattedHistory = messageHistory
-      .map(
-        (msg: { role: string; content: string }) =>
-          `${msg.role === 'user' ? 'Human' : 'Assistant'}: ${msg.content}`
-      )
-      .join('\n\n');
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage?.content) {
+      return new Response(JSON.stringify({ error: 'No message content provided' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
-    console.log('formattedHistory', formattedHistory);
+    if (!space || !space.mentor) {
+      return new Response(JSON.stringify({ error: 'Invalid space data' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
-    const systemPrompt = `You are ${mentor.name}, an AI mentor with expertise in ${mentor.expertise.join(', ')}.
-Your teaching style is ${mentor.personality}.
+    // Find relevant documents using RAG
+    let relevantDocs: Document[] = [];
+    try {
+      relevantDocs = await findSimilarDocuments(lastMessage.content);
+    } catch (error) {
+      console.error('Error finding similar documents:', error);
+      // Continue without relevant docs if there's an error
+    }
 
-You are helping a student with their learning journey for: "${context.title}"
+    // Build the system prompt
+    const systemPrompt = `You are ${space.mentor.name}, an AI mentor with expertise in ${space.mentor.expertise.join(', ')}.
+Your teaching style is ${space.mentor.personality}.
+
+You are helping a student with their learning journey for: "${space.title}"
 
 Description of the learning space:
-${context.description}
+${space.description}
 
 Learning Objectives:
-${context.objectives.map((obj: string) => `- ${obj}`).join('\n')}
+${space.objectives.map((obj: string) => `- ${obj}`).join('\n')}
 
-${
-  context.prerequisites.length > 0
-    ? `Prerequisites:
-${context.prerequisites.map((pre: string) => `- ${pre}`).join('\n')}`
-    : ''
-}
+${space.prerequisites?.length > 0 ? `Prerequisites:
+${space.prerequisites.map((pre: string) => `- ${pre}`).join('\n')}` : ''}
 
-${
-  context.plan
-    ? `Learning Plan:
-${context.plan}`
-    : ''
-}
+${relevantDocs.length > 0 ? `Relevant knowledge base entries:
+${relevantDocs.map((doc: any) => `
+Title: ${doc.title}
+Content: ${doc.content}
+---`).join('\n')}` : ''}
 
-${
-  context.to_do_list
-    ? `To-Do List:
-${context.to_do_list.map((task: string) => `- ${task}`).join('\n')}`
-    : ''
-}
-
-${mentor.system_prompt}
-
-${isFaezPresent ? `Note: Faez (the goal-setting AI) is present in this conversation. You should collaborate with Faez to provide comprehensive guidance. Faez will add insights about the user's overall progress and goal alignment after your response.` : ''}
-
-Previous conversation context:
-${formattedHistory}
+${space.mentor.system_prompt}
 
 Remember to:
 1. Stay in character as the mentor
@@ -71,111 +78,46 @@ Remember to:
 3. Provide detailed, accurate information
 4. Include code examples when relevant
 5. Break down complex concepts
-6. Reference the learning objectives and plan
+6. Reference the learning objectives
 7. Suggest practical exercises when appropriate
-8. Maintain continuity with the previous conversation
+8. Use the knowledge base information when relevant
 
-IMPORTANT: If you want to create a knowledge document, format your response ONLY as a JSON object with this structure:
+If you want to create a document or tasks, use this format:
 {
-  "type": "document",
-  "document": {
-    "title": "Document title",
-    "content": "Document content in markdown",
-    "type": "tutorial | guide | reference | exercise",
-    "tags": ["tag1", "tag2"]
+  "type": "document" | "tasks",
+  "content": {
+    // For document:
+    "title": "string",
+    "content": "string",
+    "type": "tutorial" | "guide" | "reference" | "exercise",
+    "tags": string[]
+    // For tasks:
+    "tasks": Array<{ title: string, description: string }>
   }
-}
+}`;
 
-IF you want to update the to-do list, format your response ONLY as a JSON object with this structure. Please do not change the complete list, just add or remove tasks:
-{
-  "type": "update_to_do_list",
-  "to_do_list": ["task1", "task2"]
-}
-
-Otherwise, respond with normal text.`;
-
-    console.log('systemPrompt', systemPrompt);
-
-    const completion = await anthropic.messages.create({
+    // Create a streaming response using streamText
+    const result = await streamText({
+      model: anthropic('claude-3-sonnet-20240229'),
       messages: [
-        {
-          role: 'user',
-          content: message,
-        },
+        { role: 'system', content: systemPrompt },
+        ...messages.map((m: any) => ({
+          role: m.role,
+          content: m.content,
+        })),
       ],
-      model: 'claude-3-5-sonnet-20240620',
       temperature: 0.7,
-      max_tokens: 2000,
-      system: systemPrompt,
+      maxTokens: 2000,
     });
 
-    const content = completion.content[0];
-    const response = 'text' in content ? content.text : '';
-    let result: any = {};
+    // Return the streaming response
+    return result.toTextStreamResponse();
 
-    try {
-      // Try to parse as JSON for document generation
-      const parsed = JSON.parse(response);
-      if (parsed.type === 'document') {
-        result = {
-          message: "I've created a new document for you! You can find it in the Knowledge Base.",
-          document: parsed.document,
-        };
-      }
-      if (parsed.type === 'update_to_do_list') {
-        result = {
-          message: "I've updated the to-do list for you! You can find it in the Knowledge Base.",
-          to_do_list: parsed.to_do_list,
-        };
-      }
-    } catch {
-      // If not JSON, treat as normal message
-      result = { message: response };
-    }
-
-    // If Faez is present, get Faez's response
-    if (isFaezPresent) {
-      const faezPrompt = `You are Faez, the goal-setting AI assistant. You're collaborating with ${mentor.name} (the mentor) to help the user achieve their goals.
-
-Current Space Context:
-Title: ${context.title}
-Description: ${context.description}
-Objectives: ${context.objectives.join(', ')}
-
-Previous conversation context:
-${formattedHistory}
-
-The mentor just said: "${result.message}"
-
-As Faez, your role is to:
-1. Provide insights about how this aligns with the user's overall goal
-2. Track and comment on progress
-3. Suggest adjustments or additional focus areas if needed
-4. Be encouraging but also maintain focus on the bigger picture
-5. Reference relevant parts of the previous conversation when appropriate
-
-Keep your response concise and focused on progress and goal alignment.`;
-
-      const faezCompletion = await anthropic.messages.create({
-        messages: [
-          {
-            role: 'user',
-            content: message,
-          },
-        ],
-        model: 'claude-3-haiku-20240307',
-        temperature: 0.7,
-        max_tokens: 1000,
-        system: faezPrompt,
-      });
-
-      const faezContent = faezCompletion.content[0];
-      result.faezMessage = 'text' in faezContent ? faezContent.text : '';
-    }
-
-    return NextResponse.json(result);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in chat:', error);
-    return NextResponse.json({ error: 'Failed to process message' }, { status: 500 });
+    return new Response(JSON.stringify({ error: error.message || 'Internal server error' }), {
+      status: error.status || 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }

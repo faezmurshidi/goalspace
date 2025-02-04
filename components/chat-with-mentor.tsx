@@ -1,162 +1,159 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import {
-  Brain,
-  ChevronRight,
-  Info,
-  Loader2,
-  MessageSquare,
-  PlusCircle,
-  Send,
-  Trash2,
-  UserPlus,
-  X,
-  Bot,
-  User,
-} from 'lucide-react';
+import { Bot, Send, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { useChat } from 'ai/react';
+import { type Message } from 'ai';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSpaceStore } from '@/lib/store';
-import type { Message } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { MarkdownContent } from './ui/markdown-content';
+import { toast } from './ui/use-toast';
+import { type Space } from '@/lib/types/space';
+import { getSession } from '@/lib/auth';
+import { supabase } from '@/utils/supabase/client';
 
-interface ChatMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  id: string;
-  timestamp: Date;
-}
 
 interface ChatWithMentorProps {
   spaceId: string;
-  onClose?: () => void;
 }
 
-interface QuestionWithAnswers {
-  question: string;
-  answers: string[];
-}
-
-// Predefined questions and their possible answers
-const PREDEFINED_QA = {
-  learning: [
-    {
-      question: 'Can you explain this topic in simpler terms?',
-      answers: [
-        'Yes, please break it down step by step',
-        'I need a real-world analogy',
-        'Can you use visual examples?',
-        "Explain it like I'm a beginner",
-      ],
-    },
-    {
-      question: 'What are the key concepts I should focus on?',
-      answers: [
-        'Show me the most important points',
-        'What are the fundamental principles?',
-        'Which parts will be used most often?',
-        "What's essential for beginners?",
-      ],
-    },
-    {
-      question: 'How can I practice this effectively?',
-      answers: [
-        'What exercises do you recommend?',
-        'Are there any online platforms to practice?',
-        'Can you suggest some projects?',
-        "What's the best way to start practicing?",
-      ],
-    },
-    {
-      question: 'What are common mistakes to avoid?',
-      answers: [
-        'What do beginners often get wrong?',
-        'What are the typical pitfalls?',
-        'How can I prevent these mistakes?',
-        'What should I watch out for?',
-      ],
-    },
-  ],
-  goal: [
-    {
-      question: 'How can I break this goal into smaller steps?',
-      answers: [
-        'What should be my first milestone?',
-        'How do I prioritize the steps?',
-        "What's a realistic timeline?",
-        'Which steps are most critical?',
-      ],
-    },
-    {
-      question: 'What are potential obstacles I might face?',
-      answers: [
-        'What are the common challenges?',
-        'How can I prepare for setbacks?',
-        'What should I plan for?',
-        'What resources might I need?',
-      ],
-    },
-    {
-      question: 'How can I measure my progress?',
-      answers: [
-        'What are good success metrics?',
-        'How often should I evaluate progress?',
-        'What milestones should I set?',
-        "How do I know I'm on track?",
-      ],
-    },
-    {
-      question: 'How can I stay motivated?',
-      answers: [
-        'What are effective motivation techniques?',
-        'How do I maintain momentum?',
-        'What if I feel stuck?',
-        'How do I celebrate progress?',
-      ],
-    },
-  ],
-};
-
-export function ChatWithMentor({ spaceId, onClose }: ChatWithMentorProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [session, setSession] = useState<any>(null);
 
-  const {
-    getSpaceById,
-    chatMessages,
-    addMessage,
-    clearChat,
-    addDocument,
-    faezInChat,
-    toggleFaez,
-    updateTodoList,
-    loadMessages,
-    isLoadingMessages,
+  const { 
+    getSpaceById, 
+    chatMessages, 
+    loadMessages, 
+    isLoadingMessages, 
     hasMoreMessages,
+    addMessage 
   } = useSpaceStore();
-
+  
   const space = getSpaceById(spaceId);
 
-  // Load initial messages
-  useEffect(() => {
-    if (!isInitialized && spaceId) {
-      loadMessages(spaceId);
-      setIsInitialized(true);
-    }
-  }, [spaceId, isInitialized, loadMessages]);
+  
+  
 
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit: originalHandleSubmit,
+    isLoading,
+    error,
+    setMessages,
+  } = useChat({
+    api: '/api/chat',
+    body: {
+      space,
+      session,
+    },
+    onFinish(message: Message) {
+      try {
+        // Store the message in our database
+        if (message.role === 'assistant' || message.role === 'user') {
+          addMessage(spaceId, {
+            role: message.role,
+            content: message.content,
+            isFaez: false,
+          }).catch(console.error);
+        }
+
+        // Check if the message content is a JSON string containing a special command
+        const data = JSON.parse(message.content);
+        if (data.type === 'document' || data.type === 'tasks') {
+          if (data.type === 'document') {
+            toast({
+              title: 'Document Created',
+              description: 'A new document has been added to your knowledge base.',
+            });
+          } else if (data.type === 'tasks') {
+            toast({
+              title: 'Tasks Created',
+              description: 'New tasks have been added to your list.',
+            });
+          }
+        }
+      } catch (e) {
+        // Not a JSON string, regular message - still store it
+        if (message.role === 'assistant' || message.role === 'user') {
+          addMessage(spaceId, {
+            role: message.role,
+            content: message.content,
+            isFaez: false,
+          }).catch(console.error);
+        }
+      }
+    },
+    onError(error) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to get response from mentor. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Custom submit handler to store user messages
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    // Store user message first
+    await addMessage(spaceId, {
+      role: 'user',
+      content: input.trim(),
+      isFaez: false,
+    });
+
+    // Then proceed with original submit
+    originalHandleSubmit(e);
+  };
+
+  // Load previous messages when component mounts
+  useEffect(() => {
+    const loadPreviousMessages = async () => {
+      try {
+        console.log("loadPreviousMessages");
+        await loadMessages(spaceId);
+        // Convert stored messages to the format expected by useChat
+        const storedMessages = chatMessages[spaceId] || [];
+        setMessages(
+          storedMessages.map((msg) => ({
+            id: msg.id,
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+            createdAt: new Date(msg.timestamp),
+          }))
+        );
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load previous messages.',
+          variant: 'destructive',
+        });
+      }
+    };
+    const userSession = async () => {
+      console.log("userSession");
+      const session = await getSession();
+      console.log("userSession", session);
+      setSession(session);
+    };
+
+    userSession();
+    loadPreviousMessages();
+  }, [spaceId]);
+
+  // Scroll to bottom when messages change
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
@@ -167,120 +164,29 @@ export function ChatWithMentor({ spaceId, onClose }: ChatWithMentorProps) {
   if (!space) {
     return (
       <Card className="flex h-[600px] flex-col">
-        <CardHeader>
-          <CardTitle className="text-xl">Error</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <div className="p-4">
           <p>Space not found</p>
-        </CardContent>
+        </div>
       </Card>
     );
   }
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const addFaezToChat = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message:
-            "Hi, I'm Faez. I've been analyzing your progress and I'd like to join this conversation to help provide additional insights and guidance. Would that be helpful?",
-          spaceId,
-          mentor: space.mentor,
-          context: {
-            title: space.title,
-            description: space.description,
-            objectives: space.objectives,
-            prerequisites: space.prerequisites,
-            plan: space.plan,
-            to_do_list: space.to_do_list,
-          },
-          isFaezPresent: true,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to add Faez');
-
-      const data = await response.json();
-      addMessage(spaceId, {
-        role: 'assistant',
-        content: data.message,
-        isFaez: true,
-      });
-      toggleFaez(spaceId);
-    } catch (error) {
-      console.error('Error adding Faez:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: input.trim(),
-      id: crypto.randomUUID(),
-      timestamp: new Date()
-    };
-
-    setInput('');
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...messages, userMessage],
-          spaceId
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to get response');
-      
-      const data = await response.json();
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: data.content,
-        id: crypto.randomUUID(),
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error in chat:', error);
-      const errorMessage: ChatMessage = {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-        id: crypto.randomUUID(),
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="flex h-full flex-col bg-slate-100 dark:bg-slate-900">
       {/* Chat Header */}
       <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-4 py-2 dark:border-slate-800 dark:bg-slate-800">
         <Bot className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">AI Mentor</span>
+        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{space.mentor.name}</span>
       </div>
 
       {/* Messages Area */}
       <ScrollArea ref={scrollAreaRef} className="flex-1 px-4">
         <div className="space-y-4 py-4">
+          {isLoadingMessages && (
+            <div className="flex justify-center">
+              <span className="text-sm text-muted-foreground">Loading messages...</span>
+            </div>
+          )}
           <AnimatePresence initial={false}>
             {messages.map((message) => (
               <motion.div
@@ -351,7 +257,7 @@ export function ChatWithMentor({ spaceId, onClose }: ChatWithMentorProps) {
           <Input
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             placeholder="Ask your mentor anything..."
             className="flex-1 bg-slate-100 border-slate-300 focus:border-slate-400 dark:bg-slate-700 dark:border-slate-600 dark:focus:border-slate-500 dark:placeholder:text-slate-400"
             disabled={isLoading}

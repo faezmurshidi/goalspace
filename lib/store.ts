@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { supabase } from '@/lib/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import { Module, ModuleUpdate, ModuleCreate } from '@/lib/types/module';
-import { storeDocumentEmbedding } from '@/lib/utils/vector';
+import { storeDocumentEmbedding } from '@/lib/vector';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 
 export interface Message {
   id: string;
@@ -146,7 +148,7 @@ export interface SpaceStore {
   setCurrentGoal: (goal: string) => void;
   getSpaceById: (id: string) => Space | undefined;
   getDocuments: (spaceId: string) => Document[];
-  addDocument: (spaceId: string, document: Omit<Document, 'id'>) => void;
+  addDocument: (spaceId: string, document: Document) => void;
   todoStates: { [key: string]: { [key: string]: boolean } };
   setTodoStates: (states: { [key: string]: { [key: string]: boolean } }) => void;
   toggleTodo: (spaceId: string, todoIndex: string) => void;
@@ -155,7 +157,7 @@ export interface SpaceStore {
   faezInChat: { [key: string]: boolean };
   isLoadingMessages: { [key: string]: boolean };
   hasMoreMessages: { [key: string]: boolean };
-  addMessage: (spaceId: string, message: Omit<Message, 'id' | 'timestamp'>) => Promise<void>;
+  addMessage: (spaceId: string, message: Omit<Message, 'id' | 'timestamp' | 'isFaez'>) => Promise<void>;
   loadMessages: (spaceId: string, limit?: number, offset?: number) => Promise<void>;
   clearChat: (spaceId: string) => Promise<void>;
   toggleFaez: (spaceId: string) => void;
@@ -262,7 +264,7 @@ export const useSpaceStore = create<SpaceStore>()(
       setCurrentGoal: (goal) => set({ currentGoal: goal }),
       getSpaceById: (id) => get().spaces.find((space) => space.id === id),
       getDocuments: (spaceId) => get().documents[spaceId] || [],
-      addDocument: async (spaceId: string, document: Omit<Document, 'id'>) => {
+      addDocument: async (spaceId: string, document: Document) => {
         try {
           // Get the current user
           const {
@@ -287,7 +289,7 @@ export const useSpaceStore = create<SpaceStore>()(
           if (error) throw error;
 
           // Generate and store embedding
-          await storeDocumentEmbedding(savedDoc.id, document.content);
+          await storeDocumentEmbedding(document);
 
           // Update local state
           set((state) => ({
@@ -882,3 +884,32 @@ export const useSpaceStore = create<SpaceStore>()(
     }
   )
 );
+
+export async function getServerSupabase(cookieStore: ReturnType<typeof cookies>) {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.delete({ name, ...options });
+        },
+      },
+    }
+  );
+  return supabase;
+}
+
+export async function getAuthenticatedUser(supabase: ReturnType<typeof createServerClient>) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    throw new Error('Unauthorized');
+  }
+  return user;
+}

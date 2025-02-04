@@ -142,6 +142,7 @@ export default function SpacePage() {
   // Add effect to check and generate module content when current module changes
   useEffect(() => {
     const generateModuleContent = async () => {
+      // Skip if no module, no space, already has description, or currently generating
       if (!currentModule || !space || currentModule.description || isGenerating) return;
 
       try {
@@ -172,6 +173,7 @@ export default function SpacePage() {
         });
 
         const moduleDoc = {
+          id: currentModule.id, // Add id to match Document type
           title: currentModule.title,
           content: generatedContent,
           type: 'guide',
@@ -182,7 +184,7 @@ export default function SpacePage() {
         // Save to documents with correct type
         await addDocument(spaceId, moduleDoc);
 
-        //run in background
+        // Only generate tasks during first-time content generation
         const tasks = await createTask(spaceId, moduleDoc);
         if (tasks) {
           toast({
@@ -218,16 +220,6 @@ export default function SpacePage() {
   const handleModuleSelect = async (moduleIndex: number) => {
     setCurrentModuleIndex(spaceId, moduleIndex);
     setSelectedDocument(null);
-    
-    // Generate tasks when a module is selected
-    const moduleDoc = modules[moduleIndex];
-    const tasks = await createTask(spaceId, moduleDoc);
-    if (tasks) {
-      toast({
-        title: 'Success',
-        description: 'Tasks generated successfully!',
-      });
-    }
   };
 
   if (!space) {

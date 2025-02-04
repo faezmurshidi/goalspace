@@ -26,7 +26,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSpaceStore, type Space } from '@/lib/store';
-import { supabase } from '@/lib/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
 
 export function GeneratedSpaces() {

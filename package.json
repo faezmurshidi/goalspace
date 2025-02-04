@@ -11,6 +11,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.7",
     "@ai-sdk/deepseek": "^0.1.6",
+    "@ai-sdk/openai": "^1.1.9",
     "@anthropic-ai/sdk": "^0.33.1",
     "@anthropic-ai/tokenizer": "^0.0.4",
     "@hookform/resolvers": "^3.10.0",
@@ -44,8 +45,9 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@react-three/fiber": "^8.17.12",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.47.12",
+    "@supabase/supabase-js": "^2.48.1",
     "@tiptap/extension-code-block-lowlight": "^2.11.0",
     "@tiptap/extension-link": "^2.11.0",
     "@tiptap/extension-task-item": "^2.11.0",

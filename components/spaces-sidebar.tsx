@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from 'next-themes';
-import { supabase } from '@/lib/supabase/client';
+import { supabase } from '@/utils/supabase/client';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 
 interface SpacesSidebarProps {

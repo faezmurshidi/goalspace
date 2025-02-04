@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const { moduleDoc } = await request.json();
 
     // Generate tasks from module content
-    const prompt = `Given this module content, create a list of actionable tasks that would help someone learn and implement this knowledge effectively. Each task should be specific, achievable, and help reinforce the learning objectives.
+    const prompt = `Given this module content, create a max 5 list of actionable tasks. Each task should be specific, achievable, and help reinforce the objectives.
 
 Content:
 ${moduleDoc.content}
