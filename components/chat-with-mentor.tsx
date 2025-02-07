@@ -64,7 +64,6 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
           addMessage(spaceId, {
             role: message.role,
             content: message.content,
-            isFaez: false,
           }).catch(console.error);
         }
 
@@ -89,7 +88,6 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
           addMessage(spaceId, {
             role: message.role,
             content: message.content,
-            isFaez: false,
           }).catch(console.error);
         }
       }
@@ -112,7 +110,6 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
     await addMessage(spaceId, {
       role: 'user',
       content: input.trim(),
-      isFaez: false,
     });
 
     // Then proceed with original submit

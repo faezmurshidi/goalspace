@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { User, UserSettings, UserApiUsage, UserSubscriptionHistory } from '@/lib/types/database';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -112,7 +112,7 @@ export function useUser() {
           table: 'users',
           filter: `id=eq.${userData.profile?.id}`,
         },
-        (payload) => {
+        (payload: any) => {
           setUserData(prev => ({
             ...prev,
             profile: payload.new as User,
@@ -131,7 +131,7 @@ export function useUser() {
           table: 'user_settings',
           filter: `user_id=eq.${userData.profile?.id}`,
         },
-        (payload) => {
+        (payload: any) => {
           setUserData(prev => ({
             ...prev,
             settings: payload.new as UserSettings,

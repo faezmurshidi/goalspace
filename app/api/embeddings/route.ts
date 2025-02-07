@@ -60,7 +60,7 @@ export async function POST(req: Request) {
         .select('*', { count: 'exact', head: true }); // Get count without fetching rows
 
       console.log('Simplest COUNT test result:', {
-        count: countData?.count,
+        count: countData,
         error: countError?.message
       });
 
@@ -156,7 +156,7 @@ export async function POST(req: Request) {
       const { data: accessibleDocs, error: accessError } = await supabase
         .from('documents')
         .select('id')
-        .in('id', documents.map(doc => doc.id));
+        .in('id', documents.map((doc: any) => doc.id));
 
       if (accessError) {
         console.error('Error checking document access:', accessError);
@@ -166,8 +166,8 @@ export async function POST(req: Request) {
         accessibleCount: accessibleDocs?.length 
       });
 
-      const accessibleDocIds = new Set(accessibleDocs?.map(doc => doc.id));
-      const filteredDocuments = documents.filter(doc => accessibleDocIds.has(doc.id));
+      const accessibleDocIds = new Set(accessibleDocs?.map((doc: any) => doc.id));
+      const filteredDocuments = documents.filter((doc: any) => accessibleDocIds.has(doc.id));
 
       console.log('Final filtered results:', { 
         count: filteredDocuments.length 

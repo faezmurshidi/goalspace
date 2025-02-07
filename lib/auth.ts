@@ -67,6 +67,7 @@ export async function signIn(email: string, password: string) {
 
 export async function signOut() {
   try {
+    const supabase = createClient();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
 

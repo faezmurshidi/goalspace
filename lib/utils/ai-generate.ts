@@ -32,7 +32,6 @@ function convertStoreSpaceToDatabase(space: StoreSpace): DatabaseSpace {
       introduction: space.mentor.introduction,
       system_prompt: space.mentor.system_prompt
     },
-    modules: space.modules || [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };

@@ -184,10 +184,12 @@ export function SpaceContentEditor({
 
         // Save the generated content to the knowledge base
         addDocument(space.id, {
-          title: `Initial Content: ${space.title}`,
+          id: space.id,
+          title: space.title,
           content: data.content,
-          type: 'guide',
-          tags: ['initial-content', space.category],
+          type: 'space',
+          tags: [],
+          space_id: space.id,
         });
       } catch (error) {
         console.error('Error generating initial content:', error);

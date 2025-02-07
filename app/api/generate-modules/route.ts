@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import type { Module } from '@/components/space-module';
+
 
 // Configure route options
 export const runtime = 'nodejs';
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
     const cleanedResponse = contentResponse.replace(/^[^{]+/, '').replace(/[^}]+$/, '');
 
     // Parse the JSON response
-    let parsedResponse: { modules: Module[] };
+    let parsedResponse: { modules: any[] };
     try {
       parsedResponse = JSON.parse(cleanedResponse);
       return NextResponse.json(

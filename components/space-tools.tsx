@@ -45,10 +45,12 @@ export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
 
       // Save to knowledge base
       addDocument(spaceId, {
+        id: space.id,
         title: `${useCase.charAt(0).toUpperCase() + useCase.slice(1)}: ${space.title}`,
         content,
         type: useCase === 'plan' ? 'guide' : 'tutorial',
         tags: [useCase, space.category],
+        space_id: space.id,
       });
 
       // Update specific state based on use case
@@ -109,7 +111,7 @@ export function SpaceTools({ spaceId, onClose }: SpaceToolsProps) {
             category={space.category}
           />
 
-          <CustomPodcast spaceId={spaceId} /> 
+          <CustomPodcast spaceId={spaceId} content={space.content?.toString() || ''} /> 
         </div>
       </CardContent>
     </Card>

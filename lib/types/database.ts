@@ -70,12 +70,6 @@ export type Space = {
     introduction: string;
     system_prompt: string;
   };
-  modules: {
-    id: string;
-    title: string;
-    content: string;
-    isCompleted: boolean;
-  }[];
   created_at: string;
   updated_at: string;
 };
