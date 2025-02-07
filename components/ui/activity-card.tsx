@@ -119,7 +119,7 @@ export function ActivityCard({
           <div className="flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
               <Target className="h-4 w-4" />
-              Today's Goals
+              Today&apos;s Goals
             </h4>
             <button
               type="button"

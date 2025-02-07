@@ -15,7 +15,6 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
-  isFaez?: boolean;
   metadata?: any;
 }
 
@@ -365,7 +364,6 @@ export const useSpaceStore = create<SpaceStore>()(
               content: message.content,
               metadata: {
                 ...message.metadata,
-                isFaez: message.isFaez || false
               }
             })
             .select()
@@ -384,7 +382,6 @@ export const useSpaceStore = create<SpaceStore>()(
                   role: data.role,
                   content: data.content,
                   timestamp: new Date(data.created_at).getTime(),
-                  isFaez: data.metadata?.isFaez || false,
                   metadata: data.metadata,
                 },
               ],
@@ -419,7 +416,6 @@ export const useSpaceStore = create<SpaceStore>()(
                 role: msg.role,
                 content: msg.content,
                 timestamp: new Date(msg.created_at).getTime(),
-                isFaez: msg.metadata?.isFaez || false,
                 metadata: msg.metadata,
               })),
             },

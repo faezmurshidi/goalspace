@@ -26,7 +26,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSpaceStore, type Space } from '@/lib/store';
-import { supabase } from '@/utils/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
 
 export function GeneratedSpaces() {
@@ -36,7 +36,7 @@ export function GeneratedSpaces() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const generatedSpacesRef = useRef<HTMLDivElement>(null);
-
+  const supabase = createClient();
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -502,7 +502,7 @@ export function GeneratedSpaces() {
                               'dark:text-foreground/70 dark:group-hover:text-foreground/90'
                             )}
                           >
-                            "{space.mentor.introduction}"
+                            &quot;{space.mentor.introduction}&quot;
                           </p>
                         </div>
                         <div className="space-y-2">

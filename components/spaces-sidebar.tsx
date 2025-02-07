@@ -5,11 +5,11 @@ import { Brain, Target, Plus, LayoutDashboard, Settings, Sun, Moon, LogOut, Load
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useSpaceStore } from '@/lib/store';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useTheme } from 'next-themes';
-import { supabase } from '@/utils/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 
 interface SpacesSidebarProps {
@@ -26,6 +26,8 @@ export function SpacesSidebar({ className }: SpacesSidebarProps) {
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
+
+  const supabase = useMemo(() => createClient(), []);
 
   // After mounting, we have access to the theme
   useEffect(() => {

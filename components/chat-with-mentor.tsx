@@ -15,7 +15,8 @@ import { MarkdownContent } from './ui/markdown-content';
 import { toast } from './ui/use-toast';
 import { type Space } from '@/lib/types/space';
 import { getSession } from '@/lib/auth';
-import { supabase } from '@/utils/supabase/client';
+import { createClient } from '@/utils/supabase/client';
+
 
 
 interface ChatWithMentorProps {
@@ -23,6 +24,7 @@ interface ChatWithMentorProps {
 }
 
 export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
+  const supabase = createClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
@@ -62,7 +64,6 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
           addMessage(spaceId, {
             role: message.role,
             content: message.content,
-            isFaez: false,
           }).catch(console.error);
         }
 
@@ -87,7 +88,6 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
           addMessage(spaceId, {
             role: message.role,
             content: message.content,
-            isFaez: false,
           }).catch(console.error);
         }
       }
@@ -110,7 +110,6 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
     await addMessage(spaceId, {
       role: 'user',
       content: input.trim(),
-      isFaez: false,
     });
 
     // Then proceed with original submit

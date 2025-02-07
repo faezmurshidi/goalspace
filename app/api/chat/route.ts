@@ -3,7 +3,6 @@ import { appendResponseMessages, streamText, tool } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { findSimilarDocuments } from '@/lib/vector';
-import { supabase } from '@/utils/supabase/client';
 import { useSpaceStore } from '@/lib/store';
 
 
@@ -49,7 +48,7 @@ export async function POST(req: Request) {
           parameters: z.object({
             question: z.string().describe('the users question'),
           }),
-          execute: async ({ question }) => findSimilarDocuments(question, session.session),
+          execute: async ({ question }) => findSimilarDocuments(question),
         }),
       },
     });

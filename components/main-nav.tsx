@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import {supabase} from '@/utils/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 import { Button } from './ui/button';
 import { AuthDialog } from './auth/auth-dialog';
 
@@ -13,6 +13,7 @@ export function MainNav() {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
     // Get initial session
