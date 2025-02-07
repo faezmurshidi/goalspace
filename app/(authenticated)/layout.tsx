@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/utils/supabase/client'
 import { redirect } from 'next/navigation'
 
 export default async function AuthenticatedLayout({

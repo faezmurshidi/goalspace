@@ -23,7 +23,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Progress } from '@/components/ui/progress';
 import { getCurrentUser } from '@/lib/auth';
 import { useSpaceStore } from '@/lib/store';
-import { supabase } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
 
 const mockData = [

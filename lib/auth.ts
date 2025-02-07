@@ -1,7 +1,10 @@
-import { supabase } from '../utils/supabase/client';
+import { createClient } from '../utils/supabase/client';
 import { useSpaceStore } from './store';
 
+const supabase = createClient();
+
 export async function signUp(email: string, password: string) {
+  
   try {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,

@@ -15,8 +15,9 @@ import { MarkdownContent } from './ui/markdown-content';
 import { toast } from './ui/use-toast';
 import { type Space } from '@/lib/types/space';
 import { getSession } from '@/lib/auth';
-import { supabase } from '@/utils/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 
+const supabase = createClient();
 
 interface ChatWithMentorProps {
   spaceId: string;

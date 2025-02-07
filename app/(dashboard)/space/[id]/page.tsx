@@ -18,6 +18,7 @@ import { KnowledgeBase } from '@/components/knowledge-base';
 import { TodoList } from '@/components/todo-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Podcast } from '@/components/podcast';
+import Tiptap from '@/components/TipTap';
 
 export default function SpacePage() {
   const params = useParams();
@@ -324,10 +325,11 @@ export default function SpacePage() {
                 <p>{error}</p>
               </div>
             ) : (
-              <MarkdownContent 
-                content={currentModule?.description || currentModule?.content || space.content || ''} 
-                id={spaceId} 
-              />
+              // <MarkdownContent 
+              //   content={currentModule?.description || currentModule?.content || space.content || ''} 
+              //   id={spaceId} 
+              // />
+              <Tiptap content={currentModule?.description || currentModule?.content || space.content || ''} />
             )}
           </div>
         </div>

@@ -3,7 +3,6 @@ import { appendResponseMessages, streamText, tool } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { findSimilarDocuments } from '@/lib/vector';
-import { supabase } from '@/utils/supabase/client';
 import { useSpaceStore } from '@/lib/store';
 
 

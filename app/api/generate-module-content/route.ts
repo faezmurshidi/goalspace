@@ -112,7 +112,7 @@ export async function POST(request: Request) {
           content: generateContentPrompt(spaceDetails, moduleInfo)
         }
       ],
-      model: "claude-3-sonnet-20240229",
+      model: "claude-3-haiku-20240307",
       temperature: 0.7,
       max_tokens: 4000,
       system: SYSTEM_PROMPT(spaceDetails, moduleInfo)

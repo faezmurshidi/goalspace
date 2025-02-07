@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { User, UserSettings, UserApiUsage, UserSubscriptionHistory } from '@/lib/types/database';
-import { supabase } from '@/utils/supabase/client';
+import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export type UserData = {
@@ -24,7 +24,7 @@ export function useUser() {
     error: null,
   });
   const router = useRouter();
-
+  const supabase = createClient();
   useEffect(() => {
     const fetchUserData = async () => {
       try {
