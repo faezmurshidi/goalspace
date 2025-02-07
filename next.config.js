@@ -41,16 +41,19 @@ const nextConfig = {
     }
 
     // Log final plugins count
-    console.log(`\n📊 Final configuration summary:`);
-    console.log(`- Total plugins: ${config.plugins?.length || 0}`);
-    console.log(`- Total rules: ${config.module?.rules?.length || 0}`);
-    console.log(`- Optimization enabled: ${!!config.optimization}`);
-    
-    // Log memory usage
-    const used = process.memoryUsage();
-    console.log('\n💾 Current memory usage:');
-    for (let key in used) {
-      console.log(`${key}: ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+    if (dev) {
+      // Log final plugins count
+      console.log(`\n📊 Final configuration summary:`);
+      console.log(`- Total plugins: ${config.plugins?.length || 0}`);
+      console.log(`- Total rules: ${config.module?.rules?.length || 0}`);
+      console.log(`- Optimization enabled: ${!!config.optimization}`);
+      
+      // Log memory usage (consider moving to a debug flag)
+      const used = process.memoryUsage();
+      console.log('\n💾 Current memory usage:');
+      for (let key in used) {
+        console.log(`${key}: ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
+      }
     }
 
     console.log('\n✨ Webpack configuration completed\n');
