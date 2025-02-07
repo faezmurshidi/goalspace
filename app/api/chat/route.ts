@@ -48,7 +48,7 @@ export async function POST(req: Request) {
           parameters: z.object({
             question: z.string().describe('the users question'),
           }),
-          execute: async ({ question }) => findSimilarDocuments(question, session.session),
+          execute: async ({ question }) => findSimilarDocuments(question),
         }),
       },
     });

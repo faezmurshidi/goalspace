@@ -24,7 +24,7 @@ export function NewGoalDialog({ open, onOpenChange }: NewGoalDialogProps) {
         <DialogHeader>
           <DialogTitle>Create New Goal</DialogTitle>
           <DialogDescription>
-            Let's break down your goal into actionable learning spaces.
+            Let&apos;s break down your goal into actionable learning spaces.
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">

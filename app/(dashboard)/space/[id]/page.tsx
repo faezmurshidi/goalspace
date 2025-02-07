@@ -172,13 +172,13 @@ export default function SpacePage() {
         });
 
         const moduleDoc = {
-          id: currentModule.id, // Add id to match Document type
+          id: currentModule.id,
           title: currentModule.title,
           content: generatedContent,
           type: 'guide',
           tags: ['module-content', space.category],
           space_id: spaceId
-        }
+        };
 
         // Save to documents with correct type
         await addDocument(spaceId, moduleDoc);
@@ -205,8 +205,8 @@ export default function SpacePage() {
 
   const handleModuleComplete = async (moduleId: string) => {
     try {
-      const module = modules.find(m => m.id === moduleId);
-      if (!module || !space) return;
+      const moduleItem = modules.find(m => m.id === moduleId);
+      if (!moduleItem || !space) return;
 
       // Just mark as complete, content generation is handled by the effect
       await updateModule(spaceId, moduleId, { is_completed: true });
@@ -261,7 +261,7 @@ export default function SpacePage() {
           </Button>
           <div className="text-center">
             <h1 className="mb-2 text-2xl font-bold">Space Not Found</h1>
-            <p className="text-muted-foreground">This space doesn't exist or has been removed.</p>
+            <p className="text-muted-foreground">This space doesn&apos;t exist or has been removed.</p>
           </div>
         </div>
       </div>

@@ -502,7 +502,7 @@ export function GeneratedSpaces() {
                               'dark:text-foreground/70 dark:group-hover:text-foreground/90'
                             )}
                           >
-                            "{space.mentor.introduction}"
+                            &quot;{space.mentor.introduction}&quot;
                           </p>
                         </div>
                         <div className="space-y-2">
