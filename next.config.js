@@ -56,7 +56,7 @@ const nextConfig = {
       }
     }
 
-    console.log('\n✨ Webpack configuration completed\n');
+    if (dev) console.log('\n✨ Webpack configuration completed\n');
     return config;
   },
 };
