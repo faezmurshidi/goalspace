@@ -17,13 +17,14 @@ import { type Space } from '@/lib/types/space';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/utils/supabase/client';
 
-const supabase = createClient();
+
 
 interface ChatWithMentorProps {
   spaceId: string;
 }
 
 export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
+  const supabase = createClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);

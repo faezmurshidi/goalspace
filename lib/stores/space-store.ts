@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createClient } from '@/utils/supabase/client';
 
-const supabase = createClient();
+
 
 export interface Space {
   id: string;
@@ -49,6 +49,7 @@ export const useSpaceStore = create<SpaceStore>()(
       loadSpaces: async () => {
         try {
           set({ isLoading: true, error: null });
+          const supabase = createClient();
           const { data: spaces, error } = await supabase
             .from('spaces')
             .select('*');
@@ -67,6 +68,7 @@ export const useSpaceStore = create<SpaceStore>()(
       loadGoals: async () => {
         try {
           set({ isLoading: true, error: null });
+          const supabase = createClient();
           const { data: goals, error } = await supabase
             .from('goals')
             .select('*')

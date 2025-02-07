@@ -1,10 +1,9 @@
 import { createClient } from '../utils/supabase/client';
 import { useSpaceStore } from './store';
 
-const supabase = createClient();
 
 export async function signUp(email: string, password: string) {
-  
+  const supabase = createClient();
   try {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -50,6 +49,7 @@ export async function signUp(email: string, password: string) {
 }
 
 export async function signIn(email: string, password: string) {
+  const supabase = createClient();
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -81,6 +81,7 @@ export async function signOut() {
 }
 
 export async function getCurrentUser() {
+  const supabase = createClient();
   try {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error) throw error;
@@ -92,6 +93,7 @@ export async function getCurrentUser() {
 }
 
 export async function getSession() {
+  const supabase = createClient();
   console.log("getSession");
   try {
     const { data: { session }, error } = await supabase.auth.getSession();
