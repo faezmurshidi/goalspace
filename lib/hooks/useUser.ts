@@ -24,7 +24,7 @@ export function useUser() {
     error: null,
   });
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   useEffect(() => {
     const fetchUserData = async () => {
       try {
