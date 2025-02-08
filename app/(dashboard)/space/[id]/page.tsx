@@ -272,6 +272,8 @@ export default function SpacePage() {
   const completedModules = modules.filter(m => m.is_completed).length;
   const progress = modules.length > 0 ? (completedModules / modules.length) * 100 : 0;
 
+  console.log('currentModule', currentModule);
+
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
       {/* Header - Simplified and Compact */}

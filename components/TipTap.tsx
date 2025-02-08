@@ -12,6 +12,7 @@ import Typography from '@tiptap/extension-typography'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import { cn } from '@/lib/utils'
+import { useEffect } from 'react'
 
 interface TipTapProps {
   content?: string
@@ -95,6 +96,16 @@ export default function Tiptap({ content = '', editable = true, className, onUpd
       },
     },
   })
+
+  // Add effect to update content when prop changes
+  useEffect(() => {
+    if (editor && content) {
+      const processedContent = processContent(content)
+      if (editor.getHTML() !== processedContent) {
+        editor.commands.setContent(processedContent)
+      }
+    }
+  }, [editor, content])
 
   return <EditorContent editor={editor} />
 }
