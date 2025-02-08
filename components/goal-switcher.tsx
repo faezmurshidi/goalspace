@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ChevronsUpDown, Plus, Target } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 import {
   DropdownMenu,
@@ -108,10 +109,14 @@ export function GoalSwitcher({
     onCreateGoal();
   };
 
-  // Handle keyboard shortcuts
+  // Handle single goal state
+  const isSingleGoal = goals.length === 1;
+  const hasGoals = goals.length > 0;
+
+  // Update keyboard shortcuts handling
   React.useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.metaKey || event.ctrlKey) {
+      if ((event.metaKey || event.ctrlKey) && !isSingleGoal) {
         const num = parseInt(event.key);
         if (!isNaN(num) && num > 0 && num <= goals.length) {
           handleGoalSelect(goals[num - 1]);
@@ -121,73 +126,108 @@ export function GoalSwitcher({
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [goals]);
+  }, [goals, isSingleGoal]);
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild disabled={isLoading}>
-            <SidebarMenuButton
-              size="lg"
-              className={cn(
-                "w-full justify-start hover:bg-muted px-3 py-2 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground",
-                isLoading && "pointer-events-none opacity-50"
-              )}
-            >
-              <div className="size-8 bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square items-center justify-center rounded-lg">
-                <Target className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight ml-2">
-                <span className="truncate font-semibold">
-                  {activeGoal?.title || 'Select a Goal'}
-                </span>
-                <span
-                  className={cn('truncate text-xs', getProgressColor(activeGoal?.progress || 0))}
+        {hasGoals ? (
+          <div className="w-full">
+            {!isSingleGoal ? (
+              // Multi-goal dropdown version
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild disabled={isLoading}>
+                  <SidebarMenuButton
+                    size="lg"
+                    className={cn(
+                      "w-full justify-start hover:bg-muted px-3 py-2 group",
+                      isLoading && "pointer-events-none opacity-50"
+                    )}
+                  >
+                    <div className="grid flex-1 text-left text-sm leading-tight ml-2">
+                      <span className="truncate font-semibold">
+                        {activeGoal?.title || 'Select a Goal'}
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">
+                          {!isLoading && `⌘${goals.findIndex(g => g.id === activeGoal?.id) + 1}`}
+                        </span>
+                      </span>
+                      <span className={cn('truncate text-xs', getProgressColor(activeGoal?.progress || 0))}>
+                        {isLoading ? 'Switching...' : `${Math.round(activeGoal?.progress || 0)}% Complete`}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className={cn('ml-auto size-4', isLoading && 'animate-pulse')} />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="min-w-56 w-[--radix-dropdown-menu-trigger-width] rounded-lg"
+                  align="start"
+                  side={isMobile ? 'bottom' : 'right'}
+                  sideOffset={4}
                 >
-                  {isLoading
-                    ? 'Switching...'
-                    : `${Math.round(activeGoal?.progress || 0)}% Complete`}
-                </span>
-              </div>
-              <ChevronsUpDown className={cn('ml-auto size-4', isLoading && 'animate-pulse')} />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="min-w-56 w-[--radix-dropdown-menu-trigger-width] rounded-lg"
-            align="start"
-            side={isMobile ? 'bottom' : 'right'}
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Your Goals ({goals.length})
-            </DropdownMenuLabel>
-            {goals.map((goal, index) => (
-              <DropdownMenuItem
-                key={goal.id}
-                onClick={() => handleGoalSelect(goal)}
-                className={cn(
-                  'gap-2 p-2',
-                  activeGoal?.id === goal.id && 'bg-accent',
-                  isLoading && 'pointer-events-none opacity-50'
-                )}
-              >
-                <div className="size-6 flex items-center justify-center rounded-sm border">
-                  <Target className={cn('size-4 shrink-0', getProgressColor(goal.progress))} />
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Your Goals ({goals.length})
+                  </DropdownMenuLabel>
+                  {goals.map((goal, index) => (
+                    <DropdownMenuItem
+                      key={goal.id}
+                      onClick={() => handleGoalSelect(goal)}
+                      className={cn(
+                        'gap-2 p-2',
+                        activeGoal?.id === goal.id && 'bg-accent',
+                        isLoading && 'pointer-events-none opacity-50'
+                      )}
+                    >
+                      <div className="size-6 flex items-center justify-center rounded-sm border">
+                        <Target className={cn('size-4 shrink-0', getProgressColor(goal.progress))} />
+                      </div>
+                      <div className="flex-1 truncate">{goal.title}</div>
+                      <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleCreateGoal} className="gap-2 p-2" disabled={isLoading}>
+                    <div className="size-6 flex items-center justify-center rounded-md border bg-background">
+                      <Plus className="size-4" />
+                    </div>
+                    <div className="font-medium text-muted-foreground">Add new goal</div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              // Single goal static display
+              <div className="flex items-center gap-3 px-3 py-2">
+                <div className="flex-1">
+                  <div className="text-sm font-semibold truncate">{activeGoal?.title}</div>
+                  <div className={cn(
+                    'text-xs truncate',
+                    getProgressColor(activeGoal?.progress || 0),
+                    isLoading && 'animate-pulse'
+                  )}>
+                    {isLoading ? 'Updating...' : `${Math.round(activeGoal?.progress || 0)}% Complete`}
+                  </div>
                 </div>
-                <div className="flex-1 truncate">{goal.title}</div>
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleCreateGoal} className="gap-2 p-2" disabled={isLoading}>
-              <div className="size-6 flex items-center justify-center rounded-md border bg-background">
-                <Plus className="size-4" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onCreateGoal}
+                  className="rounded-full h-8 w-8 p-0 hover:bg-muted"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="font-medium text-muted-foreground">Add new goal</div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            )}
+          </div>
+        ) : (
+          // No goals state
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2 px-3 py-2 h-auto text-sm"
+            onClick={onCreateGoal}
+          >
+            <Plus className="h-4 w-4" />
+            <span className="font-semibold">Create your first goal</span>
+          </Button>
+        )}
       </SidebarMenuItem>
     </SidebarMenu>
   );

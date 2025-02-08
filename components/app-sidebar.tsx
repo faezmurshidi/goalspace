@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
+import { motion, useMotionValueEvent, useScroll } from "framer-motion"
 import {
   Brain,
   ChevronLeft,
@@ -49,28 +49,44 @@ const sidebarVariants = cva(
       expanded: {
         true: "shadow-xl",
         false: "shadow-sm"
+      },
+      mobile: {
+        true: "w-full md:w-auto"
       }
-    }
+    },
+    compoundVariants: [
+      {
+        expanded: false,
+        mobile: true,
+        class: "w-16"
+      }
+    ]
   }
 )
 
 const navItemVariants = cva(
-  "flex items-center transition-all duration-200 hover:bg-accent/50 rounded-lg",
+  "flex items-center transition-all duration-200 rounded-lg group",
   {
     variants: {
       size: {
         compact: "h-10 w-10 p-2 justify-center",
         default: "w-full px-3 py-2.5 justify-start"
+      },
+      state: {
+        default: "hover:bg-accent/50 focus:bg-accent/30",
+        active: "bg-accent/80 hover:bg-accent/90 text-primary-foreground"
       }
     },
     defaultVariants: {
-      size: "default"
+      size: "default",
+      state: "default"
     }
   }
 )
 
 export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, children, className, ...props }: AppSidebarProps) {
-  const [open, setOpen] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+  const [open, setOpen] = useState(!isMobile)
   const [isHovered, setIsHovered] = useState(false)
   const router = useRouter()
   const { theme, setTheme } = useTheme()
@@ -80,15 +96,31 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
   )
 
   const isExpanded = open || isHovered
+  const hasMultipleGoals = goals.length > 1
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      if (mobile) setOpen(false)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const handleGoalSelect = (goal: Goal) => {
     setActiveGoal(goal)
     onGoalSelect(goal)
   }
 
-  const filteredSpaces = spaces.filter((space) => activeGoal?.spaces.includes(space.id))
+  const filteredSpaces = useMemo(
+    () => spaces.filter(space => activeGoal?.spaces.includes(space.id)),
+    [spaces, activeGoal?.spaces]
+  )
 
-  const bottomLinks = [
+  const bottomLinks = useMemo(() => [
     {
       label: 'Settings',
       href: '/settings',
@@ -102,51 +134,39 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
         await signOut()
         router.push('/auth')
       },
+      className: 'hover:bg-destructive/20 text-destructive'
     },
     {
       label: theme === 'light' ? 'Dark Mode' : 'Light Mode',
       href: '#',
-      icon: theme === 'light' ? (
-        <Moon className="h-5 w-5 flex-shrink-0" />
-      ) : (
-        <Sun className="h-5 w-5 flex-shrink-0" />
-      ),
+      icon: theme === 'light' ? <Moon className="h-5 w-5 flex-shrink-0" /> : <Sun className="h-5 w-5 flex-shrink-0" />,
       onClick: () => setTheme(theme === 'light' ? 'dark' : 'light'),
+      className: 'dark:text-amber-400 text-slate-800'
     },
-  ]
+  ], [theme, router])
 
   return (
     <div className="flex min-h-screen">
       <SidebarProvider>
         <motion.div
-          className={sidebarVariants({ expanded: isExpanded })}
-          onMouseEnter={() => !open && setIsHovered(true)}
+          className={sidebarVariants({ expanded: isExpanded, mobile: isMobile })}
+          onMouseEnter={() => !isMobile && !open && setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          animate={{ width: isExpanded ? 280 : 72 }}
+          animate={{
+            width: isMobile ? (open ? '100%' : 72) : isExpanded ? 280 : 72
+          }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
           <Sidebar className="h-full flex flex-col" {...props}>
             <SidebarHeader>
               <div className="flex items-center justify-between px-4 py-4">
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isExpanded ? 1 : 0 }}
-                  className="flex items-center gap-2"
-                >
-                  <div className="h-8 w-8 rounded-lg bg-primary/80" />
-                  <span className="text-lg font-semibold tracking-tight">GoalSpace</span>
-                </motion.div>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 hover:bg-accent/50"
                   onClick={() => setOpen(!open)}
                 >
-                  {open ? (
-                    <ChevronLeft className="h-4 w-4" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
+                  {open ? <ChevronLeft /> : <ChevronRight />}
                   <span className="sr-only">Toggle sidebar</span>
                 </Button>
               </div>
@@ -155,24 +175,14 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
             <SidebarContent className="flex-1 space-y-6 px-2 py-4">
               {/* Goal Switcher Section */}
               <div className="mb-4">
-                {isExpanded ? (
-                  <GoalSwitcher
-                    goals={goals}
-                    onGoalSelect={handleGoalSelect}
-                    onCreateGoal={onCreateGoal}
-                    initialGoalId={activeGoal?.id}
-                  />
-                ) : (
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      variant="ghost"
-                      className="h-11 w-11 p-2 hover:bg-accent/50"
-                      onClick={() => setOpen(true)}
-                    >
-                      <Target className="h-5 w-5" />
-                    </Button>
-                  </motion.div>
-                )}
+                <GoalSwitcher
+                  goals={goals}
+                  onGoalSelect={handleGoalSelect}
+                  onCreateGoal={onCreateGoal}
+                  initialGoalId={activeGoal?.id}
+                  compact={!isExpanded}
+                  hasMultipleGoals={hasMultipleGoals}
+                />
               </div>
 
               {/* Main Navigation */}
@@ -181,6 +191,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
                   label={isExpanded ? "Dashboard" : ""}
                   href="/dashboard"
                   icon={<LayoutDashboard className="h-5 w-5 text-foreground/80" />}
+                  state="active"
                 />
               </div>
 
@@ -196,9 +207,9 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
                     {filteredSpaces.map((space) => (
                       <NavItem
                         key={space.id}
-                        color={space.space_color?.main}
                         label={isExpanded ? space.title : ""}
                         href={`/space/${space.id}`}
+                        color={space.space_color?.main}
                         icon={
                           <div className="relative">
                             {space.category === "learning" ? (
@@ -208,7 +219,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
                             )}
                             {!isExpanded && (
                               <div 
-                                className="absolute -right-1 -top-1 h-2 w-2 rounded-full border-2 border-background"
+                                className="absolute -right-1 -top-1 h-2 w-2 rounded-full border-2 border-background ring-1 ring-foreground/20"
                                 style={{ backgroundColor: space.space_color?.main }}
                               />
                             )}
@@ -222,16 +233,17 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
             </SidebarContent>
 
             {/* Updated Footer Section */}
-            <SidebarFooter className="border-t border-border/30">
-              <div className="space-y-1 px-2 py-4">
+            <SidebarFooter className="border-t border-border/30 bg-background/80 backdrop-blur-lg">
+              <div className="space-y-1 px-2 py-3">
                 {bottomLinks.map((link) => (
                   <NavItem
-                    key={link.href + link.label}
+                    key={link.label}
                     {...link}
                     label={isExpanded ? link.label : ""}
                     icon={React.cloneElement(link.icon, {
                       className: cn(link.icon.props.className, "text-foreground/80")
                     })}
+                    className={link.className}
                   />
                 ))}
               </div>
@@ -242,7 +254,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
       <motion.div
         className="flex-1"
         animate={{
-          marginLeft: isExpanded ? "280px" : "72px",
+          marginLeft: isMobile ? (open ? "100%" : "72px") : isExpanded ? "280px" : "72px"
         }}
         transition={{ duration: 0.2 }}
       >
@@ -252,16 +264,17 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
   )
 }
 
-function NavItem({ label, href, icon, color, onClick }: { label: string, href: string, icon: JSX.Element, color?: string, onClick?: () => void }) {
+function NavItem({ label, href, icon, color, onClick, className, state }: NavItemProps) {
   const router = useRouter()
+  const dynamicStyle = color ? {
+    '--bg-color': `${color}1A`,
+    '--active-color': `${color}33`,
+    '--text-color': color,
+  } : undefined
 
   const handleClick = async (e: React.MouseEvent) => {
     e.preventDefault()
-    if (onClick) {
-      await onClick()
-    } else if (href !== "#") {
-      router.push(href)
-    }
+    onClick?.() || (href !== "#" && router.push(href))
   }
 
   return (
@@ -270,15 +283,18 @@ function NavItem({ label, href, icon, color, onClick }: { label: string, href: s
         variant="ghost"
         className={navItemVariants({
           size: label ? "default" : "compact",
+          state: state || "default",
           className: cn(
             "group",
-            color && label && `bg-[${color}/10] hover:bg-[${color}/20]`,
-            color && `text-[${color}]`
+            color && label && "bg-[var(--bg-color)] hover:bg-[var(--active-color)]",
+            color && "text-[var(--text-color)]",
+            className
           )
         })}
+        style={dynamicStyle as React.CSSProperties}
         onClick={handleClick}
       >
-        <span className={cn("transition-colors", color && `text-[${color}]`)}>
+        <span className={cn("transition-colors", color && "text-[var(--text-color)]")}>
           {icon}
         </span>
         {label && (
