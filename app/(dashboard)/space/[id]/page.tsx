@@ -276,36 +276,51 @@ export default function SpacePage() {
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
-      {/* Header - Simplified and Compact */}
-      <header className="fixed left-0 right-0 top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
-        <div className="mx-auto max-w-[1600px] px-6">
-          <div className="flex h-14 items-center justify-between">
-            <div className="flex items-center gap-4">
+      {/* Header - Enhanced Design */}
+      <header className="fixed left-0 right-0 top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-lg shadow-sm dark:border-slate-800 dark:bg-slate-900/90">
+        <div className="mx-auto pl-[60px] lg:pl-[72px]">
+          <div className="flex h-16 items-center px-6">
+            {/* Left Section with Back Button and Title */}
+            <div className="flex items-center gap-5">
               <Button
                 variant="ghost"
                 onClick={() => router.back()}
-                className="rounded-full p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="rounded-full h-9 w-9 p-0 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800"
+                aria-label="Go back"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
               </Button>
-              <div>
-                <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  {space.title}
-                  <span className="ml-3 text-sm font-normal text-slate-500 dark:text-slate-400">
-                    {Math.round(progress)}% Complete
-                  </span>
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100 truncate">
+                    {space.title}
+                  </h1>
+                  <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                      {Math.round(progress)}% Complete
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">
                   {space.description}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-32 rounded-full bg-slate-200 dark:bg-slate-800">
-                <div
-                  className="h-full rounded-full bg-green-500 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
+
+            {/* Right Section with Progress Bar */}
+            <div className="flex items-center gap-4 ml-auto">
+              <div className="flex flex-col gap-1">
+                <div className="h-2 w-36 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-green-500 transition-all duration-300 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center px-0.5">
+                  <span className="text-xs text-slate-400 dark:text-slate-500">Progress</span>
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{completedModules}/{modules.length}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -313,10 +328,10 @@ export default function SpacePage() {
       </header>
 
       {/* Main Content Layout */}
-      <div className="grid h-[calc(100vh-3.5rem)] grid-cols-12 gap-6 px-6 pt-14">
+      <div className="grid h-[calc(100vh-4rem)] grid-cols-12 gap-6 px-6 pt-20">
         {/* Content Area - Enhanced Readability */}
-        <div className="col-span-8 h-full overflow-y-auto">
-          <div className="mx-auto max-w-3xl py-8">
+        <div className="col-span-8 h-full overflow-y-auto pb-8">
+          <div className="mx-auto max-w-3xl">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                 {currentModule?.title || space.title}
@@ -350,11 +365,11 @@ export default function SpacePage() {
 
         {/* Sidebar - Structured Interaction */}
         <div className="col-span-4 h-full">
-          <div className="sticky top-[3.5rem] h-[calc(100vh-3.5rem)]">
+          <div className="sticky top-[4rem] h-[calc(100vh-4rem)]">
             <Card className="flex h-full flex-col border-slate-200 bg-white/50 shadow-sm backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/50">
               {/* Navigation Tabs */}
-              <Tabs defaultValue="modules">
-                <TabsList className="flex w-full justify-start gap-1 border-b border-slate-200 bg-slate-100 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/50">
+              <Tabs defaultValue="modules" className="flex flex-col h-[calc(100%-300px)]">
+                <TabsList className="w-full justify-start gap-1 border-b border-slate-200 bg-slate-100 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/50">
                   {[
                     { value: 'modules', icon: Sparkles, label: 'Modules' },
                     { value: 'knowledge', icon: BookOpen, label: 'Knowledge' },
@@ -373,8 +388,8 @@ export default function SpacePage() {
                 </TabsList>
 
                 {/* Tab Content */}
-                <div className="flex-1 overflow-y-auto p-4">
-                  <TabsContent value="modules" className="m-0">
+                <div className="flex-1 overflow-y-auto">
+                  <TabsContent value="modules" className="m-0 p-4 h-full">
                     <SpaceToolsWindow
                       spaceId={spaceId}
                       modules={modules}
@@ -383,26 +398,26 @@ export default function SpacePage() {
                       onModuleSelect={handleModuleSelect}
                     />
                   </TabsContent>
-                  <TabsContent value="knowledge" className="m-0">
+                  <TabsContent value="knowledge" className="m-0 p-4 h-full">
                     <KnowledgeBase
                       spaceId={spaceId}
                       onDocumentSelect={setSelectedDocument}
                     />
                   </TabsContent>
-                  <TabsContent value="todo" className="m-0">
+                  <TabsContent value="todo" className="m-0 p-4 h-full">
                     <TodoList spaceId={spaceId} />
                   </TabsContent>
-                  <TabsContent value="podcast" className="m-0">
+                  <TabsContent value="podcast" className="m-0 p-4 h-full">
                     <Podcast spaceId={spaceId} />
                   </TabsContent>
                 </div>
               </Tabs>
 
               {/* Persistent Chat Section */}
-              <div className="border-t border-slate-200 dark:border-slate-800">
+              <div className="h-[300px] border-t border-slate-200 dark:border-slate-800">
                 <ChatWithMentor 
                   spaceId={spaceId}
-                  className="max-h-[300px] overflow-y-auto"
+                  className="h-full overflow-y-auto"
                   inputClassName="border-t-0 focus-within:ring-0"
                 />
               </div>
