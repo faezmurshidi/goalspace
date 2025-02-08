@@ -14,6 +14,7 @@ import {
   Settings,
   Sun,
   Target,
+  BookOpen,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
@@ -191,6 +192,12 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
                   label={isExpanded ? "Dashboard" : ""}
                   href="/dashboard"
                   icon={<LayoutDashboard className="h-5 w-5 text-foreground/80" />}
+                  state="active"
+                />
+                <NavItem
+                  label={isExpanded ? "Knowledge Base" : ""}
+                  href="/knowledge-base"
+                  icon={<BookOpen className="h-5 w-5 text-foreground/80" />}
                   state="active"
                 />
               </div>
