@@ -2,12 +2,10 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import fetch from 'node-fetch';
-import { countInputTokens, updateTokenCount, isPromptTooLong } from '@/lib/utils/token-counter';
-import { trackPromptPerformance, PromptType } from '@/config/llm-prompts';
 
 // Define our own request type to avoid conflicts
 interface ApiRequest {
-  useCase: PromptType;
+  useCase: string;
   model: 'gpt' | 'claude' | 'perplexity';
   space: {
     id: string;
@@ -96,14 +94,7 @@ export async function POST(request: Request) {
     const { useCase, model, prompt } = (await request.json()) as ApiRequest;
     const startTime = Date.now();
 
-    // Check if prompt is too long
-    if (isPromptTooLong(prompt, model)) {
-      throw new Error('Prompt is too long for the selected model');
-    }
-
-    // Count input tokens
-    const tokenCount = countInputTokens(prompt, model);
-
+   
     // Generate content
     let content: string;
     switch (model) {
@@ -120,28 +111,14 @@ export async function POST(request: Request) {
         throw new Error(`Unsupported model: ${model}`);
     }
 
-    // Update token count with output
-    const finalTokenCount = updateTokenCount(tokenCount, content, model);
-
-    // Track performance
-    await trackPromptPerformance('variantA', useCase, {
-      responseTime: Date.now() - startTime,
-      success: true,
-      tokenMetrics: finalTokenCount,
-    });
-
+   
     return NextResponse.json({ 
       content,
-      tokenMetrics: finalTokenCount,
     });
   } catch (error) {
     console.error('Error generating content:', error);
 
-    // Track error
-    await trackPromptPerformance('variantA', 'space', {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+  
 
     return NextResponse.json(
       { error: 'Failed to generate content' },
