@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, BookOpen, ListChecks, MessageSquare, Sparkles } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 import { ChatWithMentor } from '@/components/chat-with-mentor';
 import { Button } from '@/components/ui/button';
@@ -272,98 +273,106 @@ export default function SpacePage() {
   const progress = modules.length > 0 ? (completedModules / modules.length) * 100 : 0;
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-white dark:bg-slate-900">
-      {/* Header */}
-      <div className="fixed left-0 right-0 top-0 z-30 border-b bg-white/50 backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/50">
+    <div className="relative h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
+      {/* Header - Simplified and Compact */}
+      <header className="fixed left-0 right-0 top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80">
         <div className="mx-auto max-w-[1600px] px-6">
-          <div className="flex h-16 items-center justify-between gap-4">
-            <div className="flex items-center gap-6">
+          <div className="flex h-14 items-center justify-between">
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 onClick={() => router.back()}
-                className="rounded-lg p-2.5 text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="rounded-full p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <div className="flex flex-col justify-center">
-                <h1 className="text-xl font-semibold tracking-tight">{space.title}</h1>
-                <p className="text-sm text-muted-foreground">{space.description}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3 rounded-lg border bg-background/50 px-4 py-2 backdrop-blur-sm">
-                <CircularProgress 
-                  value={progress}
-                  className="h-8 w-8"
-                  strokeWidth={2.5}
-                />
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium">Progress</span>
-                  <span className="text-sm text-muted-foreground">
+              <div>
+                <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  {space.title}
+                  <span className="ml-3 text-sm font-normal text-slate-500 dark:text-slate-400">
                     {Math.round(progress)}% Complete
                   </span>
-                </div>
+                </h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {space.description}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-32 rounded-full bg-slate-200 dark:bg-slate-800">
+                <div
+                  className="h-full rounded-full bg-green-500 transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Main Content */}
-      <div className="grid h-[calc(100vh-4rem)] grid-cols-12 gap-6 px-6 pt-16">
-        {/* Content Area */}
+      {/* Main Content Layout */}
+      <div className="grid h-[calc(100vh-3.5rem)] grid-cols-12 gap-6 px-6 pt-14">
+        {/* Content Area - Enhanced Readability */}
         <div className="col-span-8 h-full overflow-y-auto">
-          <div className="prose prose-slate mx-auto max-w-4xl px-8 py-12 dark:prose-invert">
-            {isGenerating ? (
-              <div className="flex items-center justify-center space-x-2">
-                <CircularProgress value={undefined} className="h-6 w-6" />
-                <span>Generating content...</span>
+          <div className="mx-auto max-w-3xl py-8">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {currentModule?.title || space.title}
+              </h2>
+              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <Sparkles className="h-4 w-4" />
+                <span>AI Generated Content</span>
               </div>
-            ) : error ? (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-                <h3 className="text-lg font-medium">Error</h3>
-                <p>{error}</p>
-              </div>
-            ) : (
-              // <MarkdownContent 
-              //   content={currentModule?.description || currentModule?.content || space.content || ''} 
-              //   id={spaceId} 
-              // />
-              <Tiptap content={currentModule?.description || currentModule?.content || space.content || ''} />
-            )}
+            </div>
+            
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              {isGenerating ? (
+                <div className="flex h-32 items-center justify-center space-x-2">
+                  <CircularProgress value={undefined} className="h-6 w-6" />
+                  <span className="text-slate-500">Generating content...</span>
+                </div>
+              ) : error ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-500">
+                  <h3 className="text-lg font-medium">Error</h3>
+                  <p>{error}</p>
+                </div>
+              ) : (
+                <Tiptap 
+                  content={currentModule?.description || currentModule?.content || space.content || ''}
+                  className="prose max-w-none dark:prose-invert"
+                />
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar - Structured Interaction */}
         <div className="col-span-4 h-full">
-          <div className="sticky top-[3.5rem]">
-            <Card className="h-[calc(100vh-4rem)] overflow-hidden border-none bg-white/50 shadow-sm backdrop-blur-xl dark:bg-slate-900/50">
-              <Tabs defaultValue="modules" className="h-full flex flex-col">
-                <TabsList className="flex w-full justify-start gap-1 border-b px-2 py-1 dark:border-slate-800">
-                  <TabsTrigger value="modules" className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4" />
-                    <span>Modules</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="knowledge" className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    <span>Knowledge</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="todo" className="flex items-center gap-2">
-                    <ListChecks className="h-4 w-4" />
-                    <span>Todo</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="chat" className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    <span>Chat</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="podcast" className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    <span>Podcast</span>
-                  </TabsTrigger>
+          <div className="sticky top-[3.5rem] h-[calc(100vh-3.5rem)]">
+            <Card className="flex h-full flex-col border-slate-200 bg-white/50 shadow-sm backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/50">
+              {/* Navigation Tabs */}
+              <Tabs defaultValue="modules">
+                <TabsList className="flex w-full justify-start gap-1 border-b border-slate-200 bg-slate-100 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/50">
+                  {[
+                    { value: 'modules', icon: Sparkles, label: 'Modules' },
+                    { value: 'knowledge', icon: BookOpen, label: 'Knowledge' },
+                    { value: 'todo', icon: ListChecks, label: 'Tasks' },
+                    { value: 'podcast', icon: MessageSquare, label: 'Podcast' },
+                  ].map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm dark:text-slate-300 dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100"
+                    >
+                      <tab.icon className="h-4 w-4" />
+                      <span>{tab.label}</span>
+                    </TabsTrigger>
+                  ))}
                 </TabsList>
 
-                <div className="flex-1 overflow-hidden">
-                  <TabsContent value="modules" className="h-full m-0 overflow-auto">
+                {/* Tab Content */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <TabsContent value="modules" className="m-0">
                     <SpaceToolsWindow
                       spaceId={spaceId}
                       modules={modules}
@@ -372,27 +381,29 @@ export default function SpacePage() {
                       onModuleSelect={handleModuleSelect}
                     />
                   </TabsContent>
-
-                  <TabsContent value="knowledge" className="h-full m-0 overflow-auto">
+                  <TabsContent value="knowledge" className="m-0">
                     <KnowledgeBase
                       spaceId={spaceId}
                       onDocumentSelect={setSelectedDocument}
                     />
                   </TabsContent>
-
-                  <TabsContent value="todo" className="h-full m-0 overflow-auto">
+                  <TabsContent value="todo" className="m-0">
                     <TodoList spaceId={spaceId} />
                   </TabsContent>
-
-                  <TabsContent value="chat" className="h-full m-0 overflow-auto">
-                    <ChatWithMentor spaceId={spaceId} />
-                  </TabsContent>
-
-                  <TabsContent value="podcast" className="h-full m-0 overflow-auto">
+                  <TabsContent value="podcast" className="m-0">
                     <Podcast spaceId={spaceId} />
                   </TabsContent>
                 </div>
               </Tabs>
+
+              {/* Persistent Chat Section */}
+              <div className="border-t border-slate-200 dark:border-slate-800">
+                <ChatWithMentor 
+                  spaceId={spaceId}
+                  className="max-h-[300px] overflow-y-auto"
+                  inputClassName="border-t-0 focus-within:ring-0"
+                />
+              </div>
             </Card>
           </div>
         </div>
