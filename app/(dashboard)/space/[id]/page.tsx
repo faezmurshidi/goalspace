@@ -20,6 +20,7 @@ import { TodoList } from '@/components/todo-list';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Podcast } from '@/components/podcast';
 import Tiptap from '@/components/TipTap';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function SpacePage() {
   const params = useParams();
@@ -275,9 +276,9 @@ export default function SpacePage() {
   console.log('currentModule', currentModule);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
+    <div className="relative min-h-screen w-full bg-slate-50 dark:bg-slate-900">
       {/* Header - Enhanced Design */}
-      <header className="fixed left-0 right-0 top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-lg shadow-sm dark:border-slate-800 dark:bg-slate-900/90">
+      <header className="fixed left-0 right-0 top-0 z-30 border-b border-slate-200 bg-white backdrop-blur-lg shadow-sm dark:border-slate-800 dark:bg-slate-900/90">
         <div className="mx-auto pl-[60px] lg:pl-[72px]">
           <div className="flex h-16 items-center px-6">
             {/* Left Section with Back Button and Title */}
@@ -330,7 +331,7 @@ export default function SpacePage() {
       {/* Main Content Layout */}
       <div className="grid h-[calc(100vh-4rem)] grid-cols-12 gap-6 px-6 pt-20">
         {/* Content Area - Enhanced Readability */}
-        <div className="col-span-8 h-full overflow-y-auto pb-8">
+        <div className="col-span-7 h-full overflow-y-auto pb-8">
           <div className="mx-auto max-w-3xl">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
@@ -364,28 +365,30 @@ export default function SpacePage() {
         </div>
 
         {/* Sidebar - Structured Interaction */}
-        <div className="col-span-4 h-full">
+        <div className="col-span-5 h-full">
           <div className="sticky top-[4rem] h-[calc(100vh-4rem)]">
-            <Card className="flex h-full flex-col border-slate-200 bg-white/50 shadow-sm backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/50">
+            <Card className="flex h-full flex-col border-slate-200 bg-white shadow-sm backdrop-blur-lg dark:border-slate-800 dark:bg-slate-900/50">
               {/* Navigation Tabs */}
               <Tabs defaultValue="modules" className="flex flex-col h-[calc(100%-300px)]">
-                <TabsList className="w-full justify-start gap-1 border-b border-slate-200 bg-slate-100 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/50">
-                  {[
-                    { value: 'modules', icon: Sparkles, label: 'Modules' },
-                    { value: 'knowledge', icon: BookOpen, label: 'Knowledge' },
-                    { value: 'todo', icon: ListChecks, label: 'Tasks' },
-                    { value: 'podcast', icon: MessageSquare, label: 'Podcast' },
-                  ].map((tab) => (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm dark:text-slate-300 dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100"
-                    >
-                      <tab.icon className="h-4 w-4" />
-                      <span>{tab.label}</span>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+                <ScrollArea className="w-full border-b border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50">
+                  <TabsList className="inline-flex h-12 px-4">
+                    {[
+                      { value: 'modules', icon: Sparkles, label: 'Modules' },
+                      { value: 'knowledge', icon: BookOpen, label: 'Knowledge' },
+                      { value: 'todo', icon: ListChecks, label: 'Tasks' },
+                      { value: 'podcast', icon: MessageSquare, label: 'Podcast' },
+                    ].map((tab) => (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm dark:text-slate-300 dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-slate-100"
+                      >
+                        <tab.icon className="h-4 w-4" />
+                        <span>{tab.label}</span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </ScrollArea>
 
                 {/* Tab Content */}
                 <div className="flex-1 overflow-y-auto">
