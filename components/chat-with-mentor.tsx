@@ -21,9 +21,11 @@ import { createClient } from '@/utils/supabase/client';
 
 interface ChatWithMentorProps {
   spaceId: string;
+  className?: string;
+  inputClassName?: string;
 }
 
-export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
+export function ChatWithMentor({ spaceId, className, inputClassName }: ChatWithMentorProps) {
   const supabase = createClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -171,7 +173,7 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
   }
 
   return (
-    <div className="flex h-full flex-col bg-slate-100 dark:bg-slate-900">
+    <div className={cn("flex h-full flex-col bg-slate-100 dark:bg-slate-900", className)}>
       {/* Chat Header */}
       <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-4 py-2 dark:border-slate-800 dark:bg-slate-800">
         <Bot className="h-5 w-5 text-slate-500 dark:text-slate-400" />
@@ -258,7 +260,10 @@ export function ChatWithMentor({ spaceId }: ChatWithMentorProps) {
             value={input}
             onChange={handleInputChange}
             placeholder="Ask your mentor anything..."
-            className="flex-1 bg-slate-100 border-slate-300 focus:border-slate-400 dark:bg-slate-700 dark:border-slate-600 dark:focus:border-slate-500 dark:placeholder:text-slate-400"
+            className={cn(
+              "flex-1 bg-slate-100 border-slate-300 focus:border-slate-400 dark:bg-slate-700 dark:border-slate-600 dark:focus:border-slate-500 dark:placeholder:text-slate-400",
+              inputClassName
+            )}
             disabled={isLoading}
           />
           <Button 

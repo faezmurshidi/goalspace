@@ -42,6 +42,16 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   children: React.ReactNode
 }
 
+interface NavItemProps {
+  label?: string;
+  href: string;
+  icon: React.ReactNode;
+  color?: string;
+  onClick?: () => void;
+  className?: string;
+  state?: 'default' | 'active';
+}
+
 // Add these new style variants above the AppSidebar component
 const sidebarVariants = cva(
   "fixed left-0 top-0 z-40 h-screen bg-background/95 backdrop-blur-lg border-r border-border/50",
@@ -181,8 +191,6 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
                   onGoalSelect={handleGoalSelect}
                   onCreateGoal={onCreateGoal}
                   initialGoalId={activeGoal?.id}
-                  compact={!isExpanded}
-                  hasMultipleGoals={hasMultipleGoals}
                 />
               </div>
 

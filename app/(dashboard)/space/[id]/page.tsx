@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpen, ListChecks, MessageSquare, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookOpen, ListChecks, MessageSquare, Sparkles, Check, ChevronRight, Loader2, X } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -285,8 +285,9 @@ export default function SpacePage() {
             <div className="flex items-center gap-5">
               <Button
                 variant="ghost"
+                size="icon"
                 onClick={() => router.back()}
-                className="rounded-full h-9 w-9 p-0 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="rounded-full p-0 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800"
                 aria-label="Go back"
               >
                 <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
@@ -418,11 +419,11 @@ export default function SpacePage() {
 
               {/* Persistent Chat Section */}
               <div className="h-[300px] border-t border-slate-200 dark:border-slate-800">
-                <ChatWithMentor 
-                  spaceId={spaceId}
-                  className="h-full overflow-y-auto"
-                  inputClassName="border-t-0 focus-within:ring-0"
-                />
+                <div className="h-full overflow-y-auto">
+                  <ChatWithMentor 
+                    spaceId={spaceId}
+                  />
+                </div>
               </div>
             </Card>
           </div>
