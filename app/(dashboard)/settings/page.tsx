@@ -13,6 +13,11 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/utils/supabase/client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useUser } from '@/lib/hooks/useUser';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { Progress } from '@/components/ui/progress';
+import { getSubscriptionFeatures } from '@/lib/utils/paywall';
 
 const settingsSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -24,8 +29,9 @@ const settingsSchema = z.object({
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 export default function SettingsPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const { profile, settings, apiUsage, subscription } = useUser();
   const supabase = createClient();
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
@@ -60,6 +66,28 @@ export default function SettingsPage() {
 
     loadSettings();
   }, [form]);
+
+  // Get subscription features based on current tier
+  const features = subscription ? 
+    getSubscriptionFeatures(subscription.subscription_type === 'enterprise' ? 'pro' : subscription.subscription_type as 'free' | 'basic' | 'pro') : 
+    getSubscriptionFeatures('free');
+  
+  // Calculate token usage percentage
+  const tokenUsagePercentage = apiUsage ? (apiUsage.api_calls_count / features.maxTokensPerMonth) * 100 : 0;
+
+  // Mock data for the charts - replace with real data from your API
+  const monthlyUsageData = [
+    { name: 'Week 1', tokens: 25000 },
+    { name: 'Week 2', tokens: 35000 },
+    { name: 'Week 3', tokens: 28000 },
+    { name: 'Week 4', tokens: 40000 },
+  ];
+
+  const modelUsageData = [
+    { name: 'GPT-3.5', usage: 45 },
+    { name: 'GPT-4', usage: 30 },
+    { name: 'Claude', usage: 25 },
+  ];
 
   async function onSubmit(data: SettingsFormValues) {
     setIsLoading(true);
@@ -103,123 +131,220 @@ export default function SettingsPage() {
 
       <Separator />
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Settings</CardTitle>
-            <CardDescription>
-              Update your profile information and preferences.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <FormField
-                  control={form.control}
-                  name="full_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your name" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        This is the name that will be displayed on your profile.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="theme_preference"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Theme Preference</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="billing">Usage & Billing</TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Settings</CardTitle>
+              <CardDescription>
+                Update your profile information and preferences.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                  <FormField
+                    control={form.control}
+                    name="full_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a theme" />
-                          </SelectTrigger>
+                          <Input placeholder="Enter your name" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="light">Light</SelectItem>
-                          <SelectItem value="dark">Dark</SelectItem>
-                          <SelectItem value="system">System</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Choose your preferred theme for the application.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="ai_model_preference"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Default AI Model</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an AI model" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                          <SelectItem value="gpt-4">GPT-4</SelectItem>
-                          <SelectItem value="claude-3">Claude 3</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Select your preferred AI model for generating content.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email_notifications"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          Email Notifications
-                        </FormLabel>
                         <FormDescription>
-                          Receive email notifications about your progress and updates.
+                          This is the name that will be displayed on your profile.
                         </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Saving...' : 'Save changes'}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </div>
+                  <FormField
+                    control={form.control}
+                    name="theme_preference"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Theme Preference</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a theme" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="light">Light</SelectItem>
+                            <SelectItem value="dark">Dark</SelectItem>
+                            <SelectItem value="system">System</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Choose your preferred theme for the application.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="ai_model_preference"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Default AI Model</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select an AI model" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                            <SelectItem value="gpt-4">GPT-4</SelectItem>
+                            <SelectItem value="claude-3">Claude 3</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Select your preferred AI model for generating content.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email_notifications"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            Email Notifications
+                          </FormLabel>
+                          <FormDescription>
+                            Receive email notifications about your progress and updates.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? 'Saving...' : 'Save changes'}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="billing">
+          <div className="grid gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Current Subscription</CardTitle>
+                <CardDescription>
+                  Your current plan and usage statistics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-medium">
+                      {subscription?.subscription_type.toUpperCase() || 'FREE'} Plan
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Billing period: {subscription?.start_date ? new Date(subscription.start_date).toLocaleDateString() : 'N/A'} 
+                      {subscription?.end_date ? ` - ${new Date(subscription.end_date).toLocaleDateString()}` : ''}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Token Usage</span>
+                      <span>{apiUsage?.api_calls_count.toLocaleString()} / {features.maxTokensPerMonth.toLocaleString()}</span>
+                    </div>
+                    <Progress value={tokenUsagePercentage} />
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">Monthly Token Usage</h4>
+                    <div className="h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={monthlyUsageData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Line type="monotone" dataKey="tokens" stroke="#2563eb" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">Model Usage Distribution</h4>
+                    <div className="h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={modelUsageData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="usage" fill="#2563eb" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">Plan Features</h4>
+                    <ul className="space-y-2">
+                      <li className="flex justify-between text-sm">
+                        <span>Max Spaces</span>
+                        <span>{features.maxSpaces}</span>
+                      </li>
+                      <li className="flex justify-between text-sm">
+                        <span>Monthly Tokens</span>
+                        <span>{features.maxTokensPerMonth.toLocaleString()}</span>
+                      </li>
+                      <li className="flex justify-between text-sm">
+                        <span>Available Models</span>
+                        <span>{features.allowedModels.join(', ')}</span>
+                      </li>
+                      <li className="flex justify-between text-sm">
+                        <span>Mentors per Space</span>
+                        <span>{features.maxMentorsPerSpace}</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {subscription?.subscription_type !== 'pro' && (
+                    <Button className="w-full">
+                      Upgrade Plan
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 } 

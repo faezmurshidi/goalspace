@@ -300,7 +300,7 @@ importers:
         specifier: ^15.6.1
         version: 15.6.1(react@18.3.1)
       recharts:
-        specifier: ^2.12.7
+        specifier: ^2.15.1
         version: 2.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rehype-highlight:
         specifier: ^7.0.1

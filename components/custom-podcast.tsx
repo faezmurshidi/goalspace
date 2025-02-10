@@ -177,13 +177,8 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
 
   const toggleMute = () => {
     if (!audioRef.current) return;
-    if (isMuted) {
-      audioRef.current.volume = volume;
-      setIsMuted(false);
-    } else {
-      audioRef.current.volume = 0;
-      setIsMuted(true);
-    }
+    setIsMuted(!isMuted);
+    audioRef.current.muted = !isMuted;
   };
 
   const handlePlayPause = (podcast?: Podcast) => {
@@ -200,6 +195,7 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
       audio.addEventListener('play', () => setIsPlaying(true));
       audio.addEventListener('pause', () => setIsPlaying(false));
       audio.addEventListener('ended', () => setIsPlaying(false));
+      audio.addEventListener('loadedmetadata', () => setDuration(audio.duration)); // Ensure duration is set
       
       // Setup visualization after a short delay to ensure audio element is ready
       setTimeout(() => {
@@ -255,11 +251,12 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
       setCurrentPodcast(savedPodcast);
       
       const audio = new Audio(newAudioUrl);
+      audioRef.current = audio;
       audio.addEventListener('play', () => setIsPlaying(true));
       audio.addEventListener('pause', () => setIsPlaying(false));
       audio.addEventListener('ended', () => setIsPlaying(false));
+      audio.addEventListener('loadedmetadata', () => setDuration(audio.duration)); // Ensure duration is set
 
-      audioRef.current = audio;
       setPodcastReady(true);
       audio.play();
     } catch (err) {
