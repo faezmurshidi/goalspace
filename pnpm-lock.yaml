@@ -360,6 +360,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.15
         version: 0.5.16(tailwindcss@3.3.3)
+      '@types/tailwindcss':
+        specifier: ^3.1.0
+        version: 3.1.0
       prettier:
         specifier: ^3.4.2
         version: 3.4.2
@@ -1769,6 +1772,10 @@ packages:
 
   '@types/stats.js@0.17.3':
     resolution: {integrity: sha512-pXNfAD3KHOdif9EQXZ9deK82HVNaXP5ZIF5RP2QG6OQFNTaY2YIetfrE9t528vEreGQvEPRDDc8muaoYeK0SxQ==}
+
+  '@types/tailwindcss@3.1.0':
+    resolution: {integrity: sha512-JxPzrm609hzvF4nmOI3StLjbBEP3WWQxDDJESqR1nh94h7gyyy3XSl0hn5RBMJ9mPudlLjtaXs5YEBtLw7CnPA==}
+    deprecated: This is a stub types definition. tailwindcss provides its own type definitions, so you do not need this installed.
 
   '@types/three@0.172.0':
     resolution: {integrity: sha512-LrUtP3FEG26Zg5WiF0nbg8VoXiKokBLTcqM2iLvM9vzcfEiYmmBAPGdBgV0OYx9fvWlY3R/3ERTZcD9X5sc0NA==}
@@ -6476,6 +6483,12 @@ snapshots:
   '@types/scheduler@0.23.0': {}
 
   '@types/stats.js@0.17.3': {}
+
+  '@types/tailwindcss@3.1.0':
+    dependencies:
+      tailwindcss: 3.3.3
+    transitivePeerDependencies:
+      - ts-node
 
   '@types/three@0.172.0':
     dependencies:
