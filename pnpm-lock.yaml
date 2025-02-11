@@ -119,9 +119,6 @@ importers:
       '@supabase/ssr':
         specifier: ^0.5.2
         version: 0.5.2(@supabase/supabase-js@2.48.1(bufferutil@4.0.9)(utf-8-validate@6.0.5))
-      '@supabase/supabase-js':
-        specifier: ^2.48.1
-        version: 2.48.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       '@tiptap/extension-code-block-lowlight':
         specifier: ^2.1.12
         version: 2.1.12(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/extension-code-block@2.11.5(@tiptap/core@2.11.5(@tiptap/pm@2.11.5))(@tiptap/pm@2.11.5))(@tiptap/pm@2.11.5)
@@ -246,7 +243,7 @@ importers:
         specifier: ^14.1.0
         version: 14.2.23(eslint@8.49.0)(typescript@5.7.3)
       framer-motion:
-        specifier: ^11.17.0
+        specifier: ^11.18.2
         version: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       input-otp:
         specifier: ^1.2.4
@@ -357,6 +354,9 @@ importers:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.4.0
         version: 4.4.1(prettier@3.4.2)
+      '@supabase/supabase-js':
+        specifier: ^2.48.1
+        version: 2.48.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       '@tailwindcss/typography':
         specifier: ^0.5.15
         version: 0.5.16(tailwindcss@3.3.3)

@@ -13,6 +13,7 @@ import {
   Target,
   User,
 } from 'lucide-react';
+import type { Session, SupabaseUser } from '@supabase/supabase-js';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -28,25 +29,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSpaceStore, type Space } from '@/lib/store';
 import { createClient } from '@/utils/supabase/client';
 import { cn } from '@/lib/utils';
+import { SpacesGrid } from '@/components/spaces-grid';
 
 export function GeneratedSpaces() {
   const router = useRouter();
   const { spaces, currentGoal } = useSpaceStore();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const generatedSpacesRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
+
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       setUser(session?.user ?? null);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
       setUser(session?.user ?? null);
     });
 
@@ -260,281 +263,7 @@ export function GeneratedSpaces() {
       </div>
 
       {/* Spaces Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {spaces.map((space, index) => (
-          <motion.div
-            key={space.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-          >
-            <Card
-              className={cn(
-                'group h-full overflow-hidden transition-all duration-500',
-                'border-primary/20 hover:border-primary/30',
-                'bg-gradient-to-br from-white via-white/80 to-background',
-                'hover:shadow-lg hover:shadow-primary/5',
-                'dark:from-gray-900/90 dark:via-gray-900/90 dark:to-background/90',
-                'dark:border-primary/10 dark:hover:border-primary/20',
-                'dark:hover:shadow-primary/10'
-              )}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1.5">
-                    <CardTitle className="flex items-center gap-2">
-                      {space.category === 'learning' ? (
-                        <Brain
-                          className={cn(
-                            'h-5 w-5 transition-colors',
-                            'text-purple-600 group-hover:text-purple-500',
-                            'dark:text-purple-300 dark:group-hover:text-purple-200'
-                          )}
-                        />
-                      ) : (
-                        <Target
-                          className={cn(
-                            'h-5 w-5 transition-colors',
-                            'text-cyan-600 group-hover:text-cyan-500',
-                            'dark:text-cyan-300 dark:group-hover:text-cyan-200'
-                          )}
-                        />
-                      )}
-                      <span
-                        className={cn(
-                          'bg-gradient-to-r bg-clip-text text-transparent transition-colors',
-                          'from-purple-600 to-cyan-600',
-                          'group-hover:from-purple-500 group-hover:to-cyan-500',
-                          'dark:from-purple-300 dark:to-cyan-300',
-                          'dark:group-hover:from-purple-200 dark:group-hover:to-cyan-200'
-                        )}
-                      >
-                        {space.title}
-                      </span>
-                    </CardTitle>
-                    <CardDescription
-                      className={cn(
-                        'transition-colors',
-                        'text-foreground/70 group-hover:text-foreground/90',
-                        'dark:text-foreground/60 dark:group-hover:text-foreground/80'
-                      )}
-                    >
-                      {space.description}
-                    </CardDescription>
-                  </div>
-                  <span
-                    className={cn(
-                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors',
-                      space.category === 'learning'
-                        ? [
-                            'bg-purple-100 text-purple-900 group-hover:bg-purple-200',
-                            'dark:bg-purple-500/20 dark:text-purple-200 dark:group-hover:bg-purple-500/30',
-                          ]
-                        : [
-                            'bg-cyan-100 text-cyan-900 group-hover:bg-cyan-200',
-                            'dark:bg-cyan-500/20 dark:text-cyan-200 dark:group-hover:bg-cyan-500/30',
-                          ]
-                    )}
-                  >
-                    {space.category.charAt(0).toUpperCase() + space.category.slice(1)}
-                  </span>
-                </div>
-              </CardHeader>
-
-              <CardContent>
-                <Tabs defaultValue="overview" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 bg-muted/50 dark:bg-muted/20">
-                    <TabsTrigger
-                      value="overview"
-                      className={cn(
-                        'transition-all',
-                        'data-[state=active]:bg-gradient-to-r',
-                        'data-[state=active]:from-purple-500/20 data-[state=active]:to-primary/20',
-                        'dark:data-[state=active]:from-purple-300/20 dark:data-[state=active]:to-primary/20',
-                        'text-foreground/70 hover:text-foreground data-[state=active]:text-foreground',
-                        'dark:text-foreground/60 dark:hover:text-foreground/90 dark:data-[state=active]:text-foreground'
-                      )}
-                    >
-                      Overview
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="mentor"
-                      className={cn(
-                        'transition-all',
-                        'data-[state=active]:bg-gradient-to-r',
-                        'data-[state=active]:from-primary/20 data-[state=active]:to-cyan-500/20',
-                        'dark:data-[state=active]:from-primary/20 dark:data-[state=active]:to-cyan-300/20',
-                        'text-foreground/70 hover:text-foreground data-[state=active]:text-foreground',
-                        'dark:text-foreground/60 dark:hover:text-foreground/90 dark:data-[state=active]:text-foreground'
-                      )}
-                    >
-                      AI Mentor
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="overview" className="mt-4 space-y-4">
-                    <div className="grid gap-4">
-                      {/* Objectives */}
-                      <div className="space-y-2">
-                        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground dark:text-foreground/90">
-                          <Sparkles
-                            className={cn('h-4 w-4', 'text-purple-600 dark:text-purple-300')}
-                          />
-                          Objectives
-                        </h3>
-                        <div
-                          className={cn(
-                            'rounded-md border p-4 transition-colors',
-                            'border-purple-100/50 bg-purple-50/50',
-                            'dark:border-purple-500/10 dark:bg-purple-500/5',
-                            'group-hover:border-purple-100 group-hover:bg-purple-50',
-                            'dark:group-hover:border-purple-500/20 dark:group-hover:bg-purple-500/10'
-                          )}
-                        >
-                          <ul className="space-y-2 text-sm">
-                            {space.objectives.map((objective, i) => (
-                              <li
-                                key={i}
-                                className={cn(
-                                  'transition-colors',
-                                  'text-foreground/80 group-hover:text-foreground',
-                                  'dark:text-foreground/70 dark:group-hover:text-foreground/90'
-                                )}
-                              >
-                                {objective}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-
-                      {/* Prerequisites */}
-                      <div className="space-y-2">
-                        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground dark:text-foreground/90">
-                          <ListChecks
-                            className={cn('h-4 w-4', 'text-cyan-600 dark:text-cyan-300')}
-                          />
-                          Prerequisites
-                        </h3>
-                        <div
-                          className={cn(
-                            'rounded-md border p-4 transition-colors',
-                            'border-cyan-100/50 bg-cyan-50/50',
-                            'dark:border-cyan-500/10 dark:bg-cyan-500/5',
-                            'group-hover:border-cyan-100 group-hover:bg-cyan-50',
-                            'dark:group-hover:border-cyan-500/20 dark:group-hover:bg-cyan-500/10'
-                          )}
-                        >
-                          <ul className="space-y-2 text-sm">
-                            {space.prerequisites.map((prerequisite, i) => (
-                              <li
-                                key={i}
-                                className={cn(
-                                  'transition-colors',
-                                  'text-foreground/80 group-hover:text-foreground',
-                                  'dark:text-foreground/70 dark:group-hover:text-foreground/90'
-                                )}
-                              >
-                                {prerequisite}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-
-                      {/* Time to Complete */}
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className={cn('h-4 w-4', 'text-purple-600 dark:text-purple-300')} />
-                        <span className="font-medium text-foreground dark:text-foreground/90">
-                          Time to Complete:
-                        </span>
-                        <span className="text-foreground/70 dark:text-foreground/60">
-                          {space.time_to_complete}
-                        </span>
-                      </div>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="mentor" className="mt-4">
-                    {space.mentor && (
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-4">
-                          <div
-                            className={cn(
-                              'rounded-full p-3',
-                              'bg-gradient-to-br from-purple-100 via-primary/10 to-cyan-100',
-                              'dark:from-purple-500/20 dark:via-primary/20 dark:to-cyan-500/20'
-                            )}
-                          >
-                            <User className="h-6 w-6 text-foreground dark:text-foreground/90" />
-                          </div>
-                          <div className="space-y-1">
-                            <h3
-                              className={cn(
-                                'bg-gradient-to-r bg-clip-text font-medium text-transparent',
-                                'from-purple-600 to-cyan-600',
-                                'dark:from-purple-300 dark:to-cyan-300'
-                              )}
-                            >
-                              {space.mentor.name}
-                            </h3>
-                            <p className="text-sm text-cyan-700 dark:text-cyan-300">
-                              {space.mentor.personality}
-                            </p>
-                          </div>
-                        </div>
-                        <div
-                          className={cn(
-                            'rounded-md border p-4 transition-colors',
-                            'bg-gradient-to-br from-purple-50/50 via-background to-cyan-50/50',
-                            'border-purple-100/50',
-                            'group-hover:from-purple-50 group-hover:to-cyan-50',
-                            'group-hover:border-purple-100/70',
-                            'dark:from-purple-500/5 dark:via-background dark:to-cyan-500/5',
-                            'dark:border-purple-500/10',
-                            'dark:group-hover:from-purple-500/10 dark:group-hover:to-cyan-500/10',
-                            'dark:group-hover:border-purple-500/20'
-                          )}
-                        >
-                          <p
-                            className={cn(
-                              'text-sm italic transition-colors',
-                              'text-foreground/80 group-hover:text-foreground',
-                              'dark:text-foreground/70 dark:group-hover:text-foreground/90'
-                            )}
-                          >
-                            &quot;{space.mentor.introduction}&quot;
-                          </p>
-                        </div>
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium text-foreground dark:text-foreground/90">
-                            Expertise
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {space.mentor.expertise.map((skill, i) => (
-                              <span
-                                key={i}
-                                className={cn(
-                                  'rounded-full px-2.5 py-0.5 text-xs transition-colors',
-                                  'bg-gradient-to-r from-purple-100/80 to-cyan-100/80',
-                                  'text-foreground hover:from-purple-200/90 hover:to-cyan-200/90',
-                                  'dark:from-purple-500/10 dark:to-cyan-500/10',
-                                  'dark:text-foreground/90 dark:hover:from-purple-500/20 dark:hover:to-cyan-500/20'
-                                )}
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+      <SpacesGrid spaces={spaces} />
 
       {/* Action Footer */}
       <motion.div
@@ -553,7 +282,6 @@ export function GeneratedSpaces() {
             {user ? 'Your goal will be saved to your dashboard' : 'Sign in to save your goal'}
           </p>
           <Button
-            size="lg"
             onClick={handleStartJourney}
             disabled={isSaving}
             className={cn(
