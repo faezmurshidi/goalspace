@@ -1,0 +1,111 @@
+# Web Development Guidelines
+
+## Tech Stack
+- Next.js 14 (App Router)
+- React 18 with TypeScript
+- Tailwind CSS for styling
+- Framer Motion for animations
+- Lucide Icons
+- shadcn/ui components
+
+## Design System
+- Color Palette:
+  - Primary: #2D2D2D (dark accent)
+  - Secondary: #969FA2 (text/icons)
+  - Neutral: #EBEBEB (borders)
+  - Background: #FFFFFF
+  - Hover States: #F5F5F5
+
+## Component Guidelines
+
+### State Management
+- Use React hooks for local state
+- Zustand for global state (useSpaceStore)
+- Prefer controlled components
+- Keep state as close to where it's used as possible
+
+### Styling
+- Use Tailwind CSS with consistent spacing
+- Utilize `cn()` utility for conditional classes
+- Follow mobile-first responsive design
+- Use semantic color variables
+- Maintain consistent border radius (rounded-xl, rounded-2xl)
+
+### Animation
+- Use Framer Motion for transitions
+- Keep animations subtle and purposeful
+- Use AnimatePresence for mount/unmount
+- Standard animation durations:
+  - Quick: 200ms
+  - Standard: 300ms
+  - Smooth: 500ms
+
+### Best Practices
+1. Component Structure:
+   ```tsx
+   'use client';
+   
+   // Imports
+   import { motion } from 'framer-motion';
+   import { cn } from '@/lib/utils';
+   
+   // Interfaces/Types
+   interface ComponentProps {
+     // ...
+   }
+   
+   // Component
+   export function Component() {
+     // State
+     // Handlers
+     // Effects
+     
+     return (
+       <motion.div>
+         {/* Content */}
+       </motion.div>
+     );
+   }
+   ```
+
+2. Form Handling:
+   - Use controlled inputs
+   - Implement proper loading states
+   - Show clear error messages
+   - Use proper HTML5 form validation
+
+3. Accessibility:
+   - Semantic HTML elements
+   - ARIA labels where needed
+   - Keyboard navigation support
+   - Color contrast compliance
+
+4. Performance:
+   - Lazy load components when possible
+   - Optimize images
+   - Minimize re-renders
+   - Use proper memoization
+
+### File Structure
+```
+components/
+  ui/          # Reusable UI components
+  layout/      # Layout components
+  features/    # Feature-specific components
+lib/
+  utils/       # Utility functions
+  store/       # State management
+  hooks/       # Custom hooks
+```
+
+## API Integration
+- Use fetch API for data fetching
+- Implement proper error handling
+- Show loading states during requests
+- Type all API responses
+
+## Testing
+- Unit tests for utilities
+- Component tests for UI
+- Integration tests for features
+- E2E tests for critical paths 

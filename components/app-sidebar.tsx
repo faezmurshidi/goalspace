@@ -15,6 +15,7 @@ import {
   Sun,
   Target,
   BookOpen,
+  Book,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
@@ -153,6 +154,12 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
       icon: theme === 'light' ? <Moon className="h-5 w-5 flex-shrink-0" /> : <Sun className="h-5 w-5 flex-shrink-0" />,
       onClick: () => setTheme(theme === 'light' ? 'dark' : 'light'),
       className: 'dark:text-amber-400 text-slate-800'
+    },
+    {
+      title: 'Blog',
+      href: '/blog',
+      icon: <Book className="h-5 w-5" />,
+      variant: 'ghost',
     },
   ], [theme, router])
 

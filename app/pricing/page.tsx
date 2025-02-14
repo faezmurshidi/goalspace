@@ -1,136 +1,126 @@
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 const plans = [
   {
-    name: 'Free',
-    description: 'Perfect for getting started with GoalSpace',
-    price: '£0',
+    name: 'Basic plan',
+    price: '$9',
+    period: 'per month',
+    description: 'For individuals or small teams starting their productivity journey.',
     features: [
-      'Basic goal-setting functionality with Faez',
-      'Access to one learning space at a time',
-      'Standard AI mentor support',
-      'Basic content modules',
-      'Limited progress-tracking features',
-      'Community support',
-      'Standard platform access',
-      '50 API requests per hour',
-      '10 Faez interactions per day',
-      '20 mentor interactions per day'
+      'Task Management',
+      'Unlimited Projects',
+      'Basic Analytics',
+      'Mobile App Access',
+      'Email Support'
     ],
-    buttonText: 'Get Started',
-    popular: false
+    buttonText: 'Get started',
+    variant: 'ghost'
   },
   {
-    name: 'Lite',
-    description: 'Great for serious learners',
-    price: '£9.99',
+    name: 'Business plan',
+    price: '$29',
+    period: 'per month',
+    description: 'Built for teams that need advanced features to collaborate and scale.',
     features: [
-      'All Free features, plus:',
-      'Up to three concurrent learning spaces',
-      'Enhanced mentor support',
-      'Interactive mindmaps & quizzes',
-      'Advanced progress-tracking',
-      'Priority support',
-      'Full platform access',
-      '500 API requests per hour',
-      '50 Faez interactions per day',
-      '100 mentor interactions per day'
+      'Team Collaboration Tools',
+      'Customizable Workflows',
+      'Advanced Reporting',
+      'Priority Support',
+      'Integrations with Popular Apps'
     ],
-    buttonText: 'Start Trial',
-    popular: true
+    buttonText: 'Upgrade to Business',
+    variant: 'accent'
   },
   {
-    name: 'Pro',
-    description: 'For power users and professionals',
-    price: '£19.99',
+    name: 'Enterprise plan',
+    price: '$149',
+    period: 'per month',
+    description: 'Built for large organizations with tailored needs and premium support.',
     features: [
-      'All Lite features, plus:',
-      'Unlimited learning spaces',
-      'Premium mentor support',
-      'Advanced content modules',
-      'Comprehensive analytics',
-      'Priority customer support',
-      'Third-party integrations',
-      'Early access to features',
-      'Unlimited AI interactions',
-      'Full Wolfram Alpha API access'
+      'Unlimited Team Members',
+      'Dedicated Account Manager',
+      'Custom Security Features',
+      'API Access for Custom Solutions',
+      'Onboarding & Training'
     ],
-    buttonText: 'Start Trial',
-    popular: false
+    buttonText: 'Upgrade to Enterprise',
+    variant: 'ghost'
   }
 ];
 
 export default function PricingPage() {
   return (
-    <div className="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-16">
-        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent sm:text-5xl">
-          Simple, transparent pricing
-        </h1>
-        <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
-          Choose the plan that best fits your learning journey
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50/50">
+      <div className="container max-w-6xl mx-auto py-24 px-4">
+        <div className="text-center space-y-2 mb-20">
+          <p className="text-sm text-[#969FA2] uppercase tracking-wide">PRICING</p>
+          <div className="space-y-1">
+            <h1 className="text-[2.5rem] font-medium tracking-tight text-[#2D2D2D]">
+              Choose the plan
+            </h1>
+            <h2 className="text-[2.5rem] font-medium tracking-tight text-[#2D2D2D]">
+              that fits your goals.
+            </h2>
+          </div>
+          <p className="mt-6 text-base text-[#969FA2]">
+            Choose the plan that fits your needs and scale your productivity with GoalSpace.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {plans.map((plan) => (
-          <Card 
-            key={plan.name}
-            className={`relative flex flex-col ${
-              plan.popular 
-                ? 'border-blue-500 shadow-lg scale-105' 
-                : 'border-gray-200'
-            }`}
-          >
-            {plan.popular && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  Most Popular
-                </span>
-              </div>
-            )}
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-              <CardDescription>{plan.description}</CardDescription>
-              <div className="mt-4">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="text-gray-600 dark:text-gray-400">/month</span>
-              </div>
-            </CardHeader>
-            <CardContent className="flex-1">
-              <ul className="space-y-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-700 dark:text-gray-300">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                className={`w-full ${
-                  plan.popular 
-                    ? 'bg-blue-500 hover:bg-blue-600' 
-                    : ''
-                }`}
-              >
-                {plan.buttonText}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={cn(
+                "group relative rounded-[1.5rem] transition-all duration-500",
+                "before:absolute before:inset-0 before:rounded-[1.5rem] before:bg-gradient-to-b before:from-white before:to-gray-50/90 before:backdrop-blur-xl",
+                "after:absolute after:inset-0 after:rounded-[1.5rem] after:shadow-[0_2px_20px_-2px_rgba(0,0,0,0.08)]"
+              )}
+            >
+              <div className="relative z-10 p-8 space-y-6">
+                {/* Plan Header */}
+                <div>
+                  <h3 className="text-[15px] font-medium text-[#2D2D2D]">
+                    {plan.name}
+                  </h3>
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-4xl font-semibold text-[#2D2D2D]">{plan.price}</span>
+                    <span className="text-sm text-[#969FA2]">{plan.period}</span>
+                  </div>
+                  <p className="mt-4 text-[13px] leading-relaxed text-[#969FA2]">
+                    {plan.description}
+                  </p>
+                </div>
 
-      <div className="mt-16 text-center">
-        <p className="text-gray-600 dark:text-gray-400">
-          All plans include a 14-day free trial. No credit card required.
-        </p>
-        <p className="mt-2 text-sm text-gray-500">
-          Need a custom plan? <a href="/contact" className="text-blue-500 hover:underline">Contact us</a>
-        </p>
+                {/* Features */}
+                <div className="space-y-3">
+                  {plan.features.map((feature) => (
+                    <div key={feature} className="flex items-center gap-3">
+                      <Check className="h-[14px] w-[14px] text-[#969FA2]" />
+                      <span className="text-[13px] text-[#969FA2]">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Button */}
+                <Button
+                  className={cn(
+                    'w-full h-11 text-[13px] font-normal rounded-xl transition-all duration-200',
+                    'border border-[#EBEBEB]/80',
+                    plan.variant === 'accent'
+                      ? 'bg-[#2D2D2D] text-white hover:bg-[#1A1A1A]'
+                      : 'bg-white text-[#2D2D2D] hover:bg-gray-50'
+                  )}
+                >
+                  {plan.buttonText}
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

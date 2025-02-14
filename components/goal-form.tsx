@@ -2,12 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, Sparkles, Wand2, BrainCircuit, Settings2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { QuestionCard } from '@/components/ui/question-card';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
@@ -28,7 +34,6 @@ export function GoalForm() {
   const [isAdvancedMode, setIsAdvancedMode] = useState(false);
   const [modelProvider, setModelProvider] = useState<'openai' | 'anthropic'>('openai');
   const [showGoalForm, setShowGoalForm] = useState(true);
-
   const { setSpaces, setCurrentGoal, setTodoStates } = useSpaceStore();
 
   const handleAnswerChange = (questionId: string, answer: string) => {
@@ -116,132 +121,161 @@ export function GoalForm() {
   };
 
   return (
-    <div className="relative">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-2xl mx-auto px-4 py-12"
+    >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {questions.length === 0 && (
-          <div className="flex flex-col gap-4">
-            <div className="group relative">
-              <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-rose-500/20 via-purple-500/20 to-cyan-500/20 opacity-75 blur transition duration-1000 group-hover:opacity-100 group-hover:duration-200" />
-              <Input
-                placeholder="Enter your goal (e.g., Learn Python for Data Science)"
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                className="relative h-14 border-border bg-background/50 text-lg shadow-lg ring-1 ring-border backdrop-blur-xl transition-all duration-300 focus:ring-2 focus:ring-purple-500/50"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4 shadow-lg backdrop-blur-xl">
-              <div className="flex items-center space-x-6">
-                <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-2">
-                  <Checkbox
-                    id="advanced-mode"
-                    checked={isAdvancedMode}
-                    onCheckedChange={(checked) => setIsAdvancedMode(checked as boolean)}
-                    className="border-border"
-                  />
-                  <label
-                    htmlFor="advanced-mode"
-                    className="flex cursor-pointer items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
-                  >
-                    <Wand2 className="h-4 w-4" />
-                    Advanced Mode
-                  </label>
-                </motion.div>
-
-                <div className="flex items-center space-x-6 border-l border-border pl-6">
-                  <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id="openai"
-                      value="openai"
-                      checked={modelProvider === 'openai'}
-                      onChange={(e) => setModelProvider(e.target.value as 'openai' | 'anthropic')}
-                      className="h-4 w-4 accent-purple-500"
-                    />
-                    <label
-                      htmlFor="openai"
-                      className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground"
-                    >
-                      GPT-3.5
-                    </label>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id="anthropic"
-                      value="anthropic"
-                      checked={modelProvider === 'anthropic'}
-                      onChange={(e) => setModelProvider(e.target.value as 'openai' | 'anthropic')}
-                      className="h-4 w-4 accent-cyan-500"
-                    />
-                    <label
-                      htmlFor="anthropic"
-                      className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground"
-                    >
-                      Claude
-                    </label>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {questions.length > 0 && (
-          <QuestionCard
-            questions={questions}
-            answers={answers}
-            onAnswerChange={handleAnswerChange}
-          />
-        )}
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{
-            opacity:
-              questions.length === 0 || Object.keys(answers).length === questions.length ? 1 : 0,
-            y: questions.length === 0 || Object.keys(answers).length === questions.length ? 0 : 20,
-          }}
-          transition={{ duration: 0.3 }}
-          className={cn(
-            questions.length > 0 && Object.keys(answers).length < questions.length && 'hidden'
-          )}
+        {/* Main Input Section */}
+        <motion.section 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative"
         >
-          <Button
-            type="submit"
+          {/* Settings Button */}
+          <div className="absolute right-3 top-3 z-10">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-full hover:bg-[#F5F5F5]"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsAdvancedMode(!isAdvancedMode);
+                    }}
+                  >
+                    <Settings2 className="h-4 w-4 text-[#969FA2]" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="left" 
+                  className="w-64 p-4 bg-white border-0 shadow-sm"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[#969FA2]">Advanced Mode</span>
+                      <Checkbox
+                        id="advanced-mode"
+                        checked={isAdvancedMode}
+                        onCheckedChange={(checked) => setIsAdvancedMode(checked as boolean)}
+                        className="border-[#EBEBEB] data-[state=checked]:bg-[#969FA2] data-[state=checked]:border-[#969FA2]"
+                      />
+                    </div>
+                    {isAdvancedMode && (
+                      <div className="space-y-2">
+                        <span className="text-xs text-[#969FA2]">AI Model</span>
+                        <div className="grid grid-cols-2 gap-2">
+                          {['openai', 'anthropic'].map((provider) => (
+                            <button
+                              key={provider}
+                              type="button"
+                              onClick={() => setModelProvider(provider as 'openai' | 'anthropic')}
+                              className={cn(
+                                'px-3 py-1.5 text-xs rounded-lg transition-all',
+                                modelProvider === provider
+                                  ? 'bg-[#F5F5F5] text-[#969FA2]'
+                                  : 'text-[#969FA2]/80 hover:bg-[#F5F5F5]'
+                              )}
+                            >
+                              {provider === 'openai' ? 'GPT-3.5' : 'Claude'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          {/* Main Input */}
+          <Textarea
+            placeholder="What would you like to learn or achieve? Be as specific as you can..."
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
             className={cn(
-              'h-14 w-full text-lg font-medium text-primary-foreground shadow-lg backdrop-blur-xl',
-              isAdvancedMode
-                ? 'border border-border bg-gradient-to-r from-blue-500/80 to-purple-500/80 hover:from-blue-500/90 hover:to-purple-500/90'
-                : 'border border-border bg-gradient-to-r from-emerald-500/80 to-cyan-500/80 hover:from-emerald-500/90 hover:to-cyan-500/90'
+              "w-full min-h-[140px] px-6 py-5 rounded-2xl",
+              "text-xl leading-relaxed resize-none",
+              "bg-white border border-[#EBEBEB]",
+              "placeholder:text-[#969FA2]/60",
+              "focus:outline-none focus:ring-1 focus:ring-[#EBEBEB]",
+              "transition-all duration-200"
             )}
             disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {questions.length === 0 ? 'Analyzing Goal...' : 'Generating Plan...'}
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                {questions.length === 0 ? 'Get AI Guidance' : 'Generate Learning Plan'}
-              </>
-            )}
-          </Button>
-        </motion.div>
+          />
+        </motion.section>
 
-        {error && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive backdrop-blur-xl"
-          >
-            {error}
-          </motion.div>
-        )}
+        {/* Question Cards */}
+        <AnimatePresence mode="wait">
+          {questions.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4"
+            >
+              <QuestionCard
+                questions={questions}
+                answers={answers}
+                onAnswerChange={handleAnswerChange}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Submit Button */}
+        <AnimatePresence mode="wait">
+          {(questions.length === 0 || Object.keys(answers).length === questions.length) && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <Button
+                type="submit"
+                className={cn(
+                  'w-full h-12 text-base rounded-xl transition-all duration-200',
+                  'bg-[#2D2D2D] hover:bg-[#1A1A1A]',
+                  'text-white font-normal',
+                  'disabled:opacity-50'
+                )}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">{questions.length === 0 ? 'Analyzing...' : 'Generating...'}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    <span className="text-sm">{questions.length === 0 ? 'Get Started' : 'Generate Plan'}</span>
+                  </div>
+                )}
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Error Message */}
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="px-4 py-3 rounded-xl bg-[#F5F5F5] text-sm text-[#969FA2]"
+            >
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </form>
-    </div>
+    </motion.div>
   );
 }
