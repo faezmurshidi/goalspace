@@ -4,9 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:staging": "NODE_ENV=staging next dev",
     "build": "next build",
+    "build:staging": "NODE_ENV=staging next build",
+    "build:production": "NODE_ENV=production next build",
     "start": "next start",
-    "lint": "next lint"
+    "start:staging": "NODE_ENV=staging next start",
+    "start:production": "NODE_ENV=production next start",
+    "lint": "next lint",
+    "deploy:development": "vercel",
+    "deploy:staging": "vercel --prod --environment=staging",
+    "deploy:production": "vercel --prod",
+    "vercel-build": "pnpm build"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.7",
@@ -44,7 +53,6 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.6",
     "@react-three/fiber": "^8.17.12",
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.5.2",
     "@tiptap/extension-code-block-lowlight": "^2.1.12",
     "@tiptap/extension-highlight": "^2.1.12",
@@ -74,8 +82,9 @@
     "@udecode/plate-list": "^42.2.2",
     "@udecode/plate-markdown": "^42.0.3",
     "@udecode/plate-paragraph": "^36.0.0",
+    "@upstash/rag-chat-component": "^0.2.2",
     "@vercel/kv": "^3.0.0",
-    "ai": "^4.1.9",
+    "ai": "^4.1.40",
     "autoprefixer": "10.4.15",
     "bufferutil": "^4.0.9",
     "class-variance-authority": "^0.7.1",
@@ -97,6 +106,7 @@
     "next-themes": "^0.3.0",
     "node-fetch": "^2.7.0",
     "openai": "^4.77.3",
+    "playwright": "^1.50.1",
     "postcss": "8.4.30",
     "react": "^18.2.0",
     "react-day-picker": "^8.10.1",
@@ -129,10 +139,11 @@
     "@supabase/supabase-js": "^2.48.1",
     "@tailwindcss/typography": "^0.5.15",
     "@types/tailwindcss": "^3.1.0",
+    "cursor-tools": "latest",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "supabase": "^2.2.1",
-    "cursor-tools": "latest"
+    "vercel": "^33.5.3"
   },
   "engines": {
     "node": ">=18.0.0",

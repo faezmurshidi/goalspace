@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "framework": "nextjs",
+  "buildCommand": "pnpm build",
+  "outputDirectory": ".next",
+  "git": {
+    "deploymentEnabled": {
+      "development": true
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_ENV": "development"
+  },
+  "github": {
+    "enabled": true,
+    "silent": true,
+    "autoAlias": false
+  },
+  "builds": [
+    {
+      "src": "next.config.js",
+      "use": "@vercel/next"
+    }
+  ],
+  "regions": ["sfo1"]
+} 
