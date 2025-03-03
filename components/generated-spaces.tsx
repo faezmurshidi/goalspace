@@ -11,9 +11,9 @@ import {
   Loader2,
   Sparkles,
   Target,
-  User,
+  User as UserIcon,
 } from 'lucide-react';
-import type { Session, SupabaseUser } from '@supabase/supabase-js';
+import type { Session, User } from '@supabase/supabase-js';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +36,7 @@ export function GeneratedSpaces() {
   const { spaces, currentGoal } = useSpaceStore();
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const generatedSpacesRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 

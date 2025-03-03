@@ -4,26 +4,21 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Brain,
-  ChevronDown,
-  ChevronUp,
   Clock,
   ListTodo,
   MessageSquare,
+  PlusCircle,
   Target,
   Trophy,
 } from 'lucide-react';
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-import { ChatWindow } from '@/components/chat-window';
-import { ActivityCard } from '@/components/ui/activity-card';
-import type { Goal, Metric } from '@/components/ui/activity-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Progress } from '@/components/ui/progress';
-import { getCurrentUser } from '@/lib/auth';
 import { useSpaceStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { SpacesGrid } from '@/components/spaces-grid';
 
 const mockData = [
   { name: 'Mon', value: 40 },
@@ -42,54 +37,80 @@ const mockTodos = [
   { id: '4', text: 'Read documentation', completed: false },
 ];
 
-export default function DashboardPage() {
+export default function DashboardPage({ stats }: { stats?: React.ReactNode }) {
   const router = useRouter();
-  const { spaces, goals, toggleSpaceCollapse, loadUserData } = useSpaceStore();
+  const { spaces, goals, loadUserData } = useSpaceStore();
   const [activeGoal, setActiveGoal] = useState<(typeof goals)[0] | undefined>();
 
   // Load user data and initialize active goal
   useEffect(() => {
-    loadUserData();
-    const lastActiveGoalId = localStorage.getItem('lastActiveGoalId');
-    if (lastActiveGoalId && goals.length > 0) {
-      const goal = goals.find((g) => g.id === lastActiveGoalId);
-      if (goal) {
-        setActiveGoal(goal);
+    const initialize = async () => {
+      await loadUserData();
+      const lastActiveGoalId = localStorage.getItem('lastActiveGoalId');
+      if (lastActiveGoalId && goals.length > 0) {
+        const goal = goals.find((g) => g.id === lastActiveGoalId);
+        if (goal) {
+          setActiveGoal(goal);
+        }
+      } else if (goals.length > 0) {
+        setActiveGoal(goals[0]);
       }
-    } else if (goals.length > 0) {
-      setActiveGoal(goals[0]);
-    }
+    };
+    
+    initialize();
   }, [loadUserData, goals]);
 
   // Filter spaces based on active goal
   const filteredSpaces = spaces.filter((space) => activeGoal?.spaces.includes(space.id));
 
-  if (!activeGoal) {
+  if (!activeGoal && goals.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Card>
-          <CardHeader>
-            <CardTitle>No Active Goal</CardTitle>
-            <CardDescription>Please select or create a goal to get started.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => router.push('/goals/new')}>Create New Goal</Button>
-          </CardContent>
-        </Card>
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <Button onClick={() => router.push('/goal')} className="gap-2">
+            <PlusCircle className="h-4 w-4" />
+            <span>New Goal</span>
+          </Button>
+        </div>
+        
+        {/* Show stats if provided via parallel route */}
+        {stats}
+        
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+          <h3 className="text-lg font-semibold">No goals yet</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Create your first goal to get started on your learning journey.
+          </p>
+          <Button onClick={() => router.push('/goal')} className="mt-4 gap-2">
+            <PlusCircle className="h-4 w-4" />
+            <span>New Goal</span>
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
-      {/* Bento Grid Layout */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Goal Overview Card */}
-        <Card className="col-span-full">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <Button onClick={() => router.push('/goal')} className="gap-2">
+          <PlusCircle className="h-4 w-4" />
+          <span>New Goal</span>
+        </Button>
+      </div>
+      
+      {/* Stats are rendered here from parallel route */}
+      {stats}
+      
+      {/* Goal Overview Card */}
+      {activeGoal && (
+        <Card className="w-full">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-2xl">{activeGoal.title}</CardTitle>
+                <CardTitle className="text-xl">{activeGoal.title}</CardTitle>
                 <CardDescription>{activeGoal.description}</CardDescription>
               </div>
               <div className="flex items-center gap-4">
@@ -104,148 +125,22 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
         </Card>
+      )}
 
-        {/* Progress Chart */}
-        <Card className="col-span-2 row-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              Weekly Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={mockData}>
-                  <XAxis
-                    dataKey="name"
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Todo List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ListTodo className="h-5 w-5 text-primary" />
-              Todo List
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockTodos.map((todo) => (
-                <div key={todo.id} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={todo.completed}
-                    className="h-4 w-4 rounded border-gray-300"
-                    onChange={() => {}}
-                  />
-                  <span
-                    className={cn(
-                      'text-sm',
-                      todo.completed && 'text-muted-foreground line-through'
-                    )}
-                  >
-                    {todo.text}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Learning Spaces Overview */}
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-primary" />
-              Learning Spaces
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {filteredSpaces.map((space) => (
-                <div
-                  key={space.id}
-                  className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                  onClick={() => router.push(`/space/${space.id}`)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {space.category === 'learning' ? (
-                    <Brain className="h-8 w-8" style={{ color: space.space_color?.main }} />
-                  ) : (
-                    <Target className="h-8 w-8" style={{ color: space.space_color?.main }} />
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-medium">{space.title}</h3>
-                    <div className="mt-2 flex items-center gap-2">
-                      <Progress value={space.progress || 0} className="flex-1" />
-                      <span className="text-sm">{Math.round(space.progress || 0)}%</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Chat */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" />
-              Quick Chat
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex h-[200px] items-center justify-center rounded-lg border-2 border-dashed">
-              <Button variant="outline" onClick={() => {}}>
-                Start a Chat
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Time Tracking */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" />
-              Time Tracking
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-2xl font-bold">12.5 hrs</div>
-              <div className="text-sm text-muted-foreground">Time spent this week</div>
-              <Progress value={65} className="w-full" />
-              <div className="text-sm text-muted-foreground">65% of weekly goal</div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Spaces Grid */}
+      {filteredSpaces.length > 0 ? (
+        <div>
+          <h2 className="font-semibold text-xl mb-4">Your Learning Spaces</h2>
+          <SpacesGrid spaces={filteredSpaces} />
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+          <h3 className="text-lg font-semibold">No spaces for this goal</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Add learning spaces to your goal to get started.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

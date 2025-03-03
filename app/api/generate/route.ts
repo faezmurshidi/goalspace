@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import fetch from 'node-fetch';
+import { withAuth, parseRequestBody } from '@/utils/supabase/middleware';
+import { User } from '@supabase/supabase-js';
 
 // Define our own request type to avoid conflicts
 interface ApiRequest {
@@ -89,12 +91,21 @@ async function generateWithPerplexity(prompt: string): Promise<string> {
   return content;
 }
 
-export async function POST(request: Request) {
+// Use the withAuth middleware to protect this route
+export const POST = withAuth(async (request: Request, user: User) => {
   try {
-    const { useCase, model, prompt } = (await request.json()) as ApiRequest;
+    const body = await parseRequestBody(request);
+    
+    if (!body) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    
+    const { useCase, model, prompt } = body as ApiRequest;
     const startTime = Date.now();
-
-   
+    
     // Generate content
     let content: string;
     switch (model) {
@@ -110,19 +121,20 @@ export async function POST(request: Request) {
       default:
         throw new Error(`Unsupported model: ${model}`);
     }
-
-   
-    return NextResponse.json({ 
+    
+    // Log usage for the authenticated user
+    console.log(`Generation completed for user ${user.id}, model: ${model}, useCase: ${useCase}`);
+    
+    return NextResponse.json({
       content,
+      userId: user.id, // Include user ID in response for potential auditing
     });
   } catch (error) {
     console.error('Error generating content:', error);
-
-  
-
+    
     return NextResponse.json(
       { error: 'Failed to generate content' },
       { status: 500 }
     );
   }
-} 
+});
