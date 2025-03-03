@@ -15,7 +15,9 @@
     "deploy:development": "vercel",
     "deploy:staging": "vercel --prod --environment=staging",
     "deploy:production": "vercel --prod",
-    "vercel-build": "pnpm build"
+    "vercel-build": "pnpm build",
+    "clean": "rm -rf .next && rm -rf node_modules/.cache",
+    "build:clean": "pnpm clean && pnpm build:production"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.7",
@@ -130,9 +132,10 @@
     "typescript": "^5.3.3",
     "utf-8-validate": "^6.0.5",
     "vaul": "^0.9.9",
+    "web-vitals": "^4.2.4",
     "ws": "^8.18.0",
     "zod": "^3.24.1",
-    "zustand": "^5.0.2"
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.4.0",
@@ -142,7 +145,7 @@
     "cursor-tools": "latest",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
-    "supabase": "^2.2.1",
+    "supabase": "^2.9.6",
     "vercel": "^33.5.3"
   },
   "engines": {

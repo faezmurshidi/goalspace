@@ -1,52 +1,51 @@
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 const plans = [
   {
-    name: 'Basic plan',
-    price: '$9',
-    period: 'per month',
-    description: 'For individuals or small teams starting their productivity journey.',
+    name: 'Free',
+    price: '$0',
+    period: 'forever',
+    description: 'Perfect for getting started with AI-powered goal achievement.',
     features: [
-      'Task Management',
-      'Unlimited Projects',
-      'Basic Analytics',
-      'Mobile App Access',
-      'Email Support'
+      'AI-powered goal analysis',
+      'Basic learning space',
+      'Standard AI mentor support',
+      'Community access',
+      'Mobile app access'
     ],
-    buttonText: 'Get started',
+    buttonText: 'Get Started',
     variant: 'ghost'
   },
   {
-    name: 'Business plan',
-    price: '$29',
+    name: 'Pro',
+    price: '$9',
     period: 'per month',
-    description: 'Built for teams that need advanced features to collaborate and scale.',
+    description: 'Enhanced features for serious learners and goal achievers.',
     features: [
-      'Team Collaboration Tools',
-      'Customizable Workflows',
-      'Advanced Reporting',
-      'Priority Support',
-      'Integrations with Popular Apps'
+      'Everything in Free, plus:',
+      'Multiple learning spaces',
+      'Advanced AI interactions',
+      'Priority mentor support',
+      'Progress analytics'
     ],
-    buttonText: 'Upgrade to Business',
+    buttonText: 'Upgrade to Pro',
     variant: 'accent'
   },
   {
-    name: 'Enterprise plan',
-    price: '$149',
+    name: 'Team',
+    price: '$29',
     period: 'per month',
-    description: 'Built for large organizations with tailored needs and premium support.',
+    description: 'Perfect for teams collaborating on learning goals.',
     features: [
-      'Unlimited Team Members',
-      'Dedicated Account Manager',
-      'Custom Security Features',
-      'API Access for Custom Solutions',
-      'Onboarding & Training'
+      'Everything in Pro, plus:',
+      'Team collaboration tools',
+      'Custom learning paths',
+      'Advanced analytics',
+      'Premium support'
     ],
-    buttonText: 'Upgrade to Enterprise',
+    buttonText: 'Start Team Plan',
     variant: 'ghost'
   }
 ];
@@ -59,14 +58,14 @@ export default function PricingPage() {
           <p className="text-sm text-[#969FA2] uppercase tracking-wide">PRICING</p>
           <div className="space-y-1">
             <h1 className="text-[2.5rem] font-medium tracking-tight text-[#2D2D2D]">
-              Choose the plan
+              Choose your learning
             </h1>
             <h2 className="text-[2.5rem] font-medium tracking-tight text-[#2D2D2D]">
-              that fits your goals.
+              journey today.
             </h2>
           </div>
           <p className="mt-6 text-base text-[#969FA2]">
-            Choose the plan that fits your needs and scale your productivity with GoalSpace.
+            Start achieving your goals with AI-powered guidance and structured learning spaces.
           </p>
         </div>
 
@@ -120,6 +119,12 @@ export default function PricingPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-16 text-center">
+          <p className="text-[13px] text-[#969FA2]">
+            All plans include a 14-day money-back guarantee. No questions asked.
+          </p>
         </div>
       </div>
     </div>

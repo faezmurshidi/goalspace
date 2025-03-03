@@ -30,6 +30,8 @@ yarn-error.log*
 
 # vercel
 .vercel
+.vercel.json
+.vercel.*.json
 
 # typescript
 *.tsbuildinfo
@@ -38,3 +40,10 @@ next-env.d.ts
 # IDE
 .vscode/
 .idea/
+
+# Environment files
+.env.local
+.env.*.local
+.env.development
+.env.staging
+.env.production
