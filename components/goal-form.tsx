@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Sparkles, Wand2, BrainCircuit, Settings2 } from 'lucide-react';
+import { Loader2, Sparkles, Zap, Brain, Settings } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,6 +22,59 @@ interface Question {
   id: string;
   question: string;
   purpose: string;
+}
+
+// New component for model selection with improved UI
+function ModelSelect({ 
+  value, 
+  onChange 
+}: { 
+  value: 'openai' | 'anthropic'; 
+  onChange: (value: 'openai' | 'anthropic') => void 
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-muted-foreground">AI Model</span>
+      </div>
+      <div className="grid grid-cols-2 gap-3 p-1 bg-muted/50 rounded-xl">
+        <button
+          type="button"
+          onClick={() => onChange('openai')}
+          className={cn(
+            "flex items-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all",
+            "hover:bg-background/80 hover:shadow-sm",
+            value === 'openai' 
+              ? "bg-background text-foreground shadow-sm" 
+              : "text-muted-foreground"
+          )}
+        >
+          <Zap className={cn("h-4 w-4", value === 'openai' ? "text-primary" : "text-muted-foreground")} />
+          <div className="flex flex-col items-start text-left">
+            <span>GPT-3.5</span>
+            <span className="text-xs font-normal text-muted-foreground">Fast responses</span>
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange('anthropic')}
+          className={cn(
+            "flex items-center gap-2 py-2.5 px-3 rounded-lg text-sm font-medium transition-all",
+            "hover:bg-background/80 hover:shadow-sm",
+            value === 'anthropic' 
+              ? "bg-background text-foreground shadow-sm" 
+              : "text-muted-foreground"
+          )}
+        >
+          <Brain className={cn("h-4 w-4", value === 'anthropic' ? "text-primary" : "text-muted-foreground")} />
+          <div className="flex flex-col items-start text-left">
+            <span>Claude</span>
+            <span className="text-xs font-normal text-muted-foreground">Detailed analysis</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function GoalForm() {
@@ -140,52 +193,34 @@ export function GoalForm() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 rounded-full hover:bg-[#F5F5F5]"
+                    className="h-7 w-7 rounded-full p-0 hover:bg-accent/50"
                     onClick={(e) => {
                       e.preventDefault();
                       setIsAdvancedMode(!isAdvancedMode);
                     }}
                   >
-                    <Settings2 className="h-4 w-4 text-[#969FA2]" />
+                    <Settings className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent 
                   side="left" 
-                  className="w-64 p-4 bg-white border-0 shadow-sm"
+                  className="w-72 p-4 bg-background border-border shadow-md"
                 >
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-[#969FA2]">Advanced Mode</span>
+                      <span className="text-sm font-medium text-foreground">Advanced Mode</span>
                       <Checkbox
                         id="advanced-mode"
                         checked={isAdvancedMode}
                         onCheckedChange={(checked) => setIsAdvancedMode(checked as boolean)}
-                        className="border-[#EBEBEB] data-[state=checked]:bg-[#969FA2] data-[state=checked]:border-[#969FA2]"
+                        className="text-primary border-input"
                       />
                     </div>
                     {isAdvancedMode && (
-                      <div className="space-y-2">
-                        <span className="text-xs text-[#969FA2]">AI Model</span>
-                        <div className="grid grid-cols-2 gap-2">
-                          {['openai', 'anthropic'].map((provider) => (
-                            <button
-                              key={provider}
-                              type="button"
-                              onClick={() => setModelProvider(provider as 'openai' | 'anthropic')}
-                              className={cn(
-                                'px-3 py-1.5 text-xs rounded-lg transition-all',
-                                modelProvider === provider
-                                  ? 'bg-[#F5F5F5] text-[#969FA2]'
-                                  : 'text-[#969FA2]/80 hover:bg-[#F5F5F5]'
-                              )}
-                            >
-                              {provider === 'openai' ? 'GPT-3.5' : 'Claude'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      <ModelSelect
+                        value={modelProvider}
+                        onChange={setModelProvider}
+                      />
                     )}
                   </div>
                 </TooltipContent>
@@ -201,9 +236,9 @@ export function GoalForm() {
             className={cn(
               "w-full min-h-[140px] px-6 py-5 rounded-2xl",
               "text-xl leading-relaxed resize-none",
-              "bg-white border border-[#EBEBEB]",
-              "placeholder:text-[#969FA2]/60",
-              "focus:outline-none focus:ring-1 focus:ring-[#EBEBEB]",
+              "bg-background border border-input",
+              "placeholder:text-muted-foreground/60",
+              "focus:outline-none focus:ring-1 focus:ring-primary/10",
               "transition-all duration-200"
             )}
             disabled={isLoading}
@@ -240,8 +275,8 @@ export function GoalForm() {
                 type="submit"
                 className={cn(
                   'w-full h-12 text-base rounded-xl transition-all duration-200',
-                  'bg-[#2D2D2D] hover:bg-[#1A1A1A]',
-                  'text-white font-normal',
+                  'bg-primary hover:bg-primary/90',
+                  'text-primary-foreground font-medium',
                   'disabled:opacity-50'
                 )}
                 disabled={isLoading}
@@ -269,7 +304,7 @@ export function GoalForm() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="px-4 py-3 rounded-xl bg-[#F5F5F5] text-sm text-[#969FA2]"
+              className="px-4 py-3 rounded-xl bg-destructive/10 text-sm text-destructive"
             >
               {error}
             </motion.div>
