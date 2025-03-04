@@ -1,36 +1,51 @@
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { createClient } from './server';
 
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
-import { type NextRequest, NextResponse } from "next/server";
+/**
+ * Middleware to handle authentication for API routes
+ * @param handler The route handler function
+ * @returns A new handler function with authentication
+ */
+export function withAuth(handler: Function) {
+  return async (request: Request) => {
+    try {
+      // Create server-side Supabase client with cookies
+      const cookieStore = cookies();
+      const supabase = createClient(cookieStore);
 
-export const createClient = (request: NextRequest) => {
-  // Create an unmodified response
-  let supabaseResponse = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+      // Verify authentication
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    },
-  );
+      // Call the original handler with authenticated user and supabase client
+      return handler(request, user, supabase);
+    } catch (error) {
+      console.error('Authentication error:', error);
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
+    }
+  };
+}
 
-  return supabaseResponse
-};
-
+/**
+ * Utility function to safely parse JSON request body with error handling
+ * @param request The request object
+ * @returns Parsed request body or null if parsing fails
+ */
+export async function parseRequestBody(request: Request) {
+  try {
+    return await request.json();
+  } catch (error) {
+    console.error('Error parsing request body:', error);
+    return null;
+  }
+}

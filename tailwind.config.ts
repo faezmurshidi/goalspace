@@ -9,6 +9,7 @@ const config = {
     './src/**/*.{js,jsx,ts,tsx,mdx}',
     './lib/**/*.{js,jsx,ts,tsx,mdx}',
     './utils/**/*.{js,jsx,ts,tsx,mdx}',
+    './node_modules/@upstash/rag-chat-component/**/*.{js,mjs}',
   ],
   prefix: '',
   theme: {

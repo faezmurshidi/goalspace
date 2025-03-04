@@ -1,23 +1,26 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { withAuth, parseRequestBody } from '@/utils/supabase/middleware';
+import { User } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 
-// Initialize regular Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export async function POST(request: Request) {
+// Use the withAuth middleware to protect this route and get authenticated user
+export const POST = withAuth(async (request: Request, user: User, supabase: SupabaseClient) => {
   try {
-    const { goal, userId } = await request.json();
+    const body = await parseRequestBody(request);
     
-    if (!userId) {
+    if (!body || !body.goal) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Goal data is required' },
         { status: 400 }
       );
     }
-
-    // Insert goal using regular client
+    
+    const { goal } = body;
+    
+    // Use the authenticated user's ID directly from the session
+    const userId = user.id;
+    
+    // Insert goal using the provided authenticated supabase client
     const { data: goalData, error: goalInsertError } = await supabase
       .from('goals')
       .insert({
@@ -30,7 +33,7 @@ export async function POST(request: Request) {
       })
       .select()
       .single();
-
+    
     if (goalInsertError) {
       console.error('Goal insert error:', goalInsertError);
       return NextResponse.json(
@@ -38,7 +41,7 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
+    
     return NextResponse.json({ success: true, goal: goalData });
   } catch (error) {
     console.error('Error in goal creation:', error);
@@ -47,4 +50,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+});

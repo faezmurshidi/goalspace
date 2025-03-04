@@ -1,0 +1,1198 @@
+
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+
+CREATE EXTENSION IF NOT EXISTS "pgsodium";
+
+
+
+
+
+
+
+
+ALTER SCHEMA "public" OWNER TO "postgres";
+
+
+CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "pgjwt" WITH SCHEMA "extensions";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+
+
+
+
+
+
+CREATE EXTENSION IF NOT EXISTS "vector" WITH SCHEMA "public";
+
+
+
+
+
+
+CREATE TYPE "public"."document_type" AS ENUM (
+    'guide',
+    'note',
+    'resource',
+    'system'
+);
+
+
+ALTER TYPE "public"."document_type" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."goal_status" AS ENUM (
+    'active',
+    'paused',
+    'completed',
+    'archived'
+);
+
+
+ALTER TYPE "public"."goal_status" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."task_status" AS ENUM (
+    'pending',
+    'in_progress',
+    'blocked',
+    'completed'
+);
+
+
+ALTER TYPE "public"."task_status" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."theme_type" AS ENUM (
+    'dark',
+    'light',
+    'system'
+);
+
+
+ALTER TYPE "public"."theme_type" OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."get_chat_history"("p_space_id" "uuid", "p_limit" integer DEFAULT 50, "p_offset" integer DEFAULT 0) RETURNS TABLE("id" "uuid", "space_id" "uuid", "user_id" "uuid", "role" "text", "content" "text", "is_faez" boolean, "metadata" "jsonb", "created_at" timestamp with time zone)
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        cm.id,
+        cm.space_id,
+        cm.user_id,
+        cm.role,
+        cm.content,
+        cm.is_faez,
+        cm.metadata,
+        cm.created_at
+    FROM public.chat_messages cm
+    WHERE cm.space_id = p_space_id
+    AND EXISTS (
+        SELECT 1 FROM public.spaces s
+        JOIN public.goals g ON s.goal_id = g.id
+        WHERE s.id = cm.space_id
+        AND g.user_id = (SELECT auth.uid())
+    )
+    ORDER BY cm.created_at DESC
+    LIMIT p_limit
+    OFFSET p_offset;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."get_chat_history"("p_space_id" "uuid", "p_limit" integer, "p_offset" integer) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."match_documents"("query_embedding" "public"."vector", "match_threshold" double precision, "match_count" integer) RETURNS TABLE("id" "uuid", "document_id" "uuid", "content" "text", "similarity" double precision)
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    de.id,
+    de.document_id,
+    de.content,
+    1 - (de.embedding <=> query_embedding) as similarity
+  FROM document_embeddings de
+  WHERE 1 - (de.embedding <=> query_embedding) > match_threshold
+  ORDER BY similarity DESC
+  LIMIT match_count;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."match_documents"("query_embedding" "public"."vector", "match_threshold" double precision, "match_count" integer) OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."update_updated_at_column"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+BEGIN
+    NEW.updated_at = timezone('utc'::text, now());
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_updated_at_column"() OWNER TO "postgres";
+
+SET default_tablespace = '';
+
+SET default_table_access_method = "heap";
+
+
+CREATE TABLE IF NOT EXISTS "public"."blog_posts" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "title" "text" NOT NULL,
+    "description" "text",
+    "content" "text" NOT NULL,
+    "author_name" "text" NOT NULL,
+    "category" "text",
+    "tags" "text"[] DEFAULT ARRAY[]::"text"[],
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    CONSTRAINT "content_not_empty" CHECK (("content" <> ''::"text")),
+    CONSTRAINT "tags_limit" CHECK (("array_length"("tags", 1) <= 10)),
+    CONSTRAINT "title_length" CHECK ((("char_length"("title") >= 1) AND ("char_length"("title") <= 128)))
+);
+
+
+ALTER TABLE "public"."blog_posts" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."blog_posts" IS 'Blog posts table for storing articles and content.';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."chat_messages" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "space_id" "uuid" NOT NULL,
+    "content" "text" NOT NULL,
+    "role" "text" NOT NULL,
+    "metadata" "jsonb" DEFAULT '{}'::"jsonb",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "chat_messages_role_check" CHECK (("role" = ANY (ARRAY['user'::"text", 'assistant'::"text", 'system'::"text"])))
+);
+
+
+ALTER TABLE "public"."chat_messages" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."document_embeddings" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "document_id" "uuid" NOT NULL,
+    "content" "text" NOT NULL,
+    "embedding" "public"."vector"(1536),
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."document_embeddings" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."documents" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "space_id" "uuid" NOT NULL,
+    "title" "text" NOT NULL,
+    "content" "text" NOT NULL,
+    "type" "text" NOT NULL,
+    "tags" "text"[] DEFAULT '{}'::"text"[],
+    "metadata" "jsonb" DEFAULT '{}'::"jsonb",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    CONSTRAINT "documents_type_check" CHECK (("type" = ANY (ARRAY['tutorial'::"text", 'guide'::"text", 'reference'::"text", 'exercise'::"text"])))
+);
+
+
+ALTER TABLE "public"."documents" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."goals" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "title" "text" NOT NULL,
+    "description" "text",
+    "category" "text",
+    "progress" integer DEFAULT 0,
+    "status" "public"."goal_status" DEFAULT 'active'::"public"."goal_status",
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    CONSTRAINT "category_format" CHECK (("category" ~ '^[a-z_]+$'::"text")),
+    CONSTRAINT "description_length" CHECK (("char_length"("description") <= 1024)),
+    CONSTRAINT "progress_range" CHECK ((("progress" >= 0) AND ("progress" <= 100))),
+    CONSTRAINT "title_length" CHECK ((("char_length"("title") >= 1) AND ("char_length"("title") <= 128)))
+);
+
+
+ALTER TABLE "public"."goals" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."goals" IS 'Goals table for tracking user objectives and progress.';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."modules" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "space_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "title" "text" NOT NULL,
+    "content" "text" NOT NULL,
+    "order_index" integer DEFAULT 0,
+    "is_completed" boolean DEFAULT false,
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "description" "text",
+    "learning_outcomes" "text"[] DEFAULT '{}'::"text"[]
+);
+
+
+ALTER TABLE "public"."modules" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."podcasts" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "space_id" "uuid" NOT NULL,
+    "title" "text" NOT NULL,
+    "audio_url" "text" NOT NULL,
+    "module_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL
+);
+
+
+ALTER TABLE "public"."podcasts" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."spaces" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "goal_id" "uuid",
+    "user_id" "uuid" NOT NULL,
+    "title" "text" NOT NULL,
+    "description" "text",
+    "category" "text",
+    "progress" integer DEFAULT 0,
+    "objectives" "jsonb" DEFAULT '{}'::"jsonb",
+    "prerequisites" "jsonb" DEFAULT '{}'::"jsonb",
+    "mentor" "jsonb" DEFAULT '{}'::"jsonb",
+    "space_color" "jsonb" DEFAULT '{}'::"jsonb",
+    "order_index" integer DEFAULT 0,
+    "mentor_type" "text",
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    CONSTRAINT "category_format" CHECK (("category" ~ '^[a-z_]+$'::"text")),
+    CONSTRAINT "color_theme_json" CHECK (("space_color" ?& ARRAY['primary'::"text", 'secondary'::"text"])),
+    CONSTRAINT "description_length" CHECK (("char_length"("description") <= 1024)),
+    CONSTRAINT "mentor_json" CHECK (("mentor" ?& ARRAY['name'::"text", 'type'::"text"])),
+    CONSTRAINT "objectives_array" CHECK (("jsonb_array_length"("objectives") > 0)),
+    CONSTRAINT "progress_range" CHECK ((("progress" >= 0) AND ("progress" <= 100))),
+    CONSTRAINT "title_length" CHECK ((("char_length"("title") >= 1) AND ("char_length"("title") <= 128)))
+);
+
+
+ALTER TABLE "public"."spaces" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."spaces" IS 'Spaces table for organizing content and goals.';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."tasks" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "space_id" "uuid" NOT NULL,
+    "title" "text" NOT NULL,
+    "description" "text",
+    "status" "public"."task_status" DEFAULT 'pending'::"public"."task_status",
+    "due_date" timestamp with time zone,
+    "priority" "text" DEFAULT 'medium'::"text",
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "user_id" "uuid",
+    CONSTRAINT "description_length" CHECK (("char_length"("description") <= 512)),
+    CONSTRAINT "reasonable_dates" CHECK (("due_date" > "created_at")),
+    CONSTRAINT "title_length" CHECK ((("char_length"("title") >= 1) AND ("char_length"("title") <= 128)))
+);
+
+
+ALTER TABLE "public"."tasks" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."tasks" IS 'Tasks table for tracking tasks within spaces.';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."user_settings" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "theme" "text" DEFAULT 'dark'::"text" NOT NULL,
+    "api_calls_count" integer DEFAULT 0,
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL
+);
+
+
+ALTER TABLE "public"."user_settings" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."users" (
+    "id" "uuid" NOT NULL,
+    "email" "text" NOT NULL,
+    "full_name" "text",
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL
+);
+
+
+ALTER TABLE "public"."users" OWNER TO "postgres";
+
+
+ALTER TABLE ONLY "public"."blog_posts"
+    ADD CONSTRAINT "blog_posts_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."chat_messages"
+    ADD CONSTRAINT "chat_messages_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."document_embeddings"
+    ADD CONSTRAINT "document_embeddings_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."documents"
+    ADD CONSTRAINT "documents_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."goals"
+    ADD CONSTRAINT "goals_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."modules"
+    ADD CONSTRAINT "modules_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."podcasts"
+    ADD CONSTRAINT "podcasts_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."spaces"
+    ADD CONSTRAINT "spaces_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."tasks"
+    ADD CONSTRAINT "tasks_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."user_settings"
+    ADD CONSTRAINT "user_settings_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."user_settings"
+    ADD CONSTRAINT "user_settings_user_id_key" UNIQUE ("user_id");
+
+
+
+ALTER TABLE ONLY "public"."users"
+    ADD CONSTRAINT "users_email_key" UNIQUE ("email");
+
+
+
+ALTER TABLE ONLY "public"."users"
+    ADD CONSTRAINT "users_pkey" PRIMARY KEY ("id");
+
+
+
+CREATE INDEX "blog_posts_author_name_idx" ON "public"."blog_posts" USING "btree" ("author_name");
+
+
+
+CREATE INDEX "blog_posts_category_idx" ON "public"."blog_posts" USING "btree" ("category");
+
+
+
+CREATE INDEX "blog_posts_created_at_idx" ON "public"."blog_posts" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "document_embeddings_embedding_idx" ON "public"."document_embeddings" USING "ivfflat" ("embedding" "public"."vector_cosine_ops") WITH ("lists"='100');
+
+
+
+CREATE INDEX "goals_created_at_idx" ON "public"."goals" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "goals_user_id_idx" ON "public"."goals" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "idx_chat_messages_created_at" ON "public"."chat_messages" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "idx_chat_messages_space_id" ON "public"."chat_messages" USING "btree" ("space_id");
+
+
+
+CREATE INDEX "idx_modules_order_index" ON "public"."modules" USING "btree" ("order_index");
+
+
+
+CREATE INDEX "idx_modules_space_id" ON "public"."modules" USING "btree" ("space_id");
+
+
+
+CREATE INDEX "podcasts_created_at_idx" ON "public"."podcasts" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "podcasts_module_id_idx" ON "public"."podcasts" USING "btree" ("module_id");
+
+
+
+CREATE INDEX "podcasts_space_id_idx" ON "public"."podcasts" USING "btree" ("space_id");
+
+
+
+CREATE INDEX "spaces_created_at_idx" ON "public"."spaces" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "spaces_goal_id_idx" ON "public"."spaces" USING "btree" ("goal_id");
+
+
+
+CREATE INDEX "spaces_user_id_idx" ON "public"."spaces" USING "btree" ("user_id");
+
+
+
+CREATE INDEX "tasks_created_at_idx" ON "public"."tasks" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "tasks_due_date_idx" ON "public"."tasks" USING "btree" ("due_date");
+
+
+
+CREATE INDEX "tasks_space_id_idx" ON "public"."tasks" USING "btree" ("space_id");
+
+
+
+CREATE INDEX "tasks_status_idx" ON "public"."tasks" USING "btree" ("status");
+
+
+
+CREATE OR REPLACE TRIGGER "update_chat_messages_updated_at" BEFORE UPDATE ON "public"."chat_messages" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_document_embeddings_updated_at" BEFORE UPDATE ON "public"."document_embeddings" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_documents_updated_at" BEFORE UPDATE ON "public"."documents" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_modules_updated_at" BEFORE UPDATE ON "public"."modules" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_podcasts_updated_at" BEFORE UPDATE ON "public"."podcasts" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_user_settings_updated_at" BEFORE UPDATE ON "public"."user_settings" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_users_updated_at" BEFORE UPDATE ON "public"."users" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+ALTER TABLE ONLY "public"."document_embeddings"
+    ADD CONSTRAINT "document_embeddings_document_id_fkey" FOREIGN KEY ("document_id") REFERENCES "public"."documents"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."documents"
+    ADD CONSTRAINT "documents_space_id_fkey" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."spaces"
+    ADD CONSTRAINT "fk_goal" FOREIGN KEY ("goal_id") REFERENCES "public"."goals"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."chat_messages"
+    ADD CONSTRAINT "fk_space" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."modules"
+    ADD CONSTRAINT "modules_space_id_fkey" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."modules"
+    ADD CONSTRAINT "modules_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."podcasts"
+    ADD CONSTRAINT "podcasts_module_id_fkey" FOREIGN KEY ("module_id") REFERENCES "public"."modules"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."podcasts"
+    ADD CONSTRAINT "podcasts_space_id_fkey" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tasks"
+    ADD CONSTRAINT "tasks_space_id_fkey" FOREIGN KEY ("space_id") REFERENCES "public"."spaces"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."tasks"
+    ADD CONSTRAINT "tasks_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."user_settings"
+    ADD CONSTRAINT "user_settings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."users"
+    ADD CONSTRAINT "users_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+
+CREATE POLICY "Allow individual read access" ON "public"."users" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") = "id"));
+
+
+
+CREATE POLICY "Allow individual update access" ON "public"."users" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") = "id")) WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "id"));
+
+
+
+CREATE POLICY "Allow signup" ON "public"."users" FOR INSERT WITH CHECK (true);
+
+
+
+CREATE POLICY "Authenticated users can create blog posts." ON "public"."blog_posts" FOR INSERT TO "authenticated" WITH CHECK (true);
+
+
+
+CREATE POLICY "Blog posts are viewable by anonymous users." ON "public"."blog_posts" FOR SELECT TO "anon" USING (true);
+
+
+
+CREATE POLICY "Blog posts are viewable by authenticated users." ON "public"."blog_posts" FOR SELECT TO "authenticated" USING (true);
+
+
+
+CREATE POLICY "Enable delete access for authenticated users" ON "public"."modules" FOR DELETE TO "authenticated" USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Enable insert access for authenticated users" ON "public"."modules" FOR INSERT TO "authenticated" WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Enable read access for authenticated users" ON "public"."modules" FOR SELECT TO "authenticated" USING (true);
+
+
+
+CREATE POLICY "Enable update access for authenticated users" ON "public"."modules" FOR UPDATE TO "authenticated" USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can create goals." ON "public"."goals" FOR INSERT TO "authenticated" WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can create own settings" ON "public"."user_settings" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "Users can create spaces." ON "public"."spaces" FOR INSERT TO "authenticated" WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can delete messages in their spaces" ON "public"."chat_messages" FOR DELETE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM ("public"."spaces" "s"
+     JOIN "public"."goals" "g" ON (("s"."goal_id" = "g"."id")))
+  WHERE (("s"."id" = "chat_messages"."space_id") AND ("g"."user_id" = "auth"."uid"())))));
+
+
+
+CREATE POLICY "Users can delete their own blog posts." ON "public"."blog_posts" FOR DELETE TO "authenticated" USING (("auth"."uid"() IN ( SELECT "users"."id"
+   FROM "auth"."users"
+  WHERE (("users"."raw_user_meta_data" ->> 'full_name'::"text") = "blog_posts"."author_name"))));
+
+
+
+CREATE POLICY "Users can delete their own chat messages" ON "public"."chat_messages" FOR DELETE USING ((EXISTS ( SELECT 1
+   FROM "public"."spaces"
+  WHERE (("spaces"."id" = "chat_messages"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals"
+          WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can delete their own documents" ON "public"."documents" FOR DELETE USING ((EXISTS ( SELECT 1
+   FROM "public"."spaces"
+  WHERE (("spaces"."id" = "documents"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals"
+          WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can delete their own goals." ON "public"."goals" FOR DELETE TO "authenticated" USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can delete their own space podcasts" ON "public"."podcasts" FOR DELETE TO "authenticated" USING (("space_id" IN ( SELECT "s"."id"
+   FROM ("public"."spaces" "s"
+     JOIN "public"."goals" "g" ON (("s"."goal_id" = "g"."id")))
+  WHERE ("g"."user_id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can delete their own spaces." ON "public"."spaces" FOR DELETE TO "authenticated" USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can insert chat messages in their spaces" ON "public"."chat_messages" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."spaces"
+  WHERE (("spaces"."id" = "chat_messages"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals"
+          WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can insert messages in their spaces" ON "public"."chat_messages" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
+   FROM ("public"."spaces" "s"
+     JOIN "public"."goals" "g" ON (("s"."goal_id" = "g"."id")))
+  WHERE (("s"."id" = "chat_messages"."space_id") AND ("g"."user_id" = "auth"."uid"())))));
+
+
+
+CREATE POLICY "Users can insert tasks in own spaces" ON "public"."tasks" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."spaces" "s"
+  WHERE (("s"."id" = "tasks"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals" "g"
+          WHERE (("g"."id" = "s"."goal_id") AND ("g"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can insert their own document embeddings" ON "public"."document_embeddings" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."documents"
+  WHERE (("documents"."id" = "document_embeddings"."document_id") AND (EXISTS ( SELECT 1
+           FROM "public"."spaces"
+          WHERE (("spaces"."id" = "documents"."space_id") AND (EXISTS ( SELECT 1
+                   FROM "public"."goals"
+                  WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"())))))))))));
+
+
+
+CREATE POLICY "Users can insert their own documents" ON "public"."documents" FOR INSERT WITH CHECK ((EXISTS ( SELECT 1
+   FROM "public"."spaces"
+  WHERE (("spaces"."id" = "documents"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals"
+          WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can insert their own space podcasts" ON "public"."podcasts" FOR INSERT TO "authenticated" WITH CHECK (("space_id" IN ( SELECT "s"."id"
+   FROM ("public"."spaces" "s"
+     JOIN "public"."goals" "g" ON (("s"."goal_id" = "g"."id")))
+  WHERE ("g"."user_id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can read their own space podcasts" ON "public"."podcasts" FOR SELECT TO "authenticated" USING (("space_id" IN ( SELECT "s"."id"
+   FROM ("public"."spaces" "s"
+     JOIN "public"."goals" "g" ON (("s"."goal_id" = "g"."id")))
+  WHERE ("g"."user_id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can update messages in their spaces" ON "public"."chat_messages" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM ("public"."spaces" "s"
+     JOIN "public"."goals" "g" ON (("s"."goal_id" = "g"."id")))
+  WHERE (("s"."id" = "chat_messages"."space_id") AND ("g"."user_id" = "auth"."uid"())))));
+
+
+
+CREATE POLICY "Users can update own settings" ON "public"."user_settings" FOR UPDATE USING ((( SELECT "auth"."uid"() AS "uid") = "user_id")) WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "Users can update their own blog posts." ON "public"."blog_posts" FOR UPDATE TO "authenticated" USING (("auth"."uid"() IN ( SELECT "users"."id"
+   FROM "auth"."users"
+  WHERE (("users"."raw_user_meta_data" ->> 'full_name'::"text") = "blog_posts"."author_name")))) WITH CHECK (("auth"."uid"() IN ( SELECT "users"."id"
+   FROM "auth"."users"
+  WHERE (("users"."raw_user_meta_data" ->> 'full_name'::"text") = "blog_posts"."author_name"))));
+
+
+
+CREATE POLICY "Users can update their own chat messages" ON "public"."chat_messages" FOR UPDATE USING ((EXISTS ( SELECT 1
+   FROM "public"."spaces"
+  WHERE (("spaces"."id" = "chat_messages"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals"
+          WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can update their own documents" ON "public"."documents" FOR UPDATE USING ((EXISTS ( SELECT 1
+   FROM "public"."spaces"
+  WHERE (("spaces"."id" = "documents"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals"
+          WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can update their own goals." ON "public"."goals" FOR UPDATE TO "authenticated" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can update their own space podcasts" ON "public"."podcasts" FOR UPDATE TO "authenticated" USING (("space_id" IN ( SELECT "s"."id"
+   FROM ("public"."spaces" "s"
+     JOIN "public"."goals" "g" ON (("s"."goal_id" = "g"."id")))
+  WHERE ("g"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))) WITH CHECK (("space_id" IN ( SELECT "s"."id"
+   FROM ("public"."spaces" "s"
+     JOIN "public"."goals" "g" ON (("s"."goal_id" = "g"."id")))
+  WHERE ("g"."user_id" = ( SELECT "auth"."uid"() AS "uid")))));
+
+
+
+CREATE POLICY "Users can update their own spaces." ON "public"."spaces" FOR UPDATE TO "authenticated" USING (("auth"."uid"() = "user_id")) WITH CHECK (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can view messages in their spaces" ON "public"."chat_messages" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM ("public"."spaces" "s"
+     JOIN "public"."goals" "g" ON (("s"."goal_id" = "g"."id")))
+  WHERE (("s"."id" = "chat_messages"."space_id") AND ("g"."user_id" = "auth"."uid"())))));
+
+
+
+CREATE POLICY "Users can view own settings" ON "public"."user_settings" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+
+
+
+CREATE POLICY "Users can view tasks in own spaces" ON "public"."tasks" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."spaces" "s"
+  WHERE (("s"."id" = "tasks"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals" "g"
+          WHERE (("g"."id" = "s"."goal_id") AND ("g"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can view their own chat messages" ON "public"."chat_messages" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."spaces"
+  WHERE (("spaces"."id" = "chat_messages"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals"
+          WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can view their own document embeddings" ON "public"."document_embeddings" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."documents"
+  WHERE (("documents"."id" = "document_embeddings"."document_id") AND (EXISTS ( SELECT 1
+           FROM "public"."spaces"
+          WHERE (("spaces"."id" = "documents"."space_id") AND (EXISTS ( SELECT 1
+                   FROM "public"."goals"
+                  WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"())))))))))));
+
+
+
+CREATE POLICY "Users can view their own documents" ON "public"."documents" FOR SELECT USING ((EXISTS ( SELECT 1
+   FROM "public"."spaces"
+  WHERE (("spaces"."id" = "documents"."space_id") AND (EXISTS ( SELECT 1
+           FROM "public"."goals"
+          WHERE (("goals"."id" = "spaces"."goal_id") AND ("goals"."user_id" = "auth"."uid"()))))))));
+
+
+
+CREATE POLICY "Users can view their own goals." ON "public"."goals" FOR SELECT TO "authenticated" USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can view their own spaces." ON "public"."spaces" FOR SELECT TO "authenticated" USING (("auth"."uid"() = "user_id"));
+
+
+
+ALTER TABLE "public"."blog_posts" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."chat_messages" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."document_embeddings" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."documents" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."goals" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."modules" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."podcasts" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."spaces" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."tasks" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."user_settings" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."users" ENABLE ROW LEVEL SECURITY;
+
+
+
+
+ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
+
+
+
+
+
+
+REVOKE USAGE ON SCHEMA "public" FROM PUBLIC;
+GRANT USAGE ON SCHEMA "public" TO "anon";
+GRANT USAGE ON SCHEMA "public" TO "authenticated";
+GRANT USAGE ON SCHEMA "public" TO "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+GRANT ALL ON FUNCTION "public"."get_chat_history"("p_space_id" "uuid", "p_limit" integer, "p_offset" integer) TO "anon";
+GRANT ALL ON FUNCTION "public"."get_chat_history"("p_space_id" "uuid", "p_limit" integer, "p_offset" integer) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."get_chat_history"("p_space_id" "uuid", "p_limit" integer, "p_offset" integer) TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "anon";
+GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+GRANT ALL ON TABLE "public"."chat_messages" TO "authenticated";
+
+
+
+GRANT ALL ON TABLE "public"."document_embeddings" TO "authenticated";
+
+
+
+GRANT ALL ON TABLE "public"."documents" TO "authenticated";
+
+
+
+GRANT ALL ON TABLE "public"."podcasts" TO "anon";
+GRANT ALL ON TABLE "public"."podcasts" TO "authenticated";
+GRANT ALL ON TABLE "public"."podcasts" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tasks" TO "authenticated";
+
+
+
+GRANT ALL ON TABLE "public"."user_settings" TO "anon";
+GRANT ALL ON TABLE "public"."user_settings" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_settings" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."users" TO "anon";
+GRANT ALL ON TABLE "public"."users" TO "authenticated";
+GRANT ALL ON TABLE "public"."users" TO "service_role";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+RESET ALL;

@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
 
-
 const nextConfig = {
   reactStrictMode: true,
+  // Note: optimizeCss is not a valid Next.js config option
+  // Add this to generate source maps in production for debugging
+  productionBrowserSourceMaps: true,
   async headers() {
     console.log('🔍 Configuring API headers...');
     return [
@@ -38,6 +40,30 @@ const nextConfig = {
         'utf-8-validate': false,
       };
       console.log('✅ Updated fallbacks:', config.resolve.fallback);
+      
+      // Ensure CSS order is preserved in production
+      if (!dev) {
+        // This ensures CSS modules are processed in the same order in production as in development
+        config.optimization.moduleIds = 'named';
+        
+        // Disable CSS minification which can cause ordering issues
+        const cssRule = config.module.rules.find(rule => rule.oneOf && Array.isArray(rule.oneOf));
+        if (cssRule && cssRule.oneOf) {
+          cssRule.oneOf.forEach(rule => {
+            if (rule.use && Array.isArray(rule.use)) {
+              rule.use.forEach(loader => {
+                if (loader.loader && loader.loader.includes('css-loader') && loader.options) {
+                  // Preserve CSS class names in production
+                  loader.options.modules = loader.options.modules || {};
+                  if (typeof loader.options.modules === 'object') {
+                    loader.options.modules.localIdentName = '[name]__[local]--[hash:base64:5]';
+                  }
+                }
+              });
+            }
+          });
+        }
+      }
     }
 
     // Log final plugins count
