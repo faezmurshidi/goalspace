@@ -7,6 +7,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { generateStructuredData } from "@/app/_lib/analytics";
+import Script from "next/script";
 
 const faqItems = [
   {
@@ -44,8 +46,16 @@ const faqItems = [
 ];
 
 function FAQ() {
+  // Generate structured data for FAQs
+  const faqStructuredData = generateStructuredData('FAQPage', { questions: faqItems });
+
   return (
-    <div className="w-full py-20 lg:py-40">
+    <section aria-labelledby="faq-heading" className="w-full py-20 lg:py-40">
+      {/* Add structured data for search engines */}
+      <Script id="faq-structured-data" type="application/ld+json">
+        {JSON.stringify(faqStructuredData)}
+      </Script>
+      
       <div className="container mx-auto">
         <div className="grid lg:grid-cols-2 gap-10">
           <div className="flex gap-10 flex-col">
@@ -54,16 +64,16 @@ function FAQ() {
                 <Badge variant="outline">FAQ</Badge>
               </div>
               <div className="flex gap-2 flex-col">
-                <h4 className="text-3xl md:text-5xl tracking-tighter max-w-xl text-left font-regular">
+                <h2 id="faq-heading" className="text-3xl md:text-5xl tracking-tighter max-w-xl text-left font-regular">
                   Frequently Asked Questions
-                </h4>
+                </h2>
                 <p className="text-lg max-w-xl lg:max-w-lg leading-relaxed tracking-tight text-muted-foreground text-left">
                   Find answers to common questions about Goalspace, our AI mentors, and how we can help you achieve your goals more effectively.
                 </p>
               </div>
               <div className="">
                 <Button className="gap-4" variant="outline">
-                  Have more questions? Contact us <PhoneCall className="w-4 h-4" />
+                  Have more questions? Contact us <PhoneCall className="w-4 h-4" aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -72,9 +82,9 @@ function FAQ() {
             {faqItems.map((item, index) => (
               <AccordionItem key={index} value={"index-" + index}>
                 <AccordionTrigger>
-                  {item.question}
+                  <span id={`faq-question-${index}`}>{item.question}</span>
                 </AccordionTrigger>
-                <AccordionContent>
+                <AccordionContent aria-labelledby={`faq-question-${index}`}>
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -82,7 +92,7 @@ function FAQ() {
           </Accordion>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
