@@ -128,7 +128,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
   }
 
   const filteredSpaces = useMemo(
-    () => spaces.filter(space => activeGoal?.spaces.includes(space.id)),
+    () => spaces.filter(space => activeGoal?.spaces?.includes(space.id) || false),
     [spaces, activeGoal?.spaces]
   )
 

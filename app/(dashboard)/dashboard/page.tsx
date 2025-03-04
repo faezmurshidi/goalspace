@@ -94,11 +94,11 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <Progress value={activeGoal.progress} className="w-[100px]" />
-                  <span className="text-sm font-medium">{Math.round(activeGoal.progress)}%</span>
+                  <Progress value={activeGoal.progress || 0} className="w-[100px]" />
+                  <span className="text-sm font-medium">{Math.round(activeGoal.progress || 0)}%</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Due: {new Date(activeGoal.dueDate).toLocaleDateString()}
+                  Due: {activeGoal.deadline ? new Date(activeGoal.deadline).toLocaleDateString() : 'No deadline set'}
                 </div>
               </div>
             </div>

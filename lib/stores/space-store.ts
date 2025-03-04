@@ -1,27 +1,36 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { createClient } from '@/utils/supabase/client';
-
-
+import { SpaceColor } from '@/lib/types/goalspace';
 
 export interface Space {
   id: string;
+  goal_id?: string | null;
   title: string;
   description: string;
-  space_color?: {
-    main: string;
-    secondary: string;
-    accent: string;
-  };
+  category: string;
+  mentor_type?: string;
+  objectives?: string[];
+  prerequisites?: string[];
+  progress?: number | null;
+  space_color?: SpaceColor | null;
+  order_index?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Goal {
   id: string;
+  user_id?: string | null;
   title: string;
   description: string;
-  spaces: string[];
-  progress: number;
-  created_at: string;
+  category: string;
+  status?: string | null;
+  progress?: number | null;
+  deadline?: string | null;
+  spaces?: string[];
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 interface SpaceStore {

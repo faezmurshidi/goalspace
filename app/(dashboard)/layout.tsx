@@ -6,6 +6,8 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { useEffect, useState } from 'react';
 import type { Goal } from '@/lib/store';
 import { SpaceThemeProvider } from '@/components/providers/space-theme-provider';
+import { Goal as StoreGoal } from '@/lib/types/database';
+import { Goal as SwitcherGoal } from '@/components/goal-switcher';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -25,10 +27,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [goals, setActiveGoal]);
 
-  const handleGoalSelect = (goal: Goal) => {
+  const handleGoalSelect = (goal: any) => {
     localStorage.setItem('lastActiveGoalId', goal.id);
     setActiveGoal(goal);
-    router.push(`/space/${goal.id}`);
+    router.push(`/dashboard`);
   };
 
   const handleCreateGoal = () => {

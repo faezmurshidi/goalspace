@@ -13,7 +13,7 @@ import {
   Target,
   User,
 } from 'lucide-react';
-import type { Session, SupabaseUser } from '@supabase/supabase-js';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 import { Button } from '@/components/ui/button';
 import {

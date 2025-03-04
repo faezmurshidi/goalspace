@@ -57,7 +57,7 @@ export default function SettingsPage() {
       if (settings) {
         form.reset({
           full_name: settings.full_name || '',
-          email_notifications: settings.email_notifications,
+          email_notifications: settings.email_notifications === null ? false : settings.email_notifications,
           theme_preference: settings.theme_preference || 'system',
           ai_model_preference: settings.ai_model_preference || 'gpt-3.5-turbo',
         });
@@ -65,15 +65,19 @@ export default function SettingsPage() {
     }
 
     loadSettings();
-  }, [form]);
+  }, [form, supabase]);
 
   // Get subscription features based on current tier
-  const features = subscription ? 
-    getSubscriptionFeatures(subscription.subscription_type === 'enterprise' ? 'pro' : subscription.subscription_type as 'free' | 'basic' | 'pro') : 
-    getSubscriptionFeatures('free');
-  
+  const features = {
+    maxTokensPerMonth: 100000,
+    maxSpaces: 5,
+    maxDocuments: 20,
+    aiModels: ['gpt-3.5-turbo'],
+    maxMentorsPerSpace: 3,
+  };
+
   // Calculate token usage percentage
-  const tokenUsagePercentage = apiUsage ? (apiUsage.api_calls_count / features.maxTokensPerMonth) * 100 : 0;
+  const tokenUsagePercentage = apiUsage ? ((apiUsage.api_calls_count || 0) / features.maxTokensPerMonth) * 100 : 0;
 
   // Mock data for the charts - replace with real data from your API
   const monthlyUsageData = [
@@ -276,8 +280,8 @@ export default function SettingsPage() {
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Token Usage</span>
-                      <span>{apiUsage?.api_calls_count.toLocaleString()} / {features.maxTokensPerMonth.toLocaleString()}</span>
+                      <span className="text-sm font-medium">Token Usage</span>
+                      <span>{apiUsage?.api_calls_count?.toLocaleString() || '0'} / {features.maxTokensPerMonth.toLocaleString()}</span>
                     </div>
                     <Progress value={tokenUsagePercentage} />
                   </div>
@@ -325,7 +329,7 @@ export default function SettingsPage() {
                       </li>
                       <li className="flex justify-between text-sm">
                         <span>Available Models</span>
-                        <span>{features.allowedModels.join(', ')}</span>
+                        <span>{features.aiModels.join(', ')}</span>
                       </li>
                       <li className="flex justify-between text-sm">
                         <span>Mentors per Space</span>

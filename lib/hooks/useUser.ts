@@ -55,7 +55,7 @@ export function useUser() {
           .eq('user_id', session.user.id)
           .single();
         
-        if (settingsError) throw settingsError;
+        if (settingsError && settingsError.code !== 'PGRST116') throw settingsError;
 
         // Fetch API usage
         const { data: apiUsage, error: apiUsageError } = await supabase
@@ -64,9 +64,9 @@ export function useUser() {
           .eq('user_id', session.user.id)
           .single();
         
-        if (apiUsageError) throw apiUsageError;
+        if (apiUsageError && apiUsageError.code !== 'PGRST116') throw apiUsageError;
 
-        // Fetch active subscription
+        // Fetch subscription
         const { data: subscription, error: subscriptionError } = await supabase
           .from('user_subscription_history')
           .select('*')
@@ -76,15 +76,13 @@ export function useUser() {
           .limit(1)
           .single();
         
-        if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-          throw subscriptionError;
-        }
+        if (subscriptionError && subscriptionError.code !== 'PGRST116') throw subscriptionError;
 
         setUserData({
           profile,
-          settings,
-          apiUsage,
-          subscription,
+          settings: settings || null,
+          apiUsage: apiUsage || null,
+          subscription: subscription || null,
           isLoading: false,
           error: null,
         });

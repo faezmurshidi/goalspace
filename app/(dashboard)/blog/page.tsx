@@ -31,7 +31,7 @@ export default function BlogPage() {
         const { data, error } = await supabase
           .from('blog_posts')
           .select('*')
-          .order('publishedAt', { ascending: false });
+          .order('published_at', { ascending: false });
 
         if (error) throw error;
 
@@ -60,7 +60,7 @@ export default function BlogPage() {
     }
 
     fetchPosts();
-  }, []);
+  }, [supabase]);
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">

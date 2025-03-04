@@ -24,7 +24,8 @@ export async function signUp(email: string, password: string) {
         .insert({
           id: authData.user.id,
           email: authData.user.email,
-          created_at: new Date().toISOString(),
+          full_name: null,
+          avatar_url: null,
         });
 
       if (dbError) throw dbError;
@@ -34,8 +35,8 @@ export async function signUp(email: string, password: string) {
         .from('user_settings')
         .insert({
           user_id: authData.user.id,
-          api_calls_count: 0,
           theme: 'dark',
+          email_notifications: false,
         });
 
       if (settingsError) throw settingsError;

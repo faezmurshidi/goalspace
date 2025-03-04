@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSpaceStore } from '@/lib/store';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Circle, XCircle, MessageSquareMore } from 'lucide-react';
+import { CheckCircle2, Circle, XCircle, MessageSquareMore, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -27,7 +27,7 @@ export function TodoList({ spaceId }: TodoListProps) {
     }
   };
 
-  const handleAssist = (task: { title: string; description: string }) => {
+  const handleAssist = (task: { title: string; description: string | null }) => {
     // Format the task content for the chat in a more conversational way
     const taskContent = `I need help with this task:
 Title: ${task.title}
@@ -42,16 +42,18 @@ Can you help me break this down into smaller steps and provide guidance on how t
     router.push(`/chat/${spaceId}`);
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | null) => {
+    if (!status) return <Circle className="h-4 w-4" />;
+    
     switch (status) {
-      case 'completed':
-        return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-      case 'in_progress':
-        return <Circle className="h-5 w-5 text-blue-500" />;
       case 'pending':
-        return <Circle className="h-5 w-5 text-gray-400" />;
+        return <Circle className="h-4 w-4" />;
+      case 'in_progress':
+        return <Clock className="h-4 w-4 text-blue-500" />;
+      case 'completed':
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       default:
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <Circle className="h-4 w-4" />;
     }
   };
 
@@ -78,7 +80,7 @@ Can you help me break this down into smaller steps and provide guidance on how t
                       pending: 'in_progress',
                       in_progress: 'completed',
                       completed: 'pending'
-                    }[task.status] as 'pending' | 'in_progress' | 'completed';
+                    }[task.status || 'pending'] as 'pending' | 'in_progress' | 'completed';
                     handleStatusChange(task.id, nextStatus);
                   }}
                 >

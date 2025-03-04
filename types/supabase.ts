@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -305,28 +304,37 @@ export type Database = {
       }
       user_settings: {
         Row: {
-          created_at: string | null
-          email_notifications: boolean | null
           id: string
-          theme: string | null
-          updated_at: string | null
           user_id: string | null
+          theme: string | null
+          theme_preference: string | null
+          ai_model_preference: string | null
+          full_name: string | null
+          email_notifications: boolean | null
+          created_at: string | null
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string | null
-          email_notifications?: boolean | null
-          id?: string
-          theme?: string | null
-          updated_at?: string | null
-          user_id?: string | null
+          id: string
+          user_id: string | null
+          theme: string | null
+          theme_preference: string | null
+          ai_model_preference: string | null
+          full_name: string | null
+          email_notifications: boolean | null
+          created_at: string | null
+          updated_at: string | null
         }
         Update: {
-          created_at?: string | null
-          email_notifications?: boolean | null
-          id?: string
-          theme?: string | null
-          updated_at?: string | null
-          user_id?: string | null
+          id: string
+          user_id: string | null
+          theme: string | null
+          theme_preference: string | null
+          ai_model_preference: string | null
+          full_name: string | null
+          email_notifications: boolean | null
+          created_at: string | null
+          updated_at: string | null
         }
         Relationships: [
           {
@@ -381,30 +389,132 @@ export type Database = {
       }
       users: {
         Row: {
-          avatar_url: string | null
-          created_at: string | null
+          id: string
           email: string
           full_name: string | null
-          id: string
+          avatar_url: string | null
+          created_at: string | null
           updated_at: string | null
         }
         Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
+          id: string
           email: string
-          full_name?: string | null
-          id?: string
-          updated_at?: string | null
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string | null
+          updated_at: string | null
         }
         Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          email?: string
-          full_name?: string | null
-          id?: string
-          updated_at?: string | null
+          id: string
+          email: string
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string | null
+          updated_at: string | null
         }
         Relationships: []
+      }
+      modules: {
+        Row: {
+          id: string
+          space_id: string
+          user_id: string | null
+          title: string
+          content: string
+          description: string
+          order_index: number
+          is_completed: boolean
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id: string
+          space_id: string
+          user_id: string | null
+          title: string
+          content: string
+          description: string
+          order_index: number
+          is_completed: boolean
+          created_at: string | null
+          updated_at: string | null
+        }
+        Update: {
+          id: string
+          space_id: string
+          user_id: string | null
+          title: string
+          content: string
+          description: string
+          order_index: number
+          is_completed: boolean
+          created_at: string | null
+          updated_at: string | null
+        }
+      }
+      podcasts: {
+        Row: {
+          id: string
+          space_id: string
+          title: string
+          audio_url: string
+          module_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id: string
+          space_id: string
+          title: string
+          audio_url: string
+          module_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Update: {
+          id: string
+          space_id: string
+          title: string
+          audio_url: string
+          module_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+      }
+      blog_posts: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          content: string
+          author_name: string
+          author_avatar: string | null
+          published_at: string
+          category: string
+          tags: string[] | null
+        }
+        Insert: {
+          id: string
+          title: string
+          description: string
+          content: string
+          author_name: string
+          author_avatar: string | null
+          published_at: string
+          category: string
+          tags: string[] | null
+        }
+        Update: {
+          id: string
+          title: string
+          description: string
+          content: string
+          author_name: string
+          author_avatar: string | null
+          published_at: string
+          category: string
+          tags: string[] | null
+        }
       }
     }
     Views: {

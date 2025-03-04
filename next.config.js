@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 
-
 const nextConfig = {
   reactStrictMode: true,
   async headers() {
-    console.log('🔍 Configuring API headers...');
+    const isProd = process.env.NODE_ENV === 'production';
+    if (!isProd) console.log('🔍 Configuring API headers...');
     return [
       {
         // matching all API routes
@@ -18,42 +18,25 @@ const nextConfig = {
       }
     ]
   },
-  webpack: (config, { dev, isServer, webpack }) => {
-    console.log(`\n🛠 Webpack configuration starting...`);
-    console.log(`📌 Environment: ${dev ? 'Development' : 'Production'}`);
-    console.log(`📌 Target: ${isServer ? 'Server' : 'Client'}`);
-    
-    // Log initial config state
-    console.log('\n📦 Initial webpack config state:');
-    console.log('- Resolve fallbacks:', config.resolve?.fallback || 'None');
-    console.log('- Mode:', config.mode);
-    console.log('- Target:', config.target);
+  webpack: (config, { dev, isServer }) => {
+    if (dev) {
+      console.log(`\n🛠 Webpack configuration starting...`);
+      console.log(`📌 Environment: Development`);
+      console.log(`📌 Target: ${isServer ? 'Server' : 'Client'}`);
+      console.log('\n📦 Initial webpack config state:');
+      console.log('- Resolve fallbacks:', config.resolve?.fallback || 'None');
+    }
 
+    // Important: Configure client-side fallbacks for Node.js built-ins
     if (!isServer) {
-      console.log('\n🔧 Configuring client-side fallbacks...');
       config.resolve.fallback = {
         ...config.resolve.fallback,
         ws: false,
         bufferutil: false,
         'utf-8-validate': false,
       };
-      console.log('✅ Updated fallbacks:', config.resolve.fallback);
-    }
 
-    // Log final plugins count
-    if (dev) {
-      // Log final plugins count
-      console.log(`\n📊 Final configuration summary:`);
-      console.log(`- Total plugins: ${config.plugins?.length || 0}`);
-      console.log(`- Total rules: ${config.module?.rules?.length || 0}`);
-      console.log(`- Optimization enabled: ${!!config.optimization}`);
-      
-      // Log memory usage (consider moving to a debug flag)
-      const used = process.memoryUsage();
-      console.log('\n💾 Current memory usage:');
-      for (let key in used) {
-        console.log(`${key}: ${Math.round(used[key] / 1024 / 1024 * 100) / 100} MB`);
-      }
+      if (dev) console.log('✅ Updated fallbacks:', config.resolve.fallback);
     }
 
     if (dev) console.log('\n✨ Webpack configuration completed\n');
@@ -61,9 +44,4 @@ const nextConfig = {
   },
 };
 
-// Log when the config is loaded
-console.log('\n🚀 Loading Next.js configuration...');
-console.log('⚙️  Mode:', process.env.NODE_ENV);
-console.log('📍 Current directory:', process.cwd());
-
-module.exports = nextConfig
+module.exports = nextConfig;

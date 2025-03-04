@@ -10,6 +10,37 @@ import { storeDocumentEmbedding } from '@/lib/vector';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
+// Define SupabaseGoal and SupabaseSpace types to match database structure
+type SupabaseGoal = {
+  id: string;
+  user_id: string | null;
+  title: string;
+  description: string | null;
+  category: string;
+  status: string | null;
+  progress: number | null;
+  deadline: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+type SupabaseSpace = {
+  id: string;
+  goal_id: string | null;
+  title: string;
+  description: string | null;
+  category: string;
+  mentor_type: string;
+  progress: number | null;
+  space_color: any | null;
+  order_index: number;
+  objectives: string[];
+  prerequisites: string[];
+  mentor: any;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
 export interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -99,9 +130,11 @@ export const SPACE_COLORS: SpaceColor[] = [
 
 export interface Space {
   id: string;
+  goal_id?: string | null;
   title: string;
-  category: 'learning' | 'goal';
+  category: string;
   description: string;
+  mentor_type?: string;
   objectives: string[];
   prerequisites: string[];
   to_do_list: string[];
@@ -113,32 +146,42 @@ export interface Space {
     expertise: string[];
     system_prompt: string;
   };
-  space_color?: SpaceColor;
+  space_color?: SpaceColor | null;
+  order_index?: number;
   plan?: string;
   research?: string;
-  progress?: number;
+  progress?: number | null;
   isCollapsed?: boolean;
   content?: string;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Goal {
   id: string;
+  user_id?: string | null;
   title: string;
   description: string;
-  dueDate: string;
-  progress: number;
+  category: string;
+  status?: string | null;
+  deadline?: string | null;
+  progress?: number | null;
   spaces: string[]; // Array of space IDs
-  createdAt: number;
+  createdAt?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Task {
   id: string;
   space_id: string;
   title: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed';
-  created_at?: string;
-  updated_at?: string;
+  description: string | null;
+  status: string | null;
+  due_date?: string | null;
+  order_index?: number;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Podcast {
@@ -216,29 +259,6 @@ export interface SpaceStore {
   fetchPodcasts: (spaceId: string) => Promise<Podcast[]>;
 }
 
-interface SupabaseGoal {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  deadline: string | null;
-  progress: number;
-  created_at: string;
-}
-
-interface SupabaseSpace {
-  id: string;
-  goal_id: string;
-  title: string;
-  category: 'learning' | 'goal';
-  description: string | null;
-  objectives: string | null;
-  prerequisites: string | null;
-  mentor: string | null;
-  progress: number;
-  space_color: string | null;
-}
-
 export const useSpaceStore = create<SpaceStore>()(
   persist(
     (set, get) => ({
@@ -267,8 +287,10 @@ export const useSpaceStore = create<SpaceStore>()(
           id: goalId,
           title: get().currentGoal,
           description: 'Goal created from spaces',
-          dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+          category: 'personal',
+          status: 'active',
           progress: 0,
+          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
           spaces: spaces.map((s) => s.id),
           createdAt: Date.now(),
         };
@@ -497,17 +519,40 @@ export const useSpaceStore = create<SpaceStore>()(
 
           return { spaces: newSpaces, goals };
         }),
-      addGoal: (goal) =>
-        set((state) => ({
-          goals: [
-            ...state.goals,
-            {
-              ...goal,
-              id: Math.random().toString(36).substring(7),
-              createdAt: Date.now(),
-            },
-          ],
-        })),
+      addGoal: async (goal) => {
+        try {
+          const supabase = createClient();
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) throw userError;
+          
+          const { data, error } = await supabase
+            .from('goals')
+            .insert({
+              title: goal.title,
+              description: goal.description,
+              category: goal.category || 'personal',
+              user_id: userData.user.id,
+              status: 'active',
+              deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+            })
+            .select()
+            .single();
+          
+          if (error) throw error;
+          
+          // Update local state
+          set((state) => ({
+            goals: [...state.goals, { ...data, spaces: [] }],
+            currentGoal: { ...data, spaces: [] },
+          }));
+          
+          return data;
+        } catch (error) {
+          console.error('Error creating goal:', error);
+          throw error;
+        }
+      },
       updateGoalProgress: (goalId) =>
         set((state) => {
           const goal = state.goals.find((g) => g.id === goalId);
@@ -598,10 +643,14 @@ export const useSpaceStore = create<SpaceStore>()(
             id: goal.id,
             title: goal.title,
             description: goal.description || '',
-            dueDate: goal.deadline || new Date().toISOString(),
+            category: goal.category,
+            status: goal.status,
             progress: goal.progress || 0,
-            spaces: allSpaces.filter((space) => space.goal_id === goal.id).map((space) => space.id),
-            createdAt: new Date(goal.created_at).getTime(),
+            deadline: goal.deadline,
+            spaces: [],
+            created_at: goal.created_at,
+            updated_at: goal.updated_at,
+            createdAt: new Date(goal.created_at || Date.now()).getTime(),
           }));
 
           const formattedSpaces: Space[] = allSpaces.map((space: SupabaseSpace) => ({
@@ -609,8 +658,8 @@ export const useSpaceStore = create<SpaceStore>()(
             title: space.title,
             category: space.category,
             description: space.description || '',
-            objectives: JSON.parse(space.objectives || '[]'),
-            prerequisites: JSON.parse(space.prerequisites || '[]'),
+            objectives: Array.isArray(space.objectives) ? space.objectives : JSON.parse(space.objectives || '[]'), 
+            prerequisites: Array.isArray(space.prerequisites) ? space.prerequisites : JSON.parse(space.prerequisites || '[]'),
             to_do_list: [], // We'll need to add this to the schema if needed
             time_to_complete: '', // We'll need to add this to the schema if needed
             mentor: JSON.parse(space.mentor || '{}'),

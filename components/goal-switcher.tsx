@@ -27,10 +27,15 @@ export type Goal = {
   id: string;
   title: string;
   description: string;
-  dueDate: string;
-  progress: number;
-  spaces: string[];
-  createdAt: number;
+  category: string;
+  deadline?: string | null;
+  progress?: number | null;
+  spaces?: string[];
+  createdAt?: number;
+  status?: string | null;
+  user_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 export function GoalSwitcher({
@@ -178,7 +183,7 @@ export function GoalSwitcher({
                       )}
                     >
                       <div className="size-6 flex items-center justify-center rounded-sm border">
-                        <Target className={cn('size-4 shrink-0', getProgressColor(goal.progress))} />
+                        <Target className={cn('size-4 shrink-0', getProgressColor(goal.progress || 0))} />
                       </div>
                       <div className="flex-1 truncate">{goal.title}</div>
                       <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>

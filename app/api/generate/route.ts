@@ -92,9 +92,29 @@ async function generateWithPerplexity(prompt: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     const { useCase, model, prompt } = (await request.json()) as ApiRequest;
-    const startTime = Date.now();
+    
+    // Check for missing environment variables based on model
+    if (model === 'gpt' && !process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { error: 'OpenAI API key is not configured' },
+        { status: 500 }
+      );
+    }
+    
+    if (model === 'claude' && !process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: 'Anthropic API key is not configured' },
+        { status: 500 }
+      );
+    }
+    
+    if (model === 'perplexity' && !process.env.PERPLEXITY_API_KEY) {
+      return NextResponse.json(
+        { error: 'Perplexity API key is not configured' },
+        { status: 500 }
+      );
+    }
 
-   
     // Generate content
     let content: string;
     switch (model) {
@@ -108,20 +128,19 @@ export async function POST(request: Request) {
         content = await generateWithPerplexity(prompt);
         break;
       default:
-        throw new Error(`Unsupported model: ${model}`);
+        return NextResponse.json(
+          { error: `Unsupported model: ${model}` },
+          { status: 400 }
+        );
     }
 
-   
-    return NextResponse.json({ 
-      content,
-    });
+    return NextResponse.json({ content });
   } catch (error) {
     console.error('Error generating content:', error);
-
-  
-
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate content';
+    
     return NextResponse.json(
-      { error: 'Failed to generate content' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
