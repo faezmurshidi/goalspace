@@ -8,17 +8,20 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Button } from './ui/button';
 import { AuthDialog } from './auth/auth-dialog';
+import { useLocale, useTranslations } from 'next-intl';
 
 export function MainNav() {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const locale = useLocale();
+  const t = useTranslations();
+  const [user, setUser] = useState(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
     });
 
     // Listen for auth changes
@@ -44,27 +47,25 @@ export function MainNav() {
         {user ? (
           <>
             <Link
-              href="/dashboard"
+              href={`/${locale}/dashboard`}
               className="text-sm font-medium text-white/70 transition-colors hover:text-white"
             >
-              Dashboard
+              {t('navigation.dashboard')}
             </Link>
-            <Button
-              variant="ghost"
-              className="text-sm font-medium text-white/70 hover:text-white"
+            <button
+              className="text-sm font-medium text-white/70 hover:text-white bg-transparent px-4 py-2 rounded"
               onClick={handleSignOut}
             >
-              Sign Out
-            </Button>
+              {t('auth.signOut')}
+            </button>
           </>
         ) : (
-          <Button
-            variant="outline"
+          <button
             onClick={() => setShowAuthDialog(true)}
-            className="text-sm font-medium"
+            className="text-sm font-medium border border-gray-300 px-4 py-2 rounded"
           >
-            Sign In
-          </Button>
+            {t('auth.signIn')}
+          </button>
         )}
       </div>
       <AuthDialog 

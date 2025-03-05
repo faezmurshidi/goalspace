@@ -1,0 +1,144 @@
+{
+  "common": {
+    "appName": "Goalspace",
+    "description": "AI-Powered Goal Achievement Platform"
+  },
+  "navigation": {
+    "pricing": "View Pricing",
+    "login": "Log In",
+    "switchLanguage": "Switch language"
+  },
+  "header": {
+    "title": "GoalSpace"
+  },
+  "hero": {
+    "title": "AI-Powered Goal Achievement Platform"
+  },
+  "trustSignals": {
+    "title": "Trusted by leading organizations and featured in",
+    "partners": [
+      "TechCrunch",
+      "Forbes",
+      "Harvard",
+      "MIT",
+      "FastCompany",
+      "Y Combinator"
+    ]
+  },
+  "statistics": {
+    "title": "Transforming the way people learn and achieve",
+    "description": "Our AI-powered platform has helped thousands of people achieve their goals through structured learning paths and personalized mentorship.",
+    "stats": [
+      {
+        "value": "10,000+",
+        "label": "Active Users",
+        "description": "Learning and growing daily"
+      },
+      {
+        "value": "40,000+",
+        "label": "Spaces Created",
+        "description": "Organized learning paths"
+      },
+      {
+        "value": "98%",
+        "label": "Completion Rate",
+        "description": "For users with AI mentors"
+      },
+      {
+        "value": "85%",
+        "label": "Success Rate",
+        "description": "Users achieve their goals"
+      }
+    ]
+  },
+  "caseStudies": {
+    "sectionTag": "Success Stories",
+    "title": "Real people, real results",
+    "description": "Discover how Goalspace has transformed learning journeys and helped people achieve extraordinary results.",
+    "featuredCase": {
+      "title": "From Novice to Full-Stack Developer in 6 Months",
+      "description": "Alex had zero coding experience but wanted to switch careers. Using Goalspace's structured learning paths and AI mentorship, he went from complete beginner to landing a junior developer role in just 6 months.",
+      "metrics": [
+        {
+          "value": "4 months",
+          "label": "Time Saved"
+        },
+        {
+          "value": "100%",
+          "label": "Completion Rate"
+        },
+        {
+          "value": "$12,000",
+          "label": "Cost Savings"
+        }
+      ],
+      "person": {
+        "name": "Alex Chen",
+        "title": "Software Developer",
+        "initials": "AC"
+      }
+    }
+  },
+  "integrations": {
+    "title": "Seamless Integrations",
+    "description": "Connect Goalspace with your favorite apps and services to enhance your learning experience.",
+    "items": [
+      {
+        "name": "Google Calendar",
+        "description": "Schedule study sessions and track progress",
+        "icon": "📅"
+      },
+      {
+        "name": "Slack",
+        "description": "Collaborate with study groups",
+        "icon": "💬"
+      },
+      {
+        "name": "GitHub",
+        "description": "Connect your code projects directly",
+        "icon": "💻"
+      },
+      {
+        "name": "YouTube",
+        "description": "Embed video tutorials in learning spaces",
+        "icon": "▶️"
+      },
+      {
+        "name": "Notion",
+        "description": "Import notes and documentation",
+        "icon": "📝"
+      },
+      {
+        "name": "Spotify",
+        "description": "Focus playlists for productive study",
+        "icon": "🎵"
+      }
+    ],
+    "footer": "More integrations coming soon. Suggest an integration you'd like to see."
+  },
+  "notifications": {
+    "welcome": {
+      "title": "Welcome to Goalspace!",
+      "description": "We're excited to have you join us for our launch. Enjoy special access to all premium features."
+    }
+  },
+  "seo": {
+    "applicationCategory": "EducationalApplication, ProductivityApplication",
+    "price": "9.99",
+    "currency": "USD",
+    "operatingSystem": "All",
+    "rating": {
+      "value": "4.8",
+      "count": "1250",
+      "best": "5",
+      "worst": "1"
+    },
+    "features": [
+      "Personalized AI mentorship",
+      "Structured learning paths",
+      "Progress tracking",
+      "Community support",
+      "Regular content updates"
+    ]
+  }
+} 

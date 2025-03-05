@@ -1,38 +1,34 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import createMiddleware from 'next-intl/middleware';
+import { locales } from './next-intl.config.js';
 
-export async function middleware(request: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req: request, res })
+// This middleware intercepts requests and handles locale detection and routing
+export default createMiddleware({
+  // A list of all locales that are supported
+  locales: locales,
   
-  // Refresh session if expired
-  await supabase.auth.getSession()
+  // Used when no locale matches
+  defaultLocale: 'en',
   
-  // Optional: Check for protected routes and redirect if not authenticated
-  const path = request.nextUrl.pathname
-  const isAuthRoute = path === '/login' || path === '/signup' || path === '/auth' || path.startsWith('/auth/')
-  const isApiRoute = path.startsWith('/api/')
-  const isPublicRoute = path === '/' || path === '/pricing' || isAuthRoute || isApiRoute
+  // This function is called when no locale matches from a URL and the Accept-Language header is used
+  localePrefix: 'as-needed',
   
-  if (!isPublicRoute) {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-  }
-  
-  return res
-}
+  // For better SEO, we want to make sure each locale has its own unique URL
+  localeDetection: true
+});
 
 export const config = {
+  // Match all pathnames except for:
+  // - API routes (/api/*)
+  // - Static files and assets:
+  //   - Next.js system files (/_next/*)
+  //   - Vercel system files (/_vercel/*)
+  //   - Favicon files (/favicon.ico, /android-chrome-*.png, /apple-touch-icon.png, etc.)
+  //   - Manifest files (/manifest.json, /site.webmanifest)
+  //   - Any file with an extension (.jpg, .png, .css, etc)
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
-} 
+    // Match all request paths except for the ones starting with:
+    '/((?!api|_next|_vercel|android-chrome|apple-touch-icon|favicon|site\\.webmanifest|manifest\\.json|.*\\..*).*)',
+    // Optional: Match all request paths that have a locale prefix
+    '/(en|ms)/:path*'
+  ]
+}; 
