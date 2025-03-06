@@ -3,16 +3,49 @@
     "appName": "Goalspace",
     "description": "Platform Pencapaian Matlamat Berkuasa AI"
   },
+  "mcp": {
+    "title": "Panel Kawalan Saya",
+    "description": "Urus akaun dan tetapan anda"
+  },
   "navigation": {
     "pricing": "Lihat Harga",
     "login": "Log Masuk",
-    "switchLanguage": "Tukar bahasa"
+    "switchLanguage": "Tukar bahasa",
+    "dashboard": "Papan Pemuka"
+  },
+  "auth": {
+    "signIn": "Log Masuk",
+    "signOut": "Log Keluar",
+    "register": "Daftar",
+    "forgotPassword": "Lupa Kata Laluan",
+    "resetPassword": "Tetapkan Semula Kata Laluan",
+    "email": "E-mel",
+    "password": "Kata Laluan",
+    "confirmPassword": "Sahkan Kata Laluan"
+  },
+  "hero": {
+    "title": "Platform Pencapaian Matlamat Berkuasa AI",
+    "anything": "apa-apa sahaja.",
+    "launchArticle": "Baca artikel pelancaran kami",
+    "description": "Tukarkan matlamat anda menjadi kenyataan dengan bimbingan AI, laluan pembelajaran peribadi, dan pendekatan berstruktur untuk mencapai kejayaan.",
+    "getStarted": "Mulakan percuma",
+    "watchDemo": "Tonton demo",
+    "joinUsers": "Sertai 10,000+ pelajar yang telah mencapai matlamat mereka",
+    "enterGoal": "Masukkan matlamat anda",
+    "goalDescription": "Beritahu kami apa yang ingin anda capai dan AI kami akan membuat ruang pembelajaran peribadi untuk anda",
+    "noSignup": "Tiada pendaftaran diperlukan untuk pratonton",
+    "itsFree": "Ia percuma",
+    "features": {
+      "personalizedSpaces": "Ruang peribadi",
+      "aiMentorship": "Bimbingan AI",
+      "goalTracking": "Penjejakan matlamat",
+      "structuredLearning": "Pembelajaran berstruktur",
+      "communitySupport": "Sokongan komuniti",
+      "adaptiveContent": "Kandungan adaptif"
+    }
   },
   "header": {
     "title": "GoalSpace"
-  },
-  "hero": {
-    "title": "Platform Pencapaian Matlamat Berkuasa AI"
   },
   "trustSignals": {
     "title": "Dipercayai oleh organisasi terkemuka dan dipaparkan dalam",

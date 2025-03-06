@@ -1,34 +1,66 @@
-import createMiddleware from 'next-intl/middleware';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import createIntlMiddleware from 'next-intl/middleware';
 import { locales } from './next-intl.config.js';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
-// This middleware intercepts requests and handles locale detection and routing
-export default createMiddleware({
-  // A list of all locales that are supported
+// Step 1: Create the internationalization middleware
+const intlMiddleware = createIntlMiddleware({
   locales: locales,
-  
-  // Used when no locale matches
   defaultLocale: 'en',
-  
-  // This function is called when no locale matches from a URL and the Accept-Language header is used
   localePrefix: 'as-needed',
-  
-  // For better SEO, we want to make sure each locale has its own unique URL
+  // For better SEO, ensure each locale has its own unique URL
   localeDetection: true
 });
 
+// Step 2: Define a combined middleware function
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  
+  // Skip auth check for public routes
+  const isPublicPage = 
+    pathname === '/' || 
+    pathname === '/login' || 
+    pathname === '/auth/callback' || 
+    pathname.startsWith('/api/') || 
+    pathname.includes('favicon') ||
+    pathname.includes('.json') ||
+    pathname.includes('.webmanifest') ||
+    pathname.match(/\.[^/]+$/); // Skip files with extensions
+  
+  // First, handle internationalization
+  const response = intlMiddleware(request);
+  
+  // Then, handle authentication if needed
+  if (!isPublicPage) {
+    try {
+      const supabase = createMiddlewareClient({ req: request, res: response });
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // If no session and this is a protected route, redirect to login
+      if (!session) {
+        const url = new URL('/login', request.url);
+        // Preserve the locale if present in the original URL
+        const locale = request.nextUrl.pathname.split('/')[1];
+        if (locales.includes(locale)) {
+          url.pathname = `/${locale}${url.pathname}`;
+        }
+        return NextResponse.redirect(url);
+      }
+    } catch (e) {
+      console.error('Middleware authentication error:', e);
+    }
+  }
+  
+  return response;
+}
+
 export const config = {
-  // Match all pathnames except for:
-  // - API routes (/api/*)
-  // - Static files and assets:
-  //   - Next.js system files (/_next/*)
-  //   - Vercel system files (/_vercel/*)
-  //   - Favicon files (/favicon.ico, /android-chrome-*.png, /apple-touch-icon.png, etc.)
-  //   - Manifest files (/manifest.json, /site.webmanifest)
-  //   - Any file with an extension (.jpg, .png, .css, etc)
+  // Match all pathnames except for specific static files and system paths
   matcher: [
-    // Match all request paths except for the ones starting with:
-    '/((?!api|_next|_vercel|android-chrome|apple-touch-icon|favicon|site\\.webmanifest|manifest\\.json|.*\\..*).*)',
-    // Optional: Match all request paths that have a locale prefix
+    // Match all pathnames
+    '/((?!_next/static|_next/image).*)',
+    // Match specific locale paths
     '/(en|ms)/:path*'
   ]
 }; 

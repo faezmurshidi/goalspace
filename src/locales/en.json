@@ -3,16 +3,49 @@
     "appName": "Goalspace",
     "description": "AI-Powered Goal Achievement Platform"
   },
+  "mcp": {
+    "title": "My Control Panel",
+    "description": "Manage your account and settings"
+  },
   "navigation": {
     "pricing": "View Pricing",
     "login": "Log In",
-    "switchLanguage": "Switch language"
+    "switchLanguage": "Switch language",
+    "dashboard": "Dashboard"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "register": "Register",
+    "forgotPassword": "Forgot Password",
+    "resetPassword": "Reset Password",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password"
+  },
+  "hero": {
+    "title": "AI-Powered Goal Achievement Platform",
+    "anything": "anything.",
+    "launchArticle": "Read our launch article",
+    "description": "Transform your goals into reality with AI-powered mentorship, personalized learning paths, and a structured approach to achievement.",
+    "getStarted": "Get started for free",
+    "watchDemo": "Watch demo",
+    "joinUsers": "Join 10,000+ learners already achieving their goals",
+    "enterGoal": "Enter your goal",
+    "goalDescription": "Tell us what you want to achieve and our AI will create personalized learning spaces for you",
+    "noSignup": "No signup required to preview",
+    "itsFree": "It's free",
+    "features": {
+      "personalizedSpaces": "Personalized spaces",
+      "aiMentorship": "AI mentorship",
+      "goalTracking": "Goal tracking",
+      "structuredLearning": "Structured learning",
+      "communitySupport": "Community support",
+      "adaptiveContent": "Adaptive content"
+    }
   },
   "header": {
     "title": "GoalSpace"
-  },
-  "hero": {
-    "title": "AI-Powered Goal Achievement Platform"
   },
   "trustSignals": {
     "title": "Trusted by leading organizations and featured in",
@@ -141,4 +174,4 @@
       "Regular content updates"
     ]
   }
-} 
+}
