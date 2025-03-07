@@ -2,9 +2,16 @@
 
 const nextConfig = {
   reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development',
+  },
   async headers() {
-    const isProd = process.env.NODE_ENV === 'production';
-    if (!isProd) console.log('🔍 Configuring API headers...');
+    const isProd = process.env.NEXT_PUBLIC_ENV === 'production';
+    const isPreview = process.env.NEXT_PUBLIC_ENV === 'preview';
+    const isDev = process.env.NEXT_PUBLIC_ENV === 'development';
+    
+    if (!isProd) console.log(`🔍 Configuring API headers for ${process.env.NEXT_PUBLIC_ENV} environment...`);
+    
     return [
       {
         // matching all API routes
@@ -19,9 +26,11 @@ const nextConfig = {
     ]
   },
   webpack: (config, { dev, isServer }) => {
+    const environment = process.env.NEXT_PUBLIC_ENV || 'development';
+    
     if (dev) {
       console.log(`\n🛠 Webpack configuration starting...`);
-      console.log(`📌 Environment: Development`);
+      console.log(`📌 Environment: ${environment}`);
       console.log(`📌 Target: ${isServer ? 'Server' : 'Client'}`);
       console.log('\n📦 Initial webpack config state:');
       console.log('- Resolve fallbacks:', config.resolve?.fallback || 'None');
