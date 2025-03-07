@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, MoveRight, PhoneCall, Play } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { GoalForm } from '../goal-form';
@@ -10,6 +11,7 @@ import { BorderBeam } from './border-beam';
 import { Card } from './card';
 
 function Hero() {
+  const t = useTranslations();
   const [titleNumber, setTitleNumber] = useState(0);
   const titles = useMemo(() => ['Learn', 'Build', 'Achieve', 'Succeed', 'Start'], []);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -42,7 +44,7 @@ function Hero() {
             transition={{ duration: 0.4, delay: 0.1 }}
           >
             <Button className="gap-2 px-4 py-2 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 border-none">
-              Read our launch article <MoveRight className="h-4 w-4 ml-1" />
+              {t('hero.launchArticle')} <MoveRight className="h-4 w-4 ml-1" />
             </Button>
           </motion.div>
           
@@ -77,7 +79,7 @@ function Hero() {
                   </motion.span>
                 ))}
               </span>
-              <span className="text-primary">anything.</span>
+              <span className="text-primary">{t('hero.anything')}</span>
             </motion.h1>
 
             <motion.p 
@@ -86,7 +88,7 @@ function Hero() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="max-w-xl text-lg leading-relaxed tracking-tight text-muted-foreground md:text-xl"
             >
-              Transform your goals into reality with AI-powered mentorship, personalized learning paths, and a structured approach to achievement.
+              {t('hero.description')}
             </motion.p>
           </div>
           
@@ -97,11 +99,11 @@ function Hero() {
             className="flex flex-col gap-4 sm:flex-row sm:items-center"
           >
             <Button className="px-6 py-3 text-base font-medium rounded-lg bg-primary hover:bg-primary/90 text-white">
-              Get started for free
+              {t('hero.getStarted')}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <Button className="px-6 py-3 text-base font-medium rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200">
-              <Play className="h-4 w-4 mr-2" /> Watch demo
+              <Play className="h-4 w-4 mr-2" /> {t('hero.watchDemo')}
             </Button>
           </motion.div>
           
@@ -116,7 +118,7 @@ function Hero() {
                 <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-gray-200 dark:border-gray-800" />
               ))}
             </div>
-            <span>Join 10,000+ learners already achieving their goals</span>
+            <span>{t('hero.joinUsers')}</span>
           </motion.div>
         </motion.div>
 
@@ -134,16 +136,16 @@ function Hero() {
               <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-purple-500/10 blur-3xl" />
               
               <div className="relative p-6 md:p-8">
-                <h3 className="mb-3 text-xl font-bold">Enter your goal</h3>
+                <h3 className="mb-3 text-xl font-bold">{t('hero.enterGoal')}</h3>
                 <p className="mb-6 text-muted-foreground">
-                  Tell us what you want to achieve and our AI will create personalized learning spaces for you
+                  {t('hero.goalDescription')}
                 </p>
                 <GoalForm/>
                 
                 <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4 text-sm dark:border-gray-800">
-                  <span className="text-muted-foreground">No signup required to preview</span>
+                  <span className="text-muted-foreground">{t('hero.noSignup')}</span>
                   <span className="flex items-center gap-1 font-medium text-primary">
-                    It&apos;s free <span className="rounded-full bg-primary/10 px-2 py-1 text-xs">Beta</span>
+                    {t('hero.itsFree')} <span className="rounded-full bg-primary/10 px-2 py-1 text-xs">Beta</span>
                   </span>
                 </div>
               </div>
@@ -158,12 +160,12 @@ function Hero() {
             className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3"
           >
             {[
-              'Personalized spaces', 
-              'AI mentorship', 
-              'Goal tracking', 
-              'Structured learning', 
-              'Community support', 
-              'Adaptive content'
+              t('hero.features.personalizedSpaces'), 
+              t('hero.features.aiMentorship'), 
+              t('hero.features.goalTracking'), 
+              t('hero.features.structuredLearning'), 
+              t('hero.features.communitySupport'), 
+              t('hero.features.adaptiveContent')
             ].map((feature, i) => (
               <div key={i} className="flex items-center gap-2 text-sm rounded-lg p-2 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
                 <svg

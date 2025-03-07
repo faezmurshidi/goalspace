@@ -1,38 +1,74 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import createIntlMiddleware from 'next-intl/middleware';
+import { locales } from './next-intl.config.js';
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
+// Step 1: Create the internationalization middleware
+const intlMiddleware = createIntlMiddleware({
+  locales: locales,
+  defaultLocale: 'en',
+  localePrefix: 'as-needed',
+  // For better SEO, ensure each locale has its own unique URL
+  localeDetection: true
+});
+
+// Step 2: Define a combined middleware function
 export async function middleware(request: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req: request, res })
+  const pathname = request.nextUrl.pathname;
   
-  // Refresh session if expired
-  await supabase.auth.getSession()
+  // Skip auth check for public routes
+  const isPublicPage = 
+    pathname === '/' || 
+    pathname === '/login' || 
+    pathname === '/auth/callback' || 
+    pathname.startsWith('/api/') || 
+    pathname.includes('favicon') ||
+    pathname.includes('.json') ||
+    pathname.includes('.webmanifest') ||
+    pathname.match(/\.[^/]+$/); // Skip files with extensions
   
-  // Optional: Check for protected routes and redirect if not authenticated
-  const path = request.nextUrl.pathname
-  const isAuthRoute = path === '/login' || path === '/signup' || path === '/auth' || path.startsWith('/auth/')
-  const isApiRoute = path.startsWith('/api/')
-  const isPublicRoute = path === '/' || path === '/pricing' || isAuthRoute || isApiRoute
+  // First, handle internationalization
+  const response = intlMiddleware(request);
   
-  if (!isPublicRoute) {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      return NextResponse.redirect(new URL('/login', request.url))
+  // Then, handle authentication if needed
+  if (!isPublicPage) {
+    try {
+      const supabase = createMiddlewareClient({ req: request, res: response });
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // If no session and this is a protected route, redirect to login
+      if (!session) {
+        const url = new URL('/login', request.url);
+        // Preserve the locale if present in the original URL
+        const locale = request.nextUrl.pathname.split('/')[1];
+        if (locales.includes(locale)) {
+          url.pathname = `/${locale}${url.pathname}`;
+        }
+        return NextResponse.redirect(url);
+      }
+    } catch (e) {
+      console.error('Middleware authentication error:', e);
+      // Fallback to login page on auth errors for security
+      const url = new URL('/login', request.url);
+      // Preserve locale if present
+      const locale = request.nextUrl.pathname.split('/')[1];
+      if (locales.includes(locale)) {
+        url.pathname = `/${locale}${url.pathname}`;
+      }
+      return NextResponse.redirect(url);
     }
   }
   
-  return res
+  return response;
 }
 
 export const config = {
+  // Match all pathnames except for specific static files and system paths
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
-} 
+    // Match all pathnames
+    '/((?!_next/static|_next/image).*)',
+    // Match specific locale paths
+    '/(en|ms)/:path*'
+  ]
+}; 

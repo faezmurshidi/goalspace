@@ -1,10 +1,15 @@
 import { MainNav } from '@/components/main-nav';
 import { ModeToggle } from '@/components/mode-toggle';
+import LanguageSelector from '@/components/language-selector';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Brain } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 
 export function SiteHeader() {
+  const locale = useLocale();
+  const t = useTranslations();
+  
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -20,10 +25,10 @@ export function SiteHeader() {
             whileHover={{ scale: 1.05 }}
             className="flex items-center gap-2"
           >
-            <Link href="/" className="flex items-center gap-2">
+            <Link href={`/${locale}`} className="flex items-center gap-2">
               <Brain className="h-6 w-6 text-rose-500" />
               <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500">
-                GoalSpace
+                {t('common.appName')}
               </span>
             </Link>
           </motion.div>
@@ -33,16 +38,17 @@ export function SiteHeader() {
             {/* Main Navigation */}
             <nav className="flex items-center gap-6">
               <Link
-                href="/pricing"
+                href={`/${locale}/pricing`}
                 className="text-sm font-medium text-white/70 transition-colors hover:text-white"
               >
-                Pricing
+                {t('navigation.pricing')}
               </Link>
               <MainNav />
             </nav>
 
-            {/* Theme Toggle */}
+            {/* Theme and Language Controls */}
             <div className="flex items-center gap-2">
+              <LanguageSelector />
               <ModeToggle />
             </div>
           </div>

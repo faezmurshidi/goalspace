@@ -1,0 +1,177 @@
+{
+  "common": {
+    "appName": "Goalspace",
+    "description": "Platform Pencapaian Matlamat Berkuasa AI"
+  },
+  "mcp": {
+    "title": "Panel Kawalan Saya",
+    "description": "Urus akaun dan tetapan anda"
+  },
+  "navigation": {
+    "pricing": "Lihat Harga",
+    "login": "Log Masuk",
+    "switchLanguage": "Tukar bahasa",
+    "dashboard": "Papan Pemuka"
+  },
+  "auth": {
+    "signIn": "Log Masuk",
+    "signOut": "Log Keluar",
+    "register": "Daftar",
+    "forgotPassword": "Lupa Kata Laluan",
+    "resetPassword": "Tetapkan Semula Kata Laluan",
+    "email": "E-mel",
+    "password": "Kata Laluan",
+    "confirmPassword": "Sahkan Kata Laluan"
+  },
+  "hero": {
+    "title": "Platform Pencapaian Matlamat Berkuasa AI",
+    "anything": "apa-apa sahaja.",
+    "launchArticle": "Baca artikel pelancaran kami",
+    "description": "Tukarkan matlamat anda menjadi kenyataan dengan bimbingan AI, laluan pembelajaran peribadi, dan pendekatan berstruktur untuk mencapai kejayaan.",
+    "getStarted": "Mulakan percuma",
+    "watchDemo": "Tonton demo",
+    "joinUsers": "Sertai 10,000+ pelajar yang telah mencapai matlamat mereka",
+    "enterGoal": "Masukkan matlamat anda",
+    "goalDescription": "Beritahu kami apa yang ingin anda capai dan AI kami akan membuat ruang pembelajaran peribadi untuk anda",
+    "noSignup": "Tiada pendaftaran diperlukan untuk pratonton",
+    "itsFree": "Ia percuma",
+    "features": {
+      "personalizedSpaces": "Ruang peribadi",
+      "aiMentorship": "Bimbingan AI",
+      "goalTracking": "Penjejakan matlamat",
+      "structuredLearning": "Pembelajaran berstruktur",
+      "communitySupport": "Sokongan komuniti",
+      "adaptiveContent": "Kandungan adaptif"
+    }
+  },
+  "header": {
+    "title": "GoalSpace"
+  },
+  "trustSignals": {
+    "title": "Dipercayai oleh organisasi terkemuka dan dipaparkan dalam",
+    "partners": [
+      "TechCrunch",
+      "Forbes",
+      "Harvard",
+      "MIT",
+      "FastCompany",
+      "Y Combinator"
+    ]
+  },
+  "statistics": {
+    "title": "Mengubah cara orang belajar dan mencapai",
+    "description": "Platform berkuasa AI kami telah membantu ribuan orang mencapai matlamat mereka melalui laluan pembelajaran berstruktur dan bimbingan peribadi.",
+    "stats": [
+      {
+        "value": "10,000+",
+        "label": "Pengguna Aktif",
+        "description": "Belajar dan berkembang setiap hari"
+      },
+      {
+        "value": "40,000+",
+        "label": "Ruang Dicipta",
+        "description": "Laluan pembelajaran teratur"
+      },
+      {
+        "value": "98%",
+        "label": "Kadar Penyelesaian",
+        "description": "Untuk pengguna dengan mentor AI"
+      },
+      {
+        "value": "85%",
+        "label": "Kadar Kejayaan",
+        "description": "Pengguna mencapai matlamat mereka"
+      }
+    ]
+  },
+  "caseStudies": {
+    "sectionTag": "Kisah Kejayaan",
+    "title": "Orang sebenar, hasil sebenar",
+    "description": "Temui bagaimana Goalspace telah mengubah perjalanan pembelajaran dan membantu orang mencapai hasil luar biasa.",
+    "featuredCase": {
+      "title": "Dari Pemula ke Pembangun Full-Stack dalam 6 Bulan",
+      "description": "Alex tidak mempunyai pengalaman pengkodan tetapi ingin menukar kerjaya. Menggunakan laluan pembelajaran berstruktur dan bimbingan AI Goalspace, dia beralih dari pemula sepenuhnya hingga mendapat peranan pembangun junior dalam hanya 6 bulan.",
+      "metrics": [
+        {
+          "value": "4 bulan",
+          "label": "Masa Dijimatkan"
+        },
+        {
+          "value": "100%",
+          "label": "Kadar Penyelesaian"
+        },
+        {
+          "value": "$12,000",
+          "label": "Penjimatan Kos"
+        }
+      ],
+      "person": {
+        "name": "Alex Chen",
+        "title": "Pembangun Perisian",
+        "initials": "AC"
+      }
+    }
+  },
+  "integrations": {
+    "title": "Integrasi Lancar",
+    "description": "Hubungkan Goalspace dengan aplikasi dan perkhidmatan kegemaran anda untuk meningkatkan pengalaman pembelajaran anda.",
+    "items": [
+      {
+        "name": "Google Calendar",
+        "description": "Jadualkan sesi belajar dan jejaki kemajuan",
+        "icon": "📅"
+      },
+      {
+        "name": "Slack",
+        "description": "Bekerjasama dengan kumpulan belajar",
+        "icon": "💬"
+      },
+      {
+        "name": "GitHub",
+        "description": "Hubungkan projek kod anda secara langsung",
+        "icon": "💻"
+      },
+      {
+        "name": "YouTube",
+        "description": "Sertakan tutorial video dalam ruang pembelajaran",
+        "icon": "▶️"
+      },
+      {
+        "name": "Notion",
+        "description": "Import nota dan dokumentasi",
+        "icon": "📝"
+      },
+      {
+        "name": "Spotify",
+        "description": "Senarai main fokus untuk pembelajaran produktif",
+        "icon": "🎵"
+      }
+    ],
+    "footer": "Lebih banyak integrasi akan datang tidak lama lagi. Cadangkan integrasi yang anda ingin lihat."
+  },
+  "notifications": {
+    "welcome": {
+      "title": "Selamat datang ke Goalspace!",
+      "description": "Kami gembira kerana anda menyertai kami untuk pelancaran kami. Nikmati akses istimewa ke semua ciri premium."
+    }
+  },
+  "seo": {
+    "applicationCategory": "EducationalApplication, ProductivityApplication",
+    "price": "9.99",
+    "currency": "USD",
+    "operatingSystem": "All",
+    "rating": {
+      "value": "4.8",
+      "count": "1250",
+      "best": "5",
+      "worst": "1"
+    },
+    "features": [
+      "Bimbingan AI peribadi",
+      "Laluan pembelajaran berstruktur",
+      "Penjejakan kemajuan",
+      "Sokongan komuniti",
+      "Kemas kini kandungan berkala"
+    ]
+  }
+}

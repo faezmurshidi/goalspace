@@ -1,6 +1,6 @@
 import './globals.css';
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 
 import { ThemeProvider } from '@/components/theme-provider';
@@ -8,6 +8,12 @@ import { Toaster } from '@/components/ui/toaster';
 import AnalyticsProvider from './providers/analytics-provider';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  minimumScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://goalspace.com'),
@@ -73,11 +79,6 @@ export const metadata: Metadata = {
     canonical: 'https://goalspace.com',
   },
   manifest: '/site.webmanifest',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    minimumScale: 1,
-  },
   category: 'education',
 };
 
