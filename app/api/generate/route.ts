@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import fetch from 'node-fetch';
+import { shouldUseMockResponse } from '@/lib/utils';
+import { mockResponseMap } from '@/lib/utils/mock-data';
 
 // Define our own request type to avoid conflicts
 interface ApiRequest {
@@ -91,7 +93,17 @@ async function generateWithPerplexity(prompt: string): Promise<string> {
 
 export async function POST(request: Request) {
   try {
-    const { useCase, model, prompt } = (await request.json()) as ApiRequest;
+    const requestData = await request.json() as ApiRequest;
+    const { useCase, model, prompt } = requestData;
+    
+    // Check if we should use mock responses
+    if (shouldUseMockResponse()) {
+      console.log('🔄 Using mock response for API call (skipApiCall flag enabled)');
+      const mockResponseFn = mockResponseMap['/api/generate'];
+      if (mockResponseFn) {
+        return NextResponse.json(mockResponseFn(requestData));
+      }
+    }
     
     // Check for missing environment variables based on model
     if (model === 'gpt' && !process.env.OPENAI_API_KEY) {

@@ -78,6 +78,11 @@ Goalspace is an AI-powered goal setting and achievement platform that helps user
 - Locale files in /locales and /src/locales directories
 - Supported locales: 'en', 'ms' (English and Malay)
 
+### Development Flags
+- Set `NEXT_PUBLIC_SKIP_API_CALL=true` in `.env.local` to use mock data instead of real API calls
+- Mock data is located in `/lib/utils/mock-data.ts`
+- This feature saves costs during development by avoiding unnecessary LLM API calls
+
 ## User Flow
 
 1. User creates an account and logs in

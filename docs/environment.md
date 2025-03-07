@@ -54,7 +54,29 @@ ANTHROPIC_API_KEY=...
 NEXT_PUBLIC_ENABLE_CHAT=true
 NEXT_PUBLIC_ENABLE_SKILL_TREE=true
 NEXT_PUBLIC_ENABLE_ANALYTICS=true
+
+# Development Flags
+NEXT_PUBLIC_SKIP_API_CALL=false  # Set to 'true' to use mock data instead of real API calls
 ```
+
+## Development Flags
+
+### Skip API Calls (NEXT_PUBLIC_SKIP_API_CALL)
+
+When this flag is set to `true` in development, the application will use mock data instead of making real API calls to external LLM providers. This is useful for:
+
+- Reducing development costs by avoiding unnecessary API calls
+- Testing flows and UI without dependent services
+- Speeding up development cycles with consistent responses
+
+To enable this flag:
+
+```bash
+# In .env.local
+NEXT_PUBLIC_SKIP_API_CALL=true
+```
+
+Mock responses are located in `/lib/utils/mock-data.ts` and can be modified to test different scenarios.
 
 ## Vercel Deployment
 

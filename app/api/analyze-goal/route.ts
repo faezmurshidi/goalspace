@@ -3,6 +3,8 @@ import { generateObject, generateText } from 'ai';
 import { anthropic } from "@ai-sdk/anthropic"
 import { deepseek } from "@ai-sdk/deepseek"
 import { SpaceSchema as AISpaceSchema, QuestionSchema as AIQuestionSchema } from '@/lib/utils/schemas';
+import { shouldUseMockResponse } from '@/lib/utils';
+import { mockResponseMap } from '@/lib/utils/mock-data';
 
 const SYSTEM_PROMPT = `You are an AI goal analysis expert. Your role is to help users break down their goals into achievable steps and create a structured plan.`;
 
@@ -88,10 +90,39 @@ Provide your response in the following JSON format:
 
 export async function POST(request: Request) {
   try {
-    const { goal, answers, isAdvancedMode, modelProvider = 'anthropic' } = await request.json();
+    const requestData = await request.json();
+    const { goal, answers, isAdvancedMode, modelProvider = 'anthropic' } = requestData;
 
     if (!goal) {
       return NextResponse.json({ error: 'Goal is required' }, { status: 400 });
+    }
+
+    // Check if we should use mock responses
+    if (shouldUseMockResponse()) {
+      console.log('🔄 Using mock response for API call (skipApiCall flag enabled)');
+      
+      // If no answers provided, return mock questions
+      if (!answers) {
+        const mockResponse = mockResponseMap['/api/analyze-goal/route']();
+        return NextResponse.json({ questions: mockResponse.questions }, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
+          }
+        });
+      }
+      
+      // If answers are provided, return mock spaces
+      const mockResponse = mockResponseMap['/api/generate-spaces/route']();
+      return NextResponse.json({
+        spaces: mockResponse.spaces,
+        reasoning: "Mock reasoning for testing purposes.",
+      }, {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        }
+      });
     }
 
     // If no answers provided, generate questions
