@@ -118,20 +118,23 @@ export function GoalSwitcher({
   const isSingleGoal = goals.length === 1;
   const hasGoals = goals.length > 0;
 
+  // Wrap handleGoalSelect in useCallback to stabilize its identity
+  const memoizedHandleGoalSelect = React.useCallback(handleGoalSelect, []);
+
   // Update keyboard shortcuts handling
   React.useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && !isSingleGoal) {
         const num = parseInt(event.key);
         if (!isNaN(num) && num > 0 && num <= goals.length) {
-          handleGoalSelect(goals[num - 1]);
+          memoizedHandleGoalSelect(goals[num - 1]);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [goals, isSingleGoal]);
+  }, [goals, isSingleGoal, memoizedHandleGoalSelect]);
 
   return (
     <SidebarMenu>

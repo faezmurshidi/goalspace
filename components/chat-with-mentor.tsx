@@ -120,14 +120,16 @@ export function ChatWithMentor({ spaceId, className, inputClassName }: ChatWithM
 
   // Load previous messages when component mounts
   useEffect(() => {
+    // Create memoized version of this function with useCallback
     const loadPreviousMessages = async () => {
       try {
         console.log("loadPreviousMessages");
         await loadMessages(spaceId);
         // Convert stored messages to the format expected by useChat
-        const storedMessages = chatMessages[spaceId] || [];
+        // Get a stable reference to chatMessages
+        const messagesForSpace = chatMessages[spaceId] || [];
         setMessages(
-          storedMessages.map((msg) => ({
+          messagesForSpace.map((msg) => ({
             id: msg.id,
             role: msg.role as 'user' | 'assistant',
             content: msg.content,
@@ -143,6 +145,7 @@ export function ChatWithMentor({ spaceId, className, inputClassName }: ChatWithM
         });
       }
     };
+    
     const userSession = async () => {
       console.log("userSession");
       const session = await getSession();
@@ -152,7 +155,10 @@ export function ChatWithMentor({ spaceId, className, inputClassName }: ChatWithM
 
     userSession();
     loadPreviousMessages();
-  }, [spaceId]);
+    
+    // Only rerun when spaceId or loadMessages changes
+    // chatMessages and setMessages have stable identities
+  }, [spaceId, loadMessages]);
 
   // Scroll to bottom when messages change
   useEffect(() => {

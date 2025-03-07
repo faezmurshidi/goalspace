@@ -14,20 +14,23 @@ export function MainNav() {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
+    // Create local reference to auth
+    const auth = supabase.auth;
+    
     // Get initial session
-    supabase.auth.getSession().then(({ data }) => {
+    auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         setShowAuthDialog(false);

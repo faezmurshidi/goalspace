@@ -103,39 +103,48 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
     }
   };
 
-  // Cleanup function
-  const cleanup = () => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    if (sourceNodeRef.current) {
-      sourceNodeRef.current.disconnect();
-    }
-    if (analyserRef.current) {
-      analyserRef.current.disconnect();
-    }
-    // Don't close the audio context, just disconnect nodes
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
-    }
-  };
-
   // Effect for audio visualization
   useEffect(() => {
     setupAudioVisualization();
-    return cleanup;
-  }, [audioRef.current, canvasRef.current, space?.space_color]);
+    
+    // Inline cleanup function
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (sourceNodeRef.current) {
+        sourceNodeRef.current.disconnect();
+      }
+      if (analyserRef.current) {
+        analyserRef.current.disconnect();
+      }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [space?.space_color, audioUrl]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - separate effect for actual unmounting
   useEffect(() => {
     return () => {
-      cleanup();
-      // Only close the audio context when component unmounts
+      // Cleanup audio contexts and refs on unmount
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (sourceNodeRef.current) {
+        sourceNodeRef.current.disconnect();
+      }
+      if (analyserRef.current) {
+        analyserRef.current.disconnect();
+      }
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
     };
-  }, []);
+  }, [audioUrl]);
 
   // Time update handler
   useEffect(() => {
@@ -152,7 +161,7 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
     };
-  }, [audioRef.current]);
+  }, []);
 
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);

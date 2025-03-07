@@ -35,7 +35,8 @@ export function KnowledgeBase({ spaceId, onClose, onDocumentSelect }: KnowledgeB
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(true);
 
-  const fetchDocuments = async () => {
+  // Use useCallback to memoize fetchDocuments
+  const fetchDocuments = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -46,12 +47,12 @@ export function KnowledgeBase({ spaceId, onClose, onDocumentSelect }: KnowledgeB
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [spaceId, loadDocuments]);
 
   // Load documents when component mounts
   useEffect(() => {
     fetchDocuments();
-  }, [spaceId, loadDocuments]);
+  }, [fetchDocuments]);
 
   const allTags = new Set(documents.flatMap(doc => doc.tags || []));
 

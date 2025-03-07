@@ -41,15 +41,18 @@ export function GeneratedSpaces() {
   const supabase = createClient();
 
   useEffect(() => {
+    // Create a stable reference to the auth object
+    const auth = supabase.auth;
+    
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
+    auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       setUser(session?.user ?? null);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
+    } = auth.onAuthStateChange((_event: string, session: Session | null) => {
       setUser(session?.user ?? null);
     });
 
@@ -68,14 +71,17 @@ export function GeneratedSpaces() {
         setIsSaving(true);
         setError(null);
 
-        // Get the current user
+        // Get the current user using the stable supabase reference
+        const auth = supabase.auth;
+        const db = supabase;
+        
         const {
           data: { user },
-        } = await supabase.auth.getUser();
+        } = await auth.getUser();
         if (!user) return;
 
         // Create the goal in Supabase
-        const { data: goalData, error: goalError } = await supabase
+        const { data: goalData, error: goalError } = await db
           .from('goals')
           .insert({
             user_id: user.id,
@@ -94,7 +100,7 @@ export function GeneratedSpaces() {
         // Create spaces in Supabase
         const parsedSpaces = JSON.parse(pendingSpaces);
         const spacesPromises = parsedSpaces.map(async (space: Space, index: number) => {
-          const { data: spaceData, error: spaceError } = await supabase
+          const { data: spaceData, error: spaceError } = await db
             .from('spaces')
             .insert({
               goal_id: goalData.id,

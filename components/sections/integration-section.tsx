@@ -105,7 +105,7 @@ export function IntegrationSection() {
         
         <div className="mt-16 text-center">
           <p className="text-sm text-muted-foreground">
-            More integrations coming soon. Suggest an integration you'd like to see.
+            More integrations coming soon. Suggest an integration you&apos;d like to see.
           </p>
         </div>
       </div>
