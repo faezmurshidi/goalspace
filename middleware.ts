@@ -49,6 +49,14 @@ export async function middleware(request: NextRequest) {
       }
     } catch (e) {
       console.error('Middleware authentication error:', e);
+      // Fallback to login page on auth errors for security
+      const url = new URL('/login', request.url);
+      // Preserve locale if present
+      const locale = request.nextUrl.pathname.split('/')[1];
+      if (locales.includes(locale)) {
+        url.pathname = `/${locale}${url.pathname}`;
+      }
+      return NextResponse.redirect(url);
     }
   }
   
