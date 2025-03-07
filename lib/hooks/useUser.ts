@@ -25,6 +25,9 @@ export function useUser() {
   });
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  // Use a ref to track previous profile ID to avoid circular dependencies
+  const profileIdRef = useRef<string | undefined>(userData.profile?.id);
+  
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -86,6 +89,9 @@ export function useUser() {
           isLoading: false,
           error: null,
         });
+        
+        // Update the ref with the new profile ID
+        profileIdRef.current = profile?.id;
 
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -99,50 +105,58 @@ export function useUser() {
 
     fetchUserData();
 
-    // Set up realtime subscriptions
-    const profileSubscription = supabase
-      .channel('profile-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'users',
-          filter: `id=eq.${userData.profile?.id}`,
-        },
-        (payload: any) => {
-          setUserData(prev => ({
-            ...prev,
-            profile: payload.new as User,
-          }));
-        }
-      )
-      .subscribe();
+    // Get a stable reference to profile ID for subscriptions
+    const profileId = profileIdRef.current;
+    
+    // Only set up subscriptions if we have a profile ID
+    if (profileId) {
+      // Set up realtime subscriptions
+      const profileSubscription = supabase
+        .channel('profile-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'users',
+            filter: `id=eq.${profileId}`,
+          },
+          (payload: any) => {
+            setUserData(prev => ({
+              ...prev,
+              profile: payload.new as User,
+            }));
+          }
+        )
+        .subscribe();
 
-    const settingsSubscription = supabase
-      .channel('settings-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_settings',
-          filter: `user_id=eq.${userData.profile?.id}`,
-        },
-        (payload: any) => {
-          setUserData(prev => ({
-            ...prev,
-            settings: payload.new as UserSettings,
-          }));
-        }
-      )
-      .subscribe();
+      const settingsSubscription = supabase
+        .channel('settings-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_settings',
+            filter: `user_id=eq.${profileId}`,
+          },
+          (payload: any) => {
+            setUserData(prev => ({
+              ...prev,
+              settings: payload.new as UserSettings,
+            }));
+          }
+        )
+        .subscribe();
 
-    return () => {
-      profileSubscription.unsubscribe();
-      settingsSubscription.unsubscribe();
-    };
-  }, []);
+      return () => {
+        profileSubscription.unsubscribe();
+        settingsSubscription.unsubscribe();
+      };
+    }
+    
+    return undefined;
+  }, [router, supabase]);
 
   return userData;
 } 

@@ -161,7 +161,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
       icon: <Book className="h-5 w-5" />,
       variant: 'ghost',
     },
-  ], [theme, router])
+  ], [theme, router, setTheme])
 
   return (
     <div className="flex min-h-screen">

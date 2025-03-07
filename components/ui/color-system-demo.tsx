@@ -202,7 +202,7 @@ export function ColorSystemDemo() {
           <div className="glass-effect rounded-lg p-6">
             <h4 className="mb-2 font-semibold">How to Use</h4>
             <div className="rounded bg-secondary/80 p-2 text-sm font-mono">
-              &lt;div className="glass-effect"&gt;
+              &lt;div className=&quot;glass-effect&quot;&gt;
                 <br />
                 &nbsp;&nbsp;Content here
                 <br />
@@ -216,7 +216,7 @@ export function ColorSystemDemo() {
       <div className="mt-12 text-center">
         <h3 className="mb-4 text-xl font-semibold">Gradient Text</h3>
         <p className="gradient-text text-4xl font-bold">Beautiful Gradient Typography</p>
-        <p className="mt-2 text-sm text-muted-foreground">Use the 'gradient-text' utility class for eye-catching headlines</p>
+        <p className="mt-2 text-sm text-muted-foreground">Use the &apos;gradient-text&apos; utility class for eye-catching headlines</p>
       </div>
     </div>
   );
