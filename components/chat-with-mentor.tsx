@@ -120,8 +120,15 @@ export function ChatWithMentor({ spaceId, className, inputClassName }: ChatWithM
 
   // Load previous messages when component mounts
   useEffect(() => {
-    // Create memoized version of this function with useCallback
-    const loadPreviousMessages = async () => {
+// At the top of the file, ensure you have:
+import { useCallback } from 'react';
+
+// ...
+
+// Memoize function to prevent unnecessary re-renders
+const loadPreviousMessages = useCallback(async () => {
+  // ... existing function body
+}, [spaceId, loadMessages, setMessages]);
       try {
         console.log("loadPreviousMessages");
         await loadMessages(spaceId);
