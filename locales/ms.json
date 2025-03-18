@@ -194,5 +194,11 @@
   "goals": {
     "createNewGoal": "Cipta Matlamat Baru",
     "goalBreakdown": "Mari pecahkan matlamat anda menjadi ruang pembelajaran yang boleh diambil tindakan."
+  },
+  "siteInfo": {
+    "enhanceExperience": "Tingkatkan pengalaman anda",
+    "dataCollectionMessage": "Kami mengumpul maklumat tidak sensitif seperti jenis peranti dan pilihan bahasa untuk meningkatkan pengalaman anda. Tiada data peribadi dikumpul atau dikongsi.",
+    "accept": "Terima",
+    "decline": "Tolak"
   }
 }

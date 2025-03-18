@@ -6,6 +6,19 @@ import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import AnalyticsProvider from './providers/analytics-provider';
+import { SiteInfoProvider } from '@/providers/site-info-provider';
+import dynamic from 'next/dynamic';
+
+// Dynamic import of components that depend on client-side features
+const SiteInfoConsentBanner = dynamic(
+  () => import('@/components/site-info-consent-banner').then(mod => mod.SiteInfoConsentBanner),
+  { ssr: false }
+);
+
+const LanguageDetection = dynamic(
+  () => import('@/components/language-detection').then(mod => mod.LanguageDetection),
+  { ssr: false }
+);
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' });
 
@@ -90,7 +103,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={inter.className}>
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AnalyticsProvider>
+            <SiteInfoProvider>
+              {/* Language detection based on site info */}
+              <LanguageDetection />
+              
+              {/* Consent banner */}
+              <SiteInfoConsentBanner />
+              
+              {/* Main app content */}
+              {children}
+            </SiteInfoProvider>
+          </AnalyticsProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

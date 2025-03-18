@@ -194,5 +194,11 @@
   "goals": {
     "createNewGoal": "Create New Goal",
     "goalBreakdown": "Let's break down your goal into actionable learning spaces."
+  },
+  "siteInfo": {
+    "enhanceExperience": "Enhance your experience",
+    "dataCollectionMessage": "We collect non-sensitive information like device type and language preference to improve your experience. No personal data is collected or shared.",
+    "accept": "Accept",
+    "decline": "Decline"
   }
 } 
