@@ -27,7 +27,10 @@ const nextConfig = {
     // Use the faster Rust compiler (more reliable with complex imports/features)
     swcMinify: true,
     // Opt out of static generation for routes handled by your middleware
-    fallbackNodePolyfills: false
+    fallbackNodePolyfills: false,
+    // Disable ISR cache during build to prevent revalidation errors
+    isrMemoryCacheSize: 0,
+    incrementalCacheHandlerPath: false
   },
   // Use trailing slash to improve route matching
   trailingSlash: true,
