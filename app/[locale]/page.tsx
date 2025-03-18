@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Suspense } from 'react';
@@ -11,7 +11,7 @@ import { FooterSection } from '@/components/sections/footer-section';
 import { HowItWorksSection } from '@/components/sections/how-it-works-section';
 import { TestimonialsSection } from '@/components/sections/testimonials-section';
 import { SiteHeader } from '@/components/site-header';
-import { Hero } from '@/components/ui/animated-hero';
+import AnimatedHero from '@/components/ui/animated-hero';
 import { FAQ } from '@/components/ui/faq-section';
 import { useToast } from '@/components/ui/use-toast';
 import Script from 'next/script';
@@ -19,7 +19,7 @@ import Link from 'next/link';
 
 // Content component to be wrapped in Suspense
 function LocalizedHomeContent() {
-  const t = useTranslations();
+  const { t } = useAppTranslations();
   const params = useParams();
   const locale = params.locale as string;
   const { toast } = useToast();
@@ -115,7 +115,7 @@ function LocalizedHomeContent() {
 
           {/* Hero Section */}
           <div className="container mx-auto px-4 md:px-6 max-w-7xl py-12 md:py-16 lg:py-20">
-            <Hero />
+            <AnimatedHero />
           </div>
 
           {/* Generated Spaces Section */}

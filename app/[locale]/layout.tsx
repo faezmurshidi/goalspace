@@ -1,24 +1,15 @@
 import React, { ReactNode } from 'react';
 import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
-import LanguageProvider from '@/components/providers/language-provider';
 import { Toaster } from '@/components/ui/toaster';
-import { setRequestLocale } from 'next-intl/server';
-
-// Import localized messages
-import enMessages from '../../locales/en.json';
-import msMessages from '../../locales/ms.json';
+import I18nProvider from '@/components/providers/i18n-provider';
+import AnalyticsProvider from '@/app/providers/analytics-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
-// Message dictionary by locale
-const messages: Record<string, any> = {
-  en: enMessages,
-  ms: msMessages,
-};
-
+// Define supported locales for static generation
 export function generateStaticParams() {
-  return [{ locale: 'en' }, { locale: 'ms' }];
+  return [{ locale: 'en' }, { locale: 'ms' }, { locale: 'zh' }];
 }
 
 export default function RootLayout({
@@ -28,23 +19,22 @@ export default function RootLayout({
   children: ReactNode;
   params: { locale: string };
 }) {
-  // This enables static rendering
-  setRequestLocale(locale);
-  
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={inter.className}>
-        <LanguageProvider locale={locale} messages={messages[locale]}>
+        <I18nProvider>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <AnalyticsProvider>
+              {children}
+            </AnalyticsProvider>
             <Toaster />
           </ThemeProvider>
-        </LanguageProvider>
+        </I18nProvider>
       </body>
     </html>
   );

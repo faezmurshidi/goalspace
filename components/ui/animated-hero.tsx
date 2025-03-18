@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, MoveRight, PhoneCall, Play } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -12,8 +12,12 @@ import { GoalForm } from '../goal-form';
 import { BorderBeam } from './border-beam';
 import { Card } from './card';
 
-function Hero() {
-  const t = useTranslations();
+interface AnimatedHeroProps {
+  className?: string;
+}
+
+export default function AnimatedHero({ className }: AnimatedHeroProps) {
+  const { t } = useAppTranslations();
   const params = useParams();
   const locale = params.locale as string;
   const [titleNumber, setTitleNumber] = useState(0);
@@ -198,5 +202,3 @@ function Hero() {
     </div>
   );
 }
-
-export { Hero };

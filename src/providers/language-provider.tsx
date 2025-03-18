@@ -1,5 +1,6 @@
-import { NextIntlClientProvider } from 'next-intl';
-import { ReactNode } from 'react';
+import { I18nextProvider } from 'react-i18next';
+import { ReactNode, useEffect } from 'react';
+import i18n from '@/lib/i18n';
 
 interface LanguageProviderProps {
   locale: string;
@@ -12,9 +13,24 @@ export default function LanguageProvider({
   children,
   messages 
 }: LanguageProviderProps) {
+  // Update i18n language based on the locale prop
+  useEffect(() => {
+    if (locale && i18n.language !== locale) {
+      i18n.changeLanguage(locale);
+    }
+    
+    // If we have messages, we can dynamically add them
+    if (messages) {
+      // Add resources for the current locale if not already added
+      if (messages && !i18n.hasResourceBundle(locale, 'translation')) {
+        i18n.addResourceBundle(locale, 'translation', messages);
+      }
+    }
+  }, [locale, messages]);
+
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
+    <I18nextProvider i18n={i18n}>
       {children}
-    </NextIntlClientProvider>
+    </I18nextProvider>
   );
 } 

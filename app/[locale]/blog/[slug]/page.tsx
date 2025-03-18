@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 import { SiteHeader } from '@/components/site-header';
 import { FooterSection } from '@/components/sections/footer-section';
 import Link from 'next/link';
@@ -14,7 +14,7 @@ import { Suspense } from 'react';
 
 // Inner component that uses useParams
 function ArticlePageContent() {
-  const t = useTranslations();
+  const { t } = useAppTranslations();
   const params = useParams();
   const locale = params.locale as string;
   const slug = params.slug as string;

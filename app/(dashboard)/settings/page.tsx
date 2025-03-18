@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 import * as z from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ function SettingsContent() {
   const [isLoading, setIsLoading] = useState(false);
   const { profile, settings, apiUsage, subscription } = useUser();
   const supabase = createClient();
-  const t = useTranslations();
+  const { t } = useAppTranslations();
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
