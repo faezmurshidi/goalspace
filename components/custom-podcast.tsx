@@ -122,7 +122,7 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
         URL.revokeObjectURL(audioUrl);
       }
     };
-  }, [space?.space_color, audioUrl]);
+  }, [space?.space_color, audioUrl, setupAudioVisualization]);
 
   // Cleanup on unmount - separate effect for actual unmounting
   useEffect(() => {
@@ -188,6 +188,23 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
     if (!audioRef.current) return;
     setIsMuted(!isMuted);
     audioRef.current.muted = !isMuted;
+  };
+
+  // Function to clean up audio resources
+  const cleanup = () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    if (sourceNodeRef.current) {
+      sourceNodeRef.current.disconnect();
+    }
+    if (analyserRef.current) {
+      analyserRef.current.disconnect();
+    }
+    if (audioContextRef.current) {
+      // Close is not used here as we might reuse the audio context
+      // but we ensure all connections are cleaned up
+    }
   };
 
   const handlePlayPause = (podcast?: Podcast) => {
