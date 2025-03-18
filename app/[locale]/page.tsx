@@ -1,8 +1,9 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Suspense } from 'react';
 import { GeneratedSpaces } from '@/components/generated-spaces';
 import { CTASection } from '@/components/sections/cta-section';
 import { FeaturesSection } from '@/components/sections/features-section';
@@ -10,14 +11,15 @@ import { FooterSection } from '@/components/sections/footer-section';
 import { HowItWorksSection } from '@/components/sections/how-it-works-section';
 import { TestimonialsSection } from '@/components/sections/testimonials-section';
 import { SiteHeader } from '@/components/site-header';
-import { Hero } from '@/components/ui/animated-hero';
+import AnimatedHero from '@/components/ui/animated-hero';
 import { FAQ } from '@/components/ui/faq-section';
 import { useToast } from '@/components/ui/use-toast';
 import Script from 'next/script';
 import Link from 'next/link';
 
-export default function LocalizedHome() {
-  const t = useTranslations();
+// Content component to be wrapped in Suspense
+function LocalizedHomeContent() {
+  const { t } = useAppTranslations();
   const params = useParams();
   const locale = params.locale as string;
   const { toast } = useToast();
@@ -113,7 +115,7 @@ export default function LocalizedHome() {
 
           {/* Hero Section */}
           <div className="container mx-auto px-4 md:px-6 max-w-7xl py-12 md:py-16 lg:py-20">
-            <Hero />
+            <AnimatedHero />
           </div>
 
           {/* Generated Spaces Section */}
@@ -151,5 +153,14 @@ export default function LocalizedHome() {
         </div>
       </div>
     </>
+  );
+}
+
+// Main component with Suspense boundary
+export default function LocalizedHome({ params }: { params: { locale: string }}) {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <LocalizedHomeContent />
+    </Suspense>
   );
 } 

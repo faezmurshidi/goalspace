@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Sparkles, Zap, Brain, Settings } from 'lucide-react';
+import { trackEvent, trackFeatureUsage, trackError } from '@/app/_lib/analytics';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -97,6 +98,13 @@ export function GoalForm() {
     try {
       setIsLoading(true);
       setError('');
+      
+      // Track question generation start
+      trackEvent('goal_analysis_started', {
+        goal_length: goalText.length,
+        model_provider: modelProvider,
+        advanced_mode: isAdvancedMode
+      });
 
       const response = await fetch('/api/analyze-goal', {
         method: 'POST',
@@ -111,9 +119,21 @@ export function GoalForm() {
 
       const data = await response.json();
       setQuestions(data.questions);
+      
+      // Track successful question generation
+      trackEvent('questions_generated', {
+        question_count: data.questions.length,
+        model_provider: modelProvider,
+        goal_category: data.category || 'unknown'
+      });
     } catch (err) {
       setError('Failed to generate questions. Please try again.');
       console.error(err);
+      trackError('goal_analysis_error', 'Failed to generate questions', {
+        goal_length: goalText.length,
+        model_provider: modelProvider,
+        error_message: err instanceof Error ? err.message : 'Unknown error'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +143,14 @@ export function GoalForm() {
     try {
       setIsLoading(true);
       setError('');
+      
+      // Track goal analysis with answers
+      trackEvent('goal_analysis_with_answers', {
+        goal_length: goalText.length,
+        model_provider: modelProvider,
+        advanced_mode: isAdvancedMode,
+        answer_count: Object.keys(userAnswers).length
+      });
 
       const response = await fetch('/api/analyze-goal', {
         method: 'POST',
@@ -138,6 +166,14 @@ export function GoalForm() {
       if (!response.ok) throw new Error('Failed to analyze goal');
 
       const data = await response.json();
+
+      // Track successful space generation
+      trackFeatureUsage('spaces_generated', {
+        space_count: data.spaces.length,
+        model_provider: modelProvider,
+        advanced_mode: isAdvancedMode,
+        goal_type: data.goal_type || 'unknown'
+      });
 
       // Update local state
       setSpaces(data.spaces);
@@ -155,6 +191,12 @@ export function GoalForm() {
     } catch (err) {
       setError('Failed to analyze goal. Please try again.');
       console.error(err);
+      trackError('goal_analysis_error', 'Failed to generate spaces', {
+        goal_length: goalText.length,
+        model_provider: modelProvider,
+        advanced_mode: isAdvancedMode,
+        error_message: err instanceof Error ? err.message : 'Unknown error'
+      });
     } finally {
       setIsLoading(false);
       setShowGoalForm(false);
@@ -164,6 +206,14 @@ export function GoalForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!goal.trim()) return;
+    
+    // Track form submission
+    trackEvent('goal_form_submitted', {
+      has_questions: questions.length > 0,
+      goal_length: goal.trim().length,
+      model_provider: modelProvider,
+      advanced_mode: isAdvancedMode
+    });
 
     if (questions.length === 0) {
       getQuestions(goal.trim());

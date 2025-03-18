@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { createClient } from "@/utils/supabase/client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { trackEvent, trackError, identifyUser } from "@/app/_lib/analytics"
 
 export function LoginForm({
   className,
@@ -31,16 +32,37 @@ export function LoginForm({
     setLoading(true)
     
     try {
+      // Track login attempt
+      trackEvent('login_attempt', { method: 'email' })
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) throw error
+      
+      // Successful login tracking
+      trackEvent('login_success', { method: 'email' })
+      
+      // Identify user for future analytics
+      if (data.user) {
+        identifyUser(data.user.id, {
+          email: data.user.email,
+          auth_method: 'email',
+          last_login: new Date().toISOString()
+        })
+      }
+      
       router.push("/dashboard")
       router.refresh()
     } catch (error) {
       console.error("Error logging in:", error)
+      trackError('login_error', 'Email login failed', { 
+        email: email,
+        // Don't include password in error tracking for security
+        error_message: error instanceof Error ? error.message : 'Unknown error'
+      })
     } finally {
       setLoading(false)
     }
@@ -48,15 +70,26 @@ export function LoginForm({
 
   const handleOAuthLogin = async (provider: 'apple' | 'google') => {
     try {
+      // Track OAuth login attempt
+      trackEvent('login_attempt', { method: provider })
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
         }
       })
+      
       if (error) throw error
+      
+      // We can't track success here since OAuth redirects away
+      // Success tracking should happen in the callback handler
     } catch (error) {
       console.error("Error with OAuth login:", error)
+      trackError('login_error', `${provider} login failed`, { 
+        provider,
+        error_message: error instanceof Error ? error.message : 'Unknown error'
+      })
     }
   }
 

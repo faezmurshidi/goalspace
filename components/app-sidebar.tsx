@@ -20,7 +20,7 @@ import {
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { cva } from "class-variance-authority"
-import { useTranslations } from "next-intl"
+import { useAppTranslations } from "@/lib/hooks/use-translations"
 
 import { GoalSwitcher } from "@/components/goal-switcher"
 import type { Goal } from "@/components/goal-switcher"
@@ -103,7 +103,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
   const [isHovered, setIsHovered] = useState(false)
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const t = useTranslations()
+  const { t } = useAppTranslations()
   const { spaces } = useSpaceStore()
   const [activeGoal, setActiveGoal] = useState<Goal | undefined>(
     goals.find(g => g.id === initialGoalId) || goals[0]
@@ -332,7 +332,7 @@ function NavItem({ label, href, icon, color, onClick, className, state }: NavIte
 }
 
 function Logo({ open }: { open: boolean }) {
-  const t = useTranslations();
+  const { t } = useAppTranslations();
   return (
     <div className="flex items-center gap-2">
       <div className="h-8 w-8 rounded-lg bg-primary" />

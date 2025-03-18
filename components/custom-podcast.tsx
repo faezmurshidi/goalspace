@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Headphones, Loader2, Pause, Play, Volume2, VolumeX, SkipBack, SkipForward } from 'lucide-react';
@@ -40,8 +40,8 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
     fetchPodcasts(spaceId);
   }, [spaceId, fetchPodcasts]);
 
-  // Setup audio visualization
-  const setupAudioVisualization = () => {
+  // Setup audio visualization - wrapped in useCallback to stabilize its identity
+  const setupAudioVisualization = useCallback(() => {
     if (!audioRef.current || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
@@ -101,7 +101,7 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
     } catch (err) {
       console.error('Error setting up audio visualization:', err);
     }
-  };
+  }, [space?.space_color?.secondary, space?.space_color?.main]);
 
   // Effect for audio visualization
   useEffect(() => {
@@ -122,7 +122,7 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
         URL.revokeObjectURL(audioUrl);
       }
     };
-  }, [space?.space_color, audioUrl]);
+  }, [space?.space_color, audioUrl, setupAudioVisualization]);
 
   // Cleanup on unmount - separate effect for actual unmounting
   useEffect(() => {
@@ -188,6 +188,23 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
     if (!audioRef.current) return;
     setIsMuted(!isMuted);
     audioRef.current.muted = !isMuted;
+  };
+
+  // Function to clean up audio resources
+  const cleanup = () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    if (sourceNodeRef.current) {
+      sourceNodeRef.current.disconnect();
+    }
+    if (analyserRef.current) {
+      analyserRef.current.disconnect();
+    }
+    if (audioContextRef.current) {
+      // Close is not used here as we might reuse the audio context
+      // but we ensure all connections are cleaned up
+    }
   };
 
   const handlePlayPause = (podcast?: Podcast) => {

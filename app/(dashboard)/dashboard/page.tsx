@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Brain,
@@ -42,7 +42,8 @@ const mockTodos = [
   { id: '4', text: 'Read documentation', completed: false },
 ];
 
-export default function DashboardPage() {
+// Inner component with all the dashboard logic
+function DashboardPageContent() {
   const router = useRouter();
   const { spaces, goals, toggleSpaceCollapse, loadUserData } = useSpaceStore();
   const [activeGoal, setActiveGoal] = useState<(typeof goals)[0] | undefined>();
@@ -247,5 +248,14 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// Wrapper component with Suspense
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-full">Loading dashboard...</div>}>
+      <DashboardPageContent />
+    </Suspense>
   );
 }

@@ -1,106 +1,109 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 import { SiteHeader } from '@/components/site-header';
 import { FooterSection } from '@/components/sections/footer-section';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { Suspense } from 'react';
 
-export default function ArticlePage() {
-  const t = useTranslations();
+// Inner component that uses useParams
+function ArticlePageContent() {
+  const { t, currentLocale } = useAppTranslations();
   const params = useParams();
-  const locale = params.locale as string;
   
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main className="container mx-auto px-4 py-16 max-w-4xl">
         <Link 
-          href={`/${locale}/blog`} 
+          href={`/${currentLocale}/blog`} 
           className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-8"
         >
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to all articles
         </Link>
-        <article className="prose dark:prose-invert lg:prose-lg max-w-none">
-          <h1 className="mb-4 text-4xl font-bold">Getting Started with AI-Powered Goal Setting</h1>
-          <p className="text-muted-foreground mb-8">Published on March 18, 2024</p>
+        
+        <article className="prose prose-lg dark:prose-invert mx-auto">
+          <h1 className="text-4xl font-bold mb-6">Getting Started with GoalSpace</h1>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+            <time dateTime="2023-01-01">January 1, 2023</time>
+            <span>•</span>
+            <span>10 min read</span>
+          </div>
           
-          <div className="aspect-video w-full bg-muted rounded-lg mb-8"></div>
+          <p className="lead">{t('blog.gettingStarted.intro')}</p>
           
-          <p className="text-lg leading-relaxed mb-6">
-            Setting and achieving goals is a fundamental part of personal and professional growth. 
-            With the advent of AI technology, we now have powerful tools at our disposal to make 
-            this process more effective and personalized.
+          <h2>Setting Up Your First Goal</h2>
+          <p>
+            GoalSpace is designed to help you achieve your goals with the help of AI-powered 
+            mentorship and structured learning paths. In this guide, we&apos;ll walk you through 
+            the process of setting up your first goal and creating a personalized learning space.
           </p>
           
-          <h2 className="text-2xl font-bold mt-8 mb-4">Why AI-Powered Goal Setting?</h2>
-          <p className="mb-4">
-            Traditional goal-setting methods often lack personalization and adaptability. 
-            AI brings a new dimension to goal setting by:
+          <h3>1. Define Your Goal</h3>
+          <p>
+            The first step is to define your goal clearly. The more specific your goal, the 
+            better our AI can assist you. For example, instead of saying &quot;Learn Python&quot;, try 
+            &quot;Build a web scraper with Python to collect data from news websites&quot;.
           </p>
-          <ul className="list-disc pl-6 mb-6">
-            <li className="mb-2">Analyzing your patterns and preferences</li>
-            <li className="mb-2">Providing personalized recommendations</li>
-            <li className="mb-2">Adapting to your progress and challenges</li>
-            <li className="mb-2">Offering real-time feedback and adjustments</li>
+          
+          <h3>2. Create Your Space</h3>
+          <p>
+            Once you&apos;ve defined your goal, GoalSpace will create a personalized learning space 
+            for you. This space will include:
+          </p>
+          <ul>
+            <li>A structured learning path</li>
+            <li>Recommended resources</li>
+            <li>Milestone tracking</li>
+            <li>AI-powered mentorship</li>
           </ul>
           
-          <h2 className="text-2xl font-bold mt-8 mb-4">Getting Started</h2>
-          <p className="mb-4">
-            To begin your AI-powered goal-setting journey:
+          <h3>3. Track Your Progress</h3>
+          <p>
+            Use the progress tracking features to monitor your journey. Regular check-ins with 
+            your AI mentor will help you stay on track and overcome any obstacles you encounter.
           </p>
-          <ol className="list-decimal pl-6 mb-6">
-            <li className="mb-2">Define your objectives clearly</li>
-            <li className="mb-2">Input your preferences and constraints</li>
-            <li className="mb-2">Let the AI analyze and suggest optimal approaches</li>
-            <li className="mb-2">Track your progress with AI-powered insights</li>
-          </ol>
           
-          <h2 className="text-2xl font-bold mt-8 mb-4">Best Practices</h2>
-          <p className="mb-4">
-            To make the most of AI-powered goal setting:
+          <h2>Making the Most of AI Mentorship</h2>
+          <p>
+            Your AI mentor is available 24/7 to provide guidance, answer questions, and help you 
+            overcome challenges. Here are some tips for effective interaction:
           </p>
-          <ul className="list-disc pl-6 mb-6">
-            <li className="mb-2">Be specific with your inputs</li>
-            <li className="mb-2">Regularly update your progress</li>
-            <li className="mb-2">Stay open to AI suggestions</li>
-            <li className="mb-2">Combine AI insights with your personal judgment</li>
+          <ul>
+            <li>Ask specific questions</li>
+            <li>Request explanations when concepts are unclear</li>
+            <li>Share your progress regularly</li>
+            <li>Discuss obstacles you&apos;re facing</li>
           </ul>
           
-          <h2 className="text-2xl font-bold mt-8 mb-4">Conclusion</h2>
-          <p className="mb-4">
-            AI-powered goal setting represents a significant advancement in personal development technology. 
-            By leveraging these tools effectively, you can enhance your productivity, maintain motivation, 
-            and achieve your goals more efficiently than ever before.
-          </p>
-          <p className="mb-4">
-            Ready to revolutionize your goal-setting process? Sign up for our platform today 
-            and experience the power of AI-assisted goal achievement!
+          <h2>Next Steps</h2>
+          <p>
+            Now that you understand the basics, it&apos;s time to create your first goal. Head to the 
+            dashboard and click on &quot;Create New Goal&quot; to get started.
           </p>
           
-          <div className="mt-12 pt-8 border-t">
-            <h3 className="text-xl font-bold mb-4">Related Articles</h3>
-            <div className="grid gap-4 md:grid-cols-2">
-              <Link 
-                href={`/${locale}/blog/ai-productivity`}
-                className="p-4 border rounded-lg hover:border-foreground/50 transition-colors"
-              >
-                <h4 className="font-medium mb-2">5 Ways AI Can Transform Your Productivity</h4>
-                <p className="text-sm text-muted-foreground">Discover how artificial intelligence can help you work smarter.</p>
-              </Link>
-              <Link 
-                href={`/${locale}/blog/future-learning`}
-                className="p-4 border rounded-lg hover:border-foreground/50 transition-colors"
-              >
-                <h4 className="font-medium mb-2">The Future of Learning with AI Assistants</h4>
-                <p className="text-sm text-muted-foreground">Explore how AI mentors are revolutionizing education.</p>
-              </Link>
-            </div>
+          <div className="flex justify-center my-8">
+            <Link 
+              href={`/${currentLocale}/dashboard`}
+              className="bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
+            >
+              Go to Dashboard
+            </Link>
           </div>
         </article>
       </main>
       <FooterSection />
     </div>
+  );
+}
+
+// Main component with Suspense
+export default function GettingStartedPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ArticlePageContent />
+    </Suspense>
   );
 } 

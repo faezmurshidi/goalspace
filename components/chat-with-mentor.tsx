@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Bot, Send, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChat } from 'ai/react';
@@ -31,13 +31,14 @@ export function ChatWithMentor({ spaceId, className, inputClassName }: ChatWithM
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
 
-  const { 
-    getSpaceById, 
-    chatMessages, 
-    loadMessages, 
+  const {
+    spaces,
+    chatMessages,
     isLoadingMessages, 
     hasMoreMessages,
-    addMessage 
+    addMessage,
+    loadMessages,
+    getSpaceById
   } = useSpaceStore();
   
   const space = getSpaceById(spaceId);
@@ -118,40 +119,35 @@ export function ChatWithMentor({ spaceId, className, inputClassName }: ChatWithM
     originalHandleSubmit(e);
   };
 
+  // Memoize function to prevent unnecessary re-renders
+  const loadPreviousMessages = useCallback(async () => {
+    try {
+      console.log("loadPreviousMessages");
+      await loadMessages(spaceId);
+      // Convert stored messages to the format expected by useChat
+      const messagesForSpace = chatMessages[spaceId] || [];
+      if (messagesForSpace && messagesForSpace.length > 0) {
+        const formattedMessages = messagesForSpace.map((msg) => ({
+          id: msg.id,
+          content: msg.content,
+          role: msg.role as 'user' | 'assistant',
+          createdAt: new Date(msg.timestamp),
+        }));
+        setMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error("Error loading messages:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load previous messages",
+        variant: "destructive",
+      });
+    }
+  }, [spaceId, loadMessages, setMessages, chatMessages]); // Removed toast from dependencies
+
   // Load previous messages when component mounts
   useEffect(() => {
-// At the top of the file, ensure you have:
-import { useCallback } from 'react';
-
-// ...
-
-// Memoize function to prevent unnecessary re-renders
-const loadPreviousMessages = useCallback(async () => {
-  // ... existing function body
-}, [spaceId, loadMessages, setMessages]);
-      try {
-        console.log("loadPreviousMessages");
-        await loadMessages(spaceId);
-        // Convert stored messages to the format expected by useChat
-        // Get a stable reference to chatMessages
-        const messagesForSpace = chatMessages[spaceId] || [];
-        setMessages(
-          messagesForSpace.map((msg) => ({
-            id: msg.id,
-            role: msg.role as 'user' | 'assistant',
-            content: msg.content,
-            createdAt: new Date(msg.timestamp),
-          }))
-        );
-      } catch (error) {
-        console.error('Error loading messages:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load previous messages.',
-          variant: 'destructive',
-        });
-      }
-    };
+    loadPreviousMessages();
     
     const userSession = async () => {
       console.log("userSession");
@@ -161,11 +157,9 @@ const loadPreviousMessages = useCallback(async () => {
     };
 
     userSession();
-    loadPreviousMessages();
     
-    // Only rerun when spaceId or loadMessages changes
-    // chatMessages and setMessages have stable identities
-  }, [spaceId, loadMessages]);
+    // Only rerun when spaceId, loadMessages, or loadPreviousMessages changes
+  }, [spaceId, loadMessages, loadPreviousMessages]);
 
   // Scroll to bottom when messages change
   useEffect(() => {

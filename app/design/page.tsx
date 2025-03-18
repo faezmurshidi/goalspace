@@ -1,12 +1,18 @@
+'use client';
+
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { ColorSystemDemo } from '@/components/ui/color-system-demo';
 
-export const metadata: Metadata = {
-  title: 'Design System - GoalSpace',
-  description: 'Explore our design system including color palettes, typography, and components',
-};
+// Note: Metadata can only be used in Server Components,
+// but we can keep it for when this component is used in a server context
+// export const metadata: Metadata = {
+//   title: 'Design System - GoalSpace',
+//   description: 'Explore our design system including color palettes, typography, and components',
+// };
 
-export default function DesignSystemPage() {
+// The content component that will be wrapped in Suspense
+function DesignSystemContent() {
   return (
     <div className="container mx-auto max-w-screen-xl px-4 py-8 md:py-12">
       <div className="mb-12">
@@ -87,5 +93,14 @@ export default function DesignSystemPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function DesignSystemPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading design system...</div>}>
+      <DesignSystemContent />
+    </Suspense>
   );
 } 

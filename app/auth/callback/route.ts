@@ -4,6 +4,10 @@ import { NextResponse } from 'next/server';
 import type { CookieOptions } from '@supabase/ssr';
 import type { Database } from '../../../types/supabase';
 
+// Import helper for analytics
+import { trackEvent } from '@/utils/server-analytics';
+// Note: We can't use the client-side analytics directly in a Server Component
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
@@ -66,6 +70,13 @@ export async function GET(request: Request) {
 
     // Only create user record if it doesn't exist
     if (!existingUser) {
+      // Track new user registration
+      trackEvent('user_registered', {
+        provider: data.user.app_metadata?.provider || 'unknown',
+        is_new_user: true,
+        timestamp: new Date().toISOString()
+      });
+      
       // Create user record after verification
       const { error: dbError } = await supabase
         .from('users')
@@ -93,12 +104,27 @@ export async function GET(request: Request) {
         console.error('Error creating user settings:', settingsError);
         // Continue anyway - the auth and user records exist
       }
+    } else {
+      // Track returning user login
+      trackEvent('user_logged_in', {
+        provider: data.user.app_metadata?.provider || 'unknown',
+        is_new_user: false,
+        timestamp: new Date().toISOString()
+      });
     }
 
     // Redirect to dashboard on success
     return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
   } catch (error) {
     console.error('Error in verification callback:', error);
+    
+    // Track authentication error
+    trackEvent('auth_error', {
+      error_type: 'verification_failed',
+      error_message: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    });
+    
     // Redirect to auth page with error
     return NextResponse.redirect(`${requestUrl.origin}/auth?error=verification_failed`);
   }

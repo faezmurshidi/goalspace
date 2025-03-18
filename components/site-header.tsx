@@ -4,11 +4,10 @@ import LanguageSelector from '@/components/language-selector';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Brain } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 
 export function SiteHeader() {
-  const locale = useLocale();
-  const t = useTranslations();
+  const { t, currentLocale } = useAppTranslations();
   
   return (
     <motion.header
@@ -25,7 +24,7 @@ export function SiteHeader() {
             whileHover={{ scale: 1.05 }}
             className="flex items-center gap-2"
           >
-            <Link href={`/${locale}`} className="flex items-center gap-2">
+            <Link href={`/${currentLocale}`} className="flex items-center gap-2">
               <Brain className="h-6 w-6 text-rose-500" />
               <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500">
                 {t('common.appName')}
@@ -34,29 +33,10 @@ export function SiteHeader() {
           </motion.div>
 
           {/* Navigation and Actions */}
-          <div className="flex items-center gap-6">
-            {/* Main Navigation */}
-            <nav className="flex items-center gap-6">
-              <Link
-                href={`/${locale}/blog`}
-                className="text-sm font-medium text-white/70 transition-colors hover:text-white"
-              >
-                {t('navigation.blog')}
-              </Link>
-              <Link
-                href={`/${locale}/pricing`}
-                className="text-sm font-medium text-white/70 transition-colors hover:text-white"
-              >
-                {t('navigation.pricing')}
-              </Link>
-              <MainNav />
-            </nav>
-
-            {/* Theme and Language Controls */}
-            <div className="flex items-center gap-2">
-              <LanguageSelector />
-              <ModeToggle />
-            </div>
+          <div className="flex items-center space-x-2">
+            <MainNav />
+            <LanguageSelector />
+            <ModeToggle />
           </div>
         </div>
       </div>
