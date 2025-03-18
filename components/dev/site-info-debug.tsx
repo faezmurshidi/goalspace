@@ -11,13 +11,17 @@ import { Code, LayoutDashboard, Smartphone, Tablet, Monitor } from 'lucide-react
  * Only use this in development environments.
  */
 export function SiteInfoDebug() {
+  const { siteInfo, hasConsented, setConsent, isSyncing, lastSynced } = useSiteInfo();
+  const [isExpanded, setIsExpanded] = useState(false);
+
   // Safeguard to prevent rendering in production
   if (process.env.NODE_ENV === 'production') {
     console.warn('SiteInfoDebug should not be used in production environments');
     return null;
   }
-  const { siteInfo, hasConsented, setConsent, isSyncing, lastSynced } = useSiteInfo();
-  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Rest of the component logic...
+}
   
   if (!siteInfo) {
     return (
