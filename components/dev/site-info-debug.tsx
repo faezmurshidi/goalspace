@@ -20,9 +20,6 @@ export function SiteInfoDebug() {
     return null;
   }
   
-  // Rest of the component logic...
-}
-  
   if (!siteInfo) {
     return (
       <Card className="max-w-md mx-auto my-4">

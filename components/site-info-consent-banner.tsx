@@ -4,12 +4,10 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSiteInfo } from '@/providers/site-info-provider';
-import { useTranslations } from 'next-intl';
 
 export function SiteInfoConsentBanner() {
   const { hasConsented, setConsent } = useSiteInfo();
   const [isVisible, setIsVisible] = useState(false);
-  const t = useTranslations('siteInfo');
 
   // Only show banner after initial render and if consent hasn't been given
   useEffect(() => {
@@ -37,10 +35,10 @@ export function SiteInfoConsentBanner() {
       <div className="flex items-start justify-between">
         <div className="flex-1 mr-4">
           <h3 className="font-semibold text-foreground mb-1">
-            {t('enhanceExperience')}
+            Enhance Your Experience
           </h3>
           <p className="text-sm text-muted-foreground mb-3">
-            {t('dataCollectionMessage')}
+            We collect anonymous usage data to improve your experience. Your privacy is important to us.
           </p>
           <div className="flex gap-2">
             <Button 
@@ -48,14 +46,14 @@ export function SiteInfoConsentBanner() {
               size="sm" 
               onClick={handleAccept}
             >
-              {t('accept')}
+              Accept
             </Button>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={handleDecline}
             >
-              {t('decline')}
+              Decline
             </Button>
           </div>
         </div>

@@ -17,7 +17,7 @@ A modern web application for goal setting and tracking, powered by AI mentors an
 - **Styling**: Tailwind CSS, shadcn/ui
 - **State Management**: Zustand
 - **Authentication**: Supabase Auth with email verification
-- **Internationalization**: next-intl for translations and locale management
+- **Internationalization**: react-i18next for translations and locale management
 
 ## Getting Started
 
@@ -61,7 +61,7 @@ pnpm dev
 
 ## Internationalization
 
-GoalSpace supports multiple languages through the next-intl package:
+GoalSpace supports multiple languages through the react-i18next package:
 
 - English (en) - Default
 - Malay (ms) 
@@ -70,7 +70,7 @@ GoalSpace supports multiple languages through the next-intl package:
 Translation files are located in the `/locales` directory. To add a new language:
 
 1. Create a new JSON file in the `/locales` directory (e.g., `fr.json`)
-2. Update the `next-intl.config.js` file to include the new locale
+2. Update the `i18n.ts` configuration file to include the new locale
 3. Add language selector option in the `language-selector.tsx` component
 
 ## Project Structure

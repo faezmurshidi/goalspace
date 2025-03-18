@@ -36,6 +36,12 @@ Goalspace is an AI-powered goal setting and achievement platform that helps user
 - Podcast feature for audio-based learning
 - Rich text editing capabilities
 
+### Site Information & Personalization
+- Collects non-sensitive device and browser information for personalization
+- User consent management through consent banner
+- Automatic language detection and redirection based on browser preferences
+- Development debug tools available at /dev/site-info (development environment only)
+
 ## Technical Architecture
 
 ### Frontend
@@ -43,6 +49,10 @@ Goalspace is an AI-powered goal setting and achievement platform that helps user
 - React components with TypeScript
 - Tailwind CSS with shadcn/ui components
 - Zustand for state management
+- Context providers:
+  - SiteInfoProvider - Site information context
+  - i18n-provider - Internationalization provider
+  - ThemeProvider - Theme management
 
 ### Backend
 - Supabase for database and authentication
@@ -53,6 +63,7 @@ Goalspace is an AI-powered goal setting and achievement platform that helps user
 ## Core Database Entities
 
 - **Users** - Account and profile information
+- **User Settings** - User preferences and site information
 - **Goals** - User objectives with metadata
 - **Spaces** - Learning environments within goals
 - **Modules** - Content modules within spaces
@@ -74,9 +85,11 @@ Goalspace is an AI-powered goal setting and achievement platform that helps user
 - Type definitions in /lib/types directory
 
 ### Internationalization
-- Uses next-intl for translations
+- Uses react-i18next for translations
+- Translation hooks and utilities in /lib/hooks/use-translations.ts and /lib/i18n.ts
+- i18n provider in /components/providers/i18n-provider.tsx
 - Locale files in /locales and /src/locales directories
-- Supported locales: 'en', 'ms' (English and Malay)
+- Supported locales: 'en', 'ms', 'zh' (English, Malay, Chinese)
 
 ### Development Flags
 - Set `NEXT_PUBLIC_SKIP_API_CALL=true` in `.env.local` to use mock data instead of real API calls

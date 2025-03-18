@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Check if analytics is enabled
 const isAnalyticsEnabled = typeof window !== 'undefined' && 
@@ -31,14 +31,24 @@ const initPostHog = () => {
 // Custom hook to track page views
 export function usePageViewTracking() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  // Use a state variable to store the search params
+  const [searchParamsString, setSearchParamsString] = useState('');
+  
+  // Only run on the client side
+  useEffect(() => {
+    // Get search params on the client side
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search).toString();
+      setSearchParamsString(params);
+    }
+  }, []);
   
   useEffect(() => {
     // Initialize analytics if not already done
     initPostHog();
 
     if (typeof window !== 'undefined') {
-      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
+      const url = pathname + (searchParamsString ? `?${searchParamsString}` : '');
       
       // For development environments, log to console
       if (process.env.NODE_ENV === 'development') {
@@ -50,7 +60,7 @@ export function usePageViewTracking() {
         (window as any).posthog.capture('$pageview', { url, pathname });
       }
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParamsString]);
 }
 
 // Function to track specific events
