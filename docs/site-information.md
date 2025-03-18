@@ -123,9 +123,28 @@ export const useSiteInfoStore = create(
 ### Database Storage (Supabase)
 
 ```sql
--- Future migration (Phase 2)
+-- Implementation in migration 20240320000000_add_site_info_column.sql
 ALTER TABLE user_settings 
 ADD COLUMN IF NOT EXISTS site_info JSONB DEFAULT '{}'::jsonb;
+
+-- Add last_seen column to track user activity
+ALTER TABLE user_settings
+ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ DEFAULT NOW();
+
+-- Function for updating site info
+CREATE OR REPLACE FUNCTION update_user_site_info(
+  user_id_param UUID,
+  site_info_param JSONB
+)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE user_settings
+  SET 
+    site_info = site_info_param,
+    last_seen = NOW()
+  WHERE user_id = user_id_param;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 ## Initialization Process
@@ -264,9 +283,75 @@ export function TimeAwareComponent({ utcTime }) {
 - Connection-quality adaptive content
 - Device capability-aware features
 
+## Server Synchronization
+
+For logged-in users who have granted consent, site information is synchronized with the server:
+
+```tsx
+// Code in site-info-provider.tsx
+useEffect(() => {
+  if (!user || !siteInfo || !hasConsented) return;
+  
+  // Debounce sync to server (only sync after 5 seconds of no changes)
+  if (syncTimeoutRef.current) {
+    clearTimeout(syncTimeoutRef.current);
+  }
+  
+  syncTimeoutRef.current = setTimeout(async () => {
+    try {
+      setIsSyncing(true);
+      
+      const response = await fetch('/api/user-site-info', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(siteInfo)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to sync site info: ${response.statusText}`);
+      }
+      
+      setLastSynced(new Date());
+    } catch (error) {
+      console.error('Error syncing site info to server:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, 5000);
+  
+  return () => {
+    if (syncTimeoutRef.current) {
+      clearTimeout(syncTimeoutRef.current);
+    }
+  };
+}, [user, siteInfo, hasConsented]);
+```
+
+### Benefits of Server Synchronization
+
+1. **Cross-Device Persistence**: User preferences and settings persist across multiple devices
+2. **Analytics Insights**: Understanding device usage patterns for user base
+3. **Personalization Improvement**: Site-wide improvements based on aggregate data
+4. **User Activity Tracking**: Last seen timestamp helps understand user engagement
+5. **Timezone-Aware Features**: Schedule notifications and events in user's local time
+
+### Privacy and Security
+
+- Server synchronization only occurs when:
+  1. The user is authenticated
+  2. The user has explicitly granted consent
+  3. Site information has changed
+- Last sync status is visible in development debug tools
+- Users can revoke consent at any time, which stops synchronization
+
 ## Next Steps
 
-1. Implement basic collection layer (deviceType, screenSize, timezone, preferredLanguage)
-2. Create the site info store with Zustand
-3. Build the provider component
-4. Implement first localization enhancements using the collected data
+1. ✅ Implement basic collection layer (deviceType, screenSize, timezone, preferredLanguage)
+2. ✅ Create the site info store with Zustand
+3. ✅ Build the provider component
+4. ✅ Implement database storage and synchronization
+5. Implement user-facing site information settings page
+6. Develop analytics dashboard for aggregate site information
+7. Implement personalized features based on site information

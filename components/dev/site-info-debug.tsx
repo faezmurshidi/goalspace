@@ -11,7 +11,7 @@ import { Code, LayoutDashboard, Smartphone, Tablet, Monitor } from 'lucide-react
  * Only use this in development environments.
  */
 export function SiteInfoDebug() {
-  const { siteInfo, hasConsented, setConsent } = useSiteInfo();
+  const { siteInfo, hasConsented, setConsent, isSyncing, lastSynced } = useSiteInfo();
   const [isExpanded, setIsExpanded] = useState(false);
   
   if (!siteInfo) {
@@ -81,6 +81,16 @@ export function SiteInfoDebug() {
             
             <div className="text-sm font-medium">Consent Status:</div>
             <div className="text-sm">{hasConsented ? 'Granted' : 'Not granted'}</div>
+            
+            <div className="text-sm font-medium">Server Sync:</div>
+            <div className="text-sm flex items-center gap-1">
+              {isSyncing && (
+                <span className="inline-block h-2 w-2 rounded-full bg-amber-500 animate-pulse mr-1"></span>
+              )}
+              {lastSynced 
+                ? `Last synced: ${new Date(lastSynced).toLocaleTimeString()}`
+                : 'Not synced with server'}
+            </div>
           </div>
           
           {isExpanded && (
