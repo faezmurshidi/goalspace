@@ -4,10 +4,18 @@
     "description": "AI-Powered Goal Achievement Platform"
   },
   "navigation": {
+    "blog": "Blog",
     "pricing": "View Pricing",
     "login": "Log In",
     "switchLanguage": "Switch language",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "goals": "Goals",
+    "spaces": "Spaces",
+    "settings": "Settings",
+    "knowledgeBase": "Knowledge Base",
+    "logout": "Logout",
+    "activeSpaces": "Active Spaces",
+    "toggleSidebar": "Toggle sidebar"
   },
   "auth": {
     "signIn": "Sign In",
@@ -169,5 +177,22 @@
       "Community support",
       "Regular content updates"
     ]
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your account settings and preferences",
+    "profileTab": "Profile",
+    "usageTab": "Usage & Billing",
+    "fullName": "Full Name",
+    "themePreference": "Theme Preference",
+    "defaultAIModel": "Default AI Model",
+    "emailNotifications": "Email Notifications",
+    "saveChanges": "Save Changes",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
+  },
+  "goals": {
+    "createNewGoal": "Create New Goal",
+    "goalBreakdown": "Let's break down your goal into actionable learning spaces."
   }
 } 

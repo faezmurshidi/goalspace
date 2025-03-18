@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 
 import { GoalForm } from '@/components/goal-form';
 import {
@@ -18,13 +19,15 @@ interface NewGoalDialogProps {
 }
 
 export function NewGoalDialog({ open, onOpenChange }: NewGoalDialogProps) {
+  const t = useTranslations();
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Create New Goal</DialogTitle>
+          <DialogTitle>{t('goals.createNewGoal')}</DialogTitle>
           <DialogDescription>
-            Let&apos;s break down your goal into actionable learning spaces.
+            {t('goals.goalBreakdown')}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">

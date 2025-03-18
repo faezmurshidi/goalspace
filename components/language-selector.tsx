@@ -49,6 +49,12 @@ export default function LanguageSelector() {
         >
           Bahasa Melayu
         </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={() => handleLanguageChange('zh')}
+          className={locale === 'zh' ? 'bg-accent' : ''}
+        >
+          简体中文
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

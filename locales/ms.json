@@ -4,10 +4,18 @@
     "description": "Platform Pencapaian Matlamat Berkuasa AI"
   },
   "navigation": {
+    "blog": "Blog",
     "pricing": "Lihat Harga",
     "login": "Log Masuk",
     "switchLanguage": "Tukar bahasa",
-    "dashboard": "Papan Pemuka"
+    "dashboard": "Papan Pemuka",
+    "goals": "Matlamat",
+    "spaces": "Ruang",
+    "settings": "Tetapan",
+    "knowledgeBase": "Pangkalan Pengetahuan",
+    "logout": "Log Keluar",
+    "activeSpaces": "Ruang Aktif",
+    "toggleSidebar": "Togel bar sisi"
   },
   "auth": {
     "signIn": "Log Masuk",
@@ -169,5 +177,22 @@
       "Sokongan komuniti",
       "Kemas kini kandungan berkala"
     ]
+  },
+  "settings": {
+    "title": "Tetapan",
+    "subtitle": "Urus tetapan dan keutamaan akaun anda",
+    "profileTab": "Profil",
+    "usageTab": "Penggunaan & Bil",
+    "fullName": "Nama Penuh",
+    "themePreference": "Keutamaan Tema",
+    "defaultAIModel": "Model AI Lalai",
+    "emailNotifications": "Pemberitahuan E-mel",
+    "saveChanges": "Simpan Perubahan",
+    "darkMode": "Mod Gelap",
+    "lightMode": "Mod Terang"
+  },
+  "goals": {
+    "createNewGoal": "Cipta Matlamat Baru",
+    "goalBreakdown": "Mari pecahkan matlamat anda menjadi ruang pembelajaran yang boleh diambil tindakan."
   }
 }

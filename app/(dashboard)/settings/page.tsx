@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 import * as z from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { profile, settings, apiUsage, subscription } = useUser();
   const supabase = createClient();
+  const t = useTranslations();
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
@@ -127,9 +129,9 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h2>
         <p className="text-muted-foreground">
-          Manage your account settings and preferences.
+          {t('settings.subtitle')}
         </p>
       </div>
 
@@ -137,8 +139,8 @@ export default function SettingsPage() {
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="billing">Usage & Billing</TabsTrigger>
+          <TabsTrigger value="profile">{t('settings.profileTab')}</TabsTrigger>
+          <TabsTrigger value="billing">{t('settings.usageTab')}</TabsTrigger>
         </TabsList>
         <TabsContent value="profile">
           <Card>
@@ -156,7 +158,7 @@ export default function SettingsPage() {
                     name="full_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel>{t('settings.fullName')}</FormLabel>
                         <FormControl>
                           <Input placeholder="Enter your name" {...field} />
                         </FormControl>
@@ -173,7 +175,7 @@ export default function SettingsPage() {
                     name="theme_preference"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Theme Preference</FormLabel>
+                        <FormLabel>{t('settings.themePreference')}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
@@ -202,7 +204,7 @@ export default function SettingsPage() {
                     name="ai_model_preference"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Default AI Model</FormLabel>
+                        <FormLabel>{t('settings.defaultAIModel')}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
@@ -233,7 +235,7 @@ export default function SettingsPage() {
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
                           <FormLabel className="text-base">
-                            Email Notifications
+                            {t('settings.emailNotifications')}
                           </FormLabel>
                           <FormDescription>
                             Receive email notifications about your progress and updates.
@@ -250,7 +252,7 @@ export default function SettingsPage() {
                   />
 
                   <Button type="submit" disabled={isLoading}>
-                    {isLoading ? 'Saving...' : 'Save changes'}
+                    {isLoading ? 'Saving...' : t('settings.saveChanges')}
                   </Button>
                 </form>
               </Form>

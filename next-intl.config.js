@@ -1,6 +1,6 @@
 module.exports = {
   // These are the locales you're application supports
-  locales: ['en', 'ms'],
+  locales: ['en', 'ms', 'zh'],
   
   // This is the default locale you want to be used when visiting
   // a non-locale prefixed path e.g. `/hello`
