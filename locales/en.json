@@ -4,6 +4,7 @@
     "description": "AI-Powered Goal Achievement Platform"
   },
   "navigation": {
+    "blog": "Blog",
     "pricing": "View Pricing",
     "login": "Log In",
     "switchLanguage": "Switch language",

@@ -20,19 +20,31 @@ export async function middleware(request: NextRequest) {
   // Skip auth check for public routes
   const isPublicPage = 
     pathname === '/' || 
-    pathname === '/login' || 
+    pathname === '/login' ||
+    pathname === '/auth' ||
     pathname === '/auth/callback' || 
     pathname.startsWith('/api/') || 
+    pathname === '/blog' ||
+    pathname.startsWith('/blog/') ||
     pathname.includes('favicon') ||
     pathname.includes('.json') ||
     pathname.includes('.webmanifest') ||
     pathname.match(/\.[^/]+$/); // Skip files with extensions
+    
+  // Check if the path is under a locale
+  const isLocalePathPublic = locales.some(locale => 
+    pathname === `/${locale}` || // Root path under locale
+    pathname === `/${locale}/login` || // Login path under locale
+    pathname === `/${locale}/auth` || // Auth path under locale
+    pathname === `/${locale}/blog` || // Exact blog route
+    pathname.startsWith(`/${locale}/blog/`) // Blog sub-routes
+  );
   
   // First, handle internationalization
   const response = intlMiddleware(request);
   
   // Then, handle authentication if needed
-  if (!isPublicPage) {
+  if (!isPublicPage && !isLocalePathPublic) {
     try {
       const supabase = createMiddlewareClient({ req: request, res: response });
       const { data: { session } } = await supabase.auth.getSession();

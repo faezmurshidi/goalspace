@@ -38,6 +38,12 @@ export function SiteHeader() {
             {/* Main Navigation */}
             <nav className="flex items-center gap-6">
               <Link
+                href={`/${locale}/blog`}
+                className="text-sm font-medium text-white/70 transition-colors hover:text-white"
+              >
+                {t('navigation.blog')}
+              </Link>
+              <Link
                 href={`/${locale}/pricing`}
                 className="text-sm font-medium text-white/70 transition-colors hover:text-white"
               >

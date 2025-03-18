@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, MoveRight, PhoneCall, Play } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { GoalForm } from '../goal-form';
@@ -12,6 +14,8 @@ import { Card } from './card';
 
 function Hero() {
   const t = useTranslations();
+  const params = useParams();
+  const locale = params.locale as string;
   const [titleNumber, setTitleNumber] = useState(0);
   const titles = useMemo(() => ['Learn', 'Build', 'Achieve', 'Succeed', 'Start'], []);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -43,8 +47,13 @@ function Hero() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <Button className="gap-2 px-4 py-2 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 border-none">
-              {t('hero.launchArticle')} <MoveRight className="h-4 w-4 ml-1" />
+            <Button 
+              asChild 
+              className="gap-2 px-4 py-2 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 border-none"
+            >
+              <Link href={`/${locale}/blog/getting-started`}>
+                {t('hero.launchArticle')} <MoveRight className="h-4 w-4 ml-1" />
+              </Link>
             </Button>
           </motion.div>
           

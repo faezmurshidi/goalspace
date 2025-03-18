@@ -4,6 +4,7 @@
     "description": "Platform Pencapaian Matlamat Berkuasa AI"
   },
   "navigation": {
+    "blog": "Blog",
     "pricing": "Lihat Harga",
     "login": "Log Masuk",
     "switchLanguage": "Tukar bahasa",
