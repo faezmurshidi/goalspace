@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 import { SiteHeader } from '@/components/site-header';
 import { FooterSection } from '@/components/sections/footer-section';
 import Link from 'next/link';
@@ -8,9 +8,11 @@ import { useParams } from 'next/navigation';
 import { getBlogPosts } from './mock-data';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { Suspense } from 'react';
 
-export default function BlogPage() {
-  const t = useTranslations();
+// Inner component that uses useParams
+function BlogPageContent() {
+  const { t } = useAppTranslations();
   const params = useParams();
   const locale = params.locale as string;
   const posts = getBlogPosts();
@@ -111,5 +113,15 @@ export default function BlogPage() {
       </main>
       <FooterSection />
     </div>
+  );
+}
+
+// Wrapper component with Suspense
+export default function BlogPage({ params }: { params: { locale: string }}) {
+  // We don't use setRequestLocale in client components as it's for server components only
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <BlogPageContent />
+    </Suspense>
   );
 } 

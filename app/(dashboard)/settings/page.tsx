@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 import * as z from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,12 +29,13 @@ const settingsSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
-export default function SettingsPage() {
+// Content component to be wrapped in Suspense
+function SettingsContent() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const { profile, settings, apiUsage, subscription } = useUser();
   const supabase = createClient();
-  const t = useTranslations();
+  const { t } = useAppTranslations();
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
@@ -352,5 +353,14 @@ export default function SettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-full">Loading settings...</div>}>
+      <SettingsContent />
+    </Suspense>
   );
 } 

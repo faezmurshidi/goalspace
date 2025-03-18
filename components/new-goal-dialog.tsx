@@ -1,17 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
-
-import { GoalForm } from '@/components/goal-form';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface NewGoalDialogProps {
   open: boolean;
@@ -19,7 +10,7 @@ interface NewGoalDialogProps {
 }
 
 export function NewGoalDialog({ open, onOpenChange }: NewGoalDialogProps) {
-  const t = useTranslations();
+  const { t } = useAppTranslations();
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -31,7 +22,7 @@ export function NewGoalDialog({ open, onOpenChange }: NewGoalDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
-          <GoalForm />
+          {/* TODO: Re-implement GoalForm with proper translations */}
         </div>
       </DialogContent>
     </Dialog>

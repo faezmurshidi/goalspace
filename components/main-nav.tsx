@@ -8,12 +8,20 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Button } from './ui/button';
 import { AuthDialog } from './auth/auth-dialog';
-import { useLocale, useTranslations } from 'next-intl';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
 
-export function MainNav() {
+export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
+  const { t, currentLocale } = useAppTranslations();
   const pathname = usePathname();
-  const locale = useLocale();
-  const t = useTranslations();
   const [user, setUser] = useState<any>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const supabase = createClient();
@@ -38,7 +46,7 @@ export function MainNav() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase.auth]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -46,11 +54,29 @@ export function MainNav() {
 
   return (
     <>
+      <NavigationMenu className={cn("hidden md:flex", className)} {...props}>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <Link href={`/${currentLocale}/blog`} legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                {t('navigation.blog')}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href={`/${currentLocale}/pricing`} legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                {t('navigation.pricing')}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
       <div className="flex items-center gap-4">
         {user ? (
           <>
             <Link
-              href={`/${locale}/dashboard`}
+              href={`/${currentLocale}/dashboard`}
               className="text-sm font-medium text-white/70 transition-colors hover:text-white"
             >
               {t('navigation.dashboard')}

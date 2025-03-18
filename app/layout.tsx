@@ -90,17 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AnalyticsProvider>
-            {children}
-          </AnalyticsProvider>
-          <Toaster />
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );

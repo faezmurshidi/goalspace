@@ -1,9 +1,24 @@
+'use client';
+
+import { Suspense } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-const plans = [
+// Define the plan type with proper types
+type Plan = {
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  features: string[];
+  buttonText: string;
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'; // Match Button variant types
+  popular?: boolean;
+};
+
+const plans: Plan[] = [
   {
     name: 'Basic plan',
     price: '$9',
@@ -17,7 +32,8 @@ const plans = [
       'Email Support'
     ],
     buttonText: 'Get started',
-    variant: 'ghost'
+    variant: 'ghost',
+    popular: false
   },
   {
     name: 'Business plan',
@@ -32,7 +48,8 @@ const plans = [
       'Integrations with Popular Apps'
     ],
     buttonText: 'Upgrade to Business',
-    variant: 'accent'
+    variant: 'default',
+    popular: true
   },
   {
     name: 'Enterprise plan',
@@ -51,77 +68,83 @@ const plans = [
   }
 ];
 
-export default function PricingPage() {
+// Separate content component
+function PricingPageContent() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50/50">
       <div className="container max-w-6xl mx-auto py-24 px-4">
-        <div className="text-center space-y-2 mb-20">
-          <p className="text-sm text-[#969FA2] uppercase tracking-wide">PRICING</p>
-          <div className="space-y-1">
-            <h1 className="text-[2.5rem] font-medium tracking-tight text-[#2D2D2D]">
-              Choose the plan
-            </h1>
-            <h2 className="text-[2.5rem] font-medium tracking-tight text-[#2D2D2D]">
-              that fits your goals.
-            </h2>
-          </div>
-          <p className="mt-6 text-base text-[#969FA2]">
-            Choose the plan that fits your needs and scale your productivity with GoalSpace.
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Choose the perfect plan for your needs. All plans include a 14-day free trial.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-8">
           {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={cn(
-                "group relative rounded-[1.5rem] transition-all duration-500",
-                "before:absolute before:inset-0 before:rounded-[1.5rem] before:bg-gradient-to-b before:from-white before:to-gray-50/90 before:backdrop-blur-xl",
-                "after:absolute after:inset-0 after:rounded-[1.5rem] after:shadow-[0_2px_20px_-2px_rgba(0,0,0,0.08)]"
+            <Card key={plan.name} className={cn(
+              "flex flex-col",
+              plan.popular && "border-primary shadow-md"
+            )}>
+              {plan.popular && (
+                <div className="px-4 py-1 text-xs font-semibold text-center text-white bg-primary">
+                  MOST POPULAR
+                </div>
               )}
-            >
-              <div className="relative z-10 p-8 space-y-6">
-                {/* Plan Header */}
-                <div>
-                  <h3 className="text-[15px] font-medium text-[#2D2D2D]">
-                    {plan.name}
-                  </h3>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-4xl font-semibold text-[#2D2D2D]">{plan.price}</span>
-                    <span className="text-sm text-[#969FA2]">{plan.period}</span>
-                  </div>
-                  <p className="mt-4 text-[13px] leading-relaxed text-[#969FA2]">
-                    {plan.description}
-                  </p>
+              <CardHeader>
+                <CardTitle>{plan.name}</CardTitle>
+                <CardDescription>{plan.description}</CardDescription>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">{plan.price}</span>
+                  <span className="text-sm text-gray-500 ml-2">{plan.period}</span>
                 </div>
-
-                {/* Features */}
-                <div className="space-y-3">
+              </CardHeader>
+              <CardContent className="flex-1">
+                <ul className="space-y-2">
                   {plan.features.map((feature) => (
-                    <div key={feature} className="flex items-center gap-3">
-                      <Check className="h-[14px] w-[14px] text-[#969FA2]" />
-                      <span className="text-[13px] text-[#969FA2]">{feature}</span>
-                    </div>
+                    <li key={feature} className="flex items-center">
+                      <Check className="h-5 w-5 text-green-500 mr-2" />
+                      <span>{feature}</span>
+                    </li>
                   ))}
-                </div>
-
-                {/* Button */}
-                <Button
-                  className={cn(
-                    'w-full h-11 text-[13px] font-normal rounded-xl transition-all duration-200',
-                    'border border-[#EBEBEB]/80',
-                    plan.variant === 'accent'
-                      ? 'bg-[#2D2D2D] text-white hover:bg-[#1A1A1A]'
-                      : 'bg-white text-[#2D2D2D] hover:bg-gray-50'
-                  )}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  className="w-full" 
+                  variant={plan.variant || "default"}
                 >
                   {plan.buttonText}
                 </Button>
-              </div>
-            </div>
+              </CardFooter>
+            </Card>
           ))}
+        </div>
+
+        <div className="mt-16 text-center max-w-2xl mx-auto bg-gray-50 p-8 rounded-lg">
+          <h2 className="text-2xl font-bold mb-4">Enterprise Plan</h2>
+          <p className="text-gray-600 mb-6">
+            Need a custom solution for your organization? Our enterprise plan offers tailored features, dedicated support, and customizable pricing.
+          </p>
+          <Button variant="outline">Contact Sales</Button>
+        </div>
+
+        <div className="mt-16 text-center">
+          <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
+          <div className="max-w-3xl mx-auto grid gap-6 mt-8">
+            {/* FAQ items would go here */}
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function PricingPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading pricing information...</div>}>
+      <PricingPageContent />
+    </Suspense>
   );
 } 

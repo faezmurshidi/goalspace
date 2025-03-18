@@ -170,10 +170,10 @@
 /* Subtle hover effects */
 .hover-lift {
   @apply transition-all duration-300;
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Focus states with custom ring */

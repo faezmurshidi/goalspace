@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSpaceStore } from '@/lib/store';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,8 @@ interface Document {
   space_id: string;
 }
 
-export default function KnowledgeBasePage() {
+// Create a content component to be wrapped in Suspense
+function KnowledgeBaseContent() {
   const { loadUserData, spaces, loadDocuments, getDocuments } = useSpaceStore();
   const [isLoading, setIsLoading] = useState(true);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -296,5 +297,14 @@ export default function KnowledgeBasePage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Main component wrapped in Suspense
+export default function KnowledgeBasePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-full">Loading knowledge base...</div>}>
+      <KnowledgeBaseContent />
+    </Suspense>
   );
 } 
