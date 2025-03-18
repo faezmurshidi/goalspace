@@ -1,6 +1,14 @@
 # GoalSpace
 
-A modern web application for goal setting and tracking, powered by AI mentors.
+A modern web application for goal setting and tracking, powered by AI mentors and multilingual support.
+
+## Features
+
+- **AI-Powered Mentorship**: Set goals and get personalized guidance from AI mentors
+- **Learning Spaces**: Organize your learning journey with dedicated spaces for each goal
+- **Multilingual Support**: Available in English, Malay, and Chinese
+- **Blog & Knowledge Base**: Access learning resources and articles in your preferred language
+- **Progress Tracking**: Monitor your advancement with visual indicators and task management
 
 ## Tech Stack
 
@@ -9,6 +17,7 @@ A modern web application for goal setting and tracking, powered by AI mentors.
 - **Styling**: Tailwind CSS, shadcn/ui
 - **State Management**: Zustand
 - **Authentication**: Supabase Auth with email verification
+- **Internationalization**: next-intl for translations and locale management
 
 ## Getting Started
 
@@ -25,6 +34,7 @@ Create a `.env.local` file in the root directory:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SKIP_API_CALL=true # Optional: for development without API calls
 ```
 
 ### Installation
@@ -38,37 +48,64 @@ cd goalspace
 2. Install dependencies:
 ```bash
 npm install
+# or
+pnpm install
 ```
 
 3. Run the development server:
 ```bash
 npm run dev
+# or
+pnpm dev
 ```
 
-## Database Schema
+## Internationalization
 
-### Users Table
-```sql
-CREATE TABLE users (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT UNIQUE NOT NULL,
-  full_name TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
+GoalSpace supports multiple languages through the next-intl package:
+
+- English (en) - Default
+- Malay (ms) 
+- Chinese (zh)
+
+Translation files are located in the `/locales` directory. To add a new language:
+
+1. Create a new JSON file in the `/locales` directory (e.g., `fr.json`)
+2. Update the `next-intl.config.js` file to include the new locale
+3. Add language selector option in the `language-selector.tsx` component
+
+## Project Structure
+
 ```
-
-### User Settings Table
-```sql
-CREATE TABLE user_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-  theme TEXT DEFAULT 'dark' NOT NULL,
-  api_calls_count INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  UNIQUE(user_id)
-);
+goalspace/
+├── app/                    # Next.js app router pages
+│   ├── [locale]/           # Internationalized routes
+│   │   ├── blog/           # Blog pages and articles
+│   │   ├── login/          # Authentication pages
+│   │   └── page.tsx        # Landing page
+│   ├── (authenticated)/    # Protected routes
+│   ├── (dashboard)/        # Dashboard routes
+│   ├── auth/               # Auth callback routes
+│   └── api/                # API routes
+├── components/             # React components
+│   ├── ui/                 # UI components (shadcn)
+│   ├── sections/           # Page sections
+│   └── ...                 # Feature components
+├── lib/                    # Utility functions
+│   ├── auth.ts            # Auth utilities
+│   ├── store.ts           # Zustand store
+│   ├── types/             # TypeScript type definitions
+│   └── utils/             # Helper functions
+├── locales/                # Translation files
+│   ├── en.json            # English translations
+│   ├── ms.json            # Malay translations
+│   └── zh.json            # Chinese translations
+├── supabase/              # Supabase configuration
+│   ├── migrations/        # Database migrations
+│   ├── schema/            # Database schema files
+│   └── seed.sql           # Seed data
+└── docs/                  # Documentation
+    ├── design-guidelines.md  # Design guidelines
+    └── ...                # Other documentation
 ```
 
 ## Authentication Flow
@@ -82,31 +119,11 @@ CREATE TABLE user_settings (
    - User clicks verification link in email
    - Redirected to `/auth/callback`
    - User record and settings created after verification
-   - Redirected to dashboard
+   - Redirected to dashboard with correct locale
 
 3. **Sign In**
-   - User enters verified email and password
-   - Redirected to dashboard on success
-
-## Project Structure
-
-```
-goalspace/
-├── app/                    # Next.js app router pages
-│   ├── auth/              # Authentication routes
-│   ├── dashboard/         # Dashboard routes
-│   └── page.tsx           # Landing page
-├── components/            # React components
-│   ├── ui/               # UI components (shadcn)
-│   └── ...               # Feature components
-├── lib/                   # Utility functions
-│   ├── auth.ts           # Auth utilities
-│   ├── store.ts          # Zustand store
-│   └── supabase/         # Supabase client
-└── supabase/             # Supabase configuration
-    ├── migrations/       # Database migrations
-    └── schema.sql       # Database schema
-```
+   - User enters verified email and password or uses OAuth provider
+   - Redirected to locale-specific dashboard on success
 
 ## Security
 
@@ -114,6 +131,13 @@ goalspace/
 - Email verification required
 - Secure session management
 - Protected API routes
+- XSS protection through proper content sanitization
+
+## Development Features
+
+- **Skip API Calls**: Set `NEXT_PUBLIC_SKIP_API_CALL=true` in `.env.local` to use mock data
+- **Mock Data**: Located in `/lib/utils/mock-data.ts` for development without API costs
+- **Blog Mock Data**: Test the blog feature with mock articles in `/app/[locale]/blog/mock-data.ts`
 
 ## Development Workflow
 
@@ -123,13 +147,14 @@ goalspace/
 
 2. **Feature Development**
    - Create components in `components/`
-   - Add routes in `app/`
+   - Add routes in appropriate locale directories
    - Update types as needed
+   - Add translations to locale JSON files
 
 3. **Testing**
    - Test authentication flows
    - Verify RLS policies
-   - Check email verification
+   - Check internationalization works across locales
 
 ## Contributing
 
