@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Headphones, Loader2, Pause, Play, Volume2, VolumeX, SkipBack, SkipForward } from 'lucide-react';
@@ -40,8 +40,8 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
     fetchPodcasts(spaceId);
   }, [spaceId, fetchPodcasts]);
 
-  // Setup audio visualization
-  const setupAudioVisualization = () => {
+  // Setup audio visualization - wrapped in useCallback to stabilize its identity
+  const setupAudioVisualization = useCallback(() => {
     if (!audioRef.current || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
@@ -101,7 +101,7 @@ export function CustomPodcast({ spaceId, content, className }: CustomPodcastProp
     } catch (err) {
       console.error('Error setting up audio visualization:', err);
     }
-  };
+  }, [space?.space_color?.secondary, space?.space_color?.main]);
 
   // Effect for audio visualization
   useEffect(() => {

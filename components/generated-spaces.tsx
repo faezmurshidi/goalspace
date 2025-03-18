@@ -57,7 +57,7 @@ export function GeneratedSpaces() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase.auth]);
 
   // Check for pending goals to save after auth
   useEffect(() => {
@@ -140,7 +140,7 @@ export function GeneratedSpaces() {
     };
 
     savePendingGoal();
-  }, [router]);
+  }, [router, supabase]);
 
   const handleStartJourney = async () => {
     try {

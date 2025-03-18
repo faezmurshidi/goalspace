@@ -119,7 +119,7 @@ export function GoalSwitcher({
   const hasGoals = goals.length > 0;
 
   // Wrap handleGoalSelect in useCallback to stabilize its identity
-  const memoizedHandleGoalSelect = React.useCallback(handleGoalSelect, []);
+  const memoizedHandleGoalSelect = React.useCallback(handleGoalSelect, [onGoalSelect, pathname, router, toast]);
 
   // Update keyboard shortcuts handling
   React.useEffect(() => {

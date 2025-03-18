@@ -5,6 +5,7 @@ const nextConfig = {
   reactStrictMode: true,
   env: {
     NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development',
+    NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL || 'http://localhost:3000',
   },
   // Configure static/dynamic rendering behavior
   staticPageGenerationTimeout: 180, // Increase timeout for static page generation (in seconds)
@@ -18,9 +19,8 @@ const nextConfig = {
     // Opt out of static generation for routes handled by your middleware
     fallbackNodePolyfills: false
   },
-  // Configure which routes should use static or dynamic rendering
-  // Setting to false allows pages to switch between static/dynamic as needed
-  dynamicParams: true,
+  // Use trailing slash to improve route matching
+  trailingSlash: true,
   async headers() {
     const isProd = process.env.NEXT_PUBLIC_ENV === 'production';
     const isPreview = process.env.NEXT_PUBLIC_ENV === 'preview';

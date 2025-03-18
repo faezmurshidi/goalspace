@@ -10,8 +10,10 @@ import { getPostBySlug, getRelatedPosts } from '../mock-data';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function ArticlePage() {
+// Inner component that uses useParams
+function ArticlePageContent() {
   const t = useTranslations();
   const params = useParams();
   const locale = params.locale as string;
@@ -126,5 +128,14 @@ export default function ArticlePage() {
       </main>
       <FooterSection />
     </div>
+  );
+}
+
+// Wrapper component with Suspense
+export default function ArticlePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <ArticlePageContent />
+    </Suspense>
   );
 } 
