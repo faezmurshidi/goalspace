@@ -6,8 +6,10 @@ import { FooterSection } from '@/components/sections/footer-section';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { Suspense } from 'react';
 
-export default function ArticlePage() {
+// Inner component that uses useParams
+function ArticlePageContent() {
   const t = useTranslations();
   const params = useParams();
   const locale = params.locale as string;
@@ -102,5 +104,14 @@ export default function ArticlePage() {
       </main>
       <FooterSection />
     </div>
+  );
+}
+
+// Wrapper component with Suspense
+export default function ArticlePage({ params }: { params: { locale: string }}) {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading article...</div>}>
+      <ArticlePageContent />
+    </Suspense>
   );
 } 

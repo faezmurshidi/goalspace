@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Suspense } from 'react';
 import { GeneratedSpaces } from '@/components/generated-spaces';
 import { CTASection } from '@/components/sections/cta-section';
 import { FeaturesSection } from '@/components/sections/features-section';
@@ -16,7 +17,8 @@ import { useToast } from '@/components/ui/use-toast';
 import Script from 'next/script';
 import Link from 'next/link';
 
-export default function LocalizedHome() {
+// Content component to be wrapped in Suspense
+function LocalizedHomeContent() {
   const t = useTranslations();
   const params = useParams();
   const locale = params.locale as string;
@@ -151,5 +153,14 @@ export default function LocalizedHome() {
         </div>
       </div>
     </>
+  );
+}
+
+// Main component with Suspense boundary
+export default function LocalizedHome({ params }: { params: { locale: string }}) {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <LocalizedHomeContent />
+    </Suspense>
   );
 } 

@@ -8,8 +8,10 @@ import { useParams } from 'next/navigation';
 import { getBlogPosts } from './mock-data';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { Suspense } from 'react';
 
-export default function BlogPage() {
+// Inner component that uses useParams
+function BlogPageContent() {
   const t = useTranslations();
   const params = useParams();
   const locale = params.locale as string;
@@ -111,5 +113,15 @@ export default function BlogPage() {
       </main>
       <FooterSection />
     </div>
+  );
+}
+
+// Wrapper component with Suspense
+export default function BlogPage({ params }: { params: { locale: string }}) {
+  // We don't use setRequestLocale in client components as it's for server components only
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <BlogPageContent />
+    </Suspense>
   );
 } 

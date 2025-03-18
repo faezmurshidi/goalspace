@@ -6,6 +6,21 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development',
   },
+  // Configure static/dynamic rendering behavior
+  staticPageGenerationTimeout: 180, // Increase timeout for static page generation (in seconds)
+  experimental: {
+    // Enable app router to handle params more appropriately for static/dynamic balancing
+    serverComponentsExternalPackages: ['next-intl'],
+    // Allow more time for page generation
+    workerThreads: true,
+    // Use the faster Rust compiler (more reliable with complex imports/features)
+    swcMinify: true,
+    // Opt out of static generation for routes handled by your middleware
+    fallbackNodePolyfills: false
+  },
+  // Configure which routes should use static or dynamic rendering
+  // Setting to false allows pages to switch between static/dynamic as needed
+  dynamicParams: true,
   async headers() {
     const isProd = process.env.NEXT_PUBLIC_ENV === 'production';
     const isPreview = process.env.NEXT_PUBLIC_ENV === 'preview';
