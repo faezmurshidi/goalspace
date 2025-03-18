@@ -1,7 +1,7 @@
 'use client';
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { AuthForm } from "@/components/auth/auth-form";
+import { LoginForm } from "@/components/login-form";
 
 interface AuthDialogProps {
   open: boolean;
@@ -12,7 +12,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <AuthForm />
+        <LoginForm />
       </DialogContent>
     </Dialog>
   );

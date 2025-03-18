@@ -91,7 +91,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://goalspace.com',
   },
-  manifest: '/site.webmanifest',
   category: 'education',
 };
 
@@ -111,14 +110,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           <AnalyticsProvider>
             <SiteInfoProvider>
-              {/* Language detection based on site info */}
-              <LanguageDetection />
-              
-              {/* Consent banner */}
-              <SiteInfoConsentBanner />
-              
               {/* Main app content */}
               {children}
+              
+              {/* Client-side only components */}
+              <LanguageDetection />
+              <SiteInfoConsentBanner />
             </SiteInfoProvider>
           </AnalyticsProvider>
           <Toaster />

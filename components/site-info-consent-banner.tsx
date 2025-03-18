@@ -7,16 +7,26 @@ import { useSiteInfo } from '@/providers/site-info-provider';
 
 export function SiteInfoConsentBanner() {
   const { hasConsented, setConsent } = useSiteInfo();
+  const [isMounted, setIsMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+
+  // Handle mounting safely for hydration
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Only show banner after initial render and if consent hasn't been given
   useEffect(() => {
+    if (!isMounted) return;
+    
     const timer = setTimeout(() => {
-      setIsVisible(hasConsented === false);
+      if (hasConsented === false) {
+        setIsVisible(true);
+      }
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [hasConsented]);
+  }, [hasConsented, isMounted]);
 
   const handleAccept = () => {
     setConsent(true);
@@ -28,6 +38,10 @@ export function SiteInfoConsentBanner() {
     setIsVisible(false);
   };
 
+  // Don't render anything during SSR or initial hydration
+  if (!isMounted) return null;
+  
+  // Don't render if not visible
   if (!isVisible) return null;
 
   return (
