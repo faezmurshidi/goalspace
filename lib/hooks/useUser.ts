@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { User, UserSettings, UserApiUsage, UserSubscriptionHistory } from '@/lib/types/database';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
