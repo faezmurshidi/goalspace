@@ -26,6 +26,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api/') || 
     pathname === '/blog' ||
     pathname.startsWith('/blog/') ||
+    pathname === '/dev/site-info' || // Site info debug page
     pathname.includes('favicon') ||
     pathname.includes('.json') ||
     pathname.includes('.webmanifest') ||

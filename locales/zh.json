@@ -193,5 +193,11 @@
   "goals": {
     "createNewGoal": "创建新目标",
     "goalBreakdown": "让我们将您的目标分解成可行的学习空间。"
+  },
+  "siteInfo": {
+    "enhanceExperience": "提升您的体验",
+    "dataCollectionMessage": "我们收集设备类型和语言偏好等非敏感信息，以改善您的体验。不会收集或共享个人数据。",
+    "accept": "接受",
+    "decline": "拒绝"
   }
 }
