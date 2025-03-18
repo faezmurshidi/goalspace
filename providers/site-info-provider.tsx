@@ -195,7 +195,8 @@ export function SiteInfoProvider({
       clearTimeout(syncTimeoutRef.current);
     }
     
-    syncTimeoutRef.current = setTimeout(async () => {
+    // Function to sync data to server
+    const syncToServer = async () => {
       try {
         setIsSyncing(true);
         
@@ -217,9 +218,46 @@ export function SiteInfoProvider({
       } finally {
         setIsSyncing(false);
       }
-    }, 5000);
+    };
+    
+    // Normal debounced sync
+    syncTimeoutRef.current = setTimeout(syncToServer, 5000);
+    
+    // Add event listeners for tab/browser closing
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Clear the debounce timeout
+        if (syncTimeoutRef.current) {
+          clearTimeout(syncTimeoutRef.current);
+          syncTimeoutRef.current = null;
+        }
+        // Immediate sync when tab becomes hidden
+        syncToServer();
+      }
+    };
+    
+    const handleBeforeUnload = () => {
+      // Clear the debounce timeout
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+        syncTimeoutRef.current = null;
+      }
+      // Use synchronous version for beforeunload
+      navigator.sendBeacon(
+        '/api/user-site-info',
+        JSON.stringify(siteInfo)
+      );
+    };
+    
+    // Add fallback sync mechanisms for tab/browser closing
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     
     return () => {
+      // Clean up all event listeners
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current);
       }

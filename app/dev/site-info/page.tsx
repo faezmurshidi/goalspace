@@ -1,8 +1,26 @@
 'use client';
 
-import { SiteInfoDebug } from '@/components/dev/site-info-debug';
+import dynamic from 'next/dynamic';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
+
+// Dynamic import with client-side rendering to ensure the component is never included in server-side rendering
+// and only loaded when in development mode
+const SiteInfoDebug = dynamic(
+  () => process.env.NODE_ENV === 'development' 
+    ? import('@/components/dev/site-info-debug').then(mod => mod.SiteInfoDebug)
+    : Promise.resolve(() => (
+        <Card className="max-w-md mx-auto my-4">
+          <CardHeader>
+            <CardTitle>Debug Not Available</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Debug tools are only available in development environments.</p>
+          </CardContent>
+        </Card>
+      ))
+  , { ssr: false }
+);
 
 export default function SiteInfoDebugPage() {
   return (
