@@ -20,6 +20,7 @@ import {
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { cva } from "class-variance-authority"
+import { useTranslations } from "next-intl"
 
 import { GoalSwitcher } from "@/components/goal-switcher"
 import type { Goal } from "@/components/goal-switcher"
@@ -102,6 +103,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
   const [isHovered, setIsHovered] = useState(false)
   const router = useRouter()
   const { theme, setTheme } = useTheme()
+  const t = useTranslations()
   const { spaces } = useSpaceStore()
   const [activeGoal, setActiveGoal] = useState<Goal | undefined>(
     goals.find(g => g.id === initialGoalId) || goals[0]
@@ -134,12 +136,12 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
 
   const bottomLinks = useMemo(() => [
     {
-      label: 'Settings',
+      label: t('navigation.settings'),
       href: '/settings',
       icon: <Settings className="h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: 'Logout',
+      label: t('navigation.logout'),
       href: '#',
       icon: <LogOut className="h-5 w-5 flex-shrink-0" />,
       onClick: async () => {
@@ -149,19 +151,19 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
       className: 'hover:bg-destructive/20 text-destructive'
     },
     {
-      label: theme === 'light' ? 'Dark Mode' : 'Light Mode',
+      label: theme === 'light' ? t('settings.darkMode') : t('settings.lightMode'),
       href: '#',
       icon: theme === 'light' ? <Moon className="h-5 w-5 flex-shrink-0" /> : <Sun className="h-5 w-5 flex-shrink-0" />,
       onClick: () => setTheme(theme === 'light' ? 'dark' : 'light'),
       className: 'dark:text-amber-400 text-slate-800'
     },
     {
-      title: 'Blog',
+      label: t('navigation.blog'),
       href: '/blog',
       icon: <Book className="h-5 w-5" />,
       variant: 'ghost',
     },
-  ], [theme, router, setTheme])
+  ], [theme, router, setTheme, t])
 
   return (
     <div className="flex min-h-screen">
@@ -185,7 +187,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
                   onClick={() => setOpen(!open)}
                 >
                   {open ? <ChevronLeft /> : <ChevronRight />}
-                  <span className="sr-only">Toggle sidebar</span>
+                  <span className="sr-only">{t('navigation.toggleSidebar')}</span>
                 </Button>
               </div>
             </SidebarHeader>
@@ -204,13 +206,13 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
               {/* Main Navigation */}
               <div className="space-y-1">
                 <NavItem
-                  label={isExpanded ? "Dashboard" : ""}
+                  label={isExpanded ? t('navigation.dashboard') : ""}
                   href="/dashboard"
                   icon={<LayoutDashboard className="h-5 w-5 text-foreground/80" />}
                   state="active"
                 />
                 <NavItem
-                  label={isExpanded ? "Knowledge Base" : ""}
+                  label={isExpanded ? t('navigation.knowledgeBase') : ""}
                   href="/knowledge-base"
                   icon={<BookOpen className="h-5 w-5 text-foreground/80" />}
                   state="active"
@@ -222,7 +224,7 @@ export function AppSidebar({ goals, onGoalSelect, onCreateGoal, initialGoalId, c
                 <div className="space-y-2">
                   {isExpanded && (
                     <h2 className="px-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                      Active Spaces
+                      {t('navigation.activeSpaces')}
                     </h2>
                   )}
                   <div className="space-y-1">
@@ -330,6 +332,7 @@ function NavItem({ label, href, icon, color, onClick, className, state }: NavIte
 }
 
 function Logo({ open }: { open: boolean }) {
+  const t = useTranslations();
   return (
     <div className="flex items-center gap-2">
       <div className="h-8 w-8 rounded-lg bg-primary" />
@@ -339,7 +342,7 @@ function Logo({ open }: { open: boolean }) {
           animate={{ opacity: 1 }}
           className="text-xl font-semibold"
         >
-          GoalSpace
+          {t('common.appName')}
         </motion.span>
       )}
     </div>

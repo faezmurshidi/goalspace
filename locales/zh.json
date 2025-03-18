@@ -1,0 +1,197 @@
+{
+  "common": {
+    "appName": "Goalspace",
+    "description": "AI驱动的目标实现平台"
+  },
+  "navigation": {
+    "blog": "博客",
+    "pricing": "查看价格",
+    "login": "登录",
+    "switchLanguage": "切换语言",
+    "dashboard": "仪表板",
+    "goals": "目标",
+    "spaces": "空间",
+    "settings": "设置",
+    "knowledgeBase": "知识库",
+    "logout": "退出登录",
+    "activeSpaces": "活跃空间"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signOut": "退出",
+    "register": "注册",
+    "forgotPassword": "忘记密码",
+    "resetPassword": "重置密码",
+    "email": "电子邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码"
+  },
+  "hero": {
+    "title": "AI驱动的目标实现平台",
+    "anything": "任何事情。",
+    "launchArticle": "阅读我们的发布文章",
+    "description": "通过AI指导、个性化学习路径和结构化方法，将您的目标转化为现实。",
+    "getStarted": "免费开始",
+    "watchDemo": "观看演示",
+    "joinUsers": "加入已经实现目标的10,000+学习者",
+    "enterGoal": "输入您的目标",
+    "goalDescription": "告诉我们您想要实现什么，我们的AI将为您创建个性化学习空间",
+    "noSignup": "无需注册即可预览",
+    "itsFree": "免费",
+    "features": {
+      "personalizedSpaces": "个性化空间",
+      "aiMentorship": "AI指导",
+      "goalTracking": "目标跟踪",
+      "structuredLearning": "结构化学习",
+      "communitySupport": "社区支持",
+      "adaptiveContent": "自适应内容"
+    }
+  },
+  "header": {
+    "title": "GoalSpace"
+  },
+  "trustSignals": {
+    "title": "受到领先组织的信任并被以下媒体报道",
+    "partners": [
+      "TechCrunch",
+      "Forbes",
+      "Harvard",
+      "MIT",
+      "FastCompany",
+      "Y Combinator"
+    ]
+  },
+  "statistics": {
+    "title": "改变人们学习和实现目标的方式",
+    "description": "我们的AI驱动平台通过结构化学习路径和个性化指导，已帮助数千人实现他们的目标。",
+    "stats": [
+      {
+        "value": "10,000+",
+        "label": "活跃用户",
+        "description": "每天学习和成长"
+      },
+      {
+        "value": "40,000+",
+        "label": "创建的空间",
+        "description": "有组织的学习路径"
+      },
+      {
+        "value": "98%",
+        "label": "完成率",
+        "description": "使用AI导师的用户"
+      },
+      {
+        "value": "85%",
+        "label": "成功率",
+        "description": "用户实现他们的目标"
+      }
+    ]
+  },
+  "caseStudies": {
+    "sectionTag": "成功案例",
+    "title": "真实的人，真实的结果",
+    "description": "发现Goalspace如何改变学习旅程并帮助人们取得非凡成果。",
+    "featuredCase": {
+      "title": "从新手到全栈开发者仅用6个月",
+      "description": "Alex没有编程经验但想要转行。使用Goalspace的结构化学习路径和AI指导，他从完全的初学者到获得初级开发者职位仅用了6个月时间。",
+      "metrics": [
+        {
+          "value": "4个月",
+          "label": "节省时间"
+        },
+        {
+          "value": "100%",
+          "label": "完成率"
+        },
+        {
+          "value": "$12,000",
+          "label": "成本节省"
+        }
+      ],
+      "person": {
+        "name": "Alex Chen",
+        "title": "软件开发者",
+        "initials": "AC"
+      }
+    }
+  },
+  "integrations": {
+    "title": "无缝集成",
+    "description": "将Goalspace与您喜爱的应用和服务连接，以提升您的学习体验。",
+    "items": [
+      {
+        "name": "Google Calendar",
+        "description": "安排学习会话并跟踪进度",
+        "icon": "📅"
+      },
+      {
+        "name": "Slack",
+        "description": "与学习小组协作",
+        "icon": "💬"
+      },
+      {
+        "name": "GitHub",
+        "description": "直接连接您的代码项目",
+        "icon": "💻"
+      },
+      {
+        "name": "YouTube",
+        "description": "在学习空间中嵌入视频教程",
+        "icon": "▶️"
+      },
+      {
+        "name": "Notion",
+        "description": "导入笔记和文档",
+        "icon": "📝"
+      },
+      {
+        "name": "Spotify",
+        "description": "高效学习的专注播放列表",
+        "icon": "🎵"
+      }
+    ],
+    "footer": "更多集成即将推出。建议您想要看到的集成。"
+  },
+  "notifications": {
+    "welcome": {
+      "title": "欢迎来到Goalspace！",
+      "description": "我们很高兴您能加入我们的启动。享受所有高级功能的特别访问权限。"
+    }
+  },
+  "seo": {
+    "applicationCategory": "EducationalApplication, ProductivityApplication",
+    "price": "9.99",
+    "currency": "USD",
+    "operatingSystem": "All",
+    "rating": {
+      "value": "4.8",
+      "count": "1250",
+      "best": "5",
+      "worst": "1"
+    },
+    "features": [
+      "个性化AI指导",
+      "结构化学习路径",
+      "进度跟踪",
+      "社区支持",
+      "定期内容更新"
+    ]
+  },
+  "settings": {
+    "title": "设置",
+    "subtitle": "管理您的账户设置和偏好",
+    "profileTab": "个人资料",
+    "usageTab": "使用情况与账单",
+    "fullName": "全名",
+    "themePreference": "主题偏好",
+    "defaultAIModel": "默认AI模型",
+    "emailNotifications": "电子邮件通知",
+    "saveChanges": "保存更改",
+    "darkMode": "深色模式",
+    "lightMode": "浅色模式"
+  },
+  "goals": {
+    "createNewGoal": "创建新目标",
+    "goalBreakdown": "让我们将您的目标分解成可行的学习空间。"
+  }
+}
