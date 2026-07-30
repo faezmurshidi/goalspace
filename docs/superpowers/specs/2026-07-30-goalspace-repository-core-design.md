@@ -148,6 +148,7 @@ create table entries (
   project_id   uuid not null references projects(id) on delete cascade,
   owner_id     uuid not null references users(id) on delete cascade,
   work_item_id uuid references work_items(id) on delete set null,
+  agent_id     uuid,
   kind         text not null check (kind in ('note','decision','source','session')),
   title        text,
   body         text not null default '',
@@ -160,6 +161,7 @@ create table work_items (
   id                  uuid primary key default gen_random_uuid(),
   project_id          uuid not null references projects(id) on delete cascade,
   owner_id            uuid not null references users(id) on delete cascade,
+  agent_id            uuid,
   parent_id           uuid references work_items(id) on delete cascade,
   order_index         integer not null default 0,
   kind                text not null default 'task' check (kind in ('task','question')),
@@ -178,6 +180,7 @@ create table documents (
   id          uuid primary key default gen_random_uuid(),
   project_id  uuid not null references projects(id) on delete cascade,
   owner_id    uuid not null references users(id) on delete cascade,
+  agent_id    uuid,
   title       text not null,
   body        text not null default '',
   created_at  timestamptz not null default now(),
@@ -265,6 +268,13 @@ corrupt data and surfaces it rather than recursing.
 and refreshed it with an `AFTER UPDATE` trigger averaging space progress, which
 goes silently stale on insert, delete, and cascade. Progress is derived in TypeScript
 from the fetched tree (§6.3).
+
+**`agent_id` is a forward reference to phase 2.** `entries`, `work_items`, and
+`documents` each carry a nullable `agent_id`, always null in phase 1 because no
+agent exists yet. Null means human-authored. The foreign key to `agents` is
+added by the phase-2 migration; the column ships now because provenance is part
+of the record's shape, and the record is phase 1's product. See
+`2026-07-30-goalspace-grounded-copartner-design.md`.
 
 **Entries are editable but not versioned.** Typo correction is legitimate;
 rewriting history is not the risk here, since there is exactly one author.
