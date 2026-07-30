@@ -22,6 +22,85 @@
 - Progress and due-date state are **computed, never stored**. No triggers that denormalise derived values.
 - Path alias is `@/*` → repo root (already configured in `tsconfig.json`).
 - Existing i18n machinery (`en`/`ms`/`zh`) is retained. Do not delete `lib/i18n.ts`, `lib/hooks/use-translations.ts`, or `locales/`.
+- **Never reinstate `typescript.ignoreBuildErrors` or `eslint.ignoreDuringBuilds`.** Task 2 removes them; with them set, every "verify the build is green" step in this plan is meaningless. `pnpm typecheck` must pass before any commit from Task 2 onward.
+- Never commit a file containing a credential. `.gitignore` blocks AI codebase-dump files as of Task 0; do not add exceptions.
+
+---
+
+### Task 0: Remove the committed credential and block future dumps
+
+> **PREREQUISITE — NOT A STEP IN THIS TASK.** `test.txt` on `main` of this **public** repository contains a full Supabase session for `faezmurshidiadnan@gmail.com` on project `wmiciabkatqfjbppvwiz`, including a **refresh token**, which does not expire on a clock. **The repository owner must revoke it** in the Supabase dashboard (Authentication → Users → sign out all sessions) before or alongside this task.
+>
+> **Deleting the files does not remediate the exposure.** The blobs remain reachable in git history and via GitHub's PR blob storage even after branches are deleted. Revocation is the only fix; this task just stops the bleeding and prevents a recurrence.
+
+**Files:**
+- Delete: `test.txt`, `tesst.txt`
+- Modify: `.gitignore`
+
+**Interfaces:**
+- Consumes: nothing (first task)
+- Produces: a working tree with no committed credentials and a `.gitignore` that blocks AI codebase dumps
+
+- [ ] **Step 1: Confirm the credential is present before deleting**
+
+```bash
+grep -l "auth-token=base64-" test.txt tesst.txt 2>/dev/null
+```
+
+Expected: `test.txt` is listed. Do not print the file contents — the token is a live credential.
+
+- [ ] **Step 2: Delete the stray files**
+
+```bash
+git rm --quiet test.txt tesst.txt
+```
+
+- [ ] **Step 3: Block AI codebase dumps from ever being committed**
+
+Append to `.gitignore`:
+
+```gitignore
+# AI codebase dumps — these inline every file, including any pasted secrets.
+# A dump of this repo leaked a Supabase session in PR #5.
+.repomix-output.txt
+repomix-output.*
+*.repomix.txt
+.aidigest
+codebase-dump.*
+```
+
+- [ ] **Step 4: Scan the rest of the tree for other credentials**
+
+```bash
+grep -rInE "eyJ[A-Za-z0-9_-]{30,}|sk-[A-Za-z0-9]{20,}|sk-ant-|xi-api-key['\"]?\s*[:=]\s*['\"][A-Za-z0-9]{20,}|postgres(ql)?://[^:]+:[^@]+@" \
+  --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.next . \
+  | cut -c1-160
+```
+
+Expected: no output. Any hit is another leaked credential — stop, report it, and get it revoked before continuing. A match inside `locales/` or a lockfile is a false positive; verify before acting.
+
+- [ ] **Step 5: Verify the build still works**
+
+```bash
+pnpm install
+pnpm build 2>&1 | tail -20
+```
+
+The build may fail for pre-existing reasons unrelated to this task — nothing imports `test.txt`. Record the output; Task 1 addresses build failures.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add -A
+git commit -m "security: remove committed Supabase session and block codebase dumps
+
+test.txt contained a full auth cookie including a refresh token, exposed on
+a public repo since Feb 2025. The session must be revoked separately - the
+blobs remain in git history and in PR #5's repomix dump.
+
+Adds .gitignore rules for AI codebase dump files, which inline every file in
+the repo and were the vector that widened this leak."
+```
 
 ---
 
@@ -34,7 +113,6 @@ Removes everything the new model replaces, so the upgrade in Task 2 operates on 
 - Delete: `components/TipTap.tsx`, `components/app-sidebar.tsx`, `components/background.tsx`, `components/chat-window.tsx`, `components/chat-with-mentor.tsx`, `components/custom-podcast.tsx`, `components/digital-clock.tsx`, `components/generated-spaces.tsx`, `components/goal-form.tsx`, `components/goal-switcher.tsx`, `components/knowledge-base.tsx`, `components/markdown-content.tsx`, `components/model-selection-dialog.tsx`, `components/new-goal-dialog.tsx`, `components/podcast.tsx`, `components/space-content-editor.tsx`, `components/space-module.tsx`, `components/space-navbar.tsx`, `components/space-todo-list.tsx`, `components/space-tools-window.tsx`, `components/space-tools.tsx`, `components/spaces-grid.tsx`, `components/spaces-sidebar.tsx`, `components/todo-list.tsx`
 - Delete: `lib/store.ts`, `lib/stores/space-store.ts`, `lib/agent-config.ts`, `lib/vector.ts`, `lib/types/goalspace.ts`, `lib/types/space.ts`, `lib/types/module.ts`, `lib/utils/ai-generate.ts`, `lib/utils/prompt-generator.ts`, `lib/utils/paywall.ts`, `lib/utils/mock-data.ts`, `lib/utils/schemas.ts`
 - Delete: `types/agent.ts` (pairs with the deleted `lib/agent-config.ts`)
-- Delete: `tesst.txt`, `test.txt` (stray files in repo root)
 - Modify: `middleware.ts`, `package.json`
 
 **Interfaces:**
@@ -72,7 +150,7 @@ git rm --quiet \
   components/spaces-grid.tsx components/spaces-sidebar.tsx components/todo-list.tsx
 ```
 
-- [ ] **Step 4: Delete obsolete lib files and stray root files**
+- [ ] **Step 4: Delete obsolete lib files**
 
 ```bash
 git rm --quiet \
@@ -80,8 +158,7 @@ git rm --quiet \
   lib/types/goalspace.ts lib/types/space.ts lib/types/module.ts \
   lib/utils/ai-generate.ts lib/utils/prompt-generator.ts lib/utils/paywall.ts \
   lib/utils/mock-data.ts lib/utils/schemas.ts \
-  types/agent.ts \
-  tesst.txt test.txt
+  types/agent.ts
 ```
 
 `types/supabase.ts` is retained — it is imported by the Supabase client helpers and is regenerated in Task 7.
@@ -145,7 +222,7 @@ i18n, shadcn primitives, site-info, blog, and the marketing shell."
 The shell is now small enough that the upgrade touches few files. The known breaking change in this repo is that `cookies()` became async in Next 15.
 
 **Files:**
-- Modify: `package.json`, `tsconfig.json`, `utils/supabase/server.ts`, `app/auth/callback/route.ts`
+- Modify: `package.json`, `tsconfig.json`, `next.config.js`, `utils/supabase/server.ts`, `app/auth/callback/route.ts`
 - Modify: any `page.tsx` or `layout.tsx` under `app/[locale]/` that reads `params`
 
 **Interfaces:**
@@ -164,7 +241,66 @@ pnpm add @supabase/supabase-js@^2.111.0 @supabase/ssr@^0.12.4
 
 In `tsconfig.json`, change `"target": "es5"` to `"target": "es2022"`. `es5` predates the async/await and class-field syntax used throughout, and forces unnecessary downlevel emit.
 
-- [ ] **Step 3: Make the server Supabase client async**
+- [ ] **Step 3: Rewrite `next.config.js`**
+
+The current config has three problems beyond the version bump: `experimental` flags that were removed or renamed in Next 15/16, a CORS block for `/api/*` routes that Task 1 deleted, and — most importantly — `ignoreBuildErrors` and `ignoreDuringBuilds`, which mean a green build proves nothing about type or lint correctness. Replace the whole file:
+
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  trailingSlash: true,
+  staticPageGenerationTimeout: 180,
+  env: {
+    NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development',
+    NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL || 'http://localhost:3000',
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+        ],
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;
+```
+
+What changed and why:
+
+- **`typescript.ignoreBuildErrors` and `eslint.ignoreDuringBuilds` are gone.** They let builds pass with type errors, which makes every "verify the build is green" step in this plan meaningless. Removing them is what gives those steps teeth.
+- **The `/api/*` CORS block is gone** — those routes no longer exist. It also paired `Access-Control-Allow-Origin: *` with `Access-Control-Allow-Credentials: true`, which browsers reject outright, and which becomes a real vulnerability the moment someone "fixes" the `*` by reflecting the request origin.
+- **Security headers are salvaged from PR #5's `vercel.json`**, minus `X-XSS-Protection` — that header is deprecated and its filter introduced vulnerabilities, so modern guidance is to omit it rather than set it.
+- **`experimental` is gone.** `serverComponentsExternalPackages` was renamed to the top-level `serverExternalPackages`, and `swcMinify`, `workerThreads`, and `fallbackNodePolyfills` no longer exist. Nothing in the remaining tree needs any of them.
+- **The `webpack` block is gone.** Its `ws` / `bufferutil` / `utf-8-validate` fallbacks existed for the AI SDK packages Task 1 removed, and Next 16 uses Turbopack by default, where a `webpack` key does not apply.
+
+- [ ] **Step 4: Add a real type-check gate**
+
+Add to `package.json` scripts:
+
+```json
+"typecheck": "tsc --noEmit"
+```
+
+Then run it:
+
+```bash
+pnpm typecheck
+```
+
+Expected: errors, at this point. With `ignoreBuildErrors` removed these are now visible; fix each one. Errors pointing at deleted modules mean Task 1 missed an import — delete that code rather than reinstating the dependency.
+
+- [ ] **Step 5: Make the server Supabase client async**
 
 Replace the contents of `utils/supabase/server.ts`:
 
@@ -202,7 +338,7 @@ export const createClient = async () => {
 };
 ```
 
-- [ ] **Step 4: Update every caller of `createClient`**
+- [ ] **Step 6: Update every caller of `createClient`**
 
 ```bash
 grep -rn "createClient(cookieStore)\|createClient(await cookies())\|createClient(cookies())" app components lib utils
@@ -210,7 +346,7 @@ grep -rn "createClient(cookieStore)\|createClient(await cookies())\|createClient
 
 Each call site becomes `const supabase = await createClient();` and its `cookies()` import is removed if now unused.
 
-- [ ] **Step 5: Await dynamic route params**
+- [ ] **Step 7: Await dynamic route params**
 
 ```bash
 grep -rn "params" app --include=page.tsx --include=layout.tsx --include=route.ts
@@ -225,7 +361,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
 }
 ```
 
-- [ ] **Step 6: Build and verify**
+- [ ] **Step 8: Build and verify**
 
 ```bash
 pnpm build
@@ -233,7 +369,7 @@ pnpm build
 
 Expected: build succeeds on Next 16. If a Radix package errors under React 19, upgrade that specific package with `pnpm add @radix-ui/<name>@latest` and rebuild.
 
-- [ ] **Step 7: Smoke-test the running app**
+- [ ] **Step 9: Smoke-test the running app**
 
 ```bash
 pnpm dev
@@ -241,7 +377,7 @@ pnpm dev
 
 Visit `http://localhost:3000` — the landing page renders and redirects to a locale. Visit `/en/login` — the login form renders. Stop the server.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 git add -A
@@ -1836,12 +1972,13 @@ export function dueWakeItems(items: WorkItemNode[], now: Date): WorkItemNode[] {
 - [ ] **Step 4: Run the full suite**
 
 ```bash
+pnpm typecheck
 pnpm test
 pnpm test:rls
 pnpm build
 ```
 
-Expected: all unit tests pass, all RLS tests pass, build succeeds.
+Expected: no type errors, all unit tests pass, all RLS tests pass, build succeeds.
 
 - [ ] **Step 5: Commit**
 
@@ -1854,7 +1991,9 @@ git commit -m "feat: add re-entry signals for due wake dates and status duration
 
 ## Definition of done
 
+- `pnpm typecheck` passes with `ignoreBuildErrors` removed — this is the gate that makes the rest meaningful.
 - `pnpm build` succeeds on Next 16 / React 19.
+- No credential remains in the working tree, and `.gitignore` blocks codebase dumps.
 - `pnpm test` passes: schemas, tree, progress, re-entry.
 - `pnpm test:rls` passes: schema shape, two-user isolation across six tables, storage isolation.
 - No AI dependency remains in `package.json`.
