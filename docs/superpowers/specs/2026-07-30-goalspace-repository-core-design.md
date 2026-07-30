@@ -54,7 +54,7 @@ reading.**
 |---|---|
 | **1 (this spec)** | Repository core: projects, log, work items, docs, resume view. Private. |
 | 2 | Grounded co-partner: retrieval over your own repo, per-project specialised agents, AI spend metering. |
-| 3 | Public projects: visibility, public read view, discovery, graph view. |
+| 3 | Public projects: visibility, public read view, discovery, graph view. Also the home for inbound connectors (§5.8) and markdown export. |
 | 4 | Contribution inbox: outside suggestions and advice threads, owner triage. |
 | 5 | Compute sponsorship: contributors fund AI credits scoped to a specific work item. |
 
@@ -86,6 +86,7 @@ Named explicitly so they do not creep back in during implementation.
 | Cross-item dependency graph | `parent_id` is a tree; "frame blocked until battery dimensions fix" is a DAG edge. `blocked` status plus prose naming the dependency covers ~90%. Dependency graphs eat months. |
 | Document diff UI | Revisions are *recorded* in phase 1 (§5.4) because unrecorded history is unrecoverable. Rendering diffs is not needed to record them. |
 | Multi-user collaboration | Owner is sole author, by design. Outside input arrives as suggestions in phase 4, never as co-authorship. This removes all merge, diff, and conflict machinery. |
+| Git-backed storage | Considered and rejected — see §5.8. |
 | Real-time / presence | Single-user product. |
 | Mobile app | Responsive web only. |
 
@@ -173,6 +174,7 @@ create table work_items (
   closed_by_entry_id  uuid references entries(id) on delete set null,
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now(),
+  status_changed_at   timestamptz not null default now(),
   closed_at           timestamptz
 );
 
@@ -258,6 +260,14 @@ says *the motor you ordered in March should have arrived.* `wake_at` may be set
 on an item of any status, but only `blocked` items are surfaced by the resume
 view when it passes.
 
+**`status_changed_at` makes duration legible.** "Blocked" is a fact; "blocked
+since March" is the version that makes you act, and it is what the resume view
+renders. A full status-transition audit log would also answer *how many times*
+an item bounced between `doing` and `blocked`, which nothing in the product
+needs, so one column replaces a table. It is set by the update action whenever
+`status` changes, not by a trigger, so the write path stays inspectable in
+TypeScript.
+
 **Cycles in `parent_id` are rejected at the action layer**, not by a database
 constraint — Postgres cannot express "no cycles" declaratively, and a recursive
 trigger would cost more than it saves for trees of this size. The reparent
@@ -322,6 +332,41 @@ mirror table RLS on the leading path segment. Images and PDFs, 25 MB per file.
 Attachments were the clearest gap found when stress-testing the model against a
 hardware build — welds, wiring, parts that arrived wrong — and they serve
 learning projects equally (recordings of your own speech, handwriting).
+
+### 5.8 Why storage is not git-backed
+
+The word "repository" invites the analogy, so the rejection is recorded here to
+stop it being relitigated.
+
+**Git's value is merge, and this product has no merges.** Owner-as-sole-author
+was chosen deliberately (§3), which is why "removes all merge, diff, and
+conflict machinery" appears there as a benefit. Adopting git pays that entire
+cost to obtain *history* — and history is the cheap problem, already solved by
+`document_revisions` for the only object that gets revised, by append-orientation
+for entries, and by `status_changed_at` for work items.
+
+The costs would be concrete. Nested work items with statuses, `wake_at`, and
+"open items whose wake date has passed" are relational queries; git stores
+files, so Postgres would remain as a derived index and every subsequent feature
+would begin with "which one is the truth?" A commit round-trip per capture
+violates success criteria 1 and 5. Images want LFS. Multi-device editing
+reintroduces the conflicts the design removed.
+
+The disqualifier is audience: goalspace is for anyone with a hard goal, not
+only developers. Requiring a GitHub account to study for HSK4 is absurd.
+
+**What is kept from the idea.** Goalspace borrows GitHub's *social* model —
+private versus public, outside contribution, sponsorship — and not its storage
+model. Two derivatives survive into phase 3:
+
+- **Inbound connectors.** Commits are work already recorded elsewhere; importing
+  them as `session` entries makes the record accrue at zero effort, which is the
+  product thesis at its purest. Read-only, no conflicts, and one connector among
+  several — a fitness or reading connector serves other project kinds
+  identically.
+- **Markdown export.** One-way export of a project to a repository gives the
+  portability and ownership story — *your record is yours* — with none of the
+  coupling.
 
 ---
 
