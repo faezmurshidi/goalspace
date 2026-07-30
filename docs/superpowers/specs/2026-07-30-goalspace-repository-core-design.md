@@ -87,6 +87,7 @@ Named explicitly so they do not creep back in during implementation.
 | Document diff UI | Revisions are *recorded* in phase 1 (§5.4) because unrecorded history is unrecoverable. Rendering diffs is not needed to record them. |
 | Multi-user collaboration | Owner is sole author, by design. Outside input arrives as suggestions in phase 4, never as co-authorship. This removes all merge, diff, and conflict machinery. |
 | Git-backed storage | Considered and rejected — see §5.8. |
+| Per-entry visibility | Visibility is per-project. Considered for phase 1 and deferred — see §5.9. |
 | Real-time / presence | Single-user product. |
 | Mobile app | Responsive web only. |
 
@@ -367,6 +368,42 @@ model. Two derivatives survive into phase 3:
 - **Markdown export.** One-way export of a project to a repository gives the
   portability and ownership story — *your record is yours* — with none of the
   coupling.
+
+### 5.9 Visibility is per-project, and stays that way
+
+`projects.visibility` is the only visibility control. Entries, work items, and
+documents inherit it. This was evaluated against per-entry visibility and the
+per-project model won on three grounds.
+
+**Partial visibility leaks through relations.** Hiding an entry means hiding
+every path to it: a public entry citing a private one, a graph edge to a private
+node, an agent answer quoting a private decision, a work item whose closing
+entry is hidden. Every subsequent feature becomes a new leak surface and the
+failures are silent. The worst property of such a system is not that it leaks
+but that it grants a false sense of control — the owner believes the sensitive
+items are marked, and is wrong once.
+
+**It fights quick capture.** A visibility decision on every entry adds a choice
+to the one interaction that must stay frictionless (§4, criterion 1).
+
+**The precedent is strong.** GitHub is per-repository, not per-file, after
+seventeen years of resources and incentive to do otherwise.
+
+**The counter-argument, and the phase-3 answer.** All-or-nothing visibility has
+a real failure mode: if a log contains supplier pricing, an interpersonal
+falling-out, or anything medical, the rational choice is to keep the project
+private forever, and phases 3–5 never activate. The answer is not per-entry
+visibility but an **exception flag** — `entries.is_private boolean not null
+default false`, inheriting the project by default, locked individually only when
+the owner knows something is sensitive. Opt-out from a sane default, with no
+decision at capture time.
+
+That flag ships in phase 3, not here. Its default is correct for every
+pre-existing row, so it requires no backfill and loses no data — placing it in a
+different class from `document_revisions` (history that cannot be
+reconstructed) and RLS (security that should not be bolted on later). The rule
+this spec follows is to defer anything that backfills trivially; cheapness alone
+is not the test, unrecoverability is.
 
 ---
 
