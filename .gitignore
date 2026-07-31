@@ -38,3 +38,6 @@ next-env.d.ts
 # IDE
 .vscode/
 .idea/
+
+# subagent-driven-development workspace (ledger, briefs, review packages)
+.superpowers/
