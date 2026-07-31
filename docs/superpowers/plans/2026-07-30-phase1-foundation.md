@@ -996,36 +996,66 @@ create policy projects_delete on projects for delete
 -- Child tables: flat ownership for writes, one shallow EXISTS for public reads.
 -- The insert check also requires the parent project to belong to the caller,
 -- so ownership cannot be forged by pointing at someone else's project.
-do $$
-declare t text;
-begin
-  foreach t in array array[
-    'entries','work_items','documents','document_revisions','attachments'
-  ] loop
-    execute format($f$
-      create policy %1$s_select on %1$I for select
-        using (
-          owner_id = auth.uid()
-          or exists (
-            select 1 from projects p
-            where p.id = %1$I.project_id and p.visibility = 'public'
-          )
-        );
-      create policy %1$s_insert on %1$I for insert
-        with check (
-          owner_id = auth.uid()
-          and exists (
-            select 1 from projects p
-            where p.id = project_id and p.owner_id = auth.uid()
-          )
-        );
-      create policy %1$s_update on %1$I for update
-        using (owner_id = auth.uid()) with check (owner_id = auth.uid());
-      create policy %1$s_delete on %1$I for delete
-        using (owner_id = auth.uid());
-    $f$, t);
-  end loop;
-end $$;
+--
+-- These 20 policies are written out rather than generated in a loop. Security
+-- rules must be greppable: you cannot search for a policy that exists only as
+-- a format string, and an auditor reading this file should see exactly what is
+-- enforced without mentally expanding a DO block.
+
+create policy entries_select on entries for select
+  using (owner_id = auth.uid()
+    or exists (select 1 from projects p where p.id = entries.project_id and p.visibility = 'public'));
+create policy entries_insert on entries for insert
+  with check (owner_id = auth.uid()
+    and exists (select 1 from projects p where p.id = project_id and p.owner_id = auth.uid()));
+create policy entries_update on entries for update
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy entries_delete on entries for delete
+  using (owner_id = auth.uid());
+
+create policy work_items_select on work_items for select
+  using (owner_id = auth.uid()
+    or exists (select 1 from projects p where p.id = work_items.project_id and p.visibility = 'public'));
+create policy work_items_insert on work_items for insert
+  with check (owner_id = auth.uid()
+    and exists (select 1 from projects p where p.id = project_id and p.owner_id = auth.uid()));
+create policy work_items_update on work_items for update
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy work_items_delete on work_items for delete
+  using (owner_id = auth.uid());
+
+create policy documents_select on documents for select
+  using (owner_id = auth.uid()
+    or exists (select 1 from projects p where p.id = documents.project_id and p.visibility = 'public'));
+create policy documents_insert on documents for insert
+  with check (owner_id = auth.uid()
+    and exists (select 1 from projects p where p.id = project_id and p.owner_id = auth.uid()));
+create policy documents_update on documents for update
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy documents_delete on documents for delete
+  using (owner_id = auth.uid());
+
+create policy document_revisions_select on document_revisions for select
+  using (owner_id = auth.uid()
+    or exists (select 1 from projects p where p.id = document_revisions.project_id and p.visibility = 'public'));
+create policy document_revisions_insert on document_revisions for insert
+  with check (owner_id = auth.uid()
+    and exists (select 1 from projects p where p.id = project_id and p.owner_id = auth.uid()));
+create policy document_revisions_update on document_revisions for update
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy document_revisions_delete on document_revisions for delete
+  using (owner_id = auth.uid());
+
+create policy attachments_select on attachments for select
+  using (owner_id = auth.uid()
+    or exists (select 1 from projects p where p.id = attachments.project_id and p.visibility = 'public'));
+create policy attachments_insert on attachments for insert
+  with check (owner_id = auth.uid()
+    and exists (select 1 from projects p where p.id = project_id and p.owner_id = auth.uid()));
+create policy attachments_update on attachments for update
+  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy attachments_delete on attachments for delete
+  using (owner_id = auth.uid());
 ```
 
 - [ ] **Step 5: Apply and re-run the tests**
@@ -1409,7 +1439,7 @@ First of three pure modules. No database, no framework — the logic most likely
 
 **Files:**
 - Create: `lib/work-items/types.ts`, `lib/work-items/tree.ts`
-- Create: `tests/unit/tree.test.ts`
+- Create: `tests/helpers/work-item-fixtures.ts`, `tests/unit/tree.test.ts`
 
 **Interfaces:**
 - Consumes: nothing
@@ -1419,16 +1449,17 @@ First of three pure modules. No database, no framework — the logic most likely
   - `buildTree(items: WorkItemNode[]): WorkItemTreeNode[]` — throws `CycleError` on a cycle
   - `class CycleError extends Error`
   - `flattenTree(nodes: WorkItemTreeNode[]): WorkItemTreeNode[]` — depth-first, display order
+  - `item(over: Partial<WorkItemNode> & { id: string }): WorkItemNode` from `tests/helpers/work-item-fixtures.ts` — the shared test fixture builder, reused by Tasks 9 and 10
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the shared test fixture**
 
-Create `tests/unit/tree.test.ts`:
+Create `tests/helpers/work-item-fixtures.ts`. Tasks 9 and 10 import this same builder rather than redefining it:
 
 ```ts
-import { describe, expect, it } from "vitest";
-import { buildTree, flattenTree, CycleError, type WorkItemNode } from "@/lib/work-items/tree";
+import type { WorkItemNode } from "@/lib/work-items/tree";
 
-function item(over: Partial<WorkItemNode> & { id: string }): WorkItemNode {
+/** Builds a WorkItemNode with sane defaults; override only what a test cares about. */
+export function item(over: Partial<WorkItemNode> & { id: string }): WorkItemNode {
   return {
     parentId: null,
     orderIndex: 0,
@@ -1441,6 +1472,16 @@ function item(over: Partial<WorkItemNode> & { id: string }): WorkItemNode {
     ...over,
   };
 }
+```
+
+- [ ] **Step 2: Write the failing test**
+
+Create `tests/unit/tree.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { buildTree, flattenTree, CycleError } from "@/lib/work-items/tree";
+import { item } from "../helpers/work-item-fixtures";
 
 describe("buildTree", () => {
   it("returns an empty array for no items", () => {
@@ -1506,7 +1547,7 @@ describe("flattenTree", () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [ ] **Step 3: Run to verify it fails**
 
 ```bash
 pnpm test tests/unit/tree.test.ts
@@ -1514,7 +1555,7 @@ pnpm test tests/unit/tree.test.ts
 
 Expected: FAIL — cannot resolve `@/lib/work-items/tree`.
 
-- [ ] **Step 3: Write the types**
+- [ ] **Step 4: Write the types**
 
 Create `lib/work-items/types.ts`:
 
@@ -1539,7 +1580,7 @@ export type WorkItemNode = {
 export type WorkItemTreeNode = WorkItemNode & { children: WorkItemTreeNode[] };
 ```
 
-- [ ] **Step 4: Write the implementation**
+- [ ] **Step 5: Write the implementation**
 
 Create `lib/work-items/tree.ts`:
 
@@ -1609,7 +1650,7 @@ export function flattenTree(nodes: WorkItemTreeNode[]): WorkItemTreeNode[] {
 }
 ```
 
-- [ ] **Step 5: Run to verify it passes**
+- [ ] **Step 6: Run to verify it passes**
 
 ```bash
 pnpm test tests/unit/tree.test.ts
@@ -1617,10 +1658,10 @@ pnpm test tests/unit/tree.test.ts
 
 Expected: PASS, 8 tests.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add lib/work-items tests/unit/tree.test.ts
+git add lib/work-items tests/helpers/work-item-fixtures.ts tests/unit/tree.test.ts
 git commit -m "feat: add work-item tree assembly with cycle detection"
 ```
 
@@ -1635,7 +1676,7 @@ Derived, never stored — replacing the old stored-progress trigger that went st
 - Create: `tests/unit/progress.test.ts`
 
 **Interfaces:**
-- Consumes: `WorkItemNode`, `buildTree` from Task 8
+- Consumes: `WorkItemNode` and `buildTree` from Task 8; the `item()` fixture from `tests/helpers/work-item-fixtures.ts` (Task 8)
 - Produces:
   - `type Progress = { done: number; total: number; ratio: number | null }`
   - `computeProgress(items: WorkItemNode[]): Map<string, Progress>` — keyed by work-item id
@@ -1649,21 +1690,7 @@ Create `tests/unit/progress.test.ts`:
 ```ts
 import { describe, expect, it } from "vitest";
 import { computeProgress } from "@/lib/work-items/progress";
-import type { WorkItemNode } from "@/lib/work-items/tree";
-
-function item(over: Partial<WorkItemNode> & { id: string }): WorkItemNode {
-  return {
-    parentId: null,
-    orderIndex: 0,
-    status: "open",
-    kind: "task",
-    title: over.id,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    statusChangedAt: "2026-01-01T00:00:00.000Z",
-    wakeAt: null,
-    ...over,
-  };
-}
+import { item } from "../helpers/work-item-fixtures";
 
 describe("computeProgress", () => {
   it("scores a lone open leaf as 0 of 1", () => {
@@ -1821,7 +1848,7 @@ Powers the resume view's two loudest claims: what is due, and how long something
 - Create: `tests/unit/reentry.test.ts`
 
 **Interfaces:**
-- Consumes: `WorkItemNode` from Task 8
+- Consumes: `WorkItemNode` from Task 8; the `item()` fixture from `tests/helpers/work-item-fixtures.ts` (Task 8)
 - Produces:
   - `dueWakeItems(items: WorkItemNode[], now: Date): WorkItemNode[]` — blocked items whose `wakeAt` has arrived, soonest first
   - `daysInStatus(item: WorkItemNode, now: Date): number` — whole days since `statusChangedAt`, never negative
@@ -1834,23 +1861,9 @@ Create `tests/unit/reentry.test.ts`:
 ```ts
 import { describe, expect, it } from "vitest";
 import { dueWakeItems, daysInStatus, daysSince } from "@/lib/work-items/reentry";
-import type { WorkItemNode } from "@/lib/work-items/tree";
+import { item } from "../helpers/work-item-fixtures";
 
 const NOW = new Date("2026-07-30T12:00:00.000Z");
-
-function item(over: Partial<WorkItemNode> & { id: string }): WorkItemNode {
-  return {
-    parentId: null,
-    orderIndex: 0,
-    status: "open",
-    kind: "task",
-    title: over.id,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    statusChangedAt: "2026-01-01T00:00:00.000Z",
-    wakeAt: null,
-    ...over,
-  };
-}
 
 describe("dueWakeItems", () => {
   it("returns a blocked item whose wake date has passed", () => {
