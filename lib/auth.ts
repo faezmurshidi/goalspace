@@ -1,5 +1,4 @@
 import { createClient } from '../utils/supabase/client';
-import { useSpaceStore } from './store';
 
 
 export async function signUp(email: string, password: string) {
@@ -71,9 +70,6 @@ export async function signOut() {
     const supabase = createClient();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-
-    // Reset the store
-    useSpaceStore.getState().reset();
 
     return { error: null };
   } catch (error) {

@@ -4,7 +4,6 @@ import { useAppTranslations } from '@/lib/hooks/use-translations';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Suspense } from 'react';
-import { GeneratedSpaces } from '@/components/generated-spaces';
 import { CTASection } from '@/components/sections/cta-section';
 import { FeaturesSection } from '@/components/sections/features-section';
 import { FooterSection } from '@/components/sections/footer-section';
@@ -116,11 +115,6 @@ function LocalizedHomeContent() {
           {/* Hero Section */}
           <div className="container mx-auto px-4 md:px-6 max-w-7xl py-12 md:py-16 lg:py-20">
             <AnimatedHero />
-          </div>
-
-          {/* Generated Spaces Section */}
-          <div className="py-12 md:py-16 lg:py-20 bg-gray-50/30 dark:bg-gray-900/20">
-            <GeneratedSpaces />
           </div>
 
           {/* Features Section - Wrapping with consistent padding */}

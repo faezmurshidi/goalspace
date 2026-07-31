@@ -88,7 +88,6 @@ export async function middleware(request: NextRequest) {
     pathname.includes('favicon') ||
     pathname.includes('.json') ||
     pathname.includes('.webmanifest') ||
-    pathname.includes('pricing') ||
     pathname.match(/\.[^/]+$/); // Skip files with extensions
     
   // Check if the path is under a locale and is public
@@ -102,9 +101,7 @@ export async function middleware(request: NextRequest) {
       normalizedPath === `/${locale}` || // Root path under locale
       normalizedPath === `/${locale}/auth` || // Auth path under locale
       normalizedPath === `/${locale}/blog` || // Exact blog route
-      normalizedPath.startsWith(`/${locale}/blog/`) || // Blog sub-routes
-      normalizedPath === `/${locale}/pricing` || // Pricing page
-      normalizedPath.startsWith(`/${locale}/pricing/`) // Pricing sub-routes
+      normalizedPath.startsWith(`/${locale}/blog/`) // Blog sub-routes
     );
   });
   

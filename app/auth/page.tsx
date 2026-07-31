@@ -2,12 +2,10 @@
 
 import { Suspense } from 'react';
 import { AuthForm } from '@/components/auth-form';
-import { Background } from '@/components/background';
 
 function AuthPageContent() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center">
-      <Background />
       <AuthForm />
     </div>
   );

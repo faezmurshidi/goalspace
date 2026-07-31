@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { GoalForm } from '../goal-form';
 import { BorderBeam } from './border-beam';
 import { Card } from './card';
 
@@ -153,8 +152,13 @@ export default function AnimatedHero({ className }: AnimatedHeroProps) {
                 <p className="mb-6 text-muted-foreground">
                   {t('hero.goalDescription')}
                 </p>
-                <GoalForm/>
-                
+                <Button asChild className="w-full px-6 py-3 text-base font-medium rounded-lg bg-primary hover:bg-primary/90 text-white">
+                  <Link href={`/${locale}/auth`}>
+                    {t('hero.getStarted')}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+
                 <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4 text-sm dark:border-gray-800">
                   <span className="text-muted-foreground">{t('hero.noSignup')}</span>
                   <span className="flex items-center gap-1 font-medium text-primary">

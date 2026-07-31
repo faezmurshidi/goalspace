@@ -63,24 +63,11 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
-          <NavigationMenuItem>
-            <Link href={`/${currentLocale}/pricing`} legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                {t('navigation.pricing')}
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
       <div className="flex items-center gap-4">
         {user ? (
           <>
-            <Link
-              href={`/${currentLocale}/dashboard`}
-              className="text-sm font-medium text-white/70 transition-colors hover:text-white"
-            >
-              {t('navigation.dashboard')}
-            </Link>
             <button
               className="text-sm font-medium text-white/70 hover:text-white bg-transparent px-4 py-2 rounded"
               onClick={handleSignOut}
