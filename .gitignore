@@ -41,3 +41,11 @@ next-env.d.ts
 
 # subagent-driven-development workspace (ledger, briefs, review packages)
 .superpowers/
+
+# AI codebase dumps — these inline every file, including any pasted secrets.
+# A dump of this repo leaked a Supabase session in PR #5.
+.repomix-output.txt
+repomix-output.*
+*.repomix.txt
+.aidigest
+codebase-dump.*
