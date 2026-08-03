@@ -19,9 +19,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://goalspace.com'),
   title: {
     default: 'GoalSpace - AI-Powered Goal Achievement Platform',
-    template: '%s | GoalSpace'
+    template: '%s | GoalSpace',
   },
-  description: 'Achieve your goals with personalized AI mentorship, structured learning spaces, and progress tracking. Transform your learning journey today.',
+  description:
+    'Achieve your goals with personalized AI mentorship, structured learning spaces, and progress tracking. Transform your learning journey today.',
   keywords: [
     'goal achievement',
     'AI mentorship',
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
     'structured learning',
     'progress tracking',
     'AI learning assistant',
-    'educational technology'
+    'educational technology',
   ],
   authors: [{ name: 'GoalSpace Team' }],
   creator: 'GoalSpace',
@@ -55,7 +56,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://goalspace.com',
     title: 'GoalSpace - AI-Powered Goal Achievement Platform',
-    description: 'Achieve your goals with personalized AI mentorship, structured learning spaces, and progress tracking.',
+    description:
+      'Achieve your goals with personalized AI mentorship, structured learning spaces, and progress tracking.',
     siteName: 'GoalSpace',
     images: [
       {
@@ -69,7 +71,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'GoalSpace - AI-Powered Goal Achievement Platform',
-    description: 'Achieve your goals with personalized AI mentorship, structured learning spaces, and progress tracking.',
+    description:
+      'Achieve your goals with personalized AI mentorship, structured learning spaces, and progress tracking.',
     images: ['/images/twitter-image.jpg'],
     creator: '@goalspace',
     site: '@goalspace',
@@ -96,9 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           enableSystem
           disableTransitionOnChange
         >
-          <AnalyticsProvider>
-            {children}
-          </AnalyticsProvider>
+          <AnalyticsProvider>{children}</AnalyticsProvider>
           <Toaster />
         </ThemeProvider>
       </body>

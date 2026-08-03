@@ -1,11 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { cn } from '@/lib/utils';
+
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -16,8 +16,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { signIn, signUp } from '@/lib/auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { signIn, signUp } from '@/lib/auth';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -70,7 +71,10 @@ export function AuthForm({ className, ...props }: AuthFormProps) {
         </TabsList>
         <TabsContent value="signin">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((values) => onSubmit(values, false))} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit((values) => onSubmit(values, false))}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="email"
@@ -106,7 +110,10 @@ export function AuthForm({ className, ...props }: AuthFormProps) {
         </TabsContent>
         <TabsContent value="signup">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((values) => onSubmit(values, true))} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit((values) => onSubmit(values, true))}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="email"
@@ -143,4 +150,4 @@ export function AuthForm({ className, ...props }: AuthFormProps) {
       </Tabs>
     </div>
   );
-} 
+}

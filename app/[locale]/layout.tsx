@@ -1,8 +1,9 @@
 import React, { ReactNode } from 'react';
 import { Inter } from 'next/font/google';
+
+import I18nProvider from '@/components/providers/i18n-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
-import I18nProvider from '@/components/providers/i18n-provider';
 import AnalyticsProvider from '@/app/providers/analytics-provider';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -30,13 +31,11 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <AnalyticsProvider>
-              {children}
-            </AnalyticsProvider>
+            <AnalyticsProvider>{children}</AnalyticsProvider>
             <Toaster />
           </ThemeProvider>
         </I18nProvider>
       </body>
     </html>
   );
-} 
+}

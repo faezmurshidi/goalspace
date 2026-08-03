@@ -5,7 +5,7 @@ import { AuthForm } from '@/components/auth-form';
 // AuthForm constructs a Supabase client at render time, so this route must
 // not be statically prerendered — that would require Supabase env vars to
 // be present at build time.
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 function AuthPageContent() {
   return (

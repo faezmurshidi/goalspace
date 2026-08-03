@@ -1,11 +1,12 @@
-import { Brain } from "lucide-react"
-import { LoginForm } from "@/components/login-form"
-import { Suspense, use } from "react"
+import { Suspense, use } from 'react';
+import { Brain } from 'lucide-react';
+
+import { LoginForm } from '@/components/login-form';
 
 // LoginForm constructs a Supabase client at render time, so this route must
 // not be statically prerendered — that would require Supabase env vars to
 // be present at build time.
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 
 // Content component that will be wrapped in Suspense
 function LoginContent({ locale }: { locale: string }) {
@@ -14,23 +15,25 @@ function LoginContent({ locale }: { locale: string }) {
       <div className="flex w-full max-w-sm flex-col gap-6">
         <div className="flex items-center gap-2 self-center">
           <Brain className="h-6 w-6 text-rose-500" />
-          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500">
+          <span className="bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500 bg-clip-text text-lg font-bold text-transparent">
             GoalSpace
           </span>
         </div>
         <LoginForm />
       </div>
     </div>
-  )
+  );
 }
 
 // Main component with Suspense boundary
 export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
   // We don't use setRequestLocale in client components
-  const { locale } = use(params)
+  const { locale } = use(params);
   return (
-    <Suspense fallback={<div className="flex min-h-svh items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={<div className="flex min-h-svh items-center justify-center">Loading...</div>}
+    >
       <LoginContent locale={locale} />
     </Suspense>
-  )
-} 
+  );
+}

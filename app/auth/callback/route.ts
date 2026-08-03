@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 
-import { createClient } from '@/utils/supabase/server';
 // Import helper for analytics
 import { trackEvent } from '@/utils/server-analytics';
+import { createClient } from '@/utils/supabase/server';
+
 // Note: We can't use the client-side analytics directly in a Server Component
 
 export async function GET(request: Request) {
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
   try {
     // Exchange the code for a session
     const { data, error: verifyError } = await supabase.auth.exchangeCodeForSession(code);
-    
+
     if (verifyError) throw verifyError;
     if (!data.user) throw new Error('No user returned from verification');
 
@@ -43,17 +44,15 @@ export async function GET(request: Request) {
       trackEvent('user_registered', {
         provider: data.user.app_metadata?.provider || 'unknown',
         is_new_user: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
+
       // Create user record after verification
-      const { error: dbError } = await supabase
-        .from('users')
-        .insert({
-          id: data.user.id,
-          email: data.user.email || '',
-          created_at: new Date().toISOString(),
-        });
+      const { error: dbError } = await supabase.from('users').insert({
+        id: data.user.id,
+        email: data.user.email || '',
+        created_at: new Date().toISOString(),
+      });
 
       if (dbError) {
         console.error('Error creating user record:', dbError);
@@ -61,12 +60,10 @@ export async function GET(request: Request) {
       }
 
       // Create user settings
-      const { error: settingsError } = await supabase
-        .from('user_settings')
-        .insert({
-          user_id: data.user.id,
-          theme: 'dark',
-        });
+      const { error: settingsError } = await supabase.from('user_settings').insert({
+        user_id: data.user.id,
+        theme: 'dark',
+      });
 
       if (settingsError) {
         console.error('Error creating user settings:', settingsError);
@@ -77,7 +74,7 @@ export async function GET(request: Request) {
       trackEvent('user_logged_in', {
         provider: data.user.app_metadata?.provider || 'unknown',
         is_new_user: false,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -90,7 +87,7 @@ export async function GET(request: Request) {
     trackEvent('auth_error', {
       error_type: 'verification_failed',
       error_message: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Redirect to the root with an error flag

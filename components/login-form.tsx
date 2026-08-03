@@ -1,104 +1,96 @@
-"use client"
+'use client';
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Apple, Chrome } from "lucide-react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { createClient } from "@/utils/supabase/client"
-import { useState } from "react"
-import { useRouter, useParams } from "next/navigation"
-import { trackEvent, trackError, identifyUser } from "@/app/_lib/analytics"
+import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Apple, Chrome } from 'lucide-react';
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const params = useParams()
-  const locale = (params?.locale as string) || "en"
-  const supabase = createClient()
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import { identifyUser, trackError, trackEvent } from '@/app/_lib/analytics';
+import { createClient } from '@/utils/supabase/client';
+
+export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
+  const supabase = createClient();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    
+    e.preventDefault();
+    setLoading(true);
+
     try {
       // Track login attempt
-      trackEvent('login_attempt', { method: 'email' })
-      
+      trackEvent('login_attempt', { method: 'email' });
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      })
+      });
 
-      if (error) throw error
-      
+      if (error) throw error;
+
       // Successful login tracking
-      trackEvent('login_success', { method: 'email' })
-      
+      trackEvent('login_success', { method: 'email' });
+
       // Identify user for future analytics
       if (data.user) {
         identifyUser(data.user.id, {
           email: data.user.email,
           auth_method: 'email',
-          last_login: new Date().toISOString()
-        })
+          last_login: new Date().toISOString(),
+        });
       }
-      
-      router.push(`/${locale}`)
-      router.refresh()
+
+      router.push(`/${locale}`);
+      router.refresh();
     } catch (error) {
-      console.error("Error logging in:", error)
-      trackError('login_error', 'Email login failed', { 
+      console.error('Error logging in:', error);
+      trackError('login_error', 'Email login failed', {
         email: email,
         // Don't include password in error tracking for security
-        error_message: error instanceof Error ? error.message : 'Unknown error'
-      })
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleOAuthLogin = async (provider: 'apple' | 'google') => {
     try {
       // Track OAuth login attempt
-      trackEvent('login_attempt', { method: provider })
-      
+      trackEvent('login_attempt', { method: provider });
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      })
-      
-      if (error) throw error
-      
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+
       // We can't track success here since OAuth redirects away
       // Success tracking should happen in the callback handler
     } catch (error) {
-      console.error("Error with OAuth login:", error)
-      trackError('login_error', `${provider} login failed`, { 
+      console.error('Error with OAuth login:', error);
+      trackError('login_error', `${provider} login failed`, {
         provider,
-        error_message: error instanceof Error ? error.message : 'Unknown error'
-      })
+        error_message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
-  }
+  };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
-        <CardHeader className="text-center space-y-1.5">
+        <CardHeader className="space-y-1.5 text-center">
           <CardTitle className="text-xl font-semibold">Welcome back</CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
             Login with your Apple or Google account
@@ -108,18 +100,18 @@ export function LoginForm({
           <form onSubmit={handleEmailLogin}>
             <div className="grid gap-6">
               <div className="flex flex-col gap-4">
-                <Button 
+                <Button
                   type="button"
-                  variant="outline" 
+                  variant="outline"
                   className="w-full"
                   onClick={() => handleOAuthLogin('apple')}
                 >
                   <Apple className="mr-2 size-4" />
                   Login with Apple
                 </Button>
-                <Button 
+                <Button
                   type="button"
-                  variant="outline" 
+                  variant="outline"
                   className="w-full"
                   onClick={() => handleOAuthLogin('google')}
                 >
@@ -135,7 +127,9 @@ export function LoginForm({
               </div>
               <div className="grid gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">
+                    Email
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -148,29 +142,27 @@ export function LoginForm({
                 </div>
                 <div className="grid gap-2">
                   <div className="flex items-center">
-                    <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                    <Label htmlFor="password" className="text-sm font-medium">
+                      Password
+                    </Label>
                     <a
                       href="#"
-                      className="ml-auto text-sm text-muted-foreground hover:text-primary transition-colors duration-200 underline-offset-4 hover:underline"
+                      className="ml-auto text-sm text-muted-foreground underline-offset-4 transition-colors duration-200 hover:text-primary hover:underline"
                     >
                       Forgot your password?
                     </a>
                   </div>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    className="h-11" 
+                  <Input
+                    id="password"
+                    type="password"
+                    className="h-11"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <Button 
-                  type="submit" 
-                  className="w-full h-11"
-                  disabled={loading}
-                >
-                  {loading ? "Logging in..." : "Login"}
+                <Button type="submit" className="h-11 w-full" disabled={loading}>
+                  {loading ? 'Logging in...' : 'Login'}
                 </Button>
               </div>
             </div>
@@ -178,9 +170,9 @@ export function LoginForm({
         </CardContent>
       </Card>
       <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 [&_a]:hover:text-primary">
-        By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
-        and <a href="#">Privacy Policy</a>.
+        By clicking continue, you agree to our <a href="#">Terms of Service</a> and{' '}
+        <a href="#">Privacy Policy</a>.
       </div>
     </div>
-  )
+  );
 }
