@@ -117,7 +117,7 @@ function BlogPageContent() {
 }
 
 // Wrapper component with Suspense
-export default function BlogPage({ params }: { params: { locale: string }}) {
+export default function BlogPage({ params }: { params: Promise<{ locale: string }> }) {
   // We don't use setRequestLocale in client components as it's for server components only
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>

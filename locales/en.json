@@ -195,6 +195,12 @@
     "createNewGoal": "Create New Goal",
     "goalBreakdown": "Let's break down your goal into actionable learning spaces."
   },
+  "blog": {
+    "title": "Latest Articles",
+    "gettingStarted": {
+      "intro": "Learn how to set up your first goal and get the most out of Goalspace's AI-powered mentorship."
+    }
+  },
   "siteInfo": {
     "enhanceExperience": "Enhance your experience",
     "dataCollectionMessage": "We collect non-sensitive information like device type and language preference to improve your experience. No personal data is collected or shared.",

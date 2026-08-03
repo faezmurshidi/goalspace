@@ -1,9 +1,6 @@
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import type { CookieOptions } from '@supabase/ssr';
-import type { Database } from '../../../types/supabase';
 
+import { createClient } from '@/utils/supabase/server';
 // Import helper for analytics
 import { trackEvent } from '@/utils/server-analytics';
 // Note: We can't use the client-side analytics directly in a Server Component
@@ -18,42 +15,13 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${requestUrl.origin}/`);
   }
 
-  const cookieStore = cookies();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing Supabase environment variables');
+  let supabase;
+  try {
+    supabase = await createClient();
+  } catch (error) {
+    console.error('Missing Supabase environment variables:', error);
     return NextResponse.redirect(`${requestUrl.origin}/?error=server_configuration`);
   }
-
-  const supabase = createServerClient<Database>(
-    supabaseUrl,
-    supabaseKey,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // Handle cookie setting error
-            console.error('Error setting cookie:', error);
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options, maxAge: 0 });
-          } catch (error) {
-            // Handle cookie deletion error
-            console.error('Error removing cookie:', error);
-          }
-        },
-      },
-    }
-  );
 
   try {
     // Exchange the code for a session
@@ -97,7 +65,6 @@ export async function GET(request: Request) {
         .from('user_settings')
         .insert({
           user_id: data.user.id,
-          api_calls_count: 0,
           theme: 'dark',
         });
 

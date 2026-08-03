@@ -20,7 +20,10 @@ import { createClient } from '@/utils/supabase/client';
 import { AuthDialog } from './auth/auth-dialog';
 import { Button } from './ui/button';
 
-export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
+export function MainNav({
+  className,
+  ...props
+}: Omit<React.HTMLAttributes<HTMLElement>, 'defaultValue' | 'dir'>) {
   const { t, currentLocale } = useAppTranslations();
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);

@@ -195,6 +195,12 @@
     "createNewGoal": "Cipta Matlamat Baru",
     "goalBreakdown": "Mari pecahkan matlamat anda menjadi ruang pembelajaran yang boleh diambil tindakan."
   },
+  "blog": {
+    "title": "Artikel Terkini",
+    "gettingStarted": {
+      "intro": "Ketahui cara menetapkan matlamat pertama anda dan memanfaatkan sepenuhnya bimbingan AI Goalspace."
+    }
+  },
   "siteInfo": {
     "enhanceExperience": "Tingkatkan pengalaman anda",
     "dataCollectionMessage": "Kami mengumpul maklumat tidak sensitif seperti jenis peranti dan pilihan bahasa untuk meningkatkan pengalaman anda. Tiada data peribadi dikumpul atau dikongsi.",

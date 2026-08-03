@@ -109,16 +109,16 @@ const config = {
         DEFAULT: {
           css: {
             'code::before': {
-              content: '"',
+              content: `'"'`,
             },
             'code::after': {
-              content: '"',
+              content: `'"'`,
             },
             'blockquote p:first-of-type::before': {
-              content: '"',
+              content: `'"'`,
             },
             'blockquote p:last-of-type::after': {
-              content: '"',
+              content: `'"'`,
             },
             pre: {
               backgroundColor: 'transparent',

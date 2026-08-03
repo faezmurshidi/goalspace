@@ -194,6 +194,12 @@
     "createNewGoal": "创建新目标",
     "goalBreakdown": "让我们将您的目标分解成可行的学习空间。"
   },
+  "blog": {
+    "title": "最新文章",
+    "gettingStarted": {
+      "intro": "了解如何设置您的第一个目标，充分利用Goalspace的AI指导。"
+    }
+  },
   "siteInfo": {
     "enhanceExperience": "提升您的体验",
     "dataCollectionMessage": "我们收集设备类型和语言偏好等非敏感信息，以改善您的体验。不会收集或共享个人数据。",

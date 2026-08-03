@@ -19,7 +19,7 @@ export async function signUp(email: string, password: string) {
       // Create a user record in the database
       const { error: dbError } = await supabase.from('users').insert({
         id: authData.user.id,
-        email: authData.user.email,
+        email: authData.user.email || '',
         full_name: null,
         avatar_url: null,
       });

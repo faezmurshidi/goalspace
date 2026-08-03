@@ -152,7 +152,7 @@ function LocalizedHomeContent() {
 }
 
 // Main component with Suspense boundary
-export default function LocalizedHome({ params }: { params: { locale: string } }) {
+export default function LocalizedHome({ params }: { params: Promise<{ locale: string }> }) {
   return (
     <Suspense
       fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}

@@ -1,6 +1,6 @@
 import { Brain } from "lucide-react"
 import { LoginForm } from "@/components/login-form"
-import { Suspense } from "react"
+import { Suspense, use } from "react"
 
 // LoginForm constructs a Supabase client at render time, so this route must
 // not be statically prerendered — that would require Supabase env vars to
@@ -25,11 +25,12 @@ function LoginContent({ locale }: { locale: string }) {
 }
 
 // Main component with Suspense boundary
-export default function LoginPage({ params }: { params: { locale: string } }) {
+export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
   // We don't use setRequestLocale in client components
+  const { locale } = use(params)
   return (
     <Suspense fallback={<div className="flex min-h-svh items-center justify-center">Loading...</div>}>
-      <LoginContent locale={params.locale} />
+      <LoginContent locale={locale} />
     </Suspense>
   )
 } 

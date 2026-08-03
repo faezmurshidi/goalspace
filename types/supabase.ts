@@ -315,15 +315,15 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          id: string
+          id?: string
           user_id: string | null
-          theme: string | null
-          theme_preference: string | null
-          ai_model_preference: string | null
-          full_name: string | null
-          email_notifications: boolean | null
-          created_at: string | null
-          updated_at: string | null
+          theme?: string | null
+          theme_preference?: string | null
+          ai_model_preference?: string | null
+          full_name?: string | null
+          email_notifications?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           id: string
@@ -399,10 +399,10 @@ export type Database = {
         Insert: {
           id: string
           email: string
-          full_name: string | null
-          avatar_url: string | null
-          created_at: string | null
-          updated_at: string | null
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          updated_at?: string | null
         }
         Update: {
           id: string
@@ -451,6 +451,7 @@ export type Database = {
           created_at: string | null
           updated_at: string | null
         }
+        Relationships: []
       }
       podcasts: {
         Row: {
@@ -480,6 +481,7 @@ export type Database = {
           created_at: string | null
           updated_at: string | null
         }
+        Relationships: []
       }
       blog_posts: {
         Row: {
@@ -515,6 +517,7 @@ export type Database = {
           category: string
           tags: string[] | null
         }
+        Relationships: []
       }
     }
     Views: {

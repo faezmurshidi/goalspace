@@ -7,9 +7,9 @@ const defaultLocale = 'en';
 
 export const dynamic = 'force-dynamic';
 
-export default function RootPage() {
+export default async function RootPage() {
   // Get the user's preferred locale from cookies or default to English
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const localeCookie = cookieStore.get('i18next');
   
   // Use cookie value if it exists and is supported, otherwise default
