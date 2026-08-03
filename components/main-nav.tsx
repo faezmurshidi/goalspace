@@ -1,14 +1,10 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { Button } from './ui/button';
-import { AuthDialog } from './auth/auth-dialog';
-import { useAppTranslations } from '@/lib/hooks/use-translations';
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -17,7 +13,12 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
+} from '@/components/ui/navigation-menu';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
+import { cn } from '@/lib/utils';
+import { createClient } from '@/utils/supabase/client';
+import { AuthDialog } from './auth/auth-dialog';
+import { Button } from './ui/button';
 
 export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElement>) {
   const { t, currentLocale } = useAppTranslations();
@@ -29,7 +30,7 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
   useEffect(() => {
     // Create local reference to auth
     const auth = supabase.auth;
-    
+
     // Get initial session
     auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
@@ -54,7 +55,7 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
 
   return (
     <>
-      <NavigationMenu className={cn("hidden md:flex", className)} {...props}>
+      <NavigationMenu className={cn('hidden md:flex', className)} {...props}>
         <NavigationMenuList>
           <NavigationMenuItem>
             <Link href={`/${currentLocale}/blog`} legacyBehavior passHref>
@@ -69,7 +70,7 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
         {user ? (
           <>
             <button
-              className="text-sm font-medium text-white/70 hover:text-white bg-transparent px-4 py-2 rounded"
+              className="rounded bg-transparent px-4 py-2 text-sm font-medium text-white/70 hover:text-white"
               onClick={handleSignOut}
             >
               {t('auth.signOut')}
@@ -78,16 +79,13 @@ export function MainNav({ className, ...props }: React.HTMLAttributes<HTMLElemen
         ) : (
           <button
             onClick={() => setShowAuthDialog(true)}
-            className="text-sm font-medium border border-gray-300 px-4 py-2 rounded"
+            className="rounded border border-gray-300 px-4 py-2 text-sm font-medium"
           >
             {t('auth.signIn')}
           </button>
         )}
       </div>
-      <AuthDialog 
-        open={showAuthDialog} 
-        onOpenChange={setShowAuthDialog}
-      />
+      <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
     </>
   );
 }

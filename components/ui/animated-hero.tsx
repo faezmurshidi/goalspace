@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
-import { ArrowRight, MoveRight, PhoneCall, Play } from 'lucide-react';
-import { useAppTranslations } from '@/lib/hooks/use-translations';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { motion, useInView } from 'framer-motion';
+import { ArrowRight, MoveRight, PhoneCall, Play } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { useAppTranslations } from '@/lib/hooks/use-translations';
 import { BorderBeam } from './border-beam';
 import { Card } from './card';
 
@@ -39,29 +39,29 @@ export default function AnimatedHero({ className }: AnimatedHeroProps) {
     <div ref={heroRef} className="w-full">
       <div className="mx-auto grid max-w-screen-xl grid-cols-1 items-center gap-16 md:grid-cols-2">
         {/* Left Column: Hero Content */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="flex flex-col items-center justify-center gap-8 py-6 md:py-8 text-center md:items-start md:text-left"
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="flex flex-col items-center justify-center gap-8 py-6 text-center md:items-start md:py-8 md:text-left"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <Button 
-              asChild 
-              className="gap-2 px-4 py-2 text-sm font-medium rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 border-none"
+            <Button
+              asChild
+              className="gap-2 rounded-full border-none bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
             >
               <Link href={`/${locale}/blog/getting-started`}>
-                {t('hero.launchArticle')} <MoveRight className="h-4 w-4 ml-1" />
+                {t('hero.launchArticle')} <MoveRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>
           </motion.div>
-          
+
           <div className="flex flex-col gap-6">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -94,7 +94,7 @@ export default function AnimatedHero({ className }: AnimatedHeroProps) {
               <span className="text-primary">{t('hero.anything')}</span>
             </motion.h1>
 
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.3 }}
@@ -103,31 +103,34 @@ export default function AnimatedHero({ className }: AnimatedHeroProps) {
               {t('hero.description')}
             </motion.p>
           </div>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
             className="flex flex-col gap-4 sm:flex-row sm:items-center"
           >
-            <Button className="px-6 py-3 text-base font-medium rounded-lg bg-primary hover:bg-primary/90 text-white">
+            <Button className="rounded-lg bg-primary px-6 py-3 text-base font-medium text-white hover:bg-primary/90">
               {t('hero.getStarted')}
-              <ArrowRight className="h-4 w-4 ml-2" />
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
-            <Button className="px-6 py-3 text-base font-medium rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200">
-              <Play className="h-4 w-4 mr-2" /> {t('hero.watchDemo')}
+            <Button className="rounded-lg border border-gray-200 bg-white px-6 py-3 text-base font-medium text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+              <Play className="mr-2 h-4 w-4" /> {t('hero.watchDemo')}
             </Button>
           </motion.div>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="flex items-center gap-3 text-sm text-muted-foreground mt-4"
+            className="mt-4 flex items-center gap-3 text-sm text-muted-foreground"
           >
             <div className="flex -space-x-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-gray-200 dark:border-gray-800" />
+                <div
+                  key={i}
+                  className="h-8 w-8 rounded-full border-2 border-white bg-gray-200 dark:border-gray-800"
+                />
               ))}
             </div>
             <span>{t('hero.joinUsers')}</span>
@@ -135,10 +138,10 @@ export default function AnimatedHero({ className }: AnimatedHeroProps) {
         </motion.div>
 
         {/* Right Column: Form Card */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
           className="w-full"
         >
           <Card className="mx-auto mb-8 w-full border-white/10 bg-white/90 shadow-xl ring-1 ring-white/20 backdrop-blur-xl dark:bg-gray-900/80">
@@ -146,48 +149,53 @@ export default function AnimatedHero({ className }: AnimatedHeroProps) {
               {/* Glowing effect */}
               <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
               <div className="absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-purple-500/10 blur-3xl" />
-              
+
               <div className="relative p-6 md:p-8">
                 <h3 className="mb-3 text-xl font-bold">{t('hero.enterGoal')}</h3>
-                <p className="mb-6 text-muted-foreground">
-                  {t('hero.goalDescription')}
-                </p>
-                <Button asChild className="w-full px-6 py-3 text-base font-medium rounded-lg bg-primary hover:bg-primary/90 text-white">
-                  <Link href={`/${locale}/auth`}>
+                <p className="mb-6 text-muted-foreground">{t('hero.goalDescription')}</p>
+                <Button
+                  asChild
+                  className="w-full rounded-lg bg-primary px-6 py-3 text-base font-medium text-white hover:bg-primary/90"
+                >
+                  <Link href={`/${locale}/login`}>
                     {t('hero.getStarted')}
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
 
                 <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4 text-sm dark:border-gray-800">
                   <span className="text-muted-foreground">{t('hero.noSignup')}</span>
                   <span className="flex items-center gap-1 font-medium text-primary">
-                    {t('hero.itsFree')} <span className="rounded-full bg-primary/10 px-2 py-1 text-xs">Beta</span>
+                    {t('hero.itsFree')}{' '}
+                    <span className="rounded-full bg-primary/10 px-2 py-1 text-xs">Beta</span>
                   </span>
                 </div>
               </div>
             </div>
           </Card>
-          
+
           {/* Features list */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.5 }}
             className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3"
           >
             {[
-              t('hero.features.personalizedSpaces'), 
-              t('hero.features.aiMentorship'), 
-              t('hero.features.goalTracking'), 
-              t('hero.features.structuredLearning'), 
-              t('hero.features.communitySupport'), 
-              t('hero.features.adaptiveContent')
+              t('hero.features.personalizedSpaces'),
+              t('hero.features.aiMentorship'),
+              t('hero.features.goalTracking'),
+              t('hero.features.structuredLearning'),
+              t('hero.features.communitySupport'),
+              t('hero.features.adaptiveContent'),
             ].map((feature, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm rounded-lg p-2 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+              <div
+                key={i}
+                className="flex items-center gap-2 rounded-lg p-2 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/30"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-primary shrink-0"
+                  className="h-5 w-5 shrink-0 text-primary"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >

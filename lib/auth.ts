@@ -1,6 +1,5 @@
 import { createClient } from '../utils/supabase/client';
 
-
 export async function signUp(email: string, password: string) {
   const supabase = createClient();
   try {
@@ -9,7 +8,7 @@ export async function signUp(email: string, password: string) {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-      }
+      },
     });
 
     if (authError) throw authError;
@@ -18,25 +17,21 @@ export async function signUp(email: string, password: string) {
     // Only create user record if email verification is disabled (session exists)
     if (authData.session) {
       // Create a user record in the database
-      const { error: dbError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email: authData.user.email,
-          full_name: null,
-          avatar_url: null,
-        });
+      const { error: dbError } = await supabase.from('users').insert({
+        id: authData.user.id,
+        email: authData.user.email,
+        full_name: null,
+        avatar_url: null,
+      });
 
       if (dbError) throw dbError;
 
       // Create user settings
-      const { error: settingsError } = await supabase
-        .from('user_settings')
-        .insert({
-          user_id: authData.user.id,
-          theme: 'dark',
-          email_notifications: false,
-        });
+      const { error: settingsError } = await supabase.from('user_settings').insert({
+        user_id: authData.user.id,
+        theme: 'dark',
+        email_notifications: false,
+      });
 
       if (settingsError) throw settingsError;
     }
@@ -81,7 +76,10 @@ export async function signOut() {
 export async function getCurrentUser() {
   const supabase = createClient();
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
     if (error) throw error;
     return { user, error: null };
   } catch (error) {
@@ -92,9 +90,12 @@ export async function getCurrentUser() {
 
 export async function getSession() {
   const supabase = createClient();
-  console.log("getSession");
+  console.log('getSession');
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
     if (error) throw error;
     return { session, error: null };
   } catch (error) {

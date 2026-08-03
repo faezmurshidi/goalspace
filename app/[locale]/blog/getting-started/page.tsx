@@ -85,11 +85,11 @@ function ArticlePageContent() {
           </p>
           
           <div className="flex justify-center my-8">
-            <Link 
-              href={`/${currentLocale}/dashboard`}
+            <Link
+              href={`/${currentLocale}`}
               className="bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:bg-primary/90 transition-colors"
             >
-              Go to Dashboard
+              Back to Home
             </Link>
           </div>
         </article>

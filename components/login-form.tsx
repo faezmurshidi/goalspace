@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/utils/supabase/client"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { trackEvent, trackError, identifyUser } from "@/app/_lib/analytics"
 
 export function LoginForm({
@@ -25,6 +25,8 @@ export function LoginForm({
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const params = useParams()
+  const locale = (params?.locale as string) || "en"
   const supabase = createClient()
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -54,7 +56,7 @@ export function LoginForm({
         })
       }
       
-      router.push("/dashboard")
+      router.push(`/${locale}`)
       router.refresh()
     } catch (error) {
       console.error("Error logging in:", error)
@@ -170,12 +172,6 @@ export function LoginForm({
                 >
                   {loading ? "Logging in..." : "Login"}
                 </Button>
-              </div>
-              <div className="text-center text-sm text-muted-foreground">
-                Don&apos;t have an account?{" "}
-                <a href="/auth" className="text-primary hover:text-primary/90 transition-colors duration-200 underline underline-offset-4">
-                  Sign up
-                </a>
               </div>
             </div>
           </form>

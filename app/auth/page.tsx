@@ -1,11 +1,15 @@
-'use client';
-
 import { Suspense } from 'react';
+
 import { AuthForm } from '@/components/auth-form';
+
+// AuthForm constructs a Supabase client at render time, so this route must
+// not be statically prerendered — that would require Supabase env vars to
+// be present at build time.
+export const dynamic = 'force-dynamic'
 
 function AuthPageContent() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center">
+    <div className="flex min-h-screen w-full items-center justify-center">
       <AuthForm />
     </div>
   );
@@ -13,8 +17,10 @@ function AuthPageContent() {
 
 export default function AuthPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+    <Suspense
+      fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}
+    >
       <AuthPageContent />
     </Suspense>
   );
-} 
+}

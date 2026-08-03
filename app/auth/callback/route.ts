@@ -13,17 +13,18 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code');
 
   if (!code) {
-    // Redirect to auth page if no code
-    return NextResponse.redirect(`${requestUrl.origin}/auth`);
+    // No code to exchange — send the user back to the root; middleware
+    // resolves the correct locale from there.
+    return NextResponse.redirect(`${requestUrl.origin}/`);
   }
 
   const cookieStore = cookies();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  
+
   if (!supabaseUrl || !supabaseKey) {
     console.error('Missing Supabase environment variables');
-    return NextResponse.redirect(`${requestUrl.origin}/auth?error=server_configuration`);
+    return NextResponse.redirect(`${requestUrl.origin}/?error=server_configuration`);
   }
 
   const supabase = createServerClient<Database>(
@@ -113,19 +114,19 @@ export async function GET(request: Request) {
       });
     }
 
-    // Redirect to dashboard on success
-    return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
+    // Redirect to the root on success; middleware resolves the correct locale.
+    return NextResponse.redirect(`${requestUrl.origin}/`);
   } catch (error) {
     console.error('Error in verification callback:', error);
-    
+
     // Track authentication error
     trackEvent('auth_error', {
       error_type: 'verification_failed',
       error_message: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     });
-    
-    // Redirect to auth page with error
-    return NextResponse.redirect(`${requestUrl.origin}/auth?error=verification_failed`);
+
+    // Redirect to the root with an error flag
+    return NextResponse.redirect(`${requestUrl.origin}/?error=verification_failed`);
   }
 }

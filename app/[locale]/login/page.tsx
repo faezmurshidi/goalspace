@@ -1,8 +1,11 @@
-'use client';
-
 import { Brain } from "lucide-react"
 import { LoginForm } from "@/components/login-form"
 import { Suspense } from "react"
+
+// LoginForm constructs a Supabase client at render time, so this route must
+// not be statically prerendered — that would require Supabase env vars to
+// be present at build time.
+export const dynamic = 'force-dynamic'
 
 // Content component that will be wrapped in Suspense
 function LoginContent({ locale }: { locale: string }) {

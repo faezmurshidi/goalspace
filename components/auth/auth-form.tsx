@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -28,6 +28,8 @@ interface AuthFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function AuthForm({ className, ...props }: AuthFormProps) {
   const router = useRouter();
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string>('');
 
@@ -51,7 +53,7 @@ export function AuthForm({ className, ...props }: AuthFormProps) {
       if (error) throw error;
       if (!user) throw new Error('No user returned');
 
-      router.push('/dashboard');
+      router.push(`/${locale}`);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {

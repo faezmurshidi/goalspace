@@ -44,7 +44,7 @@ export function AuthForm() {
 
       if (authError) throw authError;
 
-      router.push('/dashboard');
+      router.push('/');
       toast({
         title: 'Success',
         description: 'You have successfully signed in.',
@@ -97,7 +97,7 @@ export function AuthForm() {
       }
 
       // If we have a session (email verification is disabled), proceed with user creation
-      router.push('/dashboard');
+      router.push('/');
       toast({
         title: 'Success',
         description: 'Your account has been created successfully.',

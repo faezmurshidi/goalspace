@@ -36,21 +36,13 @@ Goalspace is an AI-powered goal setting and achievement platform that helps user
 - Podcast feature for audio-based learning
 - Rich text editing capabilities
 
-### Site Information & Personalization
-- Collects non-sensitive device and browser information for personalization
-- User consent management through consent banner
-- Automatic language detection and redirection based on browser preferences
-- Development debug tools available at /dev/site-info (development environment only)
-
 ## Technical Architecture
 
 ### Frontend
 - Next.js 14 with App Router
 - React components with TypeScript
 - Tailwind CSS with shadcn/ui components
-- Zustand for state management
 - Context providers:
-  - SiteInfoProvider - Site information context
   - i18n-provider - Internationalization provider
   - ThemeProvider - Theme management
 
