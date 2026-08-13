@@ -1,13 +1,10 @@
-import React, { ReactNode } from 'react';
-import { Inter } from 'next/font/google';
+import type { ReactNode } from 'react';
 import { I18nProvider } from '@goalspace/i18n';
-import { ThemeProvider, Toaster } from '@goalspace/ui';
-
 import AnalyticsProvider from '@/app/providers/analytics-provider';
+import { archivo, azeret } from '@/lib/fonts';
 
-const inter = Inter({ subsets: ['latin'] });
+import '../globals.css';
 
-// Define supported locales for static generation
 export function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'ms' }, { locale: 'zh' }];
 }
@@ -20,19 +17,12 @@ export default async function RootLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body className={inter.className}>
+    <html lang={locale} className={`${archivo.variable} ${azeret.variable}`}>
+      <body>
         <I18nProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <AnalyticsProvider>{children}</AnalyticsProvider>
-            <Toaster />
-          </ThemeProvider>
+          <AnalyticsProvider>{children}</AnalyticsProvider>
         </I18nProvider>
       </body>
     </html>
