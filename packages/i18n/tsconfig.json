@@ -1,0 +1,4 @@
+{
+  "extends": "@goalspace/config/tsconfig/base.json",
+  "include": ["src/**/*"]
+}

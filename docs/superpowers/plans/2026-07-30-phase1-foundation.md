@@ -25,6 +25,12 @@
 - **Never reinstate `typescript.ignoreBuildErrors` or `eslint.ignoreDuringBuilds`.** Task 2 removes them; with them set, every "verify the build is green" step in this plan is meaningless. `pnpm typecheck` must pass before any commit from Task 2 onward.
 - Never commit a file containing a credential. `.gitignore` blocks AI codebase-dump files as of Task 0; do not add exceptions.
 
+## Monorepo split note (2026-08-13)
+
+This plan was written when the app lived at the repository root. `refactor/monorepo-split` later moved it into `apps/web` (marketing/landing, no Supabase) and `apps/app` (the authenticated workspace, Supabase-backed), with shared `@goalspace/ui`, `@goalspace/i18n`, and `@goalspace/config` packages. Tasks 0 through 6 below predate the split and describe work already done against the old root-level paths (`app/`, `lib/`, `tests/`, `supabase/`) — those paths are historical and left as written rather than rewritten; read them as `apps/app/...` unless context says otherwise. Task 7 onward has been repointed to the post-split paths below, since that work had not started when the split happened.
+
+**Known gap — sign-up no longer provisions the `public.users` profile row.** Task 3 of the monorepo split resolved a duplicate-file conflict by keeping the auth form that does not create the row, leaving `lib/auth.ts` (which did) orphaned in `apps/app`. That insert only ever ran when email verification was disabled, so it was already fragile. The accepted fix, per a human ruling made during that task, is a `on auth.users` database trigger added in a Phase 1 migration, replacing the client-side insert entirely. Every Phase 1 table below keys `owner_id` off `users(id)`, so this trigger must land before the workspace UI (plan 2) depends on it.
+
 ---
 
 ### Task 0: Remove the committed credential and block future dumps
@@ -1239,9 +1245,9 @@ git commit -m "feat(db): add private attachments bucket with owner-prefixed poli
 Shared validation used by both forms and server actions, so there is exactly one validation path.
 
 **Files:**
-- Create: `types/supabase.ts` (regenerated)
-- Create: `lib/schemas/project.ts`, `lib/schemas/entry.ts`, `lib/schemas/work-item.ts`, `lib/schemas/document.ts`
-- Create: `tests/unit/schemas.test.ts`
+- Create: `apps/app/types/supabase.ts` (regenerated)
+- Create: `apps/app/lib/schemas/project.ts`, `apps/app/lib/schemas/entry.ts`, `apps/app/lib/schemas/work-item.ts`, `apps/app/lib/schemas/document.ts`
+- Create: `apps/app/tests/unit/schemas.test.ts`
 - Modify: `package.json`
 
 **Interfaces:**
@@ -1258,21 +1264,21 @@ Shared validation used by both forms and server actions, so there is exactly one
 In `package.json` scripts:
 
 ```json
-"db:types": "supabase gen types typescript --local > types/supabase.ts"
+"db:types": "supabase gen types typescript --local > apps/app/types/supabase.ts"
 ```
 
 - [ ] **Step 2: Generate types**
 
 ```bash
 pnpm db:types
-head -30 types/supabase.ts
+head -30 apps/app/types/supabase.ts
 ```
 
 Expected: the file names `projects`, `entries`, `work_items`, `documents`, `document_revisions`, and `attachments`.
 
 - [ ] **Step 3: Write the failing schema test**
 
-Create `tests/unit/schemas.test.ts`:
+Create `apps/app/tests/unit/schemas.test.ts`:
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -1368,7 +1374,7 @@ Expected: FAIL — `@/lib/schemas/project` cannot be resolved.
 
 - [ ] **Step 5: Write the schemas**
 
-Create `lib/schemas/project.ts`:
+Create `apps/app/lib/schemas/project.ts`:
 
 ```ts
 import { z } from "zod";
@@ -1390,7 +1396,7 @@ export const projectCreateSchema = z.object({
 export type ProjectCreateInput = z.infer<typeof projectCreateSchema>;
 ```
 
-Create `lib/schemas/entry.ts`:
+Create `apps/app/lib/schemas/entry.ts`:
 
 ```ts
 import { z } from "zod";
@@ -1413,7 +1419,7 @@ export const entryCreateSchema = z
 export type EntryCreateInput = z.infer<typeof entryCreateSchema>;
 ```
 
-Create `lib/schemas/work-item.ts`:
+Create `apps/app/lib/schemas/work-item.ts`:
 
 ```ts
 import { z } from "zod";
@@ -1443,7 +1449,7 @@ export type WorkItemCreateInput = z.infer<typeof workItemCreateSchema>;
 export type WorkItemUpdateInput = z.infer<typeof workItemUpdateSchema>;
 ```
 
-Create `lib/schemas/document.ts`:
+Create `apps/app/lib/schemas/document.ts`:
 
 ```ts
 import { z } from "zod";
@@ -1479,8 +1485,8 @@ git commit -m "feat: add generated db types and shared zod schemas"
 First of three pure modules. No database, no framework — the logic most likely to be subtly wrong, made cheap to test.
 
 **Files:**
-- Create: `lib/work-items/types.ts`, `lib/work-items/tree.ts`
-- Create: `tests/helpers/work-item-fixtures.ts`, `tests/unit/tree.test.ts`
+- Create: `apps/app/lib/work-items/types.ts`, `apps/app/lib/work-items/tree.ts`
+- Create: `apps/app/tests/helpers/work-item-fixtures.ts`, `apps/app/tests/unit/tree.test.ts`
 
 **Interfaces:**
 - Consumes: nothing
@@ -1490,11 +1496,11 @@ First of three pure modules. No database, no framework — the logic most likely
   - `buildTree(items: WorkItemNode[]): WorkItemTreeNode[]` — throws `CycleError` on a cycle
   - `class CycleError extends Error`
   - `flattenTree(nodes: WorkItemTreeNode[]): WorkItemTreeNode[]` — depth-first, display order
-  - `item(over: Partial<WorkItemNode> & { id: string }): WorkItemNode` from `tests/helpers/work-item-fixtures.ts` — the shared test fixture builder, reused by Tasks 9 and 10
+  - `item(over: Partial<WorkItemNode> & { id: string }): WorkItemNode` from `apps/app/tests/helpers/work-item-fixtures.ts` — the shared test fixture builder, reused by Tasks 9 and 10
 
 - [ ] **Step 1: Write the shared test fixture**
 
-Create `tests/helpers/work-item-fixtures.ts`. Tasks 9 and 10 import this same builder rather than redefining it:
+Create `apps/app/tests/helpers/work-item-fixtures.ts`. Tasks 9 and 10 import this same builder rather than redefining it:
 
 ```ts
 import type { WorkItemNode } from "@/lib/work-items/tree";
@@ -1517,7 +1523,7 @@ export function item(over: Partial<WorkItemNode> & { id: string }): WorkItemNode
 
 - [ ] **Step 2: Write the failing test**
 
-Create `tests/unit/tree.test.ts`:
+Create `apps/app/tests/unit/tree.test.ts`:
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -1591,14 +1597,14 @@ describe("flattenTree", () => {
 - [ ] **Step 3: Run to verify it fails**
 
 ```bash
-pnpm test tests/unit/tree.test.ts
+pnpm test apps/app/tests/unit/tree.test.ts
 ```
 
 Expected: FAIL — cannot resolve `@/lib/work-items/tree`.
 
 - [ ] **Step 4: Write the types**
 
-Create `lib/work-items/types.ts`:
+Create `apps/app/lib/work-items/types.ts`:
 
 ```ts
 import type { WORK_ITEM_KINDS, WORK_ITEM_STATUSES } from "@/lib/schemas/work-item";
@@ -1623,7 +1629,7 @@ export type WorkItemTreeNode = WorkItemNode & { children: WorkItemTreeNode[] };
 
 - [ ] **Step 5: Write the implementation**
 
-Create `lib/work-items/tree.ts`:
+Create `apps/app/lib/work-items/tree.ts`:
 
 ```ts
 import type { WorkItemNode, WorkItemTreeNode } from "./types";
@@ -1694,7 +1700,7 @@ export function flattenTree(nodes: WorkItemTreeNode[]): WorkItemTreeNode[] {
 - [ ] **Step 6: Run to verify it passes**
 
 ```bash
-pnpm test tests/unit/tree.test.ts
+pnpm test apps/app/tests/unit/tree.test.ts
 ```
 
 Expected: PASS, 8 tests.
@@ -1702,7 +1708,7 @@ Expected: PASS, 8 tests.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add lib/work-items tests/helpers/work-item-fixtures.ts tests/unit/tree.test.ts
+git add apps/app/lib/work-items apps/app/tests/helpers/work-item-fixtures.ts apps/app/tests/unit/tree.test.ts
 git commit -m "feat: add work-item tree assembly with cycle detection"
 ```
 
@@ -1713,11 +1719,11 @@ git commit -m "feat: add work-item tree assembly with cycle detection"
 Derived, never stored — replacing the old stored-progress trigger that went stale on insert, delete, and cascade.
 
 **Files:**
-- Create: `lib/work-items/progress.ts`
-- Create: `tests/unit/progress.test.ts`
+- Create: `apps/app/lib/work-items/progress.ts`
+- Create: `apps/app/tests/unit/progress.test.ts`
 
 **Interfaces:**
-- Consumes: `WorkItemNode` and `buildTree` from Task 8; the `item()` fixture from `tests/helpers/work-item-fixtures.ts` (Task 8)
+- Consumes: `WorkItemNode` and `buildTree` from Task 8; the `item()` fixture from `apps/app/tests/helpers/work-item-fixtures.ts` (Task 8)
 - Produces:
   - `type Progress = { done: number; total: number; ratio: number | null }`
   - `computeProgress(items: WorkItemNode[]): Map<string, Progress>` — keyed by work-item id
@@ -1726,7 +1732,7 @@ Rules, from the spec: a leaf contributes `1/1` when `done` and `0/1` otherwise; 
 
 - [ ] **Step 1: Write the failing test**
 
-Create `tests/unit/progress.test.ts`:
+Create `apps/app/tests/unit/progress.test.ts`:
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -1813,14 +1819,14 @@ describe("computeProgress", () => {
 - [ ] **Step 2: Run to verify it fails**
 
 ```bash
-pnpm test tests/unit/progress.test.ts
+pnpm test apps/app/tests/unit/progress.test.ts
 ```
 
 Expected: FAIL — cannot resolve `@/lib/work-items/progress`.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `lib/work-items/progress.ts`:
+Create `apps/app/lib/work-items/progress.ts`:
 
 ```ts
 import { buildTree, type WorkItemNode, type WorkItemTreeNode } from "./tree";
@@ -1862,7 +1868,7 @@ export function computeProgress(items: WorkItemNode[]): Map<string, Progress> {
 - [ ] **Step 4: Run to verify it passes**
 
 ```bash
-pnpm test tests/unit/progress.test.ts
+pnpm test apps/app/tests/unit/progress.test.ts
 ```
 
 Expected: PASS, 9 tests.
@@ -1870,7 +1876,7 @@ Expected: PASS, 9 tests.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/work-items/progress.ts tests/unit/progress.test.ts
+git add apps/app/lib/work-items/progress.ts apps/app/tests/unit/progress.test.ts
 git commit -m "feat: compute work-item progress from the tree
 
 Sums leaf descendants rather than averaging child ratios, excludes dropped
@@ -1885,11 +1891,11 @@ all-dropped subtrees."
 Powers the resume view's two loudest claims: what is due, and how long something has sat.
 
 **Files:**
-- Create: `lib/work-items/reentry.ts`
-- Create: `tests/unit/reentry.test.ts`
+- Create: `apps/app/lib/work-items/reentry.ts`
+- Create: `apps/app/tests/unit/reentry.test.ts`
 
 **Interfaces:**
-- Consumes: `WorkItemNode` from Task 8; the `item()` fixture from `tests/helpers/work-item-fixtures.ts` (Task 8)
+- Consumes: `WorkItemNode` from Task 8; the `item()` fixture from `apps/app/tests/helpers/work-item-fixtures.ts` (Task 8)
 - Produces:
   - `dueWakeItems(items: WorkItemNode[], now: Date): WorkItemNode[]` — blocked items whose `wakeAt` has arrived, soonest first
   - `daysInStatus(item: WorkItemNode, now: Date): number` — whole days since `statusChangedAt`, never negative
@@ -1897,7 +1903,7 @@ Powers the resume view's two loudest claims: what is due, and how long something
 
 - [ ] **Step 1: Write the failing test**
 
-Create `tests/unit/reentry.test.ts`:
+Create `apps/app/tests/unit/reentry.test.ts`:
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -1988,14 +1994,14 @@ describe("daysSince", () => {
 - [ ] **Step 2: Run to verify it fails**
 
 ```bash
-pnpm test tests/unit/reentry.test.ts
+pnpm test apps/app/tests/unit/reentry.test.ts
 ```
 
 Expected: FAIL — cannot resolve `@/lib/work-items/reentry`.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `lib/work-items/reentry.ts`:
+Create `apps/app/lib/work-items/reentry.ts`:
 
 ```ts
 import type { WorkItemNode } from "./tree";
@@ -2037,7 +2043,7 @@ Expected: no type errors, all unit tests pass, all RLS tests pass, build succeed
 - [ ] **Step 5: Commit**
 
 ```bash
-git add lib/work-items/reentry.ts tests/unit/reentry.test.ts
+git add apps/app/lib/work-items/reentry.ts apps/app/tests/unit/reentry.test.ts
 git commit -m "feat: add re-entry signals for due wake dates and status duration"
 ```
 
@@ -2055,4 +2061,4 @@ git commit -m "feat: add re-entry signals for due wake dates and status duration
 
 ## What plan 2 builds on this
 
-The workspace UI: routes under `app/[locale]/(workspace)/projects/`, the `lib/db` query layer, server actions, quick capture, the resume view, the work tree, the markdown document editor with revisions, and the Playwright pass over capture → close work item → resume view.
+The workspace UI: routes under `apps/app/app/projects/`, the `apps/app/lib/db` query layer, server actions, quick capture, the resume view, the work tree, the markdown document editor with revisions, and the Playwright pass over capture → close work item → resume view.

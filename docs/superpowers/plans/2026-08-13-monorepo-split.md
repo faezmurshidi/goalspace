@@ -758,7 +758,20 @@ Create `apps/web/package.json`. Move every dependency from the root `package.jso
 }
 ```
 
-Then move the dependency lists across wholesale. The primitives' own dependencies (`@radix-ui/*`, `clsx`, `tailwind-merge`, `class-variance-authority`, `cmdk`, `vaul`, `sonner`, `lucide-react`, `next-themes`) now live in `packages/ui`, and the i18next family lives in `packages/i18n`, so they can be dropped here. Everything else, including `next`, `react`, `react-dom`, `@supabase/*`, `zod`, `framer-motion`, `date-fns`, `recharts`, and the markdown stack, moves to `apps/web`.
+Then move the dependency lists across wholesale. Everything the application uses, including `next`, `react`, `react-dom`, `@supabase/*`, `zod`, `framer-motion`, `date-fns`, `recharts`, and the markdown stack, moves to `apps/web`.
+
+**The rule for the shared packages' dependencies: if `apps/web` imports a package directly in its own source, `apps/web` declares it, even when `packages/ui` or `packages/i18n` also declares it.** Both declaring the same dependency is correct, not duplication.
+
+A dependency may only be dropped from `apps/web` when nothing under `apps/web` imports it directly. Verify per package rather than assuming, because `.npmrc` sets `shamefully-hoist=true`, which resolves undeclared imports through another workspace package's `node_modules`. That makes a phantom dependency build green today and break the moment hoisting is tightened:
+
+```bash
+for pkg in $(cat /tmp/dropped-deps.txt); do
+  hits=$(grep -rl "from '$pkg\|require('$pkg" apps/web --include=*.ts --include=*.tsx | wc -l)
+  [ "$hits" -gt 0 ] && echo "KEEP $pkg ($hits files)"
+done
+```
+
+In practice `lucide-react`, `class-variance-authority`, `next-themes`, and `@radix-ui/react-icons` are all imported directly by application code and must stay declared here despite living in `packages/ui` too.
 
 - [ ] **Step 4: Reduce the root manifest**
 
@@ -964,6 +977,7 @@ git mv apps/web/utils/supabase apps/app/utils/supabase
 git mv apps/web/types/supabase.ts apps/app/types/supabase.ts
 git mv apps/web/lib/auth.ts apps/app/lib/auth.ts
 git mv apps/web/components/login-form.tsx apps/app/components/login-form.tsx
+git mv apps/web/components/auth-form.tsx apps/app/components/auth-form.tsx
 git mv apps/web/components/auth apps/app/components/auth
 git mv apps/web/components/dev apps/app/components/dev
 git mv apps/web/supabase apps/app/supabase
@@ -972,6 +986,8 @@ git mv apps/web/vitest.config.ts apps/app/vitest.config.ts
 git mv "apps/web/app/[locale]/login" apps/app/app/login
 mv apps/web/.env.test apps/app/.env.test 2>/dev/null
 ```
+
+`components/auth-form.tsx` sits at the root of `components/`, not under `components/auth/`. Task 3 resolved a collision in which both copies were live: it kept the root-level one, deleted `components/auth/auth-form.tsx`, and repointed `auth-dialog.tsx` at the survivor. Missing this file strands a `@supabase` importer in the landing, which Task 6's boundary test then fails on.
 
 `components/dev/token-alert.tsx` moves because it is a development aid for the authenticated surface. If grep shows the landing imports it, leave it in `apps/web` instead.
 
@@ -1221,13 +1237,21 @@ export function MainNav({
         >
           {t('auth.signIn')}
         </a>
+        <a
+          href={`${APP_URL}/auth`}
+          className="rounded border border-gray-300 px-4 py-2 text-sm font-medium"
+        >
+          {t('auth.signUp')}
+        </a>
       </div>
     </>
   );
 }
 ```
 
-Use `<a>` rather than `<Link>`: this is a cross-origin navigation and Next's client router cannot handle it.
+Use `<a>` rather than `<Link>`: these are cross-origin navigations and Next's client router cannot handle them.
+
+Two links, not one. Sign in goes to `/login`, which handles password and OAuth sign-in; sign up goes to `/auth`, which is the only surface that currently creates an account. Consolidating the two into a single page is Phase 1 work, deliberately not done here. Add an `auth.signUp` key to the three locale files in `packages/i18n` if one does not already exist.
 
 - [ ] **Step 11: Remove the remaining Supabase references from the landing**
 
