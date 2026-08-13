@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-13T00:00:00.000Z",
+  "title": "Design System: Goalspace",
+  "extensions": {
+    "colorMeta": {
+      "oxide": {
+        "role": "primary",
+        "displayName": "Oxide Primer",
+        "canonical": "oklch(0.55 0.15 35)",
+        "tonalRamp": [
+          "oklch(0.18 0.06 35)",
+          "oklch(0.29 0.10 35)",
+          "oklch(0.40 0.13 35)",
+          "oklch(0.51 0.15 35)",
+          "oklch(0.62 0.14 35)",
+          "oklch(0.73 0.11 35)",
+          "oklch(0.84 0.07 35)",
+          "oklch(0.94 0.03 35)"
+        ]
+      },
+      "oxide-deep": {
+        "role": "primary",
+        "displayName": "Oxide Deep",
+        "canonical": "oklch(0.44 0.14 33)",
+        "tonalRamp": [
+          "oklch(0.16 0.06 33)",
+          "oklch(0.26 0.10 33)",
+          "oklch(0.36 0.13 33)",
+          "oklch(0.44 0.14 33)",
+          "oklch(0.56 0.14 33)",
+          "oklch(0.68 0.12 33)",
+          "oklch(0.81 0.08 33)",
+          "oklch(0.93 0.03 33)"
+        ]
+      },
+      "waiting": {
+        "role": "secondary",
+        "displayName": "Waiting Blue",
+        "canonical": "oklch(0.55 0.09 240)",
+        "tonalRamp": [
+          "oklch(0.18 0.04 240)",
+          "oklch(0.29 0.06 240)",
+          "oklch(0.40 0.08 240)",
+          "oklch(0.55 0.09 240)",
+          "oklch(0.66 0.08 240)",
+          "oklch(0.77 0.06 240)",
+          "oklch(0.87 0.04 240)",
+          "oklch(0.95 0.02 240)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Manual Paper",
+        "canonical": "oklch(0.96 0.008 85)",
+        "tonalRamp": [
+          "oklch(0.20 0.010 85)",
+          "oklch(0.32 0.010 85)",
+          "oklch(0.45 0.010 85)",
+          "oklch(0.58 0.010 85)",
+          "oklch(0.70 0.010 85)",
+          "oklch(0.82 0.009 85)",
+          "oklch(0.90 0.009 85)",
+          "oklch(0.96 0.008 85)"
+        ]
+      },
+      "paper-shade": {
+        "role": "neutral",
+        "displayName": "Paper Shade",
+        "canonical": "oklch(0.93 0.010 85)",
+        "tonalRamp": [
+          "oklch(0.20 0.010 85)",
+          "oklch(0.32 0.010 85)",
+          "oklch(0.45 0.010 85)",
+          "oklch(0.58 0.010 85)",
+          "oklch(0.70 0.010 85)",
+          "oklch(0.82 0.010 85)",
+          "oklch(0.88 0.010 85)",
+          "oklch(0.93 0.010 85)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Graphite Ink",
+        "canonical": "oklch(0.22 0.012 60)",
+        "tonalRamp": [
+          "oklch(0.15 0.010 60)",
+          "oklch(0.22 0.012 60)",
+          "oklch(0.33 0.012 60)",
+          "oklch(0.45 0.010 60)",
+          "oklch(0.58 0.010 60)",
+          "oklch(0.70 0.010 60)",
+          "oklch(0.83 0.009 60)",
+          "oklch(0.94 0.008 60)"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "oklch(0.45 0.010 60)",
+        "tonalRamp": [
+          "oklch(0.15 0.010 60)",
+          "oklch(0.24 0.010 60)",
+          "oklch(0.34 0.010 60)",
+          "oklch(0.45 0.010 60)",
+          "oklch(0.57 0.010 60)",
+          "oklch(0.69 0.010 60)",
+          "oklch(0.82 0.009 60)",
+          "oklch(0.94 0.008 60)"
+        ]
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Rule",
+        "canonical": "oklch(0.78 0.010 70)",
+        "tonalRamp": [
+          "oklch(0.20 0.010 70)",
+          "oklch(0.32 0.010 70)",
+          "oklch(0.44 0.010 70)",
+          "oklch(0.56 0.010 70)",
+          "oklch(0.67 0.010 70)",
+          "oklch(0.78 0.010 70)",
+          "oklch(0.88 0.009 70)",
+          "oklch(0.95 0.008 70)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Plate headlines and the one number per section that carries the argument, such as an elapsed duration. Expanded width axis."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Plate titles and section openers."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Figure titles, table headers, work item names."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running prose, capped at 65 to 75 characters."
+      },
+      "label": {
+        "displayName": "Label / Annotation",
+        "purpose": "Plate numbers, dates, part references, dimension labels, button text, status chips. Monospace, uppercase. Never body or headlines."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Hero figure assembly and callout sequencing. The only entrance curve in the system."
+      },
+      {
+        "name": "state-150",
+        "value": "150ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Button and field state changes. Colour only, never transform."
+      },
+      {
+        "name": "draw-line",
+        "value": "stroke-dashoffset 600ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Leader lines and dimension ticks drawing in on scroll entry."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single call to action on a plate. Reads as a stamped instruction.",
+      "html": "<button class=\"ds-btn-primary\">START THE RECORD</button>",
+      "css": ".ds-btn-primary { background: oklch(0.44 0.14 33); color: oklch(0.96 0.008 85); font-family: 'Azeret Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 16px 32px; border: none; border-radius: 0; cursor: pointer; transition: background 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-primary:hover { background: oklch(0.22 0.012 60); } .ds-btn-primary:focus-visible { outline: 2px solid oklch(0.55 0.15 35); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action. Never used twice on one plate.",
+      "html": "<button class=\"ds-btn-ghost\">WHAT EXISTS TODAY</button>",
+      "css": ".ds-btn-ghost { background: oklch(0.96 0.008 85); color: oklch(0.22 0.012 60); font-family: 'Azeret Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 16px 32px; border: 1px solid oklch(0.78 0.010 70); border-radius: 0; cursor: pointer; transition: border-color 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-ghost:hover { border-color: oklch(0.22 0.012 60); } .ds-btn-ghost:focus-visible { outline: 2px solid oklch(0.55 0.15 35); outline-offset: 2px; }"
+    },
+    {
+      "name": "Plate",
+      "kind": "card",
+      "refersTo": "plate",
+      "description": "The system's container. Replaces the card entirely. A plate without its number is just a box.",
+      "html": "<section class=\"ds-plate\"><span class=\"ds-plate-no\">PLATE 01</span><h2 class=\"ds-plate-title\">The return</h2><p class=\"ds-plate-body\">You were away 23 days. Three items are open, one has been blocked since 14 March.</p><span class=\"ds-plate-meta\">REV C / 2026-08-13</span></section>",
+      "css": ".ds-plate { position: relative; background: oklch(0.96 0.008 85); color: oklch(0.22 0.012 60); border: 1px solid oklch(0.78 0.010 70); border-radius: 0; padding: 32px; } .ds-plate-no { display: block; font-family: 'Azeret Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; color: oklch(0.55 0.15 35); margin-bottom: 16px; } .ds-plate-title { font-family: Archivo, 'Helvetica Neue', sans-serif; font-size: 2rem; font-weight: 700; line-height: 1.05; letter-spacing: -0.01em; font-variation-settings: 'wdth' 112; margin: 0 0 8px; } .ds-plate-body { font-family: Archivo, 'Helvetica Neue', sans-serif; font-size: 1.0625rem; line-height: 1.6; max-width: 68ch; margin: 0 0 32px; } .ds-plate-meta { font-family: 'Azeret Mono', ui-monospace, monospace; font-size: 0.75rem; letter-spacing: 0.08em; color: oklch(0.45 0.010 60); }"
+    },
+    {
+      "name": "Drenched Plate",
+      "kind": "card",
+      "refersTo": "plate-drenched",
+      "description": "The hero ground. Colour separates it rather than elevation.",
+      "html": "<section class=\"ds-plate-drenched\"><span class=\"ds-plate-drenched-no\">PLATE 00</span><h1 class=\"ds-plate-drenched-title\">COMING BACK IS THE HARD PART</h1></section>",
+      "css": ".ds-plate-drenched { background: oklch(0.44 0.14 33); color: oklch(0.96 0.008 85); border-radius: 0; padding: 32px; } .ds-plate-drenched-no { display: block; font-family: 'Azeret Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; opacity: 0.75; margin-bottom: 16px; } .ds-plate-drenched-title { font-family: Archivo, 'Helvetica Neue', sans-serif; font-size: clamp(2.75rem, 6.5vw, 5.5rem); font-weight: 800; line-height: 0.95; letter-spacing: -0.02em; font-variation-settings: 'wdth' 125; margin: 0; }"
+    },
+    {
+      "name": "Callout Number",
+      "kind": "chip",
+      "refersTo": "callout-number",
+      "description": "Terminates a leader line on an annotated figure. The only rounded shape in the system.",
+      "html": "<span class=\"ds-callout\">3</span>",
+      "css": ".ds-callout { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: oklch(0.55 0.15 35); color: oklch(0.96 0.008 85); font-family: 'Azeret Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 500; border-radius: 999px; }"
+    },
+    {
+      "name": "Status Chip",
+      "kind": "chip",
+      "refersTo": "callout-number",
+      "description": "Work item state. Colour never carries the meaning alone; the label always states it.",
+      "html": "<span class=\"ds-status ds-status-blocked\"><svg width=\"8\" height=\"8\" viewBox=\"0 0 8 8\" aria-hidden=\"true\"><rect width=\"8\" height=\"8\" fill=\"currentColor\"/></svg>BLOCKED SINCE 14 MAR</span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; gap: 8px; font-family: 'Azeret Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 8px; border: 1px solid oklch(0.78 0.010 70); border-radius: 0; } .ds-status-blocked { color: oklch(0.55 0.09 240); }"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Square, ruled, no glow. Error state is always labelled as well as coloured.",
+      "html": "<input class=\"ds-field\" type=\"email\" placeholder=\"you@workshop.example\" aria-label=\"Email\" />",
+      "css": ".ds-field { background: oklch(0.96 0.008 85); color: oklch(0.22 0.012 60); font-family: Archivo, 'Helvetica Neue', sans-serif; font-size: 1.0625rem; padding: 12px 16px; border: 1px solid oklch(0.78 0.010 70); border-radius: 0; transition: border-color 150ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-field::placeholder { color: oklch(0.45 0.010 60); } .ds-field:focus { border-color: oklch(0.55 0.15 35); outline: 2px solid oklch(0.55 0.15 35); outline-offset: 2px; }"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "button-ghost",
+      "description": "Rule-separated, uppercase label type. No pills, no hamburger.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-link ds-nav-link-active\" href=\"#\">MANUAL</a><a class=\"ds-nav-link\" href=\"#\">LOG</a><a class=\"ds-nav-link\" href=\"#\">SIGN IN</a></nav>",
+      "css": ".ds-nav { display: flex; } .ds-nav-link { font-family: 'Azeret Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: oklch(0.22 0.012 60); text-decoration: none; padding: 8px 16px; border-right: 1px solid oklch(0.78 0.010 70); } .ds-nav-link:last-child { border-right: none; } .ds-nav-link-active { text-decoration: underline; text-decoration-color: oklch(0.55 0.15 35); text-decoration-thickness: 2px; text-underline-offset: 6px; } .ds-nav-link:hover { color: oklch(0.55 0.15 35); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Workshop Manual",
+    "overview": "Goalspace is documentation for a project that is not finished. The system takes its form from the printed workshop manual: a plate number in the margin, an exploded view with numbered callouts on leader lines, dimension ticks, a ruled border, and text that tells you the torque figure without congratulating you for asking. Nothing here is atmospheric. Every mark either labels something or measures something.\n\nThe density is high and the ornament is zero. Surfaces are flat paper with hairline rules. Depth comes from layering plates and from the weight of the ink, never from a shadow. The one saturated colour is red-oxide primer, the coat on a welded frame that has not been finished yet, and it is used where the record is live: dates, callout numbers, the drenched hero. The page reads as an object that was printed rather than a screen that was designed.\n\nWhat this system rejects, in the strongest terms: the AI startup gradient, which is the costume of the entire category and the fastest way to look like every other product; the anonymous dark developer tool; friendly-productivity illustration; and the magazine-editorial default of a display serif italic over ruled columns. It also rejects every form of encouragement. There are no streaks, no badges, no celebration of starting, because the product deliberately excludes habit tracking and the interface must not imply otherwise.",
+    "keyCharacteristics": [
+      "Printed, not rendered. Plate borders, sheet metadata, annotation in the margin.",
+      "Flat by construction. Hairline rules and paper tones do all the structural work.",
+      "Light ground on purpose. The room is dark; the manual under the lamp is not.",
+      "One committed colour, used where work is live.",
+      "Square corners everywhere except the circled callout number.",
+      "Every duration visible. Elapsed time is content, not decoration."
+    ],
+    "rules": [
+      {
+        "name": "The Primer Rule",
+        "body": "Oxide is the colour of work in progress. It marks what is live in the record: a date, a callout, an open item. It is never applied for emphasis alone, and never to a decorative element.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Signals Rule",
+        "body": "Exactly two colours carry state: oxide for live, waiting-blue for blocked. A third signal colour is forbidden. Additional states are expressed through label and shape.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Pure Neutral Rule",
+        "body": "No #000, no #fff, no untinted grey. Every neutral carries a trace of the primer hue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Annotation Rule",
+        "body": "Azeret Mono is permitted only where a printed manual would set annotation: numbers, dates, references, dimensions, and short status labels. Never for body copy, never for headlines, never as shorthand for technical. Mono used decoratively is costume.",
+        "section": "typography"
+      },
+      {
+        "name": "The Width Axis Rule",
+        "body": "Weight and width move together and in one direction: the larger the type, the wider and heavier. Never set body copy at an expanded width, and never set display type at normal width.",
+        "section": "typography"
+      },
+      {
+        "name": "The Duration Rule",
+        "body": "Any figure expressing elapsed time is set at display scale, in ink, with its unit in the label style beside it. Durations are the argument; they are never reduced to caption size.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Shadow Rule",
+        "body": "box-shadow is prohibited except for the focus ring required by accessibility. If an element needs to feel separate, give it a rule and a plate number.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Weight Rule",
+        "body": "Every border, leader line, dimension tick, and table rule is 1px in the Rule colour. Heavier strokes are reserved for drawn figure outlines, which are ink, not borders.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do tint every neutral toward the primer hue. Manual Paper is oklch(0.96 0.008 85), not white.",
+      "Do print a plate number and sheet metadata on every plate. It is what makes the system a manual rather than a layout.",
+      "Do set elapsed durations at display scale. 23 days is the argument on a page about coming back.",
+      "Do give every state a label as well as a colour: open, doing, blocked, done, dropped.",
+      "Do keep every border, leader line, and rule at 1px in the Rule colour.",
+      "Do render every callout as real text associated with its figure.",
+      "Do hold body measure between 65 and 75 characters.",
+      "Do honour prefers-reduced-motion by drawing every figure in its final state."
+    ],
+    "donts": [
+      "Don't use the AI startup gradient in any form: purple-to-blue washes, glowing orbs, sparkle icons, supercharge your workflow. This is the primary anti-reference and it is disqualifying.",
+      "Don't drift into the anonymous dark developer tool: monochrome black ground, grid glow, floating screenshot hero. The light ground is a decision, not an oversight.",
+      "Don't use friendly-productivity illustration: pastel blocks, rounded cartoon people, cheerful onboarding voice. Wrong register for a two-year build.",
+      "Don't fall back on magazine editorial: display serif italic, drop caps, ruled three-column metadata, no imagery.",
+      "Don't ship streaks, badges, confetti, or any celebration of progress. The product excludes habit tracking and the interface must not imply otherwise.",
+      "Don't apply box-shadow anywhere except the focus ring.",
+      "Don't use a coloured border-left or border-right heavier than 1px as an accent stripe. Use a full rule and a plate number.",
+      "Don't use background-clip: text with a gradient. Emphasis comes from weight, width, and scale.",
+      "Don't build a grid of identically sized cards with an icon above a heading above three lines of text. If a section reduces to that, the argument has not been made.",
+      "Don't round a corner. The circled callout number is the only exception in the system.",
+      "Don't set oxide as body text on paper. It is a mark and a display colour.",
+      "Don't write em dashes in interface copy. Use commas, colons, semicolons, periods, or parentheses.",
+      "Don't animate layout properties. Stroke geometry and opacity only, ease-out curves, no bounce."
+    ]
+  }
+}
