@@ -472,20 +472,20 @@ git commit -m "test: add Vitest harness with unit and rls test scripts"
 
 ---
 
-### Task 4: Reset the database schema
+### Task 4: Establish the database schema
 
-Destructive by design — nothing is in production. Drops the old domain tables and creates the six phase-1 tables.
+**Why this replaces a "reset".** The plan originally dropped legacy tables then created new ones. That is impossible: `supabase db reset` applies only `supabase/migrations/` and `supabase/seed.sql`, and **no migration ever creates `users`, `user_settings`, `goals`, or `spaces`** — those live only in `supabase/schema/*.sql`, which `db reset` never reads. The existing `20240321..._create_documents_table.sql` already fails on a fresh database because it references `spaces(id)`. Nothing is in production, so the honest fix is to replace the entire migration history with one baseline that creates exactly what phase 1 needs.
 
 **Files:**
-- Create: `supabase/migrations/20260730000100_phase1_drop_legacy.sql`
-- Create: `supabase/migrations/20260730000200_phase1_core_tables.sql`
-- Delete: `supabase/schema/02_goalspace.sql`, `supabase/schema/02_modules.sql`
-- Create: `tests/rls/schema.test.ts`
-- Create: `.env.test`, modify `.gitignore`
+- Delete: all 13 files in `supabase/migrations/`
+- Delete: `supabase/schema/01_users.sql`, `supabase/schema/02_goalspace.sql`, `supabase/schema/02_modules.sql`
+- Create: `supabase/migrations/20260730000100_phase1_baseline.sql`
+- Modify: `supabase/seed.sql`, `.gitignore`
+- Create: `tests/rls/schema.test.ts`, `.env.test`
 
 **Interfaces:**
 - Consumes: nothing from earlier tasks
-- Produces: tables `projects`, `entries`, `work_items`, `documents`, `document_revisions`, `attachments` in the local database
+- Produces: tables `users`, `user_settings`, `projects`, `entries`, `work_items`, `documents`, `document_revisions`, `attachments` in the local database
 
 - [ ] **Step 1: Start local Supabase**
 
@@ -493,56 +493,69 @@ Destructive by design — nothing is in production. Drops the old domain tables 
 supabase start
 ```
 
-Expected: prints API URL (`http://127.0.0.1:54321`), anon key, and service_role key. Docker must be running.
+Use the Homebrew CLI (v2.22.6) already on `PATH`. Docker is running. Expect the API URL `http://127.0.0.1:54321` plus anon and service_role keys.
 
 - [ ] **Step 2: Write the local test environment file**
 
 ```bash
 supabase status -o env > .env.test
-printf '\n.env.test\n' >> .gitignore
 ```
 
-Open `.env.test` and confirm it contains `API_URL`, `ANON_KEY`, and `SERVICE_ROLE_KEY`. These are local-only development keys.
+Then append `.env.test` as a new line in `.gitignore`. Confirm `.env.test` contains `API_URL`, `ANON_KEY`, and `SERVICE_ROLE_KEY`. These are local-only development keys. Note `.gitignore` already ignores `.env*.local`, which does **not** match `.env.test` — that is why this entry is needed.
 
-- [ ] **Step 3: Write the drop migration**
+- [ ] **Step 3: Remove the broken migration history and superseded schema files**
 
-Create `supabase/migrations/20260730000100_phase1_drop_legacy.sql`:
-
-```sql
--- Phase 1 reset. Nothing is in production; no migration path is provided.
-drop table if exists document_embeddings cascade;
-drop table if exists documents cascade;
-drop table if exists chat_messages cascade;
-drop table if exists modules cascade;
-drop table if exists tasks cascade;
-drop table if exists spaces cascade;
-drop table if exists goals cascade;
-
-drop function if exists update_goal_progress() cascade;
-drop function if exists match_documents(vector, double precision, integer) cascade;
-
--- public.users.id must equal auth.uid() for the flat RLS in the next
--- migration to be correct. The old default would generate an unrelated uuid.
-alter table users alter column id drop default;
-
-do $$
-begin
-  if not exists (
-    select 1 from pg_constraint where conname = 'users_id_fkey'
-  ) then
-    alter table users
-      add constraint users_id_fkey
-      foreign key (id) references auth.users(id) on delete cascade;
-  end if;
-end $$;
+```bash
+git rm --quiet supabase/migrations/*.sql
+git rm --quiet supabase/schema/01_users.sql supabase/schema/02_goalspace.sql supabase/schema/02_modules.sql
 ```
 
-- [ ] **Step 4: Write the core tables migration**
+- [ ] **Step 4: Empty the seed file**
 
-Create `supabase/migrations/20260730000200_phase1_core_tables.sql`:
+`supabase/config.toml` runs `./seed.sql` on every reset, and its only contents insert `blog_posts` rows. The blog renders from `app/[locale]/blog/mock-data.ts` and no code references the `blog_posts` table, so the table is not in the baseline and the seed must not reference it. Replace the entire contents of `supabase/seed.sql` with:
 
 ```sql
+-- Intentionally empty. Phase 1 seeds no data; tests create their own fixtures.
+```
+
+- [ ] **Step 5: Write the baseline migration**
+
+Create `supabase/migrations/20260730000100_phase1_baseline.sql`:
+
+```sql
+-- Phase 1 baseline. Nothing is in production, so this replaces the entire
+-- migration history rather than migrating from it.
+
 create extension if not exists "uuid-ossp";
+
+create or replace function update_updated_at_column()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+-- Retained auth tables. users.id IS auth.users.id, so the flat
+-- owner_id = auth.uid() policies added in Task 5 are correct by construction.
+create table users (
+  id         uuid primary key references auth.users(id) on delete cascade,
+  email      text unique not null,
+  full_name  text,
+  avatar_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table user_settings (
+  id                  uuid primary key default gen_random_uuid(),
+  user_id             uuid not null references users(id) on delete cascade,
+  theme               text not null default 'system',
+  email_notifications boolean not null default true,
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now(),
+  unique (user_id)
+);
 
 create table projects (
   id          uuid primary key default gen_random_uuid(),
@@ -638,6 +651,10 @@ create index attachments_entry_idx on attachments (entry_id);
 create index attachments_document_idx on attachments (document_id);
 create index projects_owner_updated_idx on projects (owner_id, updated_at desc);
 
+create trigger update_users_updated_at before update on users
+  for each row execute function update_updated_at_column();
+create trigger update_user_settings_updated_at before update on user_settings
+  for each row execute function update_updated_at_column();
 create trigger update_projects_updated_at before update on projects
   for each row execute function update_updated_at_column();
 create trigger update_entries_updated_at before update on entries
@@ -646,25 +663,33 @@ create trigger update_work_items_updated_at before update on work_items
   for each row execute function update_updated_at_column();
 create trigger update_documents_updated_at before update on documents
   for each row execute function update_updated_at_column();
+
+-- RLS for the two retained auth tables. The six phase-1 tables get theirs in
+-- Task 5. The old schema enabled RLS on users with no INSERT policy at all,
+-- so the auth callback's insert could never have succeeded; these fix that.
+alter table users enable row level security;
+alter table user_settings enable row level security;
+
+create policy users_select on users for select using (id = auth.uid());
+create policy users_insert on users for insert with check (id = auth.uid());
+create policy users_update on users for update
+  using (id = auth.uid()) with check (id = auth.uid());
+
+create policy user_settings_select on user_settings for select using (user_id = auth.uid());
+create policy user_settings_insert on user_settings for insert with check (user_id = auth.uid());
+create policy user_settings_update on user_settings for update
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
 ```
 
-`update_updated_at_column()` already exists from `supabase/schema/01_users.sql` and is not redefined.
+There is deliberately **no `handle_new_user()` trigger**. The old one inserted a `user_settings` row on every `public.users` insert while `app/auth/callback/route.ts` also inserts that row explicitly, colliding with `unique (user_id)`. The callback is now the single writer. `user_api_usage` and `user_subscription_history` are also gone — nothing references them after the earlier purge.
 
-- [ ] **Step 5: Delete the superseded schema files**
-
-```bash
-git rm --quiet supabase/schema/02_goalspace.sql supabase/schema/02_modules.sql
-```
-
-- [ ] **Step 6: Apply the migrations**
+- [ ] **Step 6: Apply the migration**
 
 ```bash
 supabase db reset
 ```
 
-Expected: all migrations apply without error. `supabase db reset` replays from scratch, so legacy migrations run first and are then dropped by ours.
-
-The foreign key from `users.id` to `auth.users(id)` is safe to add here because `supabase/seed.sql` only inserts `blog_posts` rows — there are no pre-existing `users` rows whose ids would violate it.
+Expected: the single baseline applies, the empty seed runs, no errors.
 
 - [ ] **Step 7: Write the schema smoke test**
 
@@ -677,15 +702,15 @@ import { describe, expect, it } from "vitest";
 
 config({ path: ".env.test" });
 
-const admin = createClient(
-  process.env.API_URL!,
-  process.env.SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
+const admin = createClient(process.env.API_URL!, process.env.SERVICE_ROLE_KEY!, {
+  auth: { persistSession: false },
+});
 
 describe("phase 1 schema", () => {
-  it("creates every core table", async () => {
+  it("creates every table phase 1 needs", async () => {
     for (const table of [
+      "users",
+      "user_settings",
       "projects",
       "entries",
       "work_items",
@@ -698,10 +723,18 @@ describe("phase 1 schema", () => {
     }
   });
 
-  it("drops every legacy table", async () => {
-    for (const table of ["goals", "spaces", "modules", "tasks", "chat_messages"]) {
+  it("carries no legacy tables", async () => {
+    for (const table of [
+      "goals",
+      "spaces",
+      "modules",
+      "tasks",
+      "chat_messages",
+      "blog_posts",
+      "document_embeddings",
+    ]) {
       const { error } = await admin.from(table).select("id").limit(1);
-      expect(error, `${table} should be gone`).not.toBeNull();
+      expect(error, `${table} should not exist`).not.toBeNull();
     }
   });
 });
@@ -717,14 +750,22 @@ Expected: PASS, 2 tests.
 
 - [ ] **Step 9: Commit**
 
-```bash
-git add -A
-git commit -m "feat(db): reset schema to phase 1 core tables
+Stage everything and commit with this message:
 
-Drops goals, spaces, modules, tasks, chat_messages, documents, and
-document_embeddings. Creates projects, entries, work_items, documents,
-document_revisions, and attachments with flat owner_id. Binds public.users.id
-to auth.users(id) so owner_id = auth.uid() is correct by construction."
+```
+feat(db): replace migration history with a phase 1 baseline
+
+supabase db reset could never have worked: no migration created users,
+user_settings, goals, or spaces - those existed only in supabase/schema/,
+which db reset does not apply, so the documents migration already failed on
+a fresh database. Nothing is in production, so the 13 legacy migrations are
+replaced by one baseline creating the retained auth tables and the six
+phase 1 tables.
+
+Drops blog_posts (the blog renders from mock-data.ts and no code reads the
+table) and empties seed.sql accordingly. Removes handle_new_user, whose
+user_settings insert collided with the auth callback's own. Adds the users
+INSERT policy the old schema was missing entirely.
 ```
 
 ---
