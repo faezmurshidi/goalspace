@@ -1,60 +1,23 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
-
 import {
-  Button,
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
   cn,
 } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
-import { createClient } from '@/utils/supabase/client';
-import { AuthDialog } from './auth/auth-dialog';
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
 
 export function MainNav({
   className,
   ...props
 }: Omit<React.HTMLAttributes<HTMLElement>, 'defaultValue' | 'dir'>) {
   const { t, currentLocale } = useAppTranslations();
-  const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
-  const supabase = createClient();
-
-  useEffect(() => {
-    // Create local reference to auth
-    const auth = supabase.auth;
-
-    // Get initial session
-    auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setShowAuthDialog(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
 
   return (
     <>
@@ -70,25 +33,19 @@ export function MainNav({
         </NavigationMenuList>
       </NavigationMenu>
       <div className="flex items-center gap-4">
-        {user ? (
-          <>
-            <button
-              className="rounded bg-transparent px-4 py-2 text-sm font-medium text-white/70 hover:text-white"
-              onClick={handleSignOut}
-            >
-              {t('auth.signOut')}
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setShowAuthDialog(true)}
-            className="rounded border border-gray-300 px-4 py-2 text-sm font-medium"
-          >
-            {t('auth.signIn')}
-          </button>
-        )}
+        <a
+          href={`${APP_URL}/login`}
+          className="rounded border border-gray-300 px-4 py-2 text-sm font-medium"
+        >
+          {t('auth.signIn')}
+        </a>
+        <a
+          href={`${APP_URL}/auth`}
+          className="rounded border border-gray-300 px-4 py-2 text-sm font-medium"
+        >
+          {t('auth.signUp')}
+        </a>
       </div>
-      <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
     </>
   );
 }

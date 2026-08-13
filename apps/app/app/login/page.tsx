@@ -1,4 +1,4 @@
-import { Suspense, use } from 'react';
+import { Suspense } from 'react';
 import { Brain } from 'lucide-react';
 
 import { LoginForm } from '@/components/login-form';
@@ -9,7 +9,7 @@ import { LoginForm } from '@/components/login-form';
 export const dynamic = 'force-dynamic';
 
 // Content component that will be wrapped in Suspense
-function LoginContent({ locale }: { locale: string }) {
+function LoginContent() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
@@ -26,14 +26,12 @@ function LoginContent({ locale }: { locale: string }) {
 }
 
 // Main component with Suspense boundary
-export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
-  // We don't use setRequestLocale in client components
-  const { locale } = use(params);
+export default function LoginPage() {
   return (
     <Suspense
       fallback={<div className="flex min-h-svh items-center justify-center">Loading...</div>}
     >
-      <LoginContent locale={locale} />
+      <LoginContent />
     </Suspense>
   );
 }

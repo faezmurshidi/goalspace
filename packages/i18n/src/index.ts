@@ -4,3 +4,4 @@ export { default as I18nProvider } from './i18n-provider';
 export { useAppTranslations } from './use-translations';
 export { default as LanguageProvider } from './language-provider';
 export { default as LanguageSelector } from './language-selector';
+export { NEXT_LOCALE_COOKIE, localeFromCookie } from './cookie-locale';

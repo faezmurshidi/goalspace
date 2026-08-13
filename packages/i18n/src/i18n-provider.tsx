@@ -7,24 +7,25 @@ import { useParams } from 'next/navigation';
 
 interface I18nProviderProps {
   children: ReactNode;
+  locale?: string;
 }
 
 /**
  * Provider component for i18next
  * This should be placed high in the component tree to make i18n available throughout the app
  */
-export default function I18nProvider({ children }: I18nProviderProps) {
+export default function I18nProvider({ children, locale: localeProp }: I18nProviderProps) {
   const params = useParams();
   const [isReady, setIsReady] = useState(false);
-  
-  // Get locale from route params if available and set it
+
+  // Get locale from the explicit prop if provided, otherwise from route params
   useEffect(() => {
-    // Extract locale from URL params
-    const locale = params?.locale as string;
-    
+    // Extract locale from the explicit prop or URL params
+    const locale = localeProp ?? (params?.locale as string | undefined);
+
     if (locale && i18n.language !== locale) {
       console.log(`[I18nProvider] Setting language to: ${locale}`);
-      
+
       // Change language if needed
       i18n.changeLanguage(locale).then(() => {
         // Mark initialization as complete
@@ -37,7 +38,7 @@ export default function I18nProvider({ children }: I18nProviderProps) {
       // If no locale change needed, mark as ready immediately
       setIsReady(true);
     }
-  }, [params]);
+  }, [params, localeProp]);
 
   if (!isReady) {
     // Return a minimal loading state or null

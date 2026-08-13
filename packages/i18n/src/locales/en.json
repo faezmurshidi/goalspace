@@ -19,6 +19,7 @@
   },
   "auth": {
     "signIn": "Sign In",
+    "signUp": "Sign Up",
     "signOut": "Sign Out",
     "register": "Register",
     "forgotPassword": "Forgot Password",

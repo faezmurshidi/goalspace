@@ -10,6 +10,8 @@ import { Button, Card } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
 import { BorderBeam } from './border-beam';
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
+
 interface AnimatedHeroProps {
   className?: string;
 }
@@ -156,10 +158,10 @@ export default function AnimatedHero({ className }: AnimatedHeroProps) {
                   asChild
                   className="w-full rounded-lg bg-primary px-6 py-3 text-base font-medium text-white hover:bg-primary/90"
                 >
-                  <Link href={`/${locale}/login`}>
+                  <a href={`${APP_URL}/login`}>
                     {t('hero.getStarted')}
                     <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
+                  </a>
                 </Button>
 
                 <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-4 text-sm dark:border-gray-800">

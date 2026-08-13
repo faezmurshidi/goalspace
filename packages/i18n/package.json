@@ -6,7 +6,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./locales": "./src/locales.ts"
+    "./locales": "./src/locales.ts",
+    "./cookie-locale": "./src/cookie-locale.ts"
   },
   "dependencies": {
     "i18next": "^24.2.3",

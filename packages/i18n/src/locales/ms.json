@@ -19,6 +19,7 @@
   },
   "auth": {
     "signIn": "Log Masuk",
+    "signUp": "Daftar Masuk",
     "signOut": "Log Keluar",
     "register": "Daftar",
     "forgotPassword": "Lupa Kata Laluan",

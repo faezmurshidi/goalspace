@@ -4,13 +4,12 @@ const path = require('node:path');
 const nextConfig = {
   reactStrictMode: true,
   trailingSlash: true,
-  staticPageGenerationTimeout: 180,
   transpilePackages: ['@goalspace/ui', '@goalspace/i18n'],
   // An unrelated npm project's lockfile in a parent directory
   // (/Users/faez/Documents/package-lock.json) makes Turbopack's automatic
   // workspace-root inference pick the wrong root, which breaks module
   // resolution for the newly-introduced workspace packages. Pin it explicitly
-  // to the monorepo root (two levels up from apps/web) so the hoisted
+  // to the monorepo root (two levels up from apps/app) so the hoisted
   // node_modules and packages/* workspaces stay inside the project boundary.
   turbopack: {
     root: path.join(__dirname, '../..'),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Apple, Chrome } from 'lucide-react';
 
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, cn } from '@goalspace/ui';
@@ -13,8 +13,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const params = useParams();
-  const locale = (params?.locale as string) || 'en';
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams?.get('returnUrl') || '/';
   const supabase = createClient();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -44,7 +44,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
         });
       }
 
-      router.push(`/${locale}`);
+      router.push(returnUrl);
       router.refresh();
     } catch (error) {
       console.error('Error logging in:', error);

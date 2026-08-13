@@ -18,6 +18,7 @@
   },
   "auth": {
     "signIn": "登录",
+    "signUp": "注册账号",
     "signOut": "退出",
     "register": "注册",
     "forgotPassword": "忘记密码",
