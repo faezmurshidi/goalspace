@@ -1,18 +1,18 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
-import { Button } from '@goalspace/ui';
 import { ArrowLeft } from 'lucide-react';
+import { Button } from '@goalspace/ui';
+import { Suspense } from 'react';
 
 export default function NotFound() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
         <h1 className="text-9xl font-extrabold tracking-widest text-primary">404</h1>
-        <div className="absolute rotate-12 rounded bg-primary px-2 text-sm text-white">
+        <div className="bg-primary px-2 text-sm rounded rotate-12 absolute text-white">
           Page Not Found
         </div>
         <div className="mt-8">
-          <p className="mb-8 text-2xl font-semibold md:text-3xl">
+          <p className="text-2xl font-semibold md:text-3xl mb-8">
             Oops! The page you&apos;re looking for doesn&apos;t exist.
           </p>
           <Link href="/">
@@ -25,4 +25,4 @@ export default function NotFound() {
       </div>
     </Suspense>
   );
-}
+} 

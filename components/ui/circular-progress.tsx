@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 import { cn } from '@goalspace/ui';
 
 interface CircularProgressProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -43,7 +43,9 @@ export function CircularProgress({
         <circle
           className={cn(
             'transition-all duration-500 ease-in-out',
-            value != null ? 'stroke-primary' : 'animate-spin stroke-primary/50'
+            value != null
+              ? 'stroke-primary'
+              : 'animate-spin stroke-primary/50'
           )}
           fill="none"
           cx="50"
@@ -57,4 +59,4 @@ export function CircularProgress({
       </svg>
     </div>
   );
-}
+} 

@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAppTranslations } from '@goalspace/i18n';
+import { motion } from 'framer-motion';
+
 import {
   Button,
-  cn,
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
@@ -14,9 +14,9 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
+  cn,
 } from '@goalspace/ui';
-import { motion } from 'framer-motion';
-
+import { useAppTranslations } from '@goalspace/i18n';
 import { createClient } from '@/utils/supabase/client';
 import { AuthDialog } from './auth/auth-dialog';
 

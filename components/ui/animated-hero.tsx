@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useAppTranslations } from '@goalspace/i18n';
-import { Button, Card } from '@goalspace/ui';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, MoveRight, PhoneCall, Play } from 'lucide-react';
 
+import { Button, Card } from '@goalspace/ui';
+import { useAppTranslations } from '@goalspace/i18n';
 import { BorderBeam } from './border-beam';
 
 interface AnimatedHeroProps {

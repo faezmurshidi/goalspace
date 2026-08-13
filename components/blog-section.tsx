@@ -1,6 +1,7 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@goalspace/ui';
 import { motion } from 'framer-motion';
 import { Book, Calendar, Clock, User } from 'lucide-react';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@goalspace/ui';
 
 interface BlogPost {
   id: string;
@@ -31,15 +32,13 @@ export function BlogSection({ posts }: BlogSectionProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card
-            className={cn(
-              'overflow-hidden transition-all duration-500',
-              'bg-gradient-to-br from-purple-50 via-white to-cyan-50',
-              'hover:shadow-lg hover:shadow-primary/5',
-              'dark:from-purple-500/5 dark:via-background dark:to-cyan-500/5',
-              'dark:hover:shadow-primary/10'
-            )}
-          >
+          <Card className={cn(
+            'overflow-hidden transition-all duration-500',
+            'bg-gradient-to-br from-purple-50 via-white to-cyan-50',
+            'hover:shadow-lg hover:shadow-primary/5',
+            'dark:from-purple-500/5 dark:via-background dark:to-cyan-500/5',
+            'dark:hover:shadow-primary/10'
+          )}>
             <CardHeader>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
@@ -54,8 +53,12 @@ export function BlogSection({ posts }: BlogSectionProps) {
                   {posts[0].readingTime}
                 </span>
               </div>
-              <CardTitle className="text-2xl font-bold tracking-tight">{posts[0].title}</CardTitle>
-              <CardDescription className="text-base">{posts[0].description}</CardDescription>
+              <CardTitle className="text-2xl font-bold tracking-tight">
+                {posts[0].title}
+              </CardTitle>
+              <CardDescription className="text-base">
+                {posts[0].description}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-3">
@@ -80,13 +83,11 @@ export function BlogSection({ posts }: BlogSectionProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
           >
-            <Card
-              className={cn(
-                'group h-full overflow-hidden transition-all duration-500',
-                'hover:shadow-lg hover:shadow-primary/5',
-                'dark:hover:shadow-primary/10'
-              )}
-            >
+            <Card className={cn(
+              'group h-full overflow-hidden transition-all duration-500',
+              'hover:shadow-lg hover:shadow-primary/5',
+              'dark:hover:shadow-primary/10'
+            )}>
               <CardHeader>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
@@ -97,8 +98,12 @@ export function BlogSection({ posts }: BlogSectionProps) {
                     {post.readingTime}
                   </span>
                 </div>
-                <CardTitle className="line-clamp-2 text-xl">{post.title}</CardTitle>
-                <CardDescription className="line-clamp-2">{post.description}</CardDescription>
+                <CardTitle className="line-clamp-2 text-xl">
+                  {post.title}
+                </CardTitle>
+                <CardDescription className="line-clamp-2">
+                  {post.description}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
@@ -119,4 +124,4 @@ export function BlogSection({ posts }: BlogSectionProps) {
       </div>
     </div>
   );
-}
+} 

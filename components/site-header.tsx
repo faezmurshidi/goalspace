@@ -1,14 +1,13 @@
-import Link from 'next/link';
-import { LanguageSelector, useAppTranslations } from '@goalspace/i18n';
-import { ModeToggle } from '@goalspace/ui';
-import { motion } from 'framer-motion';
-import { Brain } from 'lucide-react';
-
 import { MainNav } from '@/components/main-nav';
+import { ModeToggle } from '@goalspace/ui';
+import { LanguageSelector, useAppTranslations } from '@goalspace/i18n';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { Brain } from 'lucide-react';
 
 export function SiteHeader() {
   const { t, currentLocale } = useAppTranslations();
-
+  
   return (
     <motion.header
       initial={{ y: -20, opacity: 0 }}
@@ -20,10 +19,13 @@ export function SiteHeader() {
       <div className="container relative mx-auto">
         <div className="flex h-16 items-center justify-between px-4">
           {/* Logo and Brand */}
-          <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-2">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-2"
+          >
             <Link href={`/${currentLocale}`} className="flex items-center gap-2">
               <Brain className="h-6 w-6 text-rose-500" />
-              <span className="bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500 bg-clip-text text-lg font-bold text-transparent">
+              <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500">
                 {t('common.appName')}
               </span>
             </Link>

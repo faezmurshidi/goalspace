@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+
 import {
   Button,
   Card,
@@ -23,10 +27,6 @@ import {
   TabsList,
   TabsTrigger,
 } from '@goalspace/ui';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/utils/supabase/client';
 

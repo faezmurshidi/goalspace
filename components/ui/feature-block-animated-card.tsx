@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { cn } from '@goalspace/ui';
 import { animate, motion } from 'framer-motion';
+
+import { cn } from '@goalspace/ui';
 
 export interface AnimatedCardProps {
   className?: string;
@@ -123,7 +124,7 @@ const Container = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
 Container.displayName = 'Container';
 
 const AnimatedSparkles = () => (
-  <div className="absolute top-20 z-40 m-auto h-40 w-px animate-move bg-gradient-to-b from-transparent via-cyan-500 to-transparent">
+  <div className="animate-move absolute top-20 z-40 m-auto h-40 w-px bg-gradient-to-b from-transparent via-cyan-500 to-transparent">
     <div className="absolute -left-10 top-1/2 h-32 w-10 -translate-y-1/2">
       <Sparkles />
     </div>

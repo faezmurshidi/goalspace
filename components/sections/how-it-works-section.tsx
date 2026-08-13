@@ -2,9 +2,10 @@
 
 import { useRef } from 'react';
 import Image from 'next/image';
-import { Button } from '@goalspace/ui';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, BrainCircuit, Layout, Lightbulb, Target } from 'lucide-react';
+
+import { Button } from '@goalspace/ui';
 
 const steps = [
   {
@@ -43,7 +44,7 @@ const steps = [
 
 export function HowItWorksSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: '-100px' });
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -76,19 +77,18 @@ export function HowItWorksSection() {
             Achieve your goals in 4 simple steps
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            Our AI-powered platform makes learning and achieving goals simple, personalized, and
-            effective.
+            Our AI-powered platform makes learning and achieving goals simple, personalized, and effective.
           </p>
         </div>
 
         <div className="relative mx-auto max-w-6xl">
           {/* Connector Line (Desktop) */}
-          <div className="absolute left-1/2 top-0 hidden h-full w-[2px] -translate-x-1/2 transform bg-gradient-to-b from-transparent via-gray-200 to-transparent dark:via-gray-700 lg:block" />
+          <div className="absolute left-1/2 top-0 hidden h-full w-[2px] -translate-x-1/2 transform bg-gradient-to-b from-transparent via-gray-200 to-transparent lg:block dark:via-gray-700" />
 
           <motion.div
             variants={containerVariants}
             initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
+            animate={isInView ? "visible" : "hidden"}
             className="relative z-10 space-y-12 lg:space-y-24"
           >
             {steps.map((step, i) => (
@@ -100,28 +100,28 @@ export function HowItWorksSection() {
                 }`}
               >
                 {/* Content Side */}
-                <div className={`flex flex-col justify-center ${i % 2 === 1 ? 'lg:order-2' : ''}`}>
+                <div
+                  className={`flex flex-col justify-center ${
+                    i % 2 === 1 ? 'lg:order-2' : ''
+                  }`}
+                >
                   <span className="mb-1 text-sm font-medium text-primary">Step {step.number}</span>
                   <h3 className="mb-4 text-2xl font-bold">{step.title}</h3>
                   <p className="mb-6 text-muted-foreground">{step.description}</p>
-
+                  
                   <div className="flex">
                     <div className={`mr-4 rounded-full p-3 ${step.color}`}>
                       <step.icon className="h-6 w-6" />
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {i === 0 && (
-                        <p>
-                          Our AI analyzes your goal to understand what success looks like for you.
-                        </p>
+                        <p>Our AI analyzes your goal to understand what success looks like for you.</p>
                       )}
                       {i === 1 && (
                         <p>Spaces are tailored to your knowledge level and learning preferences.</p>
                       )}
                       {i === 2 && (
-                        <p>
-                          Your AI mentor adjusts to your pace and provides personalized feedback.
-                        </p>
+                        <p>Your AI mentor adjusts to your pace and provides personalized feedback.</p>
                       )}
                       {i === 3 && (
                         <p>Visualize your progression and see how close you are to mastery.</p>
@@ -140,16 +140,16 @@ export function HowItWorksSection() {
                     <div className="flex h-full w-full items-center justify-center text-center text-lg text-gray-500 dark:text-gray-400">
                       {/* Placeholder for actual screenshots/illustrations */}
                       <p className="px-6">
-                        {i === 0 && 'Goal setting & analysis interface'}
-                        {i === 1 && 'AI-generated learning spaces visualization'}
-                        {i === 2 && 'AI mentorship conversation example'}
-                        {i === 3 && 'Progress tracking & milestones dashboard'}
+                        {i === 0 && "Goal setting & analysis interface"}
+                        {i === 1 && "AI-generated learning spaces visualization"}
+                        {i === 2 && "AI mentorship conversation example"}
+                        {i === 3 && "Progress tracking & milestones dashboard"}
                       </p>
                     </div>
                   </div>
 
                   {/* Connector Dot for Desktop */}
-                  <div className="absolute left-1/2 top-1/2 hidden h-8 w-8 -translate-x-1/2 -translate-y-1/2 transform rounded-full border-4 border-white bg-primary dark:border-black lg:block" />
+                  <div className="absolute left-1/2 top-1/2 hidden h-8 w-8 -translate-x-1/2 -translate-y-1/2 transform rounded-full border-4 border-white bg-primary lg:block dark:border-black" />
                 </div>
               </motion.div>
             ))}

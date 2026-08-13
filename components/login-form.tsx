@@ -2,19 +2,9 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  cn,
-  Input,
-  Label,
-} from '@goalspace/ui';
 import { Apple, Chrome } from 'lucide-react';
 
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, cn } from '@goalspace/ui';
 import { identifyUser, trackError, trackEvent } from '@/app/_lib/analytics';
 import { createClient } from '@/utils/supabase/client';
 

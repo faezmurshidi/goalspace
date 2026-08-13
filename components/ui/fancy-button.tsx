@@ -75,17 +75,13 @@ export function FancyButton({
   return (
     <button
       className={cn(
-        'relative inline-flex items-center justify-center rounded-lg px-6 py-3 font-medium transition-colors',
-        'hover:opacity-90 active:opacity-100',
+        "relative inline-flex items-center justify-center rounded-lg px-6 py-3 font-medium transition-colors",
+        "hover:opacity-90 active:opacity-100",
         className
       )}
       style={{
         color: textColor,
-        filter: `drop-shadow(${dropShadow.x}px ${dropShadow.y}px ${dropShadow.blur}px ${dropShadow.color}${Math.round(
-          dropShadow.opacity * 255
-        )
-          .toString(16)
-          .padStart(2, '0')})`,
+        filter: `drop-shadow(${dropShadow.x}px ${dropShadow.y}px ${dropShadow.blur}px ${dropShadow.color}${Math.round(dropShadow.opacity * 255).toString(16).padStart(2, '0')})`,
       }}
       {...props}
     >
@@ -95,7 +91,13 @@ export function FancyButton({
         preserveAspectRatio="none"
       >
         <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient
+            id={gradientId}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
             <stop offset="0%" stopColor={fillColors.top} />
             <stop offset="50%" stopColor={fillColors.middle} />
             <stop offset="100%" stopColor={fillColors.bottom} />
@@ -110,16 +112,36 @@ export function FancyButton({
             />
           </filter>
           <filter id={innerShadowId}>
-            <feOffset dx={innerShadow.x} dy={innerShadow.y} />
-            <feGaussianBlur stdDeviation={innerShadow.blur / 2} result="offset-blur" />
-            <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
+            <feOffset
+              dx={innerShadow.x}
+              dy={innerShadow.y}
+            />
+            <feGaussianBlur
+              stdDeviation={innerShadow.blur / 2}
+              result="offset-blur"
+            />
+            <feComposite
+              operator="out"
+              in="SourceGraphic"
+              in2="offset-blur"
+              result="inverse"
+            />
             <feFlood
               floodColor={innerShadow.color}
               floodOpacity={innerShadow.opacity}
               result="color"
             />
-            <feComposite operator="in" in="color" in2="inverse" result="shadow" />
-            <feComposite operator="over" in="shadow" in2="SourceGraphic" />
+            <feComposite
+              operator="in"
+              in="color"
+              in2="inverse"
+              result="shadow"
+            />
+            <feComposite
+              operator="over"
+              in="shadow"
+              in2="SourceGraphic"
+            />
           </filter>
         </defs>
         <rect
@@ -141,4 +163,4 @@ export function FancyButton({
       </span>
     </button>
   );
-}
+} 

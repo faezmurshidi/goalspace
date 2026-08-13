@@ -1,16 +1,8 @@
 import { useState } from 'react';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
-  Progress,
-} from '@goalspace/ui';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
+
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Progress } from '@goalspace/ui';
 
 interface Question {
   id: string;

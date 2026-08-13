@@ -1,8 +1,7 @@
 'use client';
 
-import { Dialog, DialogContent } from '@goalspace/ui';
-
-import { AuthForm } from '@/components/auth-form';
+import { Dialog, DialogContent } from "@goalspace/ui";
+import { AuthForm } from "@/components/auth-form";
 
 interface AuthDialogProps {
   open: boolean;
@@ -17,4 +16,4 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       </DialogContent>
     </Dialog>
   );
-}
+} 

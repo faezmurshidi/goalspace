@@ -1,15 +1,8 @@
-import Link from 'next/link';
-import {
-  Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  cn,
-} from '@goalspace/ui';
 import { motion } from 'framer-motion';
 import { ArrowRight, Book, Calendar, Clock } from 'lucide-react';
+import Link from 'next/link';
+
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@goalspace/ui';
 
 interface BlogPost {
   id: string;
@@ -30,7 +23,11 @@ export function LandingBlogSection({ posts }: LandingBlogSectionProps) {
       {/* Background Pattern */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
-        <div className="absolute inset-y-0 left-0 w-[200%] -translate-x-1/2 rotate-[-35deg] bg-gradient-to-r from-purple-500/5 via-cyan-500/5 to-background dark:from-purple-500/10 dark:via-cyan-500/10 dark:to-background" />
+        <div
+          className="absolute inset-y-0 left-0 -translate-x-1/2 w-[200%] rotate-[-35deg]
+            bg-gradient-to-r from-purple-500/5 via-cyan-500/5 to-background
+            dark:from-purple-500/10 dark:via-cyan-500/10 dark:to-background"
+        />
       </div>
 
       <div className="container relative mx-auto max-w-7xl px-4">
@@ -50,18 +47,15 @@ export function LandingBlogSection({ posts }: LandingBlogSectionProps) {
                 Latest from our Blog
               </h2>
             </div>
-            <h3
-              className={cn(
-                'text-3xl font-bold tracking-tight sm:text-4xl',
-                'bg-gradient-to-r from-purple-600 via-primary to-cyan-600 bg-clip-text text-transparent',
-                'dark:from-purple-300 dark:via-primary dark:to-cyan-300'
-              )}
-            >
+            <h3 className={cn(
+              'text-3xl font-bold tracking-tight sm:text-4xl',
+              'bg-gradient-to-r from-purple-600 via-primary to-cyan-600 bg-clip-text text-transparent',
+              'dark:from-purple-300 dark:via-primary dark:to-cyan-300'
+            )}>
               Insights & Resources
             </h3>
             <p className="mt-4 text-lg text-muted-foreground">
-              Discover expert tips, strategies, and insights to help you achieve your goals and
-              enhance your learning journey.
+              Discover expert tips, strategies, and insights to help you achieve your goals and enhance your learning journey.
             </p>
           </motion.div>
         </div>
@@ -77,13 +71,11 @@ export function LandingBlogSection({ posts }: LandingBlogSectionProps) {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <Link href={`/blog/${post.id}`}>
-                <Card
-                  className={cn(
-                    'group h-full overflow-hidden transition-all duration-500',
-                    'hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5',
-                    'dark:hover:shadow-primary/10'
-                  )}
-                >
+                <Card className={cn(
+                  'group h-full overflow-hidden transition-all duration-500',
+                  'hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5',
+                  'dark:hover:shadow-primary/10'
+                )}>
                   <CardHeader>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
@@ -94,10 +86,12 @@ export function LandingBlogSection({ posts }: LandingBlogSectionProps) {
                         {post.readingTime}
                       </span>
                     </div>
-                    <CardTitle className="line-clamp-2 transition-colors group-hover:text-primary">
+                    <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
                       {post.title}
                     </CardTitle>
-                    <CardDescription className="line-clamp-2">{post.description}</CardDescription>
+                    <CardDescription className="line-clamp-2">
+                      {post.description}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -140,4 +134,4 @@ export function LandingBlogSection({ posts }: LandingBlogSectionProps) {
       </div>
     </section>
   );
-}
+} 
