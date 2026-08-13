@@ -9,6 +9,6 @@ export default {
     './app/**/*.{js,jsx,ts,tsx,mdx}',
     './lib/**/*.{js,jsx,ts,tsx,mdx}',
     './utils/**/*.{js,jsx,ts,tsx,mdx}',
-    './packages/*/src/**/*.{ts,tsx}',
+    '../../packages/*/src/**/*.{ts,tsx}',
   ],
 } satisfies Config;
