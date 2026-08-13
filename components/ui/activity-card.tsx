@@ -3,9 +3,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { cn } from '@goalspace/ui';
 import { Activity, ArrowUpRight, CheckCircle2, Plus, Target } from 'lucide-react';
-
-import { cn } from '@/lib/utils';
 
 export interface Metric {
   label: string;

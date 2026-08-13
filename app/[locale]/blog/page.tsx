@@ -3,12 +3,12 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useAppTranslations } from '@goalspace/i18n';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowRight, Calendar, Clock } from 'lucide-react';
 
 import { FooterSection } from '@/components/sections/footer-section';
 import { SiteHeader } from '@/components/site-header';
-import { useAppTranslations } from '@/lib/hooks/use-translations';
 import { getBlogPosts } from './mock-data';
 
 // Inner component that uses useParams

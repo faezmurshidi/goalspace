@@ -4,6 +4,8 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import Script from 'next/script';
+import { useAppTranslations } from '@goalspace/i18n';
+import { useToast } from '@goalspace/ui';
 import { motion } from 'framer-motion';
 
 import { CTASection } from '@/components/sections/cta-section';
@@ -14,8 +16,6 @@ import { TestimonialsSection } from '@/components/sections/testimonials-section'
 import { SiteHeader } from '@/components/site-header';
 import AnimatedHero from '@/components/ui/animated-hero';
 import { FAQ } from '@/components/ui/faq-section';
-import { useToast } from '@/components/ui/use-toast';
-import { useAppTranslations } from '@/lib/hooks/use-translations';
 
 // Content component to be wrapped in Suspense
 function LocalizedHomeContent() {

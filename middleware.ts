@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+// Imported from the package's `./locales` subpath (not its main barrel):
+// the main barrel also re-exports `useAppTranslations`, which pulls in
+// `next/navigation`'s client-only `useRouter`/`usePathname` hooks. Those
+// aren't available in the Edge Middleware runtime, so importing the full
+// barrel here breaks the middleware bundle. `./locales.ts` has no such
+// dependencies, so it's safe for this context.
+import { defaultLocale, locales as supportedLocales } from '@goalspace/i18n/locales';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
-// Supported locales
-export const locales = ['en', 'ms', 'zh'];
-export const defaultLocale = 'en';
+// `locales` from @goalspace/i18n is a readonly literal-typed tuple, so
+// `.includes(someString)` below would otherwise fail to typecheck against
+// its narrowed element type. Widen it here rather than touching the
+// pre-existing call sites (this file is rewritten in Tasks 4 and 5).
+const locales: readonly string[] = supportedLocales;
 
 // Helper function to normalize paths by removing trailing slashes
 function normalizePath(path: string): string {

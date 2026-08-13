@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
-
+import { useAppTranslations } from '@goalspace/i18n';
 import {
+  Button,
+  cn,
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
@@ -13,12 +14,11 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu';
-import { useAppTranslations } from '@/lib/hooks/use-translations';
-import { cn } from '@/lib/utils';
+} from '@goalspace/ui';
+import { motion } from 'framer-motion';
+
 import { createClient } from '@/utils/supabase/client';
 import { AuthDialog } from './auth/auth-dialog';
-import { Button } from './ui/button';
 
 export function MainNav({
   className,

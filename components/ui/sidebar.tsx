@@ -1,12 +1,11 @@
 'use client';
 
 import * as React from 'react';
+import { cn } from '@goalspace/ui';
 import { cva, type VariantProps } from 'class-variance-authority';
 
-import { cn } from '@/lib/utils';
-
 const sidebarMenuButtonVariants = cva(
-  'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+  'group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       size: {
@@ -124,31 +123,31 @@ export const SidebarProvider = ({
 
 const SidebarHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex flex-col space-y-2 p-2", className)} {...props} />
+    <div ref={ref} className={cn('flex flex-col space-y-2 p-2', className)} {...props} />
   )
 );
-SidebarHeader.displayName = "SidebarHeader";
+SidebarHeader.displayName = 'SidebarHeader';
 
 const SidebarContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("flex-1 overflow-auto", className)} {...props} />
+    <div ref={ref} className={cn('flex-1 overflow-auto', className)} {...props} />
   )
 );
-SidebarContent.displayName = "SidebarContent";
+SidebarContent.displayName = 'SidebarContent';
 
 const SidebarFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("mt-auto", className)} {...props} />
+    <div ref={ref} className={cn('mt-auto', className)} {...props} />
   )
 );
-SidebarFooter.displayName = "SidebarFooter";
+SidebarFooter.displayName = 'SidebarFooter';
 
-export { 
-  Sidebar, 
-  SidebarBody, 
-  SidebarMenu, 
-  SidebarMenuButton, 
-  SidebarMenuItem, 
+export {
+  Sidebar,
+  SidebarBody,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarLink,
   SidebarHeader,
   SidebarContent,

@@ -1,0 +1,27 @@
+{
+  "name": "@goalspace/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./locales": "./src/locales.ts"
+  },
+  "dependencies": {
+    "i18next": "^24.2.3",
+    "i18next-browser-languagedetector": "^8.0.4",
+    "i18next-http-backend": "^3.0.2",
+    "react-i18next": "^15.4.1",
+    "cookies-next": "^5.1.0",
+    "lucide-react": "^0.477.0",
+    "@goalspace/ui": "workspace:*"
+  },
+  "peerDependencies": {
+    "next": "^16.2.12",
+    "react": "^19.2.8"
+  },
+  "devDependencies": {
+    "@goalspace/config": "workspace:*"
+  }
+}

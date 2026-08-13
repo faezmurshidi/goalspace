@@ -1,9 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { cn } from '@goalspace/ui';
 import { AnimatePresence, motion } from 'framer-motion';
-
-import { cn } from '@/lib/utils';
 
 export function PlaceholdersAndVanishInput({
   placeholders,
@@ -17,7 +16,7 @@ export function PlaceholdersAndVanishInput({
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Move these function definitions inside the useEffect to avoid dependency issues
   useEffect(() => {
     // Define functions inside the effect so they have access to current props/state
@@ -26,7 +25,7 @@ export function PlaceholdersAndVanishInput({
         setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
       }, 3000);
     };
-    
+
     const handleVisibilityChange = () => {
       if (document.visibilityState !== 'visible' && intervalRef.current) {
         clearInterval(intervalRef.current); // Clear the interval when the tab is not visible

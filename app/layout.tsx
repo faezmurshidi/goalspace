@@ -2,9 +2,8 @@ import './globals.css';
 
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import { ThemeProvider, Toaster } from '@goalspace/ui';
 
-import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster } from '@/components/ui/toaster';
 import AnalyticsProvider from './providers/analytics-provider';
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' });

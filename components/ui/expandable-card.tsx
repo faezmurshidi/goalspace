@@ -1,8 +1,25 @@
-"use client";
+'use client';
 
-import React, { useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useRef } from 'react';
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  Progress as ProgressBar,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@goalspace/ui';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  CheckCircle2,
   Clock,
   GitBranch,
   Github,
@@ -10,25 +27,9 @@ import {
   StepForwardIcon as Progress,
   Star,
   Users,
-  CheckCircle2,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress as ProgressBar } from "@/components/ui/progress";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useExpandable } from "@/components/hooks/use-expandable";
+} from 'lucide-react';
+
+import { useExpandable } from '@/components/hooks/use-expandable';
 
 interface ProjectStatusCardProps {
   title: string;
@@ -64,17 +65,15 @@ export function ProjectStatusCard({
       onClick={toggleExpand}
     >
       <CardHeader className="space-y-1">
-        <div className="flex justify-between items-start w-full">
+        <div className="flex w-full items-start justify-between">
           <div className="space-y-2">
             <Badge
               variant="secondary"
               className={
-                progress === 100
-                  ? "bg-green-100 text-green-600"
-                  : "bg-blue-100 text-blue-600"
+                progress === 100 ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
               }
             >
-              {progress === 100 ? "Completed" : "In Progress"}
+              {progress === 100 ? 'Completed' : 'In Progress'}
             </Badge>
             <h3 className="text-2xl font-semibold">{title}</h3>
           </div>
@@ -105,7 +104,7 @@ export function ProjectStatusCard({
 
           <motion.div
             style={{ height: animatedHeight }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="overflow-hidden"
           >
             <div ref={contentRef}>
@@ -119,24 +118,24 @@ export function ProjectStatusCard({
                   >
                     <div className="flex items-center justify-between text-sm text-gray-600">
                       <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-2" />
+                        <Clock className="mr-2 h-4 w-4" />
                         <span>Due {dueDate}</span>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center">
-                          <Star className="h-4 w-4 mr-1 text-yellow-400" />
+                          <Star className="mr-1 h-4 w-4 text-yellow-400" />
                           <span>{githubStars}</span>
                         </div>
                         <div className="flex items-center">
-                          <GitBranch className="h-4 w-4 mr-1" />
+                          <GitBranch className="mr-1 h-4 w-4" />
                           <span>{openIssues} issues</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <h4 className="font-medium text-sm flex items-center">
-                        <Users className="h-4 w-4 mr-2" />
+                      <h4 className="flex items-center text-sm font-medium">
+                        <Users className="mr-2 h-4 w-4" />
                         Contributors
                       </h4>
                       <div className="flex -space-x-2">
@@ -152,9 +151,7 @@ export function ProjectStatusCard({
                                     }
                                     alt={contributor.name}
                                   />
-                                  <AvatarFallback>
-                                    {contributor.name[0]}
-                                  </AvatarFallback>
+                                  <AvatarFallback>{contributor.name[0]}</AvatarFallback>
                                 </Avatar>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -167,23 +164,18 @@ export function ProjectStatusCard({
                     </div>
 
                     <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Recent Tasks</h4>
+                      <h4 className="text-sm font-medium">Recent Tasks</h4>
                       {tasks.map((task, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between text-sm"
-                        >
+                        <div key={index} className="flex items-center justify-between text-sm">
                           <span className="text-gray-600">{task.title}</span>
-                          {task.completed && (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          )}
+                          {task.completed && <CheckCircle2 className="h-4 w-4 text-green-500" />}
                         </div>
                       ))}
                     </div>
 
                     <div className="space-y-2">
                       <Button className="w-full">
-                        <MessageSquare className="h-4 w-4 mr-2" />
+                        <MessageSquare className="mr-2 h-4 w-4" />
                         View Discussion
                       </Button>
                     </div>
@@ -196,7 +188,7 @@ export function ProjectStatusCard({
       </CardContent>
 
       <CardFooter>
-        <div className="flex items-center justify-between w-full text-sm text-gray-600">
+        <div className="flex w-full items-center justify-between text-sm text-gray-600">
           <span>Last updated: 2 hours ago</span>
           <span>{openIssues} open issues</span>
         </div>

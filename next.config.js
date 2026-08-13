@@ -3,6 +3,14 @@ const nextConfig = {
   reactStrictMode: true,
   trailingSlash: true,
   staticPageGenerationTimeout: 180,
+  transpilePackages: ['@goalspace/ui', '@goalspace/i18n'],
+  // An unrelated npm project's lockfile in a parent directory
+  // (/Users/faez/Documents/package-lock.json) makes Turbopack's automatic
+  // workspace-root inference pick the wrong root, which breaks module
+  // resolution for the newly-introduced workspace packages. Pin it explicitly.
+  turbopack: {
+    root: __dirname,
+  },
   env: {
     NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development',
     NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL || 'http://localhost:3000',

@@ -3,11 +3,11 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useAppTranslations } from '@goalspace/i18n';
 import { ArrowLeft } from 'lucide-react';
 
 import { FooterSection } from '@/components/sections/footer-section';
 import { SiteHeader } from '@/components/site-header';
-import { useAppTranslations } from '@/lib/hooks/use-translations';
 
 // Inner component that uses useParams
 function ArticlePageContent() {

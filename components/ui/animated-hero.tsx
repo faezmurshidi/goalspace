@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useAppTranslations } from '@goalspace/i18n';
+import { Button, Card } from '@goalspace/ui';
 import { motion, useInView } from 'framer-motion';
 import { ArrowRight, MoveRight, PhoneCall, Play } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { useAppTranslations } from '@/lib/hooks/use-translations';
 import { BorderBeam } from './border-beam';
-import { Card } from './card';
 
 interface AnimatedHeroProps {
   className?: string;

@@ -12,6 +12,8 @@
     "test:rls": "vitest run tests/rls"
   },
   "dependencies": {
+    "@goalspace/ui": "workspace:*",
+    "@goalspace/i18n": "workspace:*",
     "@hookform/resolvers": "^3.10.0",
     "@opentelemetry/api": "^1.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
