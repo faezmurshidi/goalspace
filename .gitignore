@@ -50,3 +50,6 @@ repomix-output.*
 *.repomix.txt
 .aidigest
 codebase-dump.*
+
+# turborepo
+.turbo

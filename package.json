@@ -117,6 +117,7 @@
     "prettier-plugin-tailwindcss": "^0.6.9",
     "supabase": "^2.2.1",
     "tailwindcss": "3.4.19",
+    "turbo": "^2.5.0",
     "vitest": "^4.1.10"
   },
   "engines": {
