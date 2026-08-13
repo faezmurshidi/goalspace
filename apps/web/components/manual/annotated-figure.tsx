@@ -25,11 +25,22 @@ export function AnnotatedFigure({ caption, callouts, children, className }: Anno
           aria-hidden="true"
           className="w-full"
         >
+          {/*
+            Scoped to this <g> rather than the whole <svg> so a figure's own
+            drawing content (children) is the only thing forced to the ink
+            outline weight. If a future figure sets its own stroke colour or
+            width inside {children}, note that Tailwind resolves same-specificity
+            classes by stylesheet order, not JSX position or DOM nesting, so an
+            equal-specificity utility here can still win over one written inline
+            on the child element. Keep drawing-specific stroke overrides at a
+            higher specificity (e.g. an arbitrary selector or a wrapping <g>
+            deeper than this one) rather than relying on JSX order.
+          */}
           <g className="[&_*]:fill-none [&_*]:stroke-ink [&_*]:[stroke-width:1.5] [&_*]:[vector-effect:non-scaling-stroke]">
             {children}
           </g>
 
-          <g className="hidden md:block">
+          <g className="hidden sm:block">
             {callouts.map((c) => (
               <g key={c.n}>
                 <line
@@ -46,7 +57,7 @@ export function AnnotatedFigure({ caption, callouts, children, className }: Anno
         </svg>
       </div>
 
-      <ol className="mt-8 grid gap-3 md:grid-cols-2">
+      <ol className="mt-8 grid gap-3 sm:grid-cols-2">
         {callouts.map((c) => (
           <li key={c.n} className="flex items-start gap-3">
             <span
