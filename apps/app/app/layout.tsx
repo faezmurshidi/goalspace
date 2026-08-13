@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { cookies } from 'next/headers';
-import { ThemeProvider } from '@goalspace/ui';
+import { ThemeProvider, Toaster } from '@goalspace/ui';
 import { I18nProvider, NEXT_LOCALE_COOKIE, localeFromCookie } from '@goalspace/i18n';
 
 import './globals.css';
@@ -20,6 +20,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             disableTransitionOnChange
           >
             {children}
+            <Toaster />
           </ThemeProvider>
         </I18nProvider>
       </body>

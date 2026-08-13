@@ -26,8 +26,8 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  useToast,
 } from '@goalspace/ui';
-import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/utils/supabase/client';
 
 const authSchema = z.object({

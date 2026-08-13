@@ -14,7 +14,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams?.get('returnUrl') || '/';
+  const rawReturnUrl = searchParams?.get('returnUrl');
+  const returnUrl =
+    rawReturnUrl && rawReturnUrl.startsWith('/') && !rawReturnUrl.startsWith('//') ? rawReturnUrl : '/';
   const supabase = createClient();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
