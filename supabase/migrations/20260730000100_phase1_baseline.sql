@@ -46,6 +46,13 @@ create table projects (
   unique (owner_id, slug)
 );
 
+-- id/project_id pairs below are targets of the composite foreign keys that
+-- follow, so a child row's denormalized project_id can be constrained to
+-- actually match its parent's project rather than merely referencing some
+-- project. `unique (id, project_id)` is redundant with the primary key for
+-- uniqueness purposes; it exists only so Postgres has a composite key to
+-- point a composite foreign key at.
+
 create table entries (
   id          uuid primary key default gen_random_uuid(),
   project_id  uuid not null references projects(id) on delete cascade,
@@ -56,7 +63,8 @@ create table entries (
   body        text not null default '',
   occurred_at timestamptz not null default now(),
   created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+  updated_at  timestamptz not null default now(),
+  unique (id, project_id)
 );
 
 create table work_items (
@@ -64,23 +72,40 @@ create table work_items (
   project_id         uuid not null references projects(id) on delete cascade,
   owner_id           uuid not null references users(id) on delete cascade,
   agent_id           uuid,
-  parent_id          uuid references work_items(id) on delete cascade,
+  parent_id          uuid,
   order_index        integer not null default 0,
   kind               text not null default 'task' check (kind in ('task','question')),
   status             text not null default 'open' check (status in ('open','doing','blocked','done','dropped')),
   title              text not null,
   body               text not null default '',
   wake_at            timestamptz,
-  closed_by_entry_id uuid references entries(id) on delete set null,
+  closed_by_entry_id uuid,
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now(),
   status_changed_at  timestamptz not null default now(),
-  closed_at          timestamptz
+  closed_at          timestamptz,
+  unique (id, project_id),
+  -- Composite: a sub-task's project_id must match its parent's, so the tree
+  -- can never cross a project boundary. Self-referencing within the same
+  -- CREATE TABLE is fine — Postgres resolves it against the columns above.
+  foreign key (parent_id, project_id)
+    references work_items (id, project_id) on delete cascade,
+  -- Composite: the entry that closed this item must belong to the same
+  -- project. `on delete set null (closed_by_entry_id)` (PG15+) nulls only
+  -- this column, not project_id, which stays not-null throughout.
+  foreign key (closed_by_entry_id, project_id)
+    references entries (id, project_id) on delete set null (closed_by_entry_id)
 );
 
 -- entries.work_item_id is added after work_items exists (mutual reference).
+-- Composite, same reasoning as above: the linked work item must share this
+-- entry's project, and only work_item_id is nulled on delete.
 alter table entries
-  add column work_item_id uuid references work_items(id) on delete set null;
+  add column work_item_id uuid;
+alter table entries
+  add constraint entries_work_item_id_project_id_fkey
+    foreign key (work_item_id, project_id)
+    references work_items (id, project_id) on delete set null (work_item_id);
 
 create table documents (
   id         uuid primary key default gen_random_uuid(),
@@ -90,30 +115,42 @@ create table documents (
   title      text not null,
   body       text not null default '',
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (id, project_id)
 );
 
 create table document_revisions (
   id          uuid primary key default gen_random_uuid(),
-  document_id uuid not null references documents(id) on delete cascade,
+  document_id uuid not null,
   project_id  uuid not null references projects(id) on delete cascade,
   owner_id    uuid not null references users(id) on delete cascade,
   title       text not null,
   body        text not null,
-  created_at  timestamptz not null default now()
+  created_at  timestamptz not null default now(),
+  -- Composite: a revision's project_id must match its document's, so a
+  -- revision can never be filed under the wrong project.
+  foreign key (document_id, project_id)
+    references documents (id, project_id) on delete cascade
 );
 
 create table attachments (
   id           uuid primary key default gen_random_uuid(),
   project_id   uuid not null references projects(id) on delete cascade,
   owner_id     uuid not null references users(id) on delete cascade,
-  entry_id     uuid references entries(id) on delete cascade,
-  document_id  uuid references documents(id) on delete cascade,
+  entry_id     uuid,
+  document_id  uuid,
   storage_path text not null,
   mime_type    text not null,
   byte_size    bigint not null,
   created_at   timestamptz not null default now(),
-  check (num_nonnulls(entry_id, document_id) = 1)
+  check (num_nonnulls(entry_id, document_id) = 1),
+  -- Composite, both nullable: MATCH SIMPLE (Postgres default) skips
+  -- enforcement when either referencing column is null, which is exactly
+  -- what "attached to an entry OR a document" needs.
+  foreign key (entry_id, project_id)
+    references entries (id, project_id) on delete cascade,
+  foreign key (document_id, project_id)
+    references documents (id, project_id) on delete cascade
 );
 
 create index entries_project_occurred_idx on entries (project_id, occurred_at desc);
