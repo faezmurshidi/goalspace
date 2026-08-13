@@ -27,7 +27,14 @@ export async function createTestUser(email: string): Promise<TestUser> {
 
   // public.users is a separate profile table; its id must match auth.uid().
   const { error: profileError } = await admin.from('users').insert({ id, email });
-  if (profileError) throw profileError;
+  if (profileError) {
+    // The auth user already exists at this point. Without this cleanup, a
+    // failed profile insert leaves an orphaned auth.users row behind (the
+    // caller's variable is never assigned, so afterAll has no id to delete),
+    // and it accumulates silently across every subsequent test run.
+    await admin.auth.admin.deleteUser(id);
+    throw profileError;
+  }
 
   const client = createClient(url, anonKey, { auth: { persistSession: false } });
   const { error: signInError } = await client.auth.signInWithPassword({
