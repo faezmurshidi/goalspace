@@ -1,12 +1,10 @@
 import './globals.css';
 
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
-import { ThemeProvider, Toaster } from '@goalspace/ui';
+import { Toaster } from '@goalspace/ui';
 
 import AnalyticsProvider from './providers/analytics-provider';
-
-const inter = Inter({ subsets: ['latin'], display: 'swap' });
+import { archivo, azeret } from '@/lib/fonts';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -86,21 +84,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${archivo.variable} ${azeret.variable}`}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AnalyticsProvider>{children}</AnalyticsProvider>
-          <Toaster />
-        </ThemeProvider>
+      <body>
+        <AnalyticsProvider>{children}</AnalyticsProvider>
+        <Toaster />
       </body>
     </html>
   );

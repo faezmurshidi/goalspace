@@ -1,15 +1,12 @@
 import type { ReactNode } from 'react';
 import { I18nProvider } from '@goalspace/i18n';
-import AnalyticsProvider from '@/app/providers/analytics-provider';
-import { archivo, azeret } from '@/lib/fonts';
-
-import '../globals.css';
+import { HtmlLangSync } from '@/components/html-lang-sync';
 
 export function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'ms' }, { locale: 'zh' }];
 }
 
-export default async function RootLayout({
+export default async function LocaleLayout({
   children,
   params,
 }: {
@@ -19,12 +16,9 @@ export default async function RootLayout({
   const { locale } = await params;
 
   return (
-    <html lang={locale} className={`${archivo.variable} ${azeret.variable}`}>
-      <body>
-        <I18nProvider>
-          <AnalyticsProvider>{children}</AnalyticsProvider>
-        </I18nProvider>
-      </body>
-    </html>
+    <I18nProvider>
+      <HtmlLangSync locale={locale} />
+      {children}
+    </I18nProvider>
   );
 }
