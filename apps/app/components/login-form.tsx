@@ -15,8 +15,15 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawReturnUrl = searchParams?.get('returnUrl');
+  // Same-origin relative paths only. `//host` and `/\host` are both treated as
+  // protocol-relative by browsers, so they would leave the origin entirely.
   const returnUrl =
-    rawReturnUrl && rawReturnUrl.startsWith('/') && !rawReturnUrl.startsWith('//') ? rawReturnUrl : '/';
+    rawReturnUrl &&
+    rawReturnUrl.startsWith('/') &&
+    !rawReturnUrl.startsWith('//') &&
+    !rawReturnUrl.startsWith('/\\')
+      ? rawReturnUrl
+      : '/';
   const supabase = createClient();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
