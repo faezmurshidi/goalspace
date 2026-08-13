@@ -6,7 +6,8 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run tests/unit"
   },
   "dependencies": {
     "@goalspace/ui": "workspace:*",
@@ -71,6 +72,8 @@
     "postcss-nesting": "^13.0.1",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
-    "tailwindcss": "3.4.19"
+    "tailwindcss": "3.4.19",
+    "vitest": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.10"
   }
 }
