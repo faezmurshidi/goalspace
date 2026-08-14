@@ -15,6 +15,15 @@ const nextConfig = {
   turbopack: {
     root: path.join(__dirname, '../..'),
   },
+  // Lets `app/global-not-found.tsx` handle genuinely unmatched routes
+  // (no `[locale]` segment matched at all) with its own branded, complete
+  // `<html>` document instead of Next's built-in fallback, which ships
+  // with no `lang` attribute. This is exactly the case the Next.js docs
+  // call out for this flag: "your root layout is defined using top-level
+  // dynamic segments" (this app's root layout is `app/[locale]/layout.tsx`).
+  experimental: {
+    globalNotFound: true,
+  },
   env: {
     NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development',
     NEXT_PUBLIC_WEB_URL: process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000',
