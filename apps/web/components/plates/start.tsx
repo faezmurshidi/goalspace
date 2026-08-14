@@ -26,7 +26,7 @@ export function Start() {
         >
           {t('landing.start.cta')}
         </a>
-        <p className="label mt-6 text-paper/75">{t('landing.start.honesty')}</p>
+        <p className="label mt-6 text-paper-soft">{t('landing.start.honesty')}</p>
       </div>
     </Plate>
   );

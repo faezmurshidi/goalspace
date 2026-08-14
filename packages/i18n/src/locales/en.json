@@ -2,7 +2,8 @@
   "common": {
     "appName": "Goalspace",
     "description": "AI-Powered Goal Achievement Platform",
-    "plateLabel": "Plate {{number}}"
+    "plateLabel": "Plate {{number}}",
+    "calloutSr": "Callout {{n}}."
   },
   "navigation": {
     "blog": "Blog",

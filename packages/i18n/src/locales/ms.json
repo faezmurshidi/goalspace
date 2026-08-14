@@ -2,7 +2,8 @@
   "common": {
     "appName": "Goalspace",
     "description": "Platform Pencapaian Matlamat Berkuasa AI",
-    "plateLabel": "Plat {{number}}"
+    "plateLabel": "Plat {{number}}",
+    "calloutSr": "Anotasi {{n}}."
   },
   "navigation": {
     "blog": "Blog",

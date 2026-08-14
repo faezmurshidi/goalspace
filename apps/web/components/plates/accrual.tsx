@@ -33,6 +33,7 @@ export function Accrual() {
         <DrawOnView>
           <AnnotatedFigure
             caption={t('landing.accrual.caption')}
+            calloutSrLabel={(n) => t('common.calloutSr', { n })}
             callouts={[
               { n: 1, label: t('landing.accrual.steps.one'), x: 19, y: 77 },
               { n: 2, label: t('landing.accrual.steps.two'), x: 55, y: 50 },

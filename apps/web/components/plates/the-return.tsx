@@ -36,6 +36,7 @@ export function TheReturn() {
         <DrawOnView>
           <AnnotatedFigure
             caption={t('landing.return.caption')}
+            calloutSrLabel={(n) => t('common.calloutSr', { n })}
             callouts={[
               {
                 n: 1,

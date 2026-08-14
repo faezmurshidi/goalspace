@@ -79,6 +79,8 @@ export function Hero() {
           <AnnotatedFigure
             caption={t('landing.hero.caption')}
             className="[&_*]:stroke-paper"
+            drenched
+            calloutSrLabel={(n) => t('common.calloutSr', { n })}
             callouts={[
               {
                 n: 1,

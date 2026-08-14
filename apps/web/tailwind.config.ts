@@ -14,6 +14,7 @@ export default {
       colors: {
         paper: 'var(--color-paper)',
         'paper-shade': 'var(--color-paper-shade)',
+        'paper-soft': 'var(--color-paper-soft)',
         ink: 'var(--color-ink)',
         'ink-soft': 'var(--color-ink-soft)',
         rule: 'var(--color-rule)',

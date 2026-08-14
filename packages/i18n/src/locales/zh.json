@@ -2,7 +2,8 @@
   "common": {
     "appName": "Goalspace",
     "description": "AI驱动的目标实现平台",
-    "plateLabel": "图版 {{number}}"
+    "plateLabel": "图版 {{number}}",
+    "calloutSr": "标注 {{n}}。"
   },
   "navigation": {
     "blog": "博客",

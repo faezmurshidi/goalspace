@@ -41,7 +41,7 @@ export function Plate({
         className
       )}
     >
-      <span className={cn('label mb-6 block', drenched ? 'text-paper/75' : 'text-oxide')}>
+      <span className={cn('label mb-6 block', drenched ? 'text-paper-soft' : 'text-oxide')}>
         {resolvedLabel}
       </span>
 
@@ -60,7 +60,7 @@ export function Plate({
         <span
           className={cn(
             'label mt-10 block text-right',
-            drenched ? 'text-paper/75' : 'text-ink-soft'
+            drenched ? 'text-paper-soft' : 'text-ink-soft'
           )}
         >
           {meta}

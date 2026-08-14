@@ -6,6 +6,17 @@
   :root {
     --color-paper: oklch(0.96 0.008 85);
     --color-paper-shade: oklch(0.93 0.010 85);
+    /*
+     * A dedicated soft-paper token, not a `text-paper/75` opacity modifier:
+     * Tailwind v3 can only inject an alpha channel into a color that's
+     * itself written as `rgb(... / <alpha-value>)` (or similar), and
+     * `--color-paper` above is a plain `oklch()` function referenced via
+     * `var()`, which it can't parse through. `text-paper/75` compiles to
+     * no CSS rule at all, so text carrying that class silently falls back
+     * to the inherited (near-black) `--color-ink`, invisible on a drenched
+     * Oxide Deep ground. This token bakes the alpha in directly instead.
+     */
+    --color-paper-soft: oklch(0.96 0.008 85 / 75%);
     --color-ink: oklch(0.22 0.012 60);
     --color-ink-soft: oklch(0.45 0.010 60);
     --color-rule: oklch(0.78 0.010 70);
