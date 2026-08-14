@@ -205,7 +205,16 @@
     "goalBreakdown": "Mari pecahkan matlamat anda menjadi ruang pembelajaran yang boleh diambil tindakan."
   },
   "blog": {
+    "plate": "06",
+    "postPlate": "07",
     "title": "Artikel Terkini",
+    "meta": "Log / dikemas kini {{date}}",
+    "subtitle": "Nota tentang rekod, kembali semula, dan kos projek yang berlarutan.",
+    "postMeta": "{{date}} / {{minutes}} minit bacaan",
+    "readMore": "Baca",
+    "backToBlog": "Kembali ke semua artikel",
+    "byLine": "{{name}}, {{role}}",
+    "relatedLabel": "Berkaitan",
     "gettingStarted": {
       "intro": "Ketahui cara menetapkan matlamat pertama anda dan memanfaatkan sepenuhnya bimbingan AI Goalspace."
     }
@@ -215,6 +224,12 @@
     "dataCollectionMessage": "Kami mengumpul maklumat tidak sensitif seperti jenis peranti dan pilihan bahasa untuk meningkatkan pengalaman anda. Tiada data peribadi dikumpul atau dikongsi.",
     "accept": "Terima",
     "decline": "Tolak"
+  },
+  "notFound": {
+    "label": "404",
+    "title": "Tiada apa di alamat ini",
+    "description": "Halaman yang anda cari tidak wujud. Ia mungkin telah dipindahkan, atau tidak pernah wujud di sini.",
+    "cta": "Kembali ke plat 00"
   },
   "landing": {
     "hero": {

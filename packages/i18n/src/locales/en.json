@@ -225,6 +225,12 @@
     "accept": "Accept",
     "decline": "Decline"
   },
+  "notFound": {
+    "label": "404",
+    "title": "Nothing at this address",
+    "description": "The page you're looking for doesn't exist. It may have moved, or it was never here.",
+    "cta": "Back to plate 00"
+  },
   "landing": {
     "hero": {
       "plate": "00",

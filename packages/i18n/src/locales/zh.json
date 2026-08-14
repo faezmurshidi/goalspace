@@ -204,7 +204,16 @@
     "goalBreakdown": "让我们将您的目标分解成可行的学习空间。"
   },
   "blog": {
+    "plate": "06",
+    "postPlate": "07",
     "title": "最新文章",
+    "meta": "日志 / 更新于 {{date}}",
+    "subtitle": "关于记录、续接画面，以及项目久拖不决所付出代价的笔记。",
+    "postMeta": "{{date}} / {{minutes}} 分钟阅读",
+    "readMore": "阅读",
+    "backToBlog": "返回所有文章",
+    "byLine": "{{name}}，{{role}}",
+    "relatedLabel": "相关",
     "gettingStarted": {
       "intro": "了解如何设置您的第一个目标，充分利用Goalspace的AI指导。"
     }
@@ -214,6 +223,12 @@
     "dataCollectionMessage": "我们收集设备类型和语言偏好等非敏感信息，以改善您的体验。不会收集或共享个人数据。",
     "accept": "接受",
     "decline": "拒绝"
+  },
+  "notFound": {
+    "label": "404",
+    "title": "此地址没有内容",
+    "description": "你要找的页面不存在。它可能已被移动，或者从未存在过。",
+    "cta": "返回第00块"
   },
   "landing": {
     "hero": {
