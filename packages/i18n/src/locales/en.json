@@ -234,6 +234,19 @@
       "blockedLabel": "Blocked {{duration}}",
       "waitingLabel": "Waiting on",
       "decidedLabel": "Decided"
+    },
+    "accrual": {
+      "plate": "02",
+      "title": "The record writes itself",
+      "lede": "Nobody keeps a project journal for two years. So the log is not a second job: closing a piece of work asks what closed it, and that answer is the record.",
+      "steps": {
+        "one": "Finish something.",
+        "two": "Say what finished it, in one line.",
+        "three": "That line is attached to the work permanently, and it is what you read when you come back."
+      },
+      "entryLabel": "The line that closed it",
+      "closing": "Two years of this is a document nobody sat down to write.",
+      "caption": "Fig. 02. Closing a work item captures the entry that closed it."
     }
   }
 } 
