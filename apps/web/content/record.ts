@@ -4,6 +4,19 @@
  * study. Nothing on the page should imply a named real user.
  */
 
+/**
+ * The record is a dated specimen, not a live feed: every elapsed-time figure
+ * on the landing page (the hero's "away" duration, blocker durations, and
+ * so on) is computed relative to this fixed date, never to `new Date()`.
+ * Computing from the real current date would make the page's strongest
+ * element drift with the visitor's clock (reading "away 15 months" a year
+ * from now) and would make statically generated output depend on build
+ * time. Bump this deliberately, alongside the record's own dates, when the
+ * specimen is refreshed; every plate that shows a duration should read it
+ * from here.
+ */
+export const AS_OF = '2026-08-13';
+
 export type EntryKind = 'note' | 'decision' | 'source' | 'session';
 
 export interface RecordEntry {

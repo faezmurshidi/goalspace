@@ -216,7 +216,11 @@
       "away": "away",
       "cta": "Start the record",
       "ctaSecondary": "What exists today",
-      "caption": "Fig. 00. A project, as it looks after three weeks away."
+      "caption": "Fig. 00. A project, as it looks after three weeks away.",
+      "meta": "Specimen / as of {{date}}",
+      "calloutBlocked": "Blocked {{duration}}: {{subject}}",
+      "calloutLastSession": "Last session {{date}}: {{summary}}",
+      "calloutReversed": "Reversed: {{summary}}"
     }
   }
 } 

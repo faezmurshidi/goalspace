@@ -4,7 +4,7 @@ import { useAppTranslations } from '@goalspace/i18n';
 import { Plate } from '@/components/manual/plate';
 import { AnnotatedFigure } from '@/components/manual/annotated-figure';
 import { ExplodedProject } from '@/components/manual/figures/exploded-project';
-import { record } from '@/content/record';
+import { record, AS_OF } from '@/content/record';
 import { daysBetween, formatElapsed } from '@/lib/duration';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
@@ -26,20 +26,26 @@ function formatDayMonth(iso: string): string {
 
 export function Hero() {
   const { t } = useAppTranslations();
-  const today = new Date().toISOString().slice(0, 10);
-  const away = formatElapsed(daysBetween(record.lastTouchedAt, today));
+  // The record is a dated specimen: every duration on this plate is
+  // computed relative to AS_OF, not the visitor's clock, so "23 days away"
+  // stays "23 days away" regardless of when the page is built or viewed.
+  const away = formatElapsed(daysBetween(record.lastTouchedAt, AS_OF));
 
   // The oldest note and decision are the wrong callouts for a hero about
   // coming back: they read as the project's start, not its state today.
   // Build the three callouts from the most recent, most telling entries
   // instead: the live blocker, the last session, and the one reversal.
   const blocker = record.blockers[0];
-  const blockerElapsed = formatElapsed(daysBetween(blocker.since, today));
+  const blockerElapsed = formatElapsed(daysBetween(blocker.since, AS_OF));
   const lastSession = record.entries[record.entries.length - 1];
   const reversal = record.decisions[record.decisions.length - 1];
 
   return (
-    <Plate number={t('landing.hero.plate')} drenched>
+    <Plate
+      number={t('landing.hero.plate')}
+      meta={t('landing.hero.meta', { date: AS_OF })}
+      drenched
+    >
       <h1 className="text-display wdth-expanded max-w-[14ch]">{t('landing.hero.title')}</h1>
 
       <p className="mt-8 max-w-[68ch] text-body">{t('landing.hero.lede')}</p>
@@ -71,19 +77,27 @@ export function Hero() {
           callouts={[
             {
               n: 1,
-              label: `Blocked ${blockerElapsed.value} ${blockerElapsed.unit}: ${asClause(blocker.title)}`,
+              label: t('landing.hero.calloutBlocked', {
+                duration: `${blockerElapsed.value} ${blockerElapsed.unit}`,
+                subject: asClause(blocker.title),
+              }),
               x: 48,
               y: 34,
             },
             {
               n: 2,
-              label: `Last session ${formatDayMonth(lastSession.at)}: ${asClause(lastSession.text)}`,
+              label: t('landing.hero.calloutLastSession', {
+                date: formatDayMonth(lastSession.at),
+                summary: asClause(lastSession.text),
+              }),
               x: 22,
               y: 64,
             },
             {
               n: 3,
-              label: `Reversed: ${asClause(reversal.text)}`,
+              label: t('landing.hero.calloutReversed', {
+                summary: asClause(reversal.text),
+              }),
               x: 76,
               y: 18,
             },
