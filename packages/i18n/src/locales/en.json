@@ -207,5 +207,16 @@
     "dataCollectionMessage": "We collect non-sensitive information like device type and language preference to improve your experience. No personal data is collected or shared.",
     "accept": "Accept",
     "decline": "Decline"
+  },
+  "landing": {
+    "hero": {
+      "plate": "00",
+      "title": "Coming back is the hard part",
+      "lede": "You know how to build the thing. What you lose is the thread: what you decided, what you were waiting on, and why you dropped the approach that looked right in month two.",
+      "away": "away",
+      "cta": "Start the record",
+      "ctaSecondary": "What exists today",
+      "caption": "Fig. 00. A project, as it looks after three weeks away."
+    }
   }
 } 

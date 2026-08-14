@@ -7,6 +7,15 @@
       "runtimeArgs": ["-c", "source ~/.nvm/nvm.sh && nvm use 22 && corepack pnpm dev"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "goalspace-web-3210",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "source ~/.nvm/nvm.sh && nvm use 22 && cd apps/web && corepack pnpm exec next dev --port 3210"
+      ],
+      "port": 3210
     }
   ]
 }
