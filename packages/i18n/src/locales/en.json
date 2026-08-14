@@ -247,6 +247,33 @@
       "entryLabel": "The line that closed it",
       "closing": "Two years of this is a document nobody sat down to write.",
       "caption": "Fig. 02. Closing a work item captures the entry that closed it."
+    },
+    "notThis": {
+      "plate": "03",
+      "title": "What this is not",
+      "items": {
+        "tasks": "Not a task manager. Open items matter, but a list of them is not a record.",
+        "wiki": "Not a wiki. Documents live here, but the log is what you actually come back for.",
+        "streaks": "No streaks, no badges, no celebration of starting. Nothing here rewards you for showing up.",
+        "reminders": "No reminders. It waits. When you come back, it tells you what changed while you were gone.",
+        "habits": "Not for habits or fitness. Those want adherence tracking, which is a different product."
+      }
+    },
+    "agent": {
+      "plate": "04",
+      "title": "The part that reads it back to you",
+      "nowLabel": "Shipping today",
+      "now": "Projects, the log, nested work items with real states including blocked and a wake date, documents, and the resume view. Private to you.",
+      "nextLabel": "Next",
+      "next": "An agent grounded in your own repository: recall and synthesis over your decisions and dead ends, not generic advice. It is not built yet.",
+      "why": "Which is the reason to start now. The agent is only worth having if there is a record for it to read, and that record takes months to accumulate. Starting today is what makes it useful later."
+    },
+    "start": {
+      "plate": "05",
+      "title": "Start the record",
+      "lede": "One project, private, free while it is early. If you are in the middle of something long, the useful moment to begin was a year ago. Second best is today.",
+      "cta": "Create your project",
+      "honesty": "Early access. What exists today is described in plate 04, exactly."
     }
   }
-} 
+}
