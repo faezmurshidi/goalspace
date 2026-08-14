@@ -3,6 +3,7 @@
 import { useAppTranslations } from '@goalspace/i18n';
 import { Plate } from '@/components/manual/plate';
 import { AnnotatedFigure } from '@/components/manual/annotated-figure';
+import { DrawOnView } from '@/components/manual/draw-on-view';
 import { AccrualMechanism } from '@/components/manual/figures/accrual-mechanism';
 import { record, AS_OF } from '@/content/record';
 import { formatDayMonth } from '@/lib/duration';
@@ -28,16 +29,18 @@ export function Accrual() {
       <p className="max-w-[68ch] text-body">{t('landing.accrual.lede')}</p>
 
       <div className="mt-12">
-        <AnnotatedFigure
-          caption={t('landing.accrual.caption')}
-          callouts={[
-            { n: 1, label: t('landing.accrual.steps.one'), x: 19, y: 77 },
-            { n: 2, label: t('landing.accrual.steps.two'), x: 55, y: 50 },
-            { n: 3, label: t('landing.accrual.steps.three'), x: 84, y: 32 },
-          ]}
-        >
-          <AccrualMechanism />
-        </AnnotatedFigure>
+        <DrawOnView>
+          <AnnotatedFigure
+            caption={t('landing.accrual.caption')}
+            callouts={[
+              { n: 1, label: t('landing.accrual.steps.one'), x: 19, y: 77 },
+              { n: 2, label: t('landing.accrual.steps.two'), x: 55, y: 50 },
+              { n: 3, label: t('landing.accrual.steps.three'), x: 84, y: 32 },
+            ]}
+          >
+            <AccrualMechanism />
+          </AnnotatedFigure>
+        </DrawOnView>
       </div>
 
       {closingEntry ? (

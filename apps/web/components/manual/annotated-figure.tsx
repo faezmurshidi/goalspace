@@ -62,7 +62,7 @@ export function AnnotatedFigure({ caption, callouts, children, className }: Anno
           <li key={c.n} className="flex items-start gap-3">
             <span
               aria-hidden="true"
-              className="label mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-oxide text-paper"
+              className="callout-num label mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-oxide text-paper"
             >
               {c.n}
             </span>

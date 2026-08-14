@@ -3,6 +3,7 @@
 import { useAppTranslations } from '@goalspace/i18n';
 import { Plate } from '@/components/manual/plate';
 import { AnnotatedFigure } from '@/components/manual/annotated-figure';
+import { DrawOnView } from '@/components/manual/draw-on-view';
 import { ResumeView } from '@/components/manual/figures/resume-view';
 import { StatusChip } from '@/components/manual/status-chip';
 import { record, AS_OF } from '@/content/record';
@@ -31,35 +32,37 @@ export function TheReturn() {
       <p className="max-w-[68ch] text-body">{t('landing.return.lede')}</p>
 
       <div className="mt-12">
-        <AnnotatedFigure
-          caption={t('landing.return.caption')}
-          callouts={[
-            {
-              n: 1,
-              label: t('landing.return.calloutLastTouch', {
-                date: formatDayMonth(record.lastTouchedAt, currentLocale),
-              }),
-              x: 50,
-              y: 19,
-            },
-            {
-              n: 2,
-              label: t('landing.return.calloutOpen', { n: record.blockers.length }),
-              x: 50,
-              y: 53,
-            },
-            {
-              n: 3,
-              label: t('landing.return.calloutDecided', {
-                summary: asClause(latestDecision.text),
-              }),
-              x: 50,
-              y: 84,
-            },
-          ]}
-        >
-          <ResumeView />
-        </AnnotatedFigure>
+        <DrawOnView>
+          <AnnotatedFigure
+            caption={t('landing.return.caption')}
+            callouts={[
+              {
+                n: 1,
+                label: t('landing.return.calloutLastTouch', {
+                  date: formatDayMonth(record.lastTouchedAt, currentLocale),
+                }),
+                x: 50,
+                y: 19,
+              },
+              {
+                n: 2,
+                label: t('landing.return.calloutOpen', { n: record.blockers.length }),
+                x: 50,
+                y: 53,
+              },
+              {
+                n: 3,
+                label: t('landing.return.calloutDecided', {
+                  summary: asClause(latestDecision.text),
+                }),
+                x: 50,
+                y: 84,
+              },
+            ]}
+          >
+            <ResumeView />
+          </AnnotatedFigure>
+        </DrawOnView>
       </div>
 
       <div className="mt-16 grid gap-12 md:grid-cols-2">

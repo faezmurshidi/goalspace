@@ -47,3 +47,76 @@
     text-transform: uppercase;
   }
 }
+
+/**
+ * DrawOnView: strokes draw in on scroll entry, gated entirely by the
+ * `data-draw-pending` attribute the component sets in JS. When reduced
+ * motion is requested the attribute is never applied (see
+ * components/manual/draw-on-view.tsx), so nothing below ever matches and
+ * every figure renders in its final, fully-drawn state with no transition.
+ *
+ * Colour, opacity and stroke geometry only, per DESIGN.md: never layout
+ * properties, so figures never reflow while they draw.
+ */
+.draw-on-view svg * {
+  transition: stroke-dashoffset var(--draw-duration, 600ms) var(--ease-out-expo);
+}
+
+.draw-on-view[data-draw-pending] svg * {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+/* Per-element stagger, capped at 8 steps so a densely-drawn figure's total
+   draw time stays bounded no matter how many strokes it has. Anything past
+   the 8th sibling reuses the 8th step's delay (the `nth-child(n+9)` rule). */
+.draw-on-view svg *:nth-child(1) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 0);
+}
+.draw-on-view svg *:nth-child(2) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 1);
+}
+.draw-on-view svg *:nth-child(3) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 2);
+}
+.draw-on-view svg *:nth-child(4) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 3);
+}
+.draw-on-view svg *:nth-child(5) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 4);
+}
+.draw-on-view svg *:nth-child(6) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 5);
+}
+.draw-on-view svg *:nth-child(7) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 6);
+}
+.draw-on-view svg *:nth-child(n + 8) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 7);
+}
+
+/**
+ * Opt-in only: the hero passes `sequence-callouts` as DrawOnView's
+ * className so its three callout numbers fade in after the figure's own
+ * stroke drawing finishes, staggered 90ms apart. Every other figure's
+ * callouts render immediately with no fade, since only the hero's
+ * orchestration budget (draw + callout stagger under 900ms) is a
+ * requirement.
+ */
+.sequence-callouts[data-draw-pending] .callout-num {
+  opacity: 0;
+}
+.sequence-callouts .callout-num {
+  opacity: 1;
+  transition: opacity 150ms var(--ease-out-expo);
+  transition-delay: var(--draw-complete, 600ms);
+}
+.sequence-callouts li:nth-child(2) .callout-num {
+  transition-delay: calc(var(--draw-complete, 600ms) + 90ms);
+}
+.sequence-callouts li:nth-child(3) .callout-num {
+  transition-delay: calc(var(--draw-complete, 600ms) + 180ms);
+}
+.sequence-callouts li:nth-child(4) .callout-num {
+  transition-delay: calc(var(--draw-complete, 600ms) + 270ms);
+}

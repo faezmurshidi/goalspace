@@ -3,6 +3,7 @@
 import { useAppTranslations } from '@goalspace/i18n';
 import { Plate } from '@/components/manual/plate';
 import { AnnotatedFigure } from '@/components/manual/annotated-figure';
+import { DrawOnView } from '@/components/manual/draw-on-view';
 import { ExplodedProject } from '@/components/manual/figures/exploded-project';
 import { record, AS_OF } from '@/content/record';
 import { daysBetween, formatElapsed, formatDayMonth } from '@/lib/duration';
@@ -62,40 +63,51 @@ export function Hero() {
           <span className="label">{`${away.unit} ${t('landing.hero.away')}`}</span>
         </p>
 
-        <AnnotatedFigure
-          caption={t('landing.hero.caption')}
-          className="[&_*]:stroke-paper"
-          callouts={[
-            {
-              n: 1,
-              label: t('landing.hero.calloutBlocked', {
-                duration: `${blockerElapsed.value} ${blockerElapsed.unit}`,
-                subject: asClause(blocker.title),
-              }),
-              x: 48,
-              y: 34,
-            },
-            {
-              n: 2,
-              label: t('landing.hero.calloutLastSession', {
-                date: formatDayMonth(lastSession.at, currentLocale),
-                summary: asClause(lastSession.text),
-              }),
-              x: 22,
-              y: 64,
-            },
-            {
-              n: 3,
-              label: t('landing.hero.calloutReversed', {
-                summary: asClause(reversal.text),
-              }),
-              x: 76,
-              y: 18,
-            },
-          ]}
-        >
-          <ExplodedProject />
-        </AnnotatedFigure>
+        {/*
+          The hero is the one figure with an orchestrated entrance: strokes
+          draw in first, then the three callout numbers fade in staggered
+          90ms apart via the `sequence-callouts` class (see globals.css).
+          durationMs/staggerMs are tuned tighter than the 600/60 default so
+          the whole sequence, draw plus callout stagger, lands under 900ms:
+          draw completes by 350 + 7*25 = 525ms, the last (3rd) callout
+          starts at 525 + 180 = 705ms and finishes its 150ms fade at 855ms.
+        */}
+        <DrawOnView className="sequence-callouts" durationMs={350} staggerMs={25}>
+          <AnnotatedFigure
+            caption={t('landing.hero.caption')}
+            className="[&_*]:stroke-paper"
+            callouts={[
+              {
+                n: 1,
+                label: t('landing.hero.calloutBlocked', {
+                  duration: `${blockerElapsed.value} ${blockerElapsed.unit}`,
+                  subject: asClause(blocker.title),
+                }),
+                x: 48,
+                y: 34,
+              },
+              {
+                n: 2,
+                label: t('landing.hero.calloutLastSession', {
+                  date: formatDayMonth(lastSession.at, currentLocale),
+                  summary: asClause(lastSession.text),
+                }),
+                x: 22,
+                y: 64,
+              },
+              {
+                n: 3,
+                label: t('landing.hero.calloutReversed', {
+                  summary: asClause(reversal.text),
+                }),
+                x: 76,
+                y: 18,
+              },
+            ]}
+          >
+            <ExplodedProject />
+          </AnnotatedFigure>
+        </DrawOnView>
       </div>
     </Plate>
   );
