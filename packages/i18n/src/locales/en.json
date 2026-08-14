@@ -7,6 +7,7 @@
     "blog": "Blog",
     "pricing": "View Pricing",
     "login": "Log In",
+    "primaryLabel": "Main navigation",
     "switchLanguage": "Switch language",
     "dashboard": "Dashboard",
     "goals": "Goals",
@@ -27,6 +28,11 @@
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password"
+  },
+  "footer": {
+    "revision": "Rev. {{version}} / printed {{date}}",
+    "navLabel": "Footer links",
+    "appLink": "Open the app"
   },
   "hero": {
     "title": "AI-Powered Goal Achievement Platform",
@@ -197,7 +203,16 @@
     "goalBreakdown": "Let's break down your goal into actionable learning spaces."
   },
   "blog": {
+    "plate": "06",
+    "postPlate": "07",
     "title": "Latest Articles",
+    "meta": "Log / updated {{date}}",
+    "subtitle": "Notes on the record, the return, and the cost of a project that runs long.",
+    "postMeta": "{{date}} / {{minutes}} min read",
+    "readMore": "Read",
+    "backToBlog": "Back to all articles",
+    "byLine": "{{name}}, {{role}}",
+    "relatedLabel": "Related",
     "gettingStarted": {
       "intro": "Learn how to set up your first goal and get the most out of Goalspace's AI-powered mentorship."
     }

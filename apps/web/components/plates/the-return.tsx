@@ -6,7 +6,7 @@ import { AnnotatedFigure } from '@/components/manual/annotated-figure';
 import { ResumeView } from '@/components/manual/figures/resume-view';
 import { StatusChip } from '@/components/manual/status-chip';
 import { record, AS_OF } from '@/content/record';
-import { daysBetween, formatElapsed } from '@/lib/duration';
+import { daysBetween, formatElapsed, formatDayMonth } from '@/lib/duration';
 
 /** Lowercases the first character so a title reads as a clause mid sentence. */
 function asClause(text: string): string {
@@ -14,17 +14,8 @@ function asClause(text: string): string {
   return sentence.charAt(0).toLowerCase() + sentence.slice(1);
 }
 
-/** "2026-07-21" -> "21 July", read straight off the record's own dates. */
-function formatDayMonth(iso: string): string {
-  const [year, month, day] = iso.split('-').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
-    date
-  );
-}
-
 export function TheReturn() {
-  const { t } = useAppTranslations();
+  const { t, currentLocale } = useAppTranslations();
 
   // The record is a dated specimen: every duration on this plate is
   // computed relative to AS_OF, not the visitor's clock, so the blocker
@@ -46,7 +37,7 @@ export function TheReturn() {
             {
               n: 1,
               label: t('landing.return.calloutLastTouch', {
-                date: formatDayMonth(record.lastTouchedAt),
+                date: formatDayMonth(record.lastTouchedAt, currentLocale),
               }),
               x: 50,
               y: 19,
@@ -103,7 +94,9 @@ export function TheReturn() {
           <ul className="border-t border-rule">
             {record.decisions.map((decision) => (
               <li key={decision.at} className="flex flex-col gap-2 border-b border-rule py-4">
-                <span className="label text-ink-soft">{formatDayMonth(decision.at)}</span>
+                <span className="label text-ink-soft">
+                  {formatDayMonth(decision.at, currentLocale)}
+                </span>
                 <p className="text-body">{decision.text}</p>
               </li>
             ))}

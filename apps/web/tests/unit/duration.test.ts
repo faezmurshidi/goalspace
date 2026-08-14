@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysBetween, formatElapsed } from '@/lib/duration';
+import { daysBetween, formatElapsed, formatDayMonth, formatFullDate } from '@/lib/duration';
 
 describe('daysBetween', () => {
   it('counts whole days between two dates', () => {
@@ -42,5 +42,25 @@ describe('formatElapsed', () => {
 
   it('handles zero without a unit mismatch', () => {
     expect(formatElapsed(0)).toEqual({ value: '0', unit: 'days' });
+  });
+});
+
+describe('formatDayMonth', () => {
+  it('formats a bare YYYY-MM-DD date as day and month, defaulting to en-GB', () => {
+    expect(formatDayMonth('2026-07-21')).toBe('21 July');
+  });
+
+  it('accepts an explicit locale', () => {
+    expect(formatDayMonth('2026-07-21', 'en-GB')).toBe('21 July');
+  });
+
+  it('is unaffected by timezone, reading the date in UTC', () => {
+    expect(formatDayMonth('2026-01-01')).toBe('1 January');
+  });
+});
+
+describe('formatFullDate', () => {
+  it('formats a full ISO timestamp with day, month, and year', () => {
+    expect(formatFullDate('2024-03-18T08:00:00Z')).toBe('18 March 2024');
   });
 });

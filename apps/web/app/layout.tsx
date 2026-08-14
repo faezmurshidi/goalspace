@@ -12,27 +12,36 @@ export const viewport: Viewport = {
   minimumScale: 1,
 };
 
+// This metadata is a server-side export: Next's metadata API cannot use the
+// client i18n hook, so the copy below is plain English only. Per-locale
+// metadata is a later concern (see the i18n regeneration in Task 10).
+//
+// The copy is drawn from PRODUCT.md and the landing plates' own copy
+// (packages/i18n/src/locales/en.json, "landing.hero" / "landing.agent" /
+// "landing.start"): Goalspace is a repository for one long project. What
+// ships today is the record; the agent that reads it back is next and not
+// built yet, so this metadata does not claim a shipping AI product.
 export const metadata: Metadata = {
   metadataBase: new URL('https://goalspace.com'),
   title: {
-    default: 'GoalSpace - AI-Powered Goal Achievement Platform',
-    template: '%s | GoalSpace',
+    default: 'Goalspace: a repository for one long project',
+    template: '%s | Goalspace',
   },
   description:
-    'Achieve your goals with personalized AI mentorship, structured learning spaces, and progress tracking. Transform your learning journey today.',
+    'Goalspace is a repository for one long project: a log of decisions and blockers, work items with real states, and documents, so coming back after weeks away is cheap. Start the record today.',
   keywords: [
-    'goal achievement',
-    'AI mentorship',
-    'learning platform',
-    'personal development',
-    'structured learning',
-    'progress tracking',
-    'AI learning assistant',
-    'educational technology',
+    'project record',
+    'long-term project tracker',
+    'decision log',
+    'work item tracker',
+    'blocked and waiting items',
+    'resume view',
+    'personal project journal',
+    'coming back to a project',
   ],
-  authors: [{ name: 'GoalSpace Team' }],
-  creator: 'GoalSpace',
-  publisher: 'GoalSpace',
+  authors: [{ name: 'Goalspace' }],
+  creator: 'Goalspace',
+  publisher: 'Goalspace',
   formatDetection: {
     email: false,
     telephone: false,
@@ -52,34 +61,34 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://goalspace.com',
-    title: 'GoalSpace - AI-Powered Goal Achievement Platform',
+    title: 'Goalspace: a repository for one long project',
     description:
-      'Achieve your goals with personalized AI mentorship, structured learning spaces, and progress tracking.',
-    siteName: 'GoalSpace',
+      'A log of decisions and blockers, work items with real states, and documents, so coming back to a long project after weeks away is cheap. The record ships today.',
+    siteName: 'Goalspace',
     images: [
       {
         url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'GoalSpace - AI-Powered Goal Achievement Platform',
+        alt: 'Goalspace: a repository for one long project',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GoalSpace - AI-Powered Goal Achievement Platform',
+    title: 'Goalspace: a repository for one long project',
     description:
-      'Achieve your goals with personalized AI mentorship, structured learning spaces, and progress tracking.',
+      'A log of decisions and blockers, work items with real states, and documents, so coming back to a long project after weeks away is cheap. The record ships today.',
     images: ['/images/twitter-image.jpg'],
     creator: '@goalspace',
     site: '@goalspace',
   },
-  applicationName: 'GoalSpace',
+  applicationName: 'Goalspace',
   alternates: {
     canonical: 'https://goalspace.com',
   },
   manifest: '/site.webmanifest',
-  category: 'education',
+  category: 'productivity',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

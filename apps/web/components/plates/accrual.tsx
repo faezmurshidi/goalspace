@@ -5,18 +5,10 @@ import { Plate } from '@/components/manual/plate';
 import { AnnotatedFigure } from '@/components/manual/annotated-figure';
 import { AccrualMechanism } from '@/components/manual/figures/accrual-mechanism';
 import { record, AS_OF } from '@/content/record';
-
-/** "2026-07-21" -> "21 July", read straight off the record's own dates. */
-function formatDayMonth(iso: string): string {
-  const [year, month, day] = iso.split('-').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
-    date
-  );
-}
+import { formatDayMonth } from '@/lib/duration';
 
 export function Accrual() {
-  const { t } = useAppTranslations();
+  const { t, currentLocale } = useAppTranslations();
 
   // The third step is illustrated with a real closing entry rather than a
   // description of one (PRODUCT.md, Design Principle 1). Session entries
@@ -51,7 +43,7 @@ export function Accrual() {
       {closingEntry ? (
         <div className="mt-10 border-t border-rule pt-6">
           <h3 className="label mb-2 text-oxide">{t('landing.accrual.entryLabel')}</h3>
-          <p className="label text-ink-soft">{formatDayMonth(closingEntry.at)}</p>
+          <p className="label text-ink-soft">{formatDayMonth(closingEntry.at, currentLocale)}</p>
           <p className="mt-2 max-w-[68ch] text-body">{closingEntry.text}</p>
         </div>
       ) : null}

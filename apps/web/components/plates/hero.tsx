@@ -5,7 +5,7 @@ import { Plate } from '@/components/manual/plate';
 import { AnnotatedFigure } from '@/components/manual/annotated-figure';
 import { ExplodedProject } from '@/components/manual/figures/exploded-project';
 import { record, AS_OF } from '@/content/record';
-import { daysBetween, formatElapsed } from '@/lib/duration';
+import { daysBetween, formatElapsed, formatDayMonth } from '@/lib/duration';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
 
@@ -15,17 +15,8 @@ function asClause(text: string): string {
   return sentence.charAt(0).toLowerCase() + sentence.slice(1);
 }
 
-/** "2026-07-21" -> "21 July", read straight off the record's own dates. */
-function formatDayMonth(iso: string): string {
-  const [year, month, day] = iso.split('-').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
-    date
-  );
-}
-
 export function Hero() {
-  const { t } = useAppTranslations();
+  const { t, currentLocale } = useAppTranslations();
   // The record is a dated specimen: every duration on this plate is
   // computed relative to AS_OF, not the visitor's clock, so "23 days away"
   // stays "23 days away" regardless of when the page is built or viewed.
@@ -87,7 +78,7 @@ export function Hero() {
             {
               n: 2,
               label: t('landing.hero.calloutLastSession', {
-                date: formatDayMonth(lastSession.at),
+                date: formatDayMonth(lastSession.at, currentLocale),
                 summary: asClause(lastSession.text),
               }),
               x: 22,
