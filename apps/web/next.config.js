@@ -1,4 +1,5 @@
 const path = require('node:path');
+const { resolveAppUrl } = require('./lib/app-url');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -27,7 +28,10 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development',
     NEXT_PUBLIC_WEB_URL: process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000',
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001',
+    // Throws on a production build when unset or malformed, rather than
+    // substituting a localhost default that only works on the machine that
+    // built it. See ./lib/app-url.js for why this is the enforcement point.
+    NEXT_PUBLIC_APP_URL: resolveAppUrl(),
   },
   async headers() {
     return [
