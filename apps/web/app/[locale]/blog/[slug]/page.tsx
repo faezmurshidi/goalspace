@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
 import { useAppTranslations } from '@goalspace/i18n';
 
-import { Colophon } from '@/components/manual/colophon';
-import { SiteHeader } from '@/components/site-header';
 import { Plate } from '@/components/manual/plate';
 import { formatFullDate } from '@/lib/duration';
 import { getPostBySlug, getRelatedPosts } from '../mock-data';
@@ -43,8 +41,7 @@ function ArticlePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-paper">
-      <SiteHeader />
+    <div className="bg-paper">
       <main>
         <Plate
           number={t('blog.postPlate')}
@@ -91,7 +88,6 @@ function ArticlePageContent() {
           ) : null}
         </Plate>
       </main>
-      <Colophon />
     </div>
   );
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { useAppTranslations } from '@goalspace/i18n';
 import { MainNav } from '@/components/main-nav';

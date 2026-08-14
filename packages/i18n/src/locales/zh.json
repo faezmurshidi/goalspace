@@ -8,6 +8,7 @@
     "blog": "博客",
     "pricing": "查看价格",
     "login": "登录",
+    "primaryLabel": "主导航",
     "switchLanguage": "切换语言",
     "dashboard": "仪表板",
     "goals": "目标",
@@ -27,6 +28,11 @@
     "email": "电子邮箱",
     "password": "密码",
     "confirmPassword": "确认密码"
+  },
+  "footer": {
+    "revision": "版本 {{version}} / 印制于 {{date}}",
+    "navLabel": "页脚链接",
+    "appLink": "打开应用"
   },
   "hero": {
     "title": "AI驱动的目标实现平台",

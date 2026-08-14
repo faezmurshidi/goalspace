@@ -8,6 +8,7 @@
     "blog": "Blog",
     "pricing": "Lihat Harga",
     "login": "Log Masuk",
+    "primaryLabel": "Navigasi utama",
     "switchLanguage": "Tukar bahasa",
     "dashboard": "Papan Pemuka",
     "goals": "Matlamat",
@@ -28,6 +29,11 @@
     "email": "E-mel",
     "password": "Kata Laluan",
     "confirmPassword": "Sahkan Kata Laluan"
+  },
+  "footer": {
+    "revision": "Rev. {{version}} / dicetak {{date}}",
+    "navLabel": "Pautan kaki",
+    "appLink": "Buka aplikasi"
   },
   "hero": {
     "title": "Platform Pencapaian Matlamat Berkuasa AI",
