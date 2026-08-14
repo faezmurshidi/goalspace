@@ -1,7 +1,8 @@
 {
   "common": {
     "appName": "Goalspace",
-    "description": "AI-Powered Goal Achievement Platform"
+    "description": "AI-Powered Goal Achievement Platform",
+    "plateLabel": "Plate {{number}}"
   },
   "navigation": {
     "blog": "Blog",

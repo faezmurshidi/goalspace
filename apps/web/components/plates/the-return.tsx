@@ -7,7 +7,7 @@ import { DrawOnView } from '@/components/manual/draw-on-view';
 import { ResumeView } from '@/components/manual/figures/resume-view';
 import { StatusChip } from '@/components/manual/status-chip';
 import { record, AS_OF } from '@/content/record';
-import { daysBetween, formatElapsed, formatDayMonth } from '@/lib/duration';
+import { daysBetween, formatElapsed, formatDayMonth, localeJoin } from '@/lib/duration';
 
 /** Lowercases the first character so a title reads as a clause mid sentence. */
 function asClause(text: string): string {
@@ -26,6 +26,7 @@ export function TheReturn() {
   return (
     <Plate
       number={t('landing.return.plate')}
+      label={t('common.plateLabel', { number: t('landing.return.plate') })}
       title={t('landing.return.title')}
       meta={t('landing.hero.meta', { date: AS_OF })}
     >
@@ -70,7 +71,7 @@ export function TheReturn() {
           <h3 className="label mb-4 text-oxide">{t('landing.return.openLabel')}</h3>
           <ul className="border-t border-rule">
             {record.blockers.map((blocker) => {
-              const elapsed = formatElapsed(daysBetween(blocker.since, AS_OF));
+              const elapsed = formatElapsed(daysBetween(blocker.since, AS_OF), currentLocale);
               return (
                 <li key={blocker.title} className="flex flex-col gap-2 border-b border-rule py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -78,7 +79,7 @@ export function TheReturn() {
                     <StatusChip
                       status="blocked"
                       label={t('landing.return.blockedLabel', {
-                        duration: `${elapsed.value} ${elapsed.unit}`,
+                        duration: localeJoin([elapsed.value, elapsed.unit], currentLocale),
                       })}
                     />
                   </div>

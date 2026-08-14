@@ -10,16 +10,40 @@ export function daysBetween(from: string, to: string): number {
   return diff > 0 ? Math.round(diff) : 0;
 }
 
-export function formatElapsed(days: number): { value: string; unit: string } {
+/**
+ * Joins word-like fragments (a number and a unit, a unit and "ago") the
+ * way each locale actually spaces text: Chinese doesn't space between
+ * characters ("23天前", not "23 天 前"), while English and Malay do.
+ */
+export function localeJoin(parts: string[], locale: string): string {
+  return parts.join(locale === 'zh' ? '' : ' ');
+}
+
+/**
+ * Elapsed-time unit words, by locale. Malay and Chinese do not inflect
+ * these for number, so both slots hold the same word; the singular/plural
+ * lookup below still runs so English keeps its distinction. Only the
+ * app's three supported locales are listed; anything else falls back to
+ * English rather than producing an untranslated unit.
+ */
+const ELAPSED_UNIT_WORDS: Record<string, { day: [string, string]; month: [string, string]; year: [string, string] }> = {
+  en: { day: ['day', 'days'], month: ['month', 'months'], year: ['year', 'years'] },
+  ms: { day: ['hari', 'hari'], month: ['bulan', 'bulan'], year: ['tahun', 'tahun'] },
+  zh: { day: ['天', '天'], month: ['个月', '个月'], year: ['年', '年'] },
+};
+
+export function formatElapsed(days: number, locale: string = 'en'): { value: string; unit: string } {
+  const words = ELAPSED_UNIT_WORDS[locale] ?? ELAPSED_UNIT_WORDS.en;
+
   if (days >= 730) {
     const years = Math.floor(days / 365);
-    return { value: String(years), unit: years === 1 ? 'year' : 'years' };
+    return { value: String(years), unit: years === 1 ? words.year[0] : words.year[1] };
   }
   if (days >= 60) {
     const months = Math.floor(days / 30);
-    return { value: String(months), unit: months === 1 ? 'month' : 'months' };
+    return { value: String(months), unit: months === 1 ? words.month[0] : words.month[1] };
   }
-  return { value: String(days), unit: days === 1 ? 'day' : 'days' };
+  return { value: String(days), unit: days === 1 ? words.day[0] : words.day[1] };
 }
 
 /**

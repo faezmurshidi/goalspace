@@ -25,6 +25,7 @@ export function NotThis() {
   return (
     <Plate
       number={t('landing.notThis.plate')}
+      label={t('common.plateLabel', { number: t('landing.notThis.plate') })}
       title={t('landing.notThis.title')}
       meta={t('landing.hero.meta', { date: AS_OF })}
     >

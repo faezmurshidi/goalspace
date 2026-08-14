@@ -3,6 +3,15 @@ import { cn } from '@goalspace/ui';
 
 interface PlateProps {
   number: string;
+  /**
+   * The already-localized "Plate {{number}}" string. Callers hold the
+   * `t` function (Plate itself takes no i18n dependency so it stays a
+   * plain, router-free component that's simple to unit test), so they
+   * pass `t('common.plateLabel', { number })` through. Falls back to the
+   * bare English form so existing callers and tests that don't pass it
+   * keep working unchanged.
+   */
+  label?: string;
   title?: string;
   meta?: string;
   drenched?: boolean;
@@ -10,13 +19,22 @@ interface PlateProps {
   children: ReactNode;
 }
 
-export function Plate({ number, title, meta, drenched = false, className, children }: PlateProps) {
+export function Plate({
+  number,
+  label,
+  title,
+  meta,
+  drenched = false,
+  className,
+  children,
+}: PlateProps) {
   const headingId = title ? `plate-${number}-heading` : undefined;
+  const resolvedLabel = label ?? `Plate ${number}`;
 
   return (
     <section
       aria-labelledby={headingId}
-      aria-label={title ? undefined : `Plate ${number}`}
+      aria-label={title ? undefined : resolvedLabel}
       className={cn(
         'relative px-6 py-10 md:px-16 md:py-16',
         drenched ? 'bg-oxide-deep text-paper' : 'border border-rule bg-paper text-ink',
@@ -24,7 +42,7 @@ export function Plate({ number, title, meta, drenched = false, className, childr
       )}
     >
       <span className={cn('label mb-6 block', drenched ? 'text-paper/75' : 'text-oxide')}>
-        Plate {number}
+        {resolvedLabel}
       </span>
 
       {title ? (

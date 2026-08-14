@@ -16,6 +16,7 @@ export function TheAgent() {
     <div id="plate-04">
       <Plate
         number={t('landing.agent.plate')}
+        label={t('common.plateLabel', { number: t('landing.agent.plate') })}
         title={t('landing.agent.title')}
         meta={t('landing.hero.meta', { date: AS_OF })}
         className="bg-paper-shade"

@@ -23,7 +23,12 @@ function BlogPageContent() {
     <div className="min-h-screen bg-paper">
       <SiteHeader />
       <main>
-        <Plate number={t('blog.plate')} title={t('blog.title')} meta={t('blog.meta', { date: AS_OF })}>
+        <Plate
+          number={t('blog.plate')}
+          label={t('common.plateLabel', { number: t('blog.plate') })}
+          title={t('blog.title')}
+          meta={t('blog.meta', { date: AS_OF })}
+        >
           <p className="max-w-[68ch] text-body">{t('blog.subtitle')}</p>
 
           <ul className="mt-12 border-t border-rule">

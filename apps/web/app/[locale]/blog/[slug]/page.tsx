@@ -48,6 +48,7 @@ function ArticlePageContent() {
       <main>
         <Plate
           number={t('blog.postPlate')}
+          label={t('common.plateLabel', { number: t('blog.postPlate') })}
           title={post.title}
           meta={t('blog.postMeta', {
             date: formatFullDate(post.publishedAt, currentLocale),

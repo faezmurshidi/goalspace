@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysBetween, formatElapsed, formatDayMonth, formatFullDate } from '@/lib/duration';
+import { daysBetween, formatElapsed, formatDayMonth, formatFullDate, localeJoin } from '@/lib/duration';
 
 describe('daysBetween', () => {
   it('counts whole days between two dates', () => {
@@ -43,6 +43,21 @@ describe('formatElapsed', () => {
   it('handles zero without a unit mismatch', () => {
     expect(formatElapsed(0)).toEqual({ value: '0', unit: 'days' });
   });
+
+  it('reports the Malay unit word, unchanged by plural count', () => {
+    expect(formatElapsed(23, 'ms')).toEqual({ value: '23', unit: 'hari' });
+    expect(formatElapsed(1, 'ms')).toEqual({ value: '1', unit: 'hari' });
+    expect(formatElapsed(90, 'ms')).toEqual({ value: '3', unit: 'bulan' });
+  });
+
+  it('reports the Chinese unit word, unchanged by plural count', () => {
+    expect(formatElapsed(23, 'zh')).toEqual({ value: '23', unit: '天' });
+    expect(formatElapsed(800, 'zh')).toEqual({ value: '2', unit: '年' });
+  });
+
+  it('falls back to English for an unrecognised locale', () => {
+    expect(formatElapsed(23, 'fr')).toEqual({ value: '23', unit: 'days' });
+  });
 });
 
 describe('formatDayMonth', () => {
@@ -56,6 +71,17 @@ describe('formatDayMonth', () => {
 
   it('is unaffected by timezone, reading the date in UTC', () => {
     expect(formatDayMonth('2026-01-01')).toBe('1 January');
+  });
+});
+
+describe('localeJoin', () => {
+  it('spaces fragments for English and Malay', () => {
+    expect(localeJoin(['23', 'days'], 'en')).toBe('23 days');
+    expect(localeJoin(['23', 'hari'], 'ms')).toBe('23 hari');
+  });
+
+  it('does not space fragments for Chinese', () => {
+    expect(localeJoin(['23', '天'], 'zh')).toBe('23天');
   });
 });
 

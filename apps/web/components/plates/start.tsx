@@ -12,6 +12,7 @@ export function Start() {
   return (
     <Plate
       number={t('landing.start.plate')}
+      label={t('common.plateLabel', { number: t('landing.start.plate') })}
       title={t('landing.start.title')}
       meta={t('landing.hero.meta', { date: AS_OF })}
       drenched

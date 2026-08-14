@@ -22,6 +22,7 @@ export function Accrual() {
   return (
     <Plate
       number={t('landing.accrual.plate')}
+      label={t('common.plateLabel', { number: t('landing.accrual.plate') })}
       title={t('landing.accrual.title')}
       meta={t('landing.hero.meta', { date: AS_OF })}
       className="bg-paper-shade"
