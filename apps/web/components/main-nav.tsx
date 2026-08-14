@@ -1,51 +1,53 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-  cn,
-} from '@goalspace/ui';
+import { usePathname } from 'next/navigation';
+import { cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
+
+/**
+ * Every destination in this nav shares one class: label typography, ink
+ * text, and a 1px rule that runs down the left on desktop and across the
+ * top on mobile (DESIGN.md #5, Navigation). The rule sits on every item,
+ * including the first, so it also separates the whole nav from the
+ * wordmark beside or above it, with no extra spacing rule needed.
+ */
+const navItemClass =
+  'label flex items-center border-t border-rule px-0 py-3 text-ink md:h-16 md:border-t-0 md:border-l md:border-rule md:px-6 md:py-0';
 
 export function MainNav({
   className,
   ...props
 }: Omit<React.HTMLAttributes<HTMLElement>, 'defaultValue' | 'dir'>) {
   const { t, currentLocale } = useAppTranslations();
+  const pathname = usePathname();
+  const blogHref = `/${currentLocale}/blog`;
+  const isBlogActive = pathname?.startsWith(blogHref) ?? false;
 
   return (
-    <>
-      <NavigationMenu className={cn('hidden md:flex', className)} {...props}>
-        <NavigationMenuList>
-          <NavigationMenuItem>
-            <Link href={`/${currentLocale}/blog`} legacyBehavior passHref>
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                {t('navigation.blog')}
-              </NavigationMenuLink>
-            </Link>
-          </NavigationMenuItem>
-        </NavigationMenuList>
-      </NavigationMenu>
-      <div className="flex items-center gap-4">
-        <a
-          href={`${APP_URL}/login`}
-          className="rounded border border-gray-300 px-4 py-2 text-sm font-medium"
-        >
-          {t('auth.signIn')}
-        </a>
-        <a
-          href={`${APP_URL}/auth`}
-          className="rounded border border-gray-300 px-4 py-2 text-sm font-medium"
-        >
-          {t('auth.signUp')}
-        </a>
-      </div>
-    </>
+    <nav
+      aria-label={t('navigation.primaryLabel')}
+      className={cn('flex flex-col md:flex-row', className)}
+      {...props}
+    >
+      <Link
+        href={blogHref}
+        aria-current={isBlogActive ? 'page' : undefined}
+        className={cn(
+          navItemClass,
+          isBlogActive && 'underline decoration-oxide decoration-2 underline-offset-[6px]'
+        )}
+      >
+        {t('navigation.blog')}
+      </Link>
+      <a href={`${APP_URL}/login`} className={navItemClass}>
+        {t('auth.signIn')}
+      </a>
+      <a href={`${APP_URL}/auth`} className={navItemClass}>
+        {t('auth.signUp')}
+      </a>
+    </nav>
   );
 }

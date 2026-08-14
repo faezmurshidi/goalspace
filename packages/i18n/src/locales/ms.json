@@ -1,12 +1,15 @@
 {
   "common": {
     "appName": "Goalspace",
-    "description": "Platform Pencapaian Matlamat Berkuasa AI"
+    "description": "Platform Pencapaian Matlamat Berkuasa AI",
+    "plateLabel": "Plat {{number}}",
+    "calloutSr": "Anotasi {{n}}."
   },
   "navigation": {
     "blog": "Blog",
     "pricing": "Lihat Harga",
     "login": "Log Masuk",
+    "primaryLabel": "Navigasi utama",
     "switchLanguage": "Tukar bahasa",
     "dashboard": "Papan Pemuka",
     "goals": "Matlamat",
@@ -27,6 +30,11 @@
     "email": "E-mel",
     "password": "Kata Laluan",
     "confirmPassword": "Sahkan Kata Laluan"
+  },
+  "footer": {
+    "revision": "Rev. {{version}} / dicetak {{date}}",
+    "navLabel": "Pautan kaki",
+    "appLink": "Buka aplikasi"
   },
   "hero": {
     "title": "Platform Pencapaian Matlamat Berkuasa AI",
@@ -197,7 +205,16 @@
     "goalBreakdown": "Mari pecahkan matlamat anda menjadi ruang pembelajaran yang boleh diambil tindakan."
   },
   "blog": {
+    "plate": "06",
+    "postPlate": "07",
     "title": "Artikel Terkini",
+    "meta": "Log / dikemas kini {{date}}",
+    "subtitle": "Nota tentang rekod, kembali semula, dan kos projek yang berlarutan.",
+    "postMeta": "{{date}} / {{minutes}} minit bacaan",
+    "readMore": "Baca",
+    "backToBlog": "Kembali ke semua artikel",
+    "byLine": "{{name}}, {{role}}",
+    "relatedLabel": "Berkaitan",
     "gettingStarted": {
       "intro": "Ketahui cara menetapkan matlamat pertama anda dan memanfaatkan sepenuhnya bimbingan AI Goalspace."
     }
@@ -207,5 +224,79 @@
     "dataCollectionMessage": "Kami mengumpul maklumat tidak sensitif seperti jenis peranti dan pilihan bahasa untuk meningkatkan pengalaman anda. Tiada data peribadi dikumpul atau dikongsi.",
     "accept": "Terima",
     "decline": "Tolak"
+  },
+  "notFound": {
+    "label": "404",
+    "title": "Tiada apa di alamat ini",
+    "description": "Halaman yang anda cari tidak wujud. Ia mungkin telah dipindahkan, atau tidak pernah wujud di sini.",
+    "cta": "Kembali ke plat 00"
+  },
+  "landing": {
+    "hero": {
+      "plate": "00",
+      "title": "Kembali itu bahagian yang sukar",
+      "lede": "Anda tahu cara membina benda itu. Yang hilang ialah benangnya: apa yang anda putuskan, apa yang anda tunggu, dan sebab anda menggugurkan pendekatan yang kelihatan betul pada bulan kedua.",
+      "away": "lalu",
+      "cta": "Mulakan rekod",
+      "ctaSecondary": "Apa yang wujud sekarang",
+      "caption": "Raj. 00. Sebuah projek, seperti rupanya selepas tiga minggu tidak disentuh.",
+      "meta": "Spesimen / setakat {{date}}",
+      "calloutBlocked": "Disekat {{duration}}: {{subject}}",
+      "calloutLastSession": "Sesi terakhir {{date}}: {{summary}}",
+      "calloutReversed": "Diterbalikkan: {{summary}}"
+    },
+    "return": {
+      "plate": "01",
+      "title": "Skrin yang menjawab di mana anda berhenti",
+      "lede": "Buka projek selepas sebulan tidak disentuh. Sebelum anda pergi ke mana-mana, ia memberitahu apa yang masih terbuka, apa yang anda lakukan terakhir, dan apa yang anda telah putuskan.",
+      "caption": "Raj. 01. Skrin sambung semula, beranotasi.",
+      "calloutLastTouch": "Terakhir disentuh {{date}}",
+      "calloutOpen": "{{n}} terbuka",
+      "calloutDecided": "Keputusan terkini: {{summary}}",
+      "openLabel": "Terbuka",
+      "blockedLabel": "Disekat {{duration}}",
+      "waitingLabel": "Menunggu",
+      "decidedLabel": "Diputuskan"
+    },
+    "accrual": {
+      "plate": "02",
+      "title": "Rekod itu menulis dirinya sendiri",
+      "lede": "Tiada siapa menyimpan jurnal projek selama dua tahun. Jadi log ini bukan kerja tambahan: menutup satu kerja bertanya apa yang menutupnya, dan jawapan itulah rekodnya.",
+      "steps": {
+        "one": "Selesaikan sesuatu.",
+        "two": "Nyatakan apa yang menyelesaikannya, dalam satu baris.",
+        "three": "Baris itu dilekatkan pada kerja itu secara kekal, dan itulah yang anda baca apabila anda kembali."
+      },
+      "entryLabel": "Baris yang menutupnya",
+      "closing": "Dua tahun begini menjadi dokumen yang tiada siapa pernah duduk untuk menulisnya.",
+      "caption": "Raj. 02. Menutup satu item kerja merakam entri yang menutupnya."
+    },
+    "notThis": {
+      "plate": "03",
+      "title": "Apa yang ini bukan",
+      "items": {
+        "tasks": "Bukan pengurus tugasan. Item terbuka penting, tetapi senarai item bukan rekod.",
+        "wiki": "Bukan wiki. Dokumen disimpan di sini, tetapi log itulah sebab anda sebenarnya kembali.",
+        "streaks": "Tiada jujukan hari, tiada lencana, tiada sambutan kerana memulakan. Tiada apa di sini memberi ganjaran kerana anda muncul.",
+        "reminders": "Tiada peringatan. Ia menunggu. Apabila anda kembali, ia memberitahu apa yang berubah semasa anda tiada.",
+        "habits": "Bukan untuk tabiat atau kecergasan. Itu memerlukan penjejakan pematuhan, produk yang berbeza."
+      }
+    },
+    "agent": {
+      "plate": "04",
+      "title": "Bahagian yang membacakannya semula kepada anda",
+      "nowLabel": "Sedang dihantar hari ini",
+      "now": "Projek, log, item kerja bersarang dengan status sebenar termasuk disekat dan tarikh bangun, dokumen, dan skrin sambung semula. Peribadi untuk anda sahaja.",
+      "nextLabel": "Seterusnya",
+      "next": "Ejen yang berpijak pada repositori anda sendiri: mengingat dan mensintesis keputusan dan jalan buntu anda, bukan nasihat generik. Ia belum dibina lagi.",
+      "why": "Itulah sebab untuk mula sekarang. Ejen itu hanya berbaloi jika ada rekod untuknya dibaca, dan rekod itu mengambil masa berbulan-bulan untuk terkumpul. Bermula hari ini yang menjadikannya berguna kelak."
+    },
+    "start": {
+      "plate": "05",
+      "title": "Mulakan rekod",
+      "lede": "Satu projek, peribadi, percuma semasa ia masih awal. Jika anda di tengah-tengah sesuatu yang panjang, saat yang berguna untuk bermula ialah setahun lalu. Kedua terbaik ialah hari ini.",
+      "cta": "Cipta projek anda",
+      "honesty": "Akses awal. Apa yang wujud hari ini diterangkan tepat dalam plat 04."
+    }
   }
 }
