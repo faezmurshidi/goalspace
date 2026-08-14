@@ -264,7 +264,9 @@ enforced.
 - **Shadow Strategy:** None. See Elevation.
 - **Border:** 1px Rule on all four sides. Never a thick coloured edge on one
   side.
-- **Internal Padding:** 32px, rising to 64px on plates that carry a figure.
+- **Internal Padding:** 24px horizontal / 40px vertical on mobile, rising to
+  64px on all sides at the md breakpoint (768px). Applied uniformly to every
+  plate, not only those carrying a figure.
 - **Required marks:** a plate number set in label typography in the top left of
   the margin, and sheet metadata (revision, date) in the bottom right. A plate
   without its number is just a box.

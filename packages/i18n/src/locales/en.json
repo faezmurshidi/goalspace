@@ -1,12 +1,15 @@
 {
   "common": {
     "appName": "Goalspace",
-    "description": "AI-Powered Goal Achievement Platform"
+    "description": "AI-Powered Goal Achievement Platform",
+    "plateLabel": "Plate {{number}}",
+    "calloutSr": "Callout {{n}}."
   },
   "navigation": {
     "blog": "Blog",
     "pricing": "View Pricing",
     "login": "Log In",
+    "primaryLabel": "Main navigation",
     "switchLanguage": "Switch language",
     "dashboard": "Dashboard",
     "goals": "Goals",
@@ -27,6 +30,11 @@
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password"
+  },
+  "footer": {
+    "revision": "Rev. {{version}} / printed {{date}}",
+    "navLabel": "Footer links",
+    "appLink": "Open the app"
   },
   "hero": {
     "title": "AI-Powered Goal Achievement Platform",
@@ -197,7 +205,16 @@
     "goalBreakdown": "Let's break down your goal into actionable learning spaces."
   },
   "blog": {
+    "plate": "06",
+    "postPlate": "07",
     "title": "Latest Articles",
+    "meta": "Log / updated {{date}}",
+    "subtitle": "Notes on the record, the return, and the cost of a project that runs long.",
+    "postMeta": "{{date}} / {{minutes}} min read",
+    "readMore": "Read",
+    "backToBlog": "Back to all articles",
+    "byLine": "{{name}}, {{role}}",
+    "relatedLabel": "Related",
     "gettingStarted": {
       "intro": "Learn how to set up your first goal and get the most out of Goalspace's AI-powered mentorship."
     }
@@ -207,5 +224,79 @@
     "dataCollectionMessage": "We collect non-sensitive information like device type and language preference to improve your experience. No personal data is collected or shared.",
     "accept": "Accept",
     "decline": "Decline"
+  },
+  "notFound": {
+    "label": "404",
+    "title": "Nothing at this address",
+    "description": "The page you're looking for doesn't exist. It may have moved, or it was never here.",
+    "cta": "Back to plate 00"
+  },
+  "landing": {
+    "hero": {
+      "plate": "00",
+      "title": "Coming back is the hard part",
+      "lede": "You know how to build the thing. What you lose is the thread: what you decided, what you were waiting on, and why you dropped the approach that looked right in month two.",
+      "away": "away",
+      "cta": "Start the record",
+      "ctaSecondary": "What exists today",
+      "caption": "Fig. 00. A project, as it looks after three weeks away.",
+      "meta": "Specimen / as of {{date}}",
+      "calloutBlocked": "Blocked {{duration}}: {{subject}}",
+      "calloutLastSession": "Last session {{date}}: {{summary}}",
+      "calloutReversed": "Reversed: {{summary}}"
+    },
+    "return": {
+      "plate": "01",
+      "title": "The screen that answers where you were",
+      "lede": "Open a project after a month away. Before you navigate anywhere, it tells you what is open, what you last did, and what you already decided.",
+      "caption": "Fig. 01. The resume view, annotated.",
+      "calloutLastTouch": "Last touched {{date}}",
+      "calloutOpen": "{{n}} open",
+      "calloutDecided": "Latest decision: {{summary}}",
+      "openLabel": "Open",
+      "blockedLabel": "Blocked {{duration}}",
+      "waitingLabel": "Waiting on",
+      "decidedLabel": "Decided"
+    },
+    "accrual": {
+      "plate": "02",
+      "title": "The record writes itself",
+      "lede": "Nobody keeps a project journal for two years. So the log is not a second job: closing a piece of work asks what closed it, and that answer is the record.",
+      "steps": {
+        "one": "Finish something.",
+        "two": "Say what finished it, in one line.",
+        "three": "That line is attached to the work permanently, and it is what you read when you come back."
+      },
+      "entryLabel": "The line that closed it",
+      "closing": "Two years of this is a document nobody sat down to write.",
+      "caption": "Fig. 02. Closing a work item captures the entry that closed it."
+    },
+    "notThis": {
+      "plate": "03",
+      "title": "What this is not",
+      "items": {
+        "tasks": "Not a task manager. Open items matter, but a list of them is not a record.",
+        "wiki": "Not a wiki. Documents live here, but the log is what you actually come back for.",
+        "streaks": "No streaks, no badges, no celebration of starting. Nothing here rewards you for showing up.",
+        "reminders": "No reminders. It waits. When you come back, it tells you what changed while you were gone.",
+        "habits": "Not for habits or fitness. Those want adherence tracking, which is a different product."
+      }
+    },
+    "agent": {
+      "plate": "04",
+      "title": "The part that reads it back to you",
+      "nowLabel": "Shipping today",
+      "now": "Projects, the log, nested work items with real states including blocked and a wake date, documents, and the resume view. Private to you.",
+      "nextLabel": "Next",
+      "next": "An agent grounded in your own repository: recall and synthesis over your decisions and dead ends, not generic advice. It is not built yet.",
+      "why": "Which is the reason to start now. The agent is only worth having if there is a record for it to read, and that record takes months to accumulate. Starting today is what makes it useful later."
+    },
+    "start": {
+      "plate": "05",
+      "title": "Start the record",
+      "lede": "One project, private, free while it is early. If you are in the middle of something long, the useful moment to begin was a year ago. Second best is today.",
+      "cta": "Create your project",
+      "honesty": "Early access. What exists today is described in plate 04, exactly."
+    }
   }
-} 
+}

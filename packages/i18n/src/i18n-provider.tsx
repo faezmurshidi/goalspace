@@ -1,9 +1,10 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { I18nextProvider } from 'react-i18next';
-import i18n from './i18n';
+import type { i18n as I18nInstance } from 'i18next';
 import { useParams } from 'next/navigation';
+import i18n from './i18n';
 
 interface I18nProviderProps {
   children: ReactNode;
@@ -11,43 +12,35 @@ interface I18nProviderProps {
 }
 
 /**
- * Provider component for i18next
- * This should be placed high in the component tree to make i18n available throughout the app
+ * Provider component for i18next.
+ *
+ * Renders synchronously on every pass (no `isReady` gate, no `useEffect`
+ * before first paint): the previous version returned `null` until an
+ * effect fired, which means server-rendered HTML never contained any
+ * translated content at all. Every page in both apps is wrapped in this
+ * provider, so that made the entire server response blank.
+ *
+ * The `i18n` singleton imported above is module-level state, shared by
+ * every in-flight request on the server. It is never mutated here
+ * (`i18n.changeLanguage`) during render, because doing so would race
+ * concurrent requests for different locales against each other. Instead,
+ * when the resolved locale differs from the singleton's current language,
+ * `i18n.cloneInstance` produces a lightweight instance scoped to this
+ * render tree. The clone shares the already-loaded resource bundles (see
+ * `./i18n`, which imports all three locale JSON files directly rather than
+ * fetching them), so `initAsync: false` keeps this synchronous — no
+ * network/backend round trip, safe to call during render.
  */
 export default function I18nProvider({ children, locale: localeProp }: I18nProviderProps) {
   const params = useParams();
-  const [isReady, setIsReady] = useState(false);
+  const locale = localeProp ?? (params?.locale as string | undefined);
 
-  // Get locale from the explicit prop if provided, otherwise from route params
-  useEffect(() => {
-    // Extract locale from the explicit prop or URL params
-    const locale = localeProp ?? (params?.locale as string | undefined);
-
-    if (locale && i18n.language !== locale) {
-      console.log(`[I18nProvider] Setting language to: ${locale}`);
-
-      // Change language if needed
-      i18n.changeLanguage(locale).then(() => {
-        // Mark initialization as complete
-        setIsReady(true);
-      }).catch(err => {
-        console.error('[I18nProvider] Failed to change language:', err);
-        setIsReady(true); // Still mark as ready to avoid blocking the UI
-      });
-    } else {
-      // If no locale change needed, mark as ready immediately
-      setIsReady(true);
+  const instance = useMemo<I18nInstance>(() => {
+    if (!locale || i18n.language === locale) {
+      return i18n;
     }
-  }, [params, localeProp]);
+    return i18n.cloneInstance({ lng: locale, initAsync: false });
+  }, [locale]);
 
-  if (!isReady) {
-    // Return a minimal loading state or null
-    return null;
-  }
-
-  return (
-    <I18nextProvider i18n={i18n}>
-      {children}
-    </I18nextProvider>
-  );
-} 
+  return <I18nextProvider i18n={instance}>{children}</I18nextProvider>;
+}

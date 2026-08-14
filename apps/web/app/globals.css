@@ -4,283 +4,130 @@
 
 @layer base {
   :root {
-    /* Base */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-    
-    /* Surface colors */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --color-paper: oklch(0.96 0.008 85);
+    --color-paper-shade: oklch(0.93 0.010 85);
+    /*
+     * A dedicated soft-paper token, not a `text-paper/75` opacity modifier:
+     * Tailwind v3 can only inject an alpha channel into a color that's
+     * itself written as `rgb(... / <alpha-value>)` (or similar), and
+     * `--color-paper` above is a plain `oklch()` function referenced via
+     * `var()`, which it can't parse through. `text-paper/75` compiles to
+     * no CSS rule at all, so text carrying that class silently falls back
+     * to the inherited (near-black) `--color-ink`, invisible on a drenched
+     * Oxide Deep ground. This token bakes the alpha in directly instead.
+     */
+    --color-paper-soft: oklch(0.96 0.008 85 / 75%);
+    --color-ink: oklch(0.22 0.012 60);
+    --color-ink-soft: oklch(0.45 0.010 60);
+    --color-rule: oklch(0.78 0.010 70);
+    --color-oxide: oklch(0.55 0.15 35);
+    --color-oxide-deep: oklch(0.44 0.14 33);
+    --color-waiting: oklch(0.55 0.09 240);
 
-    /* Brand colors */
-    --primary: 255 60% 56%;  /* Vibrant purple-blue */
-    --primary-foreground: 210 40% 98%;
-    --primary-muted: 255 60% 92%; /* Lighter version for subtle UI */
-    
-    /* UI colors */
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --secondary-hover: 220 14% 93%;
-    
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8% 46%;
-    
-    --accent: 255 40% 96%;
-    --accent-foreground: 255 60% 25%;
-    --accent-hover: 255 40% 92%;
-    
-    /* Feedback colors */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --destructive-muted: 0 84% 95%;
-    
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
-    --success-muted: 142 76% 95%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
-    --warning-muted: 38 92% 95%;
-    
-    --info: 200 98% 50%;
-    --info-foreground: 210 40% 98%;
-    --info-muted: 200 98% 95%;
-    
-    /* Border & Lines */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 255 60% 56%;
-    --ring-muted: 255 60% 85%;
-    
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(255 60% 56%), hsl(235 70% 60%));
-    --gradient-background: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 100%));
-    
-    /* Shadows */
-    --shadow-sm: 0px 1px 2px rgba(16, 24, 40, 0.05);
-    --shadow-md: 0px 2px 4px -2px rgba(16, 24, 40, 0.06), 0px 4px 8px -2px rgba(16, 24, 40, 0.1);
-    --shadow-lg: 0px 4px 6px -2px rgba(16, 24, 40, 0.03), 0px 12px 16px -4px rgba(16, 24, 40, 0.08);
-    
-    /* Layout */
-    --radius: 0.5rem;
-    
-    /* Sidebar */
-    --sidebar: 210 40% 98%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-accent: 255 30% 94%;
-    --sidebar-accent-foreground: 255 60% 40%;
-    --sidebar-primary: 255 60% 56%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-muted: 220 14% 92%;
-    --sidebar-muted-foreground: 220 8% 46%;
-    --sidebar-border: 220 13% 91%;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
-  
-  .dark {
-    /* Base */
-    --background: 222 45% 7%;
-    --foreground: 210 40% 98%;
-    
-    /* Surface colors */
-    --card: 222 47% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
-    
-    /* Brand colors */
-    --primary: 255 65% 65%;  /* Brighter in dark mode for visibility */
-    --primary-foreground: 222 47% 11%;
-    --primary-muted: 255 30% 25%;
-    
-    /* UI colors */
-    --secondary: 223 15% 15%;
-    --secondary-foreground: 210 40% 98%;
-    --secondary-hover: 223 15% 18%;
-    
-    --muted: 223 15% 15%;
-    --muted-foreground: 220 10% 70%;
-    
-    --accent: 255 30% 20%;
-    --accent-foreground: 255 65% 80%;
-    --accent-hover: 255 30% 23%;
-    
-    /* Feedback colors */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --destructive-muted: 0 70% 25%;
-    
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
-    --success-muted: 142 70% 20%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
-    --warning-muted: 38 70% 25%;
-    
-    --info: 200 98% 50%;
-    --info-foreground: 210 40% 98%;
-    --info-muted: 200 70% 25%;
-    
-    /* Border & Lines */
-    --border: 223 15% 18%;
-    --input: 223 15% 18%;
-    --ring: 255 65% 65%;
-    --ring-muted: 255 30% 40%;
-    
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(255 65% 65%), hsl(235 80% 70%));
-    --gradient-background: linear-gradient(180deg, hsl(222 45% 7%), hsl(222 47% 5%));
-    
-    /* Shadows - more subtle in dark mode */
-    --shadow-sm: 0px 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0px 2px 4px -2px rgba(0, 0, 0, 0.4), 0px 4px 8px -2px rgba(0, 0, 0, 0.6);
-    --shadow-lg: 0px 4px 6px -2px rgba(0, 0, 0, 0.3), 0px 12px 16px -4px rgba(0, 0, 0, 0.6);
-    
-    /* Sidebar */
-    --sidebar: 222 47% 10%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-accent: 255 30% 17%;
-    --sidebar-accent-foreground: 255 65% 80%;
-    --sidebar-primary: 255 65% 65%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-muted: 223 15% 15%;
-    --sidebar-muted-foreground: 220 10% 70%;
-    --sidebar-border: 223 15% 18%;
+
+  html {
+    background-color: var(--color-paper);
   }
-}
 
-/* Enhanced smooth transition between light/dark modes */
-:root {
-  transition: all 0.25s ease-out;
-}
-
-/* Glass effect for cards and panels */
-.glass-effect {
-  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50;
-}
-
-/* Gradient text */
-.gradient-text {
-  @apply text-transparent bg-clip-text;
-  background-image: var(--gradient-primary);
-}
-
-/* Subtle hover effects */
-.hover-lift {
-  @apply transition-all duration-300;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Focus states with custom ring */
-.custom-focus {
-  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary;
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-archivo), 'Helvetica Neue', sans-serif;
   }
-  
-  /* Enhanced link styles */
-  a:not(.unstyled) {
-    @apply text-primary hover:text-primary/80 transition-colors;
-  }
-  
-  /* Button color enhancements */
-  .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95;
-  }
-  
-  .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary-hover active:bg-secondary;
-  }
-  
-  .btn-accent {
-    @apply bg-accent text-accent-foreground hover:bg-accent-hover active:bg-accent;
+
+  *:focus-visible {
+    outline: 2px solid var(--color-oxide);
+    outline-offset: 2px;
   }
 }
 
-/* Markdown Styles */
-.prose {
-  @apply text-gray-900 dark:text-gray-100;
+@layer utilities {
+  .wdth-expanded {
+    font-variation-settings: 'wdth' 125;
+  }
+  .wdth-wide {
+    font-variation-settings: 'wdth' 112;
+  }
+  .label {
+    font-family: var(--font-azeret), ui-monospace, monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 }
 
-.prose h1, .prose h2, .prose h3 {
-  @apply font-bold tracking-tight;
+/**
+ * DrawOnView: strokes draw in on scroll entry, gated entirely by the
+ * `data-draw-pending` attribute the component sets in JS. When reduced
+ * motion is requested the attribute is never applied (see
+ * components/manual/draw-on-view.tsx), so nothing below ever matches and
+ * every figure renders in its final, fully-drawn state with no transition.
+ *
+ * Colour, opacity and stroke geometry only, per DESIGN.md: never layout
+ * properties, so figures never reflow while they draw.
+ */
+.draw-on-view svg * {
+  transition: stroke-dashoffset var(--draw-duration, 600ms) var(--ease-out-expo);
 }
 
-.prose h1 {
-  @apply text-4xl mt-8 mb-4;
+.draw-on-view[data-draw-pending] svg * {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
 }
 
-.prose h2 {
-  @apply text-2xl mt-6 mb-3;
+/* Per-element stagger, capped at 8 steps so a densely-drawn figure's total
+   draw time stays bounded no matter how many strokes it has. Anything past
+   the 8th sibling reuses the 8th step's delay (the `nth-child(n+9)` rule). */
+.draw-on-view svg *:nth-child(1) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 0);
+}
+.draw-on-view svg *:nth-child(2) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 1);
+}
+.draw-on-view svg *:nth-child(3) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 2);
+}
+.draw-on-view svg *:nth-child(4) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 3);
+}
+.draw-on-view svg *:nth-child(5) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 4);
+}
+.draw-on-view svg *:nth-child(6) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 5);
+}
+.draw-on-view svg *:nth-child(7) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 6);
+}
+.draw-on-view svg *:nth-child(n + 8) {
+  transition-delay: calc(var(--draw-stagger, 60ms) * 7);
 }
 
-.prose h3 {
-  @apply text-xl mt-4 mb-2;
+/**
+ * Opt-in only: the hero passes `sequence-callouts` as DrawOnView's
+ * className so its three callout numbers fade in after the figure's own
+ * stroke drawing finishes, staggered 90ms apart. Every other figure's
+ * callouts render immediately with no fade, since only the hero's
+ * orchestration budget (draw + callout stagger under 900ms) is a
+ * requirement.
+ */
+.sequence-callouts[data-draw-pending] .callout-num {
+  opacity: 0;
 }
-
-.prose p {
-  @apply mb-4 leading-7;
+.sequence-callouts .callout-num {
+  opacity: 1;
+  transition: opacity 150ms var(--ease-out-expo);
+  transition-delay: var(--draw-complete, 600ms);
 }
-
-.prose ul {
-  @apply list-disc pl-6 mb-4 space-y-2;
+.sequence-callouts li:nth-child(2) .callout-num {
+  transition-delay: calc(var(--draw-complete, 600ms) + 90ms);
 }
-
-.prose ol {
-  @apply list-decimal pl-6 mb-4 space-y-2;
+.sequence-callouts li:nth-child(3) .callout-num {
+  transition-delay: calc(var(--draw-complete, 600ms) + 180ms);
 }
-
-.prose li {
-  @apply mb-1;
-}
-
-.prose blockquote {
-  @apply border-l-4 border-primary/20 pl-4 italic my-4;
-}
-
-.prose code {
-  @apply bg-secondary dark:bg-secondary rounded px-1 py-0.5 text-sm font-mono;
-}
-
-.prose pre {
-  @apply bg-secondary dark:bg-secondary rounded-lg p-4 mb-4 overflow-x-auto;
-}
-
-.prose pre code {
-  @apply bg-transparent p-0 text-sm;
-}
-
-.prose a {
-  @apply text-primary hover:text-primary/80 underline;
-}
-
-.prose img {
-  @apply rounded-lg my-4;
-}
-
-.prose hr {
-  @apply my-8 border-t border-gray-200 dark:border-gray-700;
-}
-
-.prose table {
-  @apply w-full my-6 border-collapse;
-}
-
-.prose th {
-  @apply bg-secondary dark:bg-secondary border border-border px-4 py-2 text-left;
-}
-
-.prose td {
-  @apply border border-border px-4 py-2;
+.sequence-callouts li:nth-child(4) .callout-num {
+  transition-delay: calc(var(--draw-complete, 600ms) + 270ms);
 }

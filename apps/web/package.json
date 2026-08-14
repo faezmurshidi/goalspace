@@ -10,8 +10,8 @@
     "test": "vitest run tests/unit"
   },
   "dependencies": {
-    "@goalspace/ui": "workspace:*",
     "@goalspace/i18n": "workspace:*",
+    "@goalspace/ui": "workspace:*",
     "@opentelemetry/api": "^1.9.0",
     "@radix-ui/react-icons": "^1.3.2",
     "@types/node": "^20.6.2",
@@ -34,13 +34,10 @@
     "class-variance-authority": "^0.7.1",
     "cookies-next": "^5.1.0",
     "date-fns": "^3.6.0",
-    "embla-carousel-react": "^8.3.0",
     "encoding": "^0.1.13",
-    "framer-motion": "^11.18.2",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.477.0",
     "marked": "^15.0.6",
-    "mermaid": "^11.4.1",
     "next": "^16.2.12",
     "next-themes": "^0.3.0",
     "postcss": "8.4.30",
@@ -50,7 +47,6 @@
     "react-markdown": "^9.0.3",
     "react-resizable-panels": "^2.1.3",
     "react-syntax-highlighter": "^15.6.1",
-    "recharts": "^2.15.1",
     "rehype-highlight": "^7.0.1",
     "rehype-raw": "^7.0.0",
     "rehype-sanitize": "^6.0.0",
@@ -65,15 +61,19 @@
     "@goalspace/config": "workspace:*",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.0",
     "@tailwindcss/typography": "^0.5.20",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
     "@types/tailwindcss": "^3.1.0",
+    "@vitejs/plugin-react": "^6.0.5",
+    "@vitest/coverage-v8": "^4.1.10",
     "cursor-tools": "latest",
+    "jsdom": "^30.0.1",
     "postcss-nesting": "^13.0.1",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "tailwindcss": "3.4.19",
-    "vitest": "^4.1.10",
-    "@vitest/coverage-v8": "^4.1.10"
+    "vitest": "^4.1.10"
   }
 }

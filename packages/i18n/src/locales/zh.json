@@ -1,12 +1,15 @@
 {
   "common": {
     "appName": "Goalspace",
-    "description": "AI驱动的目标实现平台"
+    "description": "AI驱动的目标实现平台",
+    "plateLabel": "图版 {{number}}",
+    "calloutSr": "标注 {{n}}。"
   },
   "navigation": {
     "blog": "博客",
     "pricing": "查看价格",
     "login": "登录",
+    "primaryLabel": "主导航",
     "switchLanguage": "切换语言",
     "dashboard": "仪表板",
     "goals": "目标",
@@ -26,6 +29,11 @@
     "email": "电子邮箱",
     "password": "密码",
     "confirmPassword": "确认密码"
+  },
+  "footer": {
+    "revision": "版本 {{version}} / 印制于 {{date}}",
+    "navLabel": "页脚链接",
+    "appLink": "打开应用"
   },
   "hero": {
     "title": "AI驱动的目标实现平台",
@@ -196,7 +204,16 @@
     "goalBreakdown": "让我们将您的目标分解成可行的学习空间。"
   },
   "blog": {
+    "plate": "06",
+    "postPlate": "07",
     "title": "最新文章",
+    "meta": "日志 / 更新于 {{date}}",
+    "subtitle": "关于记录、续接画面，以及项目久拖不决所付出代价的笔记。",
+    "postMeta": "{{date}} / {{minutes}} 分钟阅读",
+    "readMore": "阅读",
+    "backToBlog": "返回所有文章",
+    "byLine": "{{name}}，{{role}}",
+    "relatedLabel": "相关",
     "gettingStarted": {
       "intro": "了解如何设置您的第一个目标，充分利用Goalspace的AI指导。"
     }
@@ -206,5 +223,79 @@
     "dataCollectionMessage": "我们收集设备类型和语言偏好等非敏感信息，以改善您的体验。不会收集或共享个人数据。",
     "accept": "接受",
     "decline": "拒绝"
+  },
+  "notFound": {
+    "label": "404",
+    "title": "此地址没有内容",
+    "description": "你要找的页面不存在。它可能已被移动，或者从未存在过。",
+    "cta": "返回第00块"
+  },
+  "landing": {
+    "hero": {
+      "plate": "00",
+      "title": "回来才是最难的部分",
+      "lede": "你知道怎么把东西做出来。你丢失的是线索：你做过什么决定，你在等什么，以及你为什么在第二个月放弃了当时看起来正确的做法。",
+      "away": "前",
+      "cta": "开始记录",
+      "ctaSecondary": "今天已有什么",
+      "caption": "图 00。一个项目，在被搁置三周后的样子。",
+      "meta": "样本 / 截至 {{date}}",
+      "calloutBlocked": "阻塞 {{duration}}：{{subject}}",
+      "calloutLastSession": "上次记录 {{date}}：{{summary}}",
+      "calloutReversed": "推翻：{{summary}}"
+    },
+    "return": {
+      "plate": "01",
+      "title": "告诉你上次进度的画面",
+      "lede": "一个月没碰的项目，打开后，在你去任何地方之前，它会告诉你还有什么未完成、你上次做了什么、以及你已经做过的决定。",
+      "caption": "图 01。带注解的续接画面。",
+      "calloutLastTouch": "上次操作于 {{date}}",
+      "calloutOpen": "{{n}} 项未完成",
+      "calloutDecided": "最新决定：{{summary}}",
+      "openLabel": "未完成",
+      "blockedLabel": "阻塞 {{duration}}",
+      "waitingLabel": "等待",
+      "decidedLabel": "已决定"
+    },
+    "accrual": {
+      "plate": "02",
+      "title": "记录会自己积累",
+      "lede": "没有人会为一个项目写两年的日志。所以这份记录不是额外的工作：完成一项工作时，你只需说明是什么让它完成的，那句话就是记录本身。",
+      "steps": {
+        "one": "完成一件事。",
+        "two": "用一句话说明是什么让它完成的。",
+        "three": "这句话永久附在这项工作上，也是你回来时会读到的内容。"
+      },
+      "entryLabel": "让它完成的那句话",
+      "closing": "两年下来，这是一份没有人特地坐下来写的文档。",
+      "caption": "图 02。完成一项工作时，记录下让它完成的那条记录。"
+    },
+    "notThis": {
+      "plate": "03",
+      "title": "这不是什么",
+      "items": {
+        "tasks": "不是任务管理工具。未完成事项很重要，但列出它们不等于记录。",
+        "wiki": "不是维基。文档确实存放在这里，但真正让你回来的是这份记录。",
+        "streaks": "没有连续打卡，没有徽章，也不庆祝你开始做某事。这里不会因为你出现而奖励你。",
+        "reminders": "没有提醒。它只是等着。等你回来时，它会告诉你离开期间发生了什么变化。",
+        "habits": "不适用于习惯养成或健身。那些需要的是坚持追踪，是另一种产品。"
+      }
+    },
+    "agent": {
+      "plate": "04",
+      "title": "把这一切读给你听的那部分",
+      "nowLabel": "今天已上线",
+      "now": "项目、记录、带有真实状态（包括阻塞和唤醒日期）的嵌套工作项、文档，以及续接画面。仅对你私有。",
+      "nextLabel": "接下来",
+      "next": "一个基于你自己仓库的智能体：回顾并综合你的决定和走过的死路，而不是泛泛的建议。它还没有做出来。",
+      "why": "这正是现在就开始的理由。这个智能体只有在有记录可读时才值得拥有，而这份记录需要几个月才能积累起来。今天开始，才能让它以后真正有用。"
+    },
+    "start": {
+      "plate": "05",
+      "title": "开始记录",
+      "lede": "一个项目，私有，早期阶段免费使用。如果你正在做一件耗时很长的事，最有用的开始时机是一年前。第二好的时机是今天。",
+      "cta": "创建你的项目",
+      "honesty": "早期访问。今天已有什么，第04块中写得清清楚楚。"
+    }
   }
 }
