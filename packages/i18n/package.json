@@ -10,7 +10,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./locales": "./src/locales.ts",
-    "./cookie-locale": "./src/cookie-locale.ts"
+    "./cookie-locale": "./src/cookie-locale.ts",
+    "./server": "./src/server.ts"
   },
   "dependencies": {
     "i18next": "^24.2.3",

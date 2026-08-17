@@ -297,5 +297,169 @@
       "cta": "创建你的项目",
       "honesty": "早期访问。今天已有什么，第04块中写得清清楚楚。"
     }
+  },
+  "app": {
+    "common": {
+      "signOut": "退出登录",
+      "loading": "加载中",
+      "retry": "重试",
+      "cancel": "取消",
+      "save": "保存",
+      "theme": "主题",
+      "language": "语言"
+    },
+    "auth": {
+      "tagline": "一个长期项目的记录",
+      "signIn": "登录",
+      "createAccount": "创建账户",
+      "email": "邮箱",
+      "password": "密码",
+      "passwordHintNew": "至少 8 个字符",
+      "submitSignIn": "登录",
+      "submitSignUp": "创建账户",
+      "submittingSignIn": "正在登录",
+      "submittingSignUp": "正在创建账户",
+      "dividerOr": "或",
+      "continueWithGoogle": "使用 Google 继续",
+      "continueWithApple": "使用 Apple 继续",
+      "errorInvalidEmail": "请输入有效的邮箱地址。",
+      "errorPasswordShort": "密码至少需要 8 个字符。",
+      "errorBadCredentials": "该邮箱与密码不匹配任何账户。",
+      "errorAccountExists": "该邮箱已有账户，请直接登录。",
+      "errorGeneric": "出了点问题，请重试。",
+      "errorProvider": "{{provider}} 登录不可用，请使用邮箱和密码。",
+      "checkEmailTitle": "确认你的邮箱",
+      "checkEmailBody": "我们已向 {{email}} 发送确认链接。打开它即可完成账户创建。"
+    },
+    "nav": {
+      "resume": "继续",
+      "work": "工作",
+      "log": "日志",
+      "switchProject": "切换项目",
+      "account": "账户",
+      "theme": "主题",
+      "themeLight": "浅色",
+      "themeDark": "深色",
+      "themeSystem": "跟随系统",
+      "language": "语言",
+      "skipToContent": "跳到主要内容",
+      "sections": "项目分区"
+    },
+    "project": {
+      "kindBuild": "制作",
+      "kindLearn": "学习",
+      "kindResearch": "研究",
+      "statusActive": "进行中",
+      "statusPaused": "已暂停",
+      "statusDone": "已完成",
+      "statusAbandoned": "已放弃",
+      "sheetSlug": "编号",
+      "sheetUpdated": "修订于",
+      "sheetKind": "类型",
+      "sheetStatus": "状态"
+    },
+    "status": {
+      "open": "待办",
+      "doing": "进行中",
+      "blocked": "受阻",
+      "done": "已完成",
+      "dropped": "已放弃"
+    },
+    "kind": {
+      "task": "任务",
+      "question": "问题"
+    },
+    "entryKind": {
+      "note": "笔记",
+      "decision": "决定",
+      "source": "资料",
+      "session": "工作记录"
+    },
+    "resume": {
+      "awayBefore": "你离开了",
+      "awayAfter": "天。",
+      "lastSession": "上次处理于 {{when}}",
+      "firstRunTitle": "还没有任何记录",
+      "firstRunBody": "写下你做了什么、决定了什么，或卡在哪里。有记录，回来才不费力。",
+      "waitingTitle": "等待外部",
+      "waitingCaption": "日期已过的受阻事项。",
+      "overdueDays": "已过期 {{count}} 天",
+      "overdueToday": "今天到期",
+      "overdueOne": "已过期 1 天",
+      "blockedSince": "自 {{when}} 起受阻",
+      "openTitle": "还有什么没做完",
+      "openEmpty": "没有未完成的事项。",
+      "leftOffTitle": "你上次停在哪里",
+      "leftOffEmpty": "还没有记录。",
+      "decidedTitle": "你做过的决定",
+      "decidedEmpty": "没有记录的决定。",
+      "progressOf": "已完成 {{done}} / {{total}}",
+      "anomalyTitle": "部分工作项无法归位",
+      "anomalyBody": "{{count}} 个工作项指向缺失或循环的父项，已列在顶层。"
+    },
+    "work": {
+      "title": "工作",
+      "empty": "还没有工作项。",
+      "emptyBody": "把项目拆成可以完成的事情。",
+      "addItem": "添加事项",
+      "addChild": "添加子项",
+      "setStatus": "设置状态",
+      "closeWithEntry": "是什么让它完成的？",
+      "closeSkip": "不写说明直接关闭",
+      "closeSubmit": "关闭事项",
+      "questionsFirst": "问题",
+      "tasks": "任务"
+    },
+    "log": {
+      "title": "日志",
+      "empty": "还没有记录。",
+      "filterAll": "全部",
+      "filterLabel": "按类型筛选",
+      "loadMore": "加载更多",
+      "occurredAt": "发生于"
+    },
+    "capture": {
+      "placeholder": "发生了什么？",
+      "kindLabel": "类型",
+      "submit": "记录",
+      "submitting": "正在记录",
+      "hint": "{{keys}} 记录",
+      "attachTo": "关于",
+      "attachNone": "本项目",
+      "retry": "重试",
+      "failed": "没有保存成功，你的文字还在。"
+    },
+    "create": {
+      "title": "开始记录",
+      "body": "先从一个项目开始，之后可以再添加。",
+      "titleLabel": "你在做什么或学什么？",
+      "titlePlaceholder": "带锯木厂",
+      "briefLabel": "简介",
+      "briefPlaceholder": "它是做什么用的？完成是什么样子？",
+      "kindLabel": "类型",
+      "submit": "创建项目",
+      "submitting": "正在创建"
+    },
+    "errors": {
+      "validation": "请检查标记的字段。",
+      "generic": "出了点问题，请重试。",
+      "captureFailed": "没有保存成功，你的文字还在。",
+      "projectMissing": "该项目已不存在。",
+      "moveRejected": "该移动会把事项放进它自己的子树里。"
+    },
+    "error": {
+      "title": "加载失败",
+      "body": "获取该项目时出了问题。你记录的内容没有丢失。",
+      "retry": "重试"
+    },
+    "notFound": {
+      "title": "找不到该项目",
+      "body": "该项目不存在，或者不属于你。没有任何内容被删除。",
+      "back": "返回你的工作"
+    },
+    "offline": {
+      "title": "无法连接服务器",
+      "body": "你的文字还在。恢复网络后请重试。"
+    }
   }
 }
