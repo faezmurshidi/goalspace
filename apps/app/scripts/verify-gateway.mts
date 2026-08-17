@@ -12,10 +12,11 @@
  *   1. AI_GATEWAY_API_KEY   — .env.local
  *   2. VERCEL_OIDC_TOKEN    — written by `vercel env pull`, ~24h lifetime
  */
+import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
 import { streamText, gateway } from 'ai';
 
-config({ path: new URL('../.env.local', import.meta.url).pathname });
+config({ path: fileURLToPath(new URL('../.env.local', import.meta.url)) });
 
 const MODEL = process.env.GATEWAY_MODEL ?? 'openai/gpt-5.6-sol';
 
@@ -72,12 +73,22 @@ async function main(): Promise<void> {
     const result = streamText({
       model: MODEL,
       prompt: 'In one sentence, what is a project log good for?',
+      // A probe should fail fast and say why. The default 2 retries turn a
+      // free-tier 429 into three rounds of exponential backoff and then a
+      // RetryError that buries the original message.
+      maxRetries: 0,
+      timeout: { totalMs: 30_000 },
     });
 
     for await (const chunk of result.textStream) process.stdout.write(chunk);
 
+    // Providers may omit either count; `undefined` in the output would read
+    // as a bug in the probe rather than a gap in the response.
     const usage = await result.usage;
-    console.log(`\n\n✓ Gateway reachable. Tokens in/out: ${usage.inputTokens}/${usage.outputTokens}`);
+    const tokens = (n: number | undefined) => n ?? 'unknown';
+    console.log(
+      `\n\n✓ Gateway reachable. Tokens in/out: ${tokens(usage.inputTokens)}/${tokens(usage.outputTokens)}`
+    );
   } catch (error) {
     await explain(error);
   }

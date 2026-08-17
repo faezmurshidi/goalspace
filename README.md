@@ -16,7 +16,7 @@ there are no streaks, badges, or progress celebration, by design.
 
 pnpm workspaces, driven by Turborepo.
 
-```
+```text
 apps/app        the workspace application — the product   (:3001)
 apps/web        marketing site and blog                   (:3000)
 packages/ui     shared design-system components

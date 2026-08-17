@@ -120,8 +120,13 @@ cookie. Layouts must survive strings ~40% longer than English.
 
 ## The AI layer
 
-**There is none yet.** No AI dependencies, no model calls, no agent tables, no
-pgvector. Do not add one incidentally.
+**There is none yet.** No product code calls a model: no agent tables, no
+pgvector, no retrieval, no proposals. Do not add one incidentally.
+
+The `ai` package *is* a dependency of `apps/app`, but its only importer is
+`scripts/verify-gateway.mts`, a standalone connectivity check that is not part
+of any bundle. Treat a second importer as the start of phase 2, not as a
+detail.
 
 It is designed in
 [docs/superpowers/specs/2026-07-30-goalspace-grounded-copartner-design.md](docs/superpowers/specs/2026-07-30-goalspace-grounded-copartner-design.md)

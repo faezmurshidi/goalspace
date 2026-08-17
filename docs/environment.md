@@ -29,7 +29,7 @@ cp apps/app/.env.example apps/app/.env.local
 
 ### Supabase
 
-```
+```text
 NEXT_PUBLIC_SUPABASE_URL=       # public; embedded in the client bundle
 NEXT_PUBLIC_SUPABASE_ANON_KEY=  # public; carries no authority of its own
 ```
@@ -39,7 +39,7 @@ table has owner-scoped policies and why the isolation tests exist.
 
 ### RLS tests only
 
-```
+```text
 API_URL=            # Supabase project URL
 ANON_KEY=           # anon key
 SERVICE_ROLE_KEY=   # service role key — a real secret, .env.local only
@@ -54,7 +54,7 @@ tracked file.
 
 ### Cross-application links
 
-```
+```text
 NEXT_PUBLIC_ENV=development     # development | preview | production
 NEXT_PUBLIC_WEB_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3001
@@ -64,20 +64,24 @@ Defaulted in `apps/app/next.config.js` if unset.
 
 ### Analytics
 
-```
+```text
 NEXT_PUBLIC_ENABLE_ANALYTICS=false
 NEXT_PUBLIC_POSTHOG_KEY=
 NEXT_PUBLIC_POSTHOG_HOST=
-POSTHOG_SERVER_KEY=             # server-side; currently commented out in code
 ```
 
-Read by `apps/app/app/_lib/analytics.ts`, `apps/web/app/_lib/analytics.ts`, and
-`apps/app/utils/server-analytics.ts`. See [usage-tracking.md](usage-tracking.md).
+Read by `apps/app/app/_lib/analytics.ts` and `apps/web/app/_lib/analytics.ts`.
+See [usage-tracking.md](usage-tracking.md).
+
+`POSTHOG_SERVER_KEY` is documented in usage-tracking.md but is **not** read:
+the only reference, in `apps/app/utils/server-analytics.ts`, is commented out.
+Setting it has no effect until that code is enabled.
 
 ### AI Gateway
 
-```
+```text
 AI_GATEWAY_API_KEY=   # a real secret — .env.local only
+GATEWAY_MODEL=        # optional; overrides the model used by the check below
 ```
 
 All model access goes through the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway)
@@ -89,7 +93,19 @@ model classes, but both resolve through the same gateway credential.
 
 Alternatively, `vercel env pull .env.local` provisions a short-lived
 `VERCEL_OIDC_TOKEN` (~24h) and no static key is needed. When both are present
-`AI_GATEWAY_API_KEY` wins — the gateway checks it first.
+`AI_GATEWAY_API_KEY` wins — the gateway checks it first. Note that
+`vercel env pull` **overwrites** the target file, so back up `.env.local`
+first or pull elsewhere and merge.
+
+To check the credential and the gateway are working:
+
+```bash
+pnpm --filter @goalspace/app verify:gateway
+```
+
+`GATEWAY_MODEL` overrides the model that check uses; it defaults to
+`openai/gpt-5.6-sol` and is read only by `scripts/verify-gateway.mts`, never by
+application code.
 
 ## Variables set but never read
 
