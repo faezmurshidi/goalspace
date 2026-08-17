@@ -137,17 +137,22 @@ CREATE POLICY "Users can update own settings" ON user_settings
 
 ### Protected Routes
 ```typescript
-// middleware.ts
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createServerClient(...);
-  const { data: { session } } = await supabase.auth.getSession();
+// apps/app/middleware.ts — deny-by-default: everything is protected
+// except an explicit public allowlist.
+const PUBLIC_PATHS = ['/login', '/auth/callback', '/auth'];
 
-  if (!session && req.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/auth', req.url));
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const { supabase, supabaseResponse } = createClient(request);
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user && !isPublic(pathname)) {
+    const redirectUrl = new URL('/login', request.url);
+    redirectUrl.searchParams.set('returnUrl', pathname);
+    return NextResponse.redirect(redirectUrl);
   }
 
-  return res;
+  return supabaseResponse;
 }
 ```
 
