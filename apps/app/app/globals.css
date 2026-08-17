@@ -2,285 +2,226 @@
 @tailwind components;
 @tailwind utilities;
 
+/**
+ * Goalspace workspace tokens: the Workshop Manual system in its product
+ * register. See DESIGN.md for the system, PRODUCT.md for why it looks like
+ * this rather than like the category.
+ *
+ * WHY THE VALUES ARE BARE OKLCH CHANNELS
+ *
+ * Every colour below is stored as three unwrapped numbers ("L C H"), not as a
+ * finished `oklch(...)`. Tailwind v3 can only inject an alpha channel into a
+ * colour it can parse structurally, so a token holding a complete `oklch()`
+ * function silently compiles `bg-primary/90` to no rule at all. That matters
+ * here because the shared @goalspace/ui components are shadcn-derived and lean
+ * on exactly those modifiers (`hover:bg-primary/90`, `bg-secondary/80`,
+ * `bg-muted/50`), and a dropped hover rule fails invisibly: the button just
+ * stops responding, with nothing in the console.
+ *
+ * Storing channels lets tailwind.config.ts expose each colour as
+ * `oklch(var(--token) / <alpha-value>)`, so modifiers work throughout.
+ * apps/web wraps its tokens instead and works around the same limitation with
+ * a dedicated --color-paper-soft; it has no shadcn surface to satisfy.
+ */
+
 @layer base {
   :root {
-    /* Base */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-    
-    /* Surface colors */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    /* ── Manual palette ───────────────────────────────────────────────────
+       Warm paper, graphite ink, and the primer colour of unfinished steel.
+       No pure neutral anywhere: every grey is tinted toward the primer hue. */
+    --paper: 0.96 0.008 85;
+    --paper-shade: 0.93 0.01 85;
+    --ink: 0.22 0.012 60;
+    --ink-soft: 0.45 0.01 60;
+    --rule: 0.78 0.01 70;
+    /*
+     * DESIGN.md sets every rule at one weight and one colour, and against
+     * paper that lands at 1.78:1. For a table rule or a divider that is fine:
+     * WCAG 1.4.11 exempts purely decorative boundaries.
+     *
+     * It is not fine for the edge of a text input or a button, where the
+     * border is the only thing identifying the control, and 1.4.11 requires
+     * 3:1. Rather than darken every rule in the system (which would coarsen
+     * the drawing and break step with apps/web), control boundaries get their
+     * own token. Measured in-browser: 3.24:1 on paper, 3.13:1 on the dark
+     * ground, both clear.
+     */
+    --rule-strong: 0.62 0.012 70;
+    --oxide: 0.55 0.15 35;
+    --oxide-deep: 0.44 0.14 33;
+    /*
+     * DESIGN.md gives Waiting Blue as oklch(0.55 0.09 240). Measured in the
+     * browser, that lands at 4.25:1 on paper, and this colour's whole job is
+     * to carry `blocked` on 12px annotation type, which AA holds to 4.5:1.
+     *
+     * Darkened to 0.50 and nudged in chroma to hold the same hue identity:
+     * 5.29:1, a real margin rather than a pass by rounding. The dark-ground
+     * value below already measures 7.1:1 and is left alone.
+     */
+    --waiting: 0.5 0.11 245;
 
-    /* Brand colors */
-    --primary: 255 60% 56%;  /* Vibrant purple-blue */
-    --primary-foreground: 210 40% 98%;
-    --primary-muted: 255 60% 92%; /* Lighter version for subtle UI */
-    
-    /* UI colors */
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --secondary-hover: 220 14% 93%;
-    
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8% 46%;
-    
-    --accent: 255 40% 96%;
-    --accent-foreground: 255 60% 25%;
-    --accent-hover: 255 40% 92%;
-    
-    /* Feedback colors */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --destructive-muted: 0 84% 95%;
-    
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
-    --success-muted: 142 76% 95%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
-    --warning-muted: 38 92% 95%;
-    
-    --info: 200 98% 50%;
-    --info-foreground: 210 40% 98%;
-    --info-muted: 200 98% 95%;
-    
-    /* Border & Lines */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 255 60% 56%;
-    --ring-muted: 255 60% 85%;
-    
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(255 60% 56%), hsl(235 70% 60%));
-    --gradient-background: linear-gradient(180deg, hsl(210 40% 98%), hsl(210 40% 100%));
-    
-    /* Shadows */
-    --shadow-sm: 0px 1px 2px rgba(16, 24, 40, 0.05);
-    --shadow-md: 0px 2px 4px -2px rgba(16, 24, 40, 0.06), 0px 4px 8px -2px rgba(16, 24, 40, 0.1);
-    --shadow-lg: 0px 4px 6px -2px rgba(16, 24, 40, 0.03), 0px 12px 16px -4px rgba(16, 24, 40, 0.08);
-    
-    /* Layout */
-    --radius: 0.5rem;
-    
-    /* Sidebar */
-    --sidebar: 210 40% 98%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-accent: 255 30% 94%;
-    --sidebar-accent-foreground: 255 60% 40%;
-    --sidebar-primary: 255 60% 56%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-muted: 220 14% 92%;
-    --sidebar-muted-foreground: 220 8% 46%;
-    --sidebar-border: 220 13% 91%;
+    /* ── Semantic aliases ─────────────────────────────────────────────────
+       These are the names @goalspace/ui consumes. Mapping them here is what
+       makes every shared component (Button, Input, Dialog, Toast, Select)
+       inherit the manual system without the package being touched. */
+    --background: var(--paper);
+    --foreground: var(--ink);
+
+    /* Cards are not a concept in this system (DESIGN.md uses plates, which
+       are a border and a ground, never a raised surface). The tokens still
+       have to resolve because shared components reference them, so they
+       resolve to plain paper and the separation comes from the border. */
+    --card: var(--paper);
+    --card-foreground: var(--ink);
+    --popover: var(--paper);
+    --popover-foreground: var(--ink);
+
+    --primary: var(--oxide-deep);
+    --primary-foreground: var(--paper);
+    --secondary: var(--paper-shade);
+    --secondary-foreground: var(--ink);
+    --muted: var(--paper-shade);
+    --muted-foreground: var(--ink-soft);
+    --accent: var(--paper-shade);
+    --accent-foreground: var(--ink);
+
+    /* The Two Signals Rule forbids a third state colour, so destructive is
+       oxide rather than a new red. Nothing is lost: DESIGN.md already
+       specifies that errors are carried by a message in label type, never by
+       colour alone, so `destructive` never has to be distinguishable from
+       `primary` on hue alone. */
+    --destructive: var(--oxide);
+    --destructive-foreground: var(--paper);
+
+    --border: var(--rule);
+    /* Deliberately the stronger token: `--input` is what shared form controls
+       draw their edge with, so pointing it here makes every one of them meet
+       1.4.11 without each call site having to remember. */
+    --input: var(--rule-strong);
+    --ring: var(--oxide);
+
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
-  
+
+  /* ── Drafting room ──────────────────────────────────────────────────────
+     The same manual under a bench lamp after midnight, not a different
+     product. Every rule from the light ground survives: hairline borders at
+     one weight, zero shadows, square corners, oxide marking what is live.
+
+     Lightness is inverted; hue and the no-pure-neutral rule are not. The
+     ground is warm graphite rather than black, and the type is warm off-white
+     rather than white, so the surface still reads as a printed object.
+     Chroma on the two signal colours rises slightly because saturation reads
+     weaker against a dark ground. */
   .dark {
-    /* Base */
-    --background: 222 45% 7%;
-    --foreground: 210 40% 98%;
-    
-    /* Surface colors */
-    --card: 222 47% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 10%;
-    --popover-foreground: 210 40% 98%;
-    
-    /* Brand colors */
-    --primary: 255 65% 65%;  /* Brighter in dark mode for visibility */
-    --primary-foreground: 222 47% 11%;
-    --primary-muted: 255 30% 25%;
-    
-    /* UI colors */
-    --secondary: 223 15% 15%;
-    --secondary-foreground: 210 40% 98%;
-    --secondary-hover: 223 15% 18%;
-    
-    --muted: 223 15% 15%;
-    --muted-foreground: 220 10% 70%;
-    
-    --accent: 255 30% 20%;
-    --accent-foreground: 255 65% 80%;
-    --accent-hover: 255 30% 23%;
-    
-    /* Feedback colors */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --destructive-muted: 0 70% 25%;
-    
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
-    --success-muted: 142 70% 20%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
-    --warning-muted: 38 70% 25%;
-    
-    --info: 200 98% 50%;
-    --info-foreground: 210 40% 98%;
-    --info-muted: 200 70% 25%;
-    
-    /* Border & Lines */
-    --border: 223 15% 18%;
-    --input: 223 15% 18%;
-    --ring: 255 65% 65%;
-    --ring-muted: 255 30% 40%;
-    
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(255 65% 65%), hsl(235 80% 70%));
-    --gradient-background: linear-gradient(180deg, hsl(222 45% 7%), hsl(222 47% 5%));
-    
-    /* Shadows - more subtle in dark mode */
-    --shadow-sm: 0px 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0px 2px 4px -2px rgba(0, 0, 0, 0.4), 0px 4px 8px -2px rgba(0, 0, 0, 0.6);
-    --shadow-lg: 0px 4px 6px -2px rgba(0, 0, 0, 0.3), 0px 12px 16px -4px rgba(0, 0, 0, 0.6);
-    
-    /* Sidebar */
-    --sidebar: 222 47% 10%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-accent: 255 30% 17%;
-    --sidebar-accent-foreground: 255 65% 80%;
-    --sidebar-primary: 255 65% 65%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-muted: 223 15% 15%;
-    --sidebar-muted-foreground: 220 10% 70%;
-    --sidebar-border: 223 15% 18%;
+    --paper: 0.18 0.008 60;
+    --paper-shade: 0.23 0.009 62;
+    --ink: 0.93 0.006 85;
+    --ink-soft: 0.68 0.008 72;
+    --rule: 0.34 0.009 65;
+    --rule-strong: 0.5 0.012 65;
+    --oxide: 0.66 0.155 38;
+    --oxide-deep: 0.5 0.145 34;
+    --waiting: 0.72 0.1 245;
+
+    /* The aliases above are declared with var(), so they re-resolve against
+       these values automatically. Only the two that need a different
+       *relationship* in dark are restated: on a dark ground the primary fill
+       is a lit plate, so its label stays the lightest thing in the system
+       rather than flipping to the ground colour. */
+    --primary: var(--oxide-deep);
+    --primary-foreground: var(--ink);
+    --destructive-foreground: var(--ink);
   }
-}
 
-/* Enhanced smooth transition between light/dark modes */
-:root {
-  transition: all 0.25s ease-out;
-}
-
-/* Glass effect for cards and panels */
-.glass-effect {
-  @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50;
-}
-
-/* Gradient text */
-.gradient-text {
-  @apply text-transparent bg-clip-text;
-  background-image: var(--gradient-primary);
-}
-
-/* Subtle hover effects */
-.hover-lift {
-  @apply transition-all duration-300;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Focus states with custom ring */
-.custom-focus {
-  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary;
-}
-
-@layer base {
   * {
     @apply border-border;
   }
+
+  html {
+    background-color: oklch(var(--paper));
+    /*
+     * The workspace is pinned top and bottom: a sticky header and an
+     * always-mounted capture bar. Without this, tabbing to a control near
+     * either edge scrolls it flush against the viewport and straight under
+     * one of them, so the focus ring is invisible and a keyboard user cannot
+     * tell where they are. The values clear each bar with room to spare.
+     */
+    scroll-padding-top: 4.5rem;
+    scroll-padding-bottom: 13rem;
+  }
+
   body {
     @apply bg-background text-foreground;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    /* Grotesks in this family look mushy without it at UI sizes. */
+    -webkit-font-smoothing: antialiased;
   }
-  
-  /* Enhanced link styles */
-  a:not(.unstyled) {
-    @apply text-primary hover:text-primary/80 transition-colors;
+
+  /* The single sanctioned exception to the no-shadow rule, per DESIGN.md's
+     Elevation section: an outline, not a glow, and never a box-shadow. */
+  *:focus-visible {
+    outline: 2px solid oklch(var(--oxide));
+    outline-offset: 2px;
   }
-  
-  /* Button color enhancements */
-  .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/95;
-  }
-  
-  .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-secondary-hover active:bg-secondary;
-  }
-  
-  .btn-accent {
-    @apply bg-accent text-accent-foreground hover:bg-accent-hover active:bg-accent;
+
+  /* Tabular figures everywhere a number is compared against another number:
+     dates in a log, durations in a list, progress ratios in a tree. Without
+     this, proportional digits make a column of dates ragged. */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Markdown Styles */
-.prose {
-  @apply text-gray-900 dark:text-gray-100;
+@layer utilities {
+  /* Width axis. The Width Axis Rule: weight and width move together and in
+     one direction, so these belong only on display and headline type. */
+  .wdth-expanded {
+    font-variation-settings: 'wdth' 125;
+  }
+  .wdth-wide {
+    font-variation-settings: 'wdth' 112;
+  }
+
+  /* Annotation. Permitted only where a printed manual would set annotation:
+     numbers, dates, references, dimensions, short status labels. Never body
+     copy, never headlines. */
+  .label {
+    font-family: var(--font-azeret), ui-monospace, monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Running prose inside an entry or a document, held to the 65-75ch measure
+     PRODUCT.md requires. UI chrome is denser and does not use this. */
+  .prose-measure {
+    max-width: 68ch;
+    font-size: 1rem;
+    line-height: 1.65;
+  }
 }
 
-.prose h1, .prose h2, .prose h3 {
-  @apply font-bold tracking-tight;
-}
-
-.prose h1 {
-  @apply text-4xl mt-8 mb-4;
-}
-
-.prose h2 {
-  @apply text-2xl mt-6 mb-3;
-}
-
-.prose h3 {
-  @apply text-xl mt-4 mb-2;
-}
-
-.prose p {
-  @apply mb-4 leading-7;
-}
-
-.prose ul {
-  @apply list-disc pl-6 mb-4 space-y-2;
-}
-
-.prose ol {
-  @apply list-decimal pl-6 mb-4 space-y-2;
-}
-
-.prose li {
-  @apply mb-1;
-}
-
-.prose blockquote {
-  @apply border-l-4 border-primary/20 pl-4 italic my-4;
-}
-
-.prose code {
-  @apply bg-secondary dark:bg-secondary rounded px-1 py-0.5 text-sm font-mono;
-}
-
-.prose pre {
-  @apply bg-secondary dark:bg-secondary rounded-lg p-4 mb-4 overflow-x-auto;
-}
-
-.prose pre code {
-  @apply bg-transparent p-0 text-sm;
-}
-
-.prose a {
-  @apply text-primary hover:text-primary/80 underline;
-}
-
-.prose img {
-  @apply rounded-lg my-4;
-}
-
-.prose hr {
-  @apply my-8 border-t border-gray-200 dark:border-gray-700;
-}
-
-.prose table {
-  @apply w-full my-6 border-collapse;
-}
-
-.prose th {
-  @apply bg-secondary dark:bg-secondary border border-border px-4 py-2 text-left;
-}
-
-.prose td {
-  @apply border border-border px-4 py-2;
+/**
+ * Motion. Product register: 150-250ms, state-conveying only, never
+ * decorative, and never on a layout property.
+ *
+ * prefers-reduced-motion is honoured globally rather than per-component, so a
+ * component added later cannot forget to. Durations collapse to ~0 instead of
+ * `animation: none`, which would break Radix components that wait for an
+ * animationend event before unmounting.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

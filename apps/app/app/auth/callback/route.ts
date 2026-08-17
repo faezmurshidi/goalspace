@@ -1,19 +1,16 @@
 import { NextResponse } from 'next/server';
 
-// Import helper for analytics
 import { trackEvent } from '@/utils/server-analytics';
+import { safeInternalPath } from '@/lib/safe-redirect';
 import { createClient } from '@/utils/supabase/server';
-
-// Note: We can't use the client-side analytics directly in a Server Component
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const next = safeInternalPath(requestUrl.searchParams.get('next'), requestUrl.origin);
 
   if (!code) {
-    // No code to exchange — send the user back to the root; middleware
-    // resolves the correct locale from there.
-    return NextResponse.redirect(`${requestUrl.origin}/`);
+    return NextResponse.redirect(`${requestUrl.origin}/login`);
   }
 
   let supabase;
@@ -21,76 +18,55 @@ export async function GET(request: Request) {
     supabase = await createClient();
   } catch (error) {
     console.error('Missing Supabase environment variables:', error);
-    return NextResponse.redirect(`${requestUrl.origin}/?error=server_configuration`);
+    return NextResponse.redirect(`${requestUrl.origin}/login?error=server_configuration`);
   }
 
   try {
-    // Exchange the code for a session
     const { data, error: verifyError } = await supabase.auth.exchangeCodeForSession(code);
 
     if (verifyError) throw verifyError;
     if (!data.user) throw new Error('No user returned from verification');
 
-    // Check if user already exists in the database
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('id', data.user.id)
-      .single();
+    /**
+     * The profile and settings rows are created by the `on_auth_user_created`
+     * trigger, inside the same transaction as the auth insert. This route used
+     * to insert them itself, which is now both redundant and wrong:
+     *
+     *  - It could not work reliably anyway. RLS on `public.users` requires
+     *    `id = auth.uid()`, and it wrote `theme: 'dark'` into user_settings,
+     *    contradicting the column's own 'system' default.
+     *  - Worse, with the trigger in place the row always exists by the time
+     *    this code runs, so the old "does the row exist yet?" test for a new
+     *    account would report *every* user as returning, and the
+     *    `user_registered` event would never fire again.
+     *
+     * First sign-in is detected from the auth record instead: Supabase stamps
+     * `created_at` and `last_sign_in_at` within milliseconds of each other on
+     * the very first session, and they diverge permanently after that.
+     */
+    const createdAt = Date.parse(data.user.created_at ?? '');
+    const lastSignInAt = Date.parse(data.user.last_sign_in_at ?? '');
+    const isNewUser =
+      Number.isFinite(createdAt) &&
+      Number.isFinite(lastSignInAt) &&
+      Math.abs(lastSignInAt - createdAt) < 5_000;
 
-    // Only create user record if it doesn't exist
-    if (!existingUser) {
-      // Track new user registration
-      trackEvent('user_registered', {
-        provider: data.user.app_metadata?.provider || 'unknown',
-        is_new_user: true,
-        timestamp: new Date().toISOString(),
-      });
+    trackEvent(isNewUser ? 'user_registered' : 'user_logged_in', {
+      provider: data.user.app_metadata?.provider || 'unknown',
+      is_new_user: isNewUser,
+      timestamp: new Date().toISOString(),
+    });
 
-      // Create user record after verification
-      const { error: dbError } = await supabase.from('users').insert({
-        id: data.user.id,
-        email: data.user.email || '',
-        created_at: new Date().toISOString(),
-      });
-
-      if (dbError) {
-        console.error('Error creating user record:', dbError);
-        // Continue anyway - the auth record exists
-      }
-
-      // Create user settings
-      const { error: settingsError } = await supabase.from('user_settings').insert({
-        user_id: data.user.id,
-        theme: 'dark',
-      });
-
-      if (settingsError) {
-        console.error('Error creating user settings:', settingsError);
-        // Continue anyway - the auth and user records exist
-      }
-    } else {
-      // Track returning user login
-      trackEvent('user_logged_in', {
-        provider: data.user.app_metadata?.provider || 'unknown',
-        is_new_user: false,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    // Redirect to the root on success; middleware resolves the correct locale.
-    return NextResponse.redirect(`${requestUrl.origin}/`);
+    return NextResponse.redirect(`${requestUrl.origin}${next}`);
   } catch (error) {
     console.error('Error in verification callback:', error);
 
-    // Track authentication error
     trackEvent('auth_error', {
       error_type: 'verification_failed',
       error_message: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString(),
     });
 
-    // Redirect to the root with an error flag
-    return NextResponse.redirect(`${requestUrl.origin}/?error=verification_failed`);
+    return NextResponse.redirect(`${requestUrl.origin}/login?error=verification_failed`);
   }
 }

@@ -298,5 +298,175 @@
       "cta": "Cipta projek anda",
       "honesty": "Akses awal. Apa yang wujud hari ini diterangkan tepat dalam plat 04."
     }
+  },
+  "app": {
+    "common": {
+      "signOut": "Log keluar",
+      "loading": "Memuatkan",
+      "retry": "Cuba lagi",
+      "cancel": "Batal",
+      "save": "Simpan",
+      "theme": "Tema",
+      "language": "Bahasa",
+      "loadingRegion": "Sedang memuatkan"
+    },
+    "auth": {
+      "tagline": "Rekod bagi satu projek panjang",
+      "signIn": "Log masuk",
+      "createAccount": "Buka akaun",
+      "email": "E-mel",
+      "password": "Kata laluan",
+      "passwordHintNew": "Sekurang-kurangnya 8 aksara",
+      "submitSignIn": "Log masuk",
+      "submitSignUp": "Buka akaun",
+      "submittingSignIn": "Sedang log masuk",
+      "submittingSignUp": "Sedang buka akaun",
+      "dividerOr": "atau",
+      "continueWithGoogle": "Teruskan dengan Google",
+      "continueWithApple": "Teruskan dengan Apple",
+      "errorInvalidEmail": "Masukkan alamat e-mel yang sah.",
+      "errorPasswordShort": "Kata laluan mesti sekurang-kurangnya 8 aksara.",
+      "errorBadCredentials": "E-mel dan kata laluan itu tidak sepadan dengan mana-mana akaun.",
+      "errorAccountExists": "Akaun untuk e-mel itu sudah wujud. Log masuk sebaliknya.",
+      "errorGeneric": "Ada sesuatu yang tidak kena. Cuba lagi.",
+      "errorProvider": "Log masuk {{provider}} tidak tersedia. Guna e-mel dan kata laluan.",
+      "checkEmailTitle": "Sahkan e-mel anda",
+      "checkEmailBody": "Kami hantar pautan pengesahan ke {{email}}. Buka pautan itu untuk menyiapkan akaun anda.",
+      "errorCallbackFailed": "Log masuk tidak selesai. Cuba lagi.",
+      "errorServerConfig": "Log masuk tidak tersedia buat masa ini. Cuba sebentar lagi."
+    },
+    "nav": {
+      "resume": "Sambung",
+      "work": "Kerja",
+      "log": "Log",
+      "switchProject": "Tukar projek",
+      "account": "Akaun",
+      "theme": "Tema",
+      "themeLight": "Cerah",
+      "themeDark": "Gelap",
+      "themeSystem": "Sistem",
+      "language": "Bahasa",
+      "skipToContent": "Terus ke kandungan",
+      "sections": "Bahagian projek"
+    },
+    "project": {
+      "kindBuild": "Bina",
+      "kindLearn": "Belajar",
+      "kindResearch": "Kaji",
+      "statusActive": "Aktif",
+      "statusPaused": "Tergendala",
+      "statusDone": "Selesai",
+      "statusAbandoned": "Ditinggalkan",
+      "sheetSlug": "Ruj",
+      "sheetUpdated": "Dikemas kini",
+      "sheetKind": "Jenis",
+      "sheetStatus": "Status"
+    },
+    "status": {
+      "open": "Terbuka",
+      "doing": "Sedang dibuat",
+      "blocked": "Tersekat",
+      "done": "Selesai",
+      "dropped": "Digugurkan"
+    },
+    "kind": {
+      "task": "Tugas",
+      "question": "Soalan"
+    },
+    "entryKind": {
+      "note": "Nota",
+      "decision": "Keputusan",
+      "source": "Sumber",
+      "session": "Sesi"
+    },
+    "resume": {
+      "awayBefore": "Anda tiada selama",
+      "awayAfter": "hari.",
+      "lastSession": "Kali terakhir dikerjakan {{when}}",
+      "firstRunTitle": "Belum ada rekod",
+      "firstRunBody": "Tulis apa yang anda buat, putuskan, atau di mana anda tersekat. Rekod inilah yang memudahkan anda kembali.",
+      "waitingTitle": "Menunggu pihak luar",
+      "waitingCaption": "Perkara tersekat yang tarikhnya sudah berlalu.",
+      "overdueDays": "{{count}} hari lewat",
+      "overdueToday": "Genap hari ini",
+      "overdueOne": "1 hari lewat",
+      "blockedSince": "Tersekat sejak {{when}}",
+      "openTitle": "Apa yang terbuka",
+      "openEmpty": "Tiada yang terbuka.",
+      "leftOffTitle": "Di mana anda berhenti",
+      "leftOffEmpty": "Belum ada catatan.",
+      "decidedTitle": "Apa yang anda putuskan",
+      "decidedEmpty": "Tiada keputusan direkodkan.",
+      "progressOf": "{{done}} daripada {{total}} selesai",
+      "anomalyTitle": "Ada item kerja yang tidak dapat diletakkan",
+      "anomalyBody": "{{count}} item merujuk induk yang hilang atau berpusing. Item itu disenaraikan di peringkat atas."
+    },
+    "work": {
+      "title": "Kerja",
+      "empty": "Belum ada item kerja.",
+      "emptyBody": "Pecahkan projek kepada perkara yang boleh disiapkan.",
+      "addItem": "Tambah item",
+      "addChild": "Tambah sub-item",
+      "setStatus": "Tetapkan status",
+      "closeWithEntry": "Apa yang menyelesaikannya?",
+      "closeSkip": "Tutup tanpa nota",
+      "closeSubmit": "Tutup item",
+      "questionsFirst": "Soalan",
+      "tasks": "Tugas"
+    },
+    "log": {
+      "title": "Log",
+      "empty": "Belum ada rekod.",
+      "filterAll": "Semua",
+      "filterLabel": "Tapis mengikut jenis",
+      "loadMore": "Muat lagi",
+      "occurredAt": "Berlaku"
+    },
+    "capture": {
+      "placeholder": "Apa yang berlaku?",
+      "kindLabel": "Jenis",
+      "submit": "Rekod",
+      "submitting": "Merekod",
+      "hint": "{{keys}} untuk merekod",
+      "attachTo": "Berkenaan",
+      "attachNone": "Projek ini",
+      "retry": "Cuba lagi",
+      "failed": "Itu tidak tersimpan. Teks anda masih ada."
+    },
+    "create": {
+      "title": "Mulakan rekod",
+      "body": "Satu projek dahulu. Anda boleh tambah kemudian.",
+      "titleLabel": "Apa yang anda bina atau pelajari?",
+      "titlePlaceholder": "Kilang papan bandsaw",
+      "briefLabel": "Ringkasan",
+      "briefPlaceholder": "Untuk apa, dan apa maksudnya siap?",
+      "kindLabel": "Jenis",
+      "submit": "Buka projek",
+      "submitting": "Membuka"
+    },
+    "errors": {
+      "validation": "Semak medan yang ditanda.",
+      "generic": "Ada sesuatu yang tidak kena. Cuba lagi.",
+      "captureFailed": "Itu tidak tersimpan. Teks anda masih ada.",
+      "projectMissing": "Projek itu sudah tiada.",
+      "moveRejected": "Pemindahan itu akan meletakkan item di dalam subpokoknya sendiri.",
+      "fieldRequired": "Medan ini wajib diisi.",
+      "fieldTooLong": "Ini terlalu panjang.",
+      "fieldInvalid": "Nilai ini tidak sah."
+    },
+    "error": {
+      "title": "Itu tidak dapat dimuatkan",
+      "body": "Ada masalah semasa mengambil projek ini. Tiada apa yang anda rekodkan hilang.",
+      "retry": "Cuba lagi"
+    },
+    "notFound": {
+      "title": "Projek tidak dijumpai",
+      "body": "Projek ini tidak wujud, atau ia bukan milik anda. Tiada apa yang dipadam.",
+      "back": "Kembali ke kerja anda"
+    },
+    "offline": {
+      "title": "Tidak dapat menghubungi pelayan",
+      "body": "Teks anda masih ada. Cuba lagi apabila anda kembali dalam talian."
+    }
   }
 }

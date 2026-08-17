@@ -1,37 +1,39 @@
 import { Suspense } from 'react';
-import { Brain } from 'lucide-react';
 
-import { LoginForm } from '@/components/login-form';
+import { AuthForm } from '@/components/auth/auth-form';
+import { AuthMasthead } from '@/components/auth/auth-masthead';
 
-// LoginForm constructs a Supabase client at render time, so this route must
-// not be statically prerendered — that would require Supabase env vars to
-// be present at build time.
+// AuthForm builds a Supabase client at render time, so this route must not be
+// statically prerendered: that would require the Supabase env vars to exist at
+// build time.
 export const dynamic = 'force-dynamic';
 
-// Content component that will be wrapped in Suspense
-function LoginContent() {
+function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-      <div className="flex w-full max-w-sm flex-col gap-6">
-        <div className="flex items-center gap-2 self-center">
-          <Brain className="h-6 w-6 text-rose-500" />
-          <span className="bg-gradient-to-r from-rose-500 via-purple-500 to-cyan-500 bg-clip-text text-lg font-bold text-transparent">
-            GoalSpace
-          </span>
-        </div>
-        <LoginForm />
+    <main className="flex min-h-svh flex-col items-center justify-center bg-paper px-6 py-16">
+      <div className="w-full max-w-sm">
+        <AuthMasthead />
+        {children}
       </div>
-    </div>
+    </main>
   );
 }
 
-// Main component with Suspense boundary
 export default function LoginPage() {
   return (
     <Suspense
-      fallback={<div className="flex min-h-svh items-center justify-center">Loading...</div>}
+      fallback={
+        <Frame>
+          {/* A shaped skeleton rather than the word "Loading", so the plate
+              holds its footprint and the page does not jump when the form
+              arrives. */}
+          <div className="h-[34rem] border border-rule bg-paper-shade" />
+        </Frame>
+      }
     >
-      <LoginContent />
+      <Frame>
+        <AuthForm />
+      </Frame>
     </Suspense>
   );
 }

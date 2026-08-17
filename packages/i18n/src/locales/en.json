@@ -298,5 +298,175 @@
       "cta": "Create your project",
       "honesty": "Early access. What exists today is described in plate 04, exactly."
     }
+  },
+  "app": {
+    "common": {
+      "signOut": "Sign out",
+      "loading": "Loading",
+      "retry": "Retry",
+      "cancel": "Cancel",
+      "save": "Save",
+      "theme": "Theme",
+      "language": "Language",
+      "loadingRegion": "Loading"
+    },
+    "auth": {
+      "tagline": "The record of one long project",
+      "signIn": "Sign in",
+      "createAccount": "Create account",
+      "email": "Email",
+      "password": "Password",
+      "passwordHintNew": "At least 8 characters",
+      "submitSignIn": "Sign in",
+      "submitSignUp": "Create account",
+      "submittingSignIn": "Signing in",
+      "submittingSignUp": "Creating account",
+      "dividerOr": "or",
+      "continueWithGoogle": "Continue with Google",
+      "continueWithApple": "Continue with Apple",
+      "errorInvalidEmail": "Enter a valid email address.",
+      "errorPasswordShort": "Passwords must be at least 8 characters.",
+      "errorBadCredentials": "That email and password do not match an account.",
+      "errorAccountExists": "An account already exists for that email. Sign in instead.",
+      "errorGeneric": "Something went wrong. Try again.",
+      "errorProvider": "{{provider}} sign-in is unavailable. Use email and password.",
+      "checkEmailTitle": "Confirm your email",
+      "checkEmailBody": "We sent a confirmation link to {{email}}. Open it to finish creating your account.",
+      "errorCallbackFailed": "Sign-in did not complete. Try again.",
+      "errorServerConfig": "Sign-in is unavailable right now. Try again shortly."
+    },
+    "nav": {
+      "resume": "Resume",
+      "work": "Work",
+      "log": "Log",
+      "switchProject": "Switch project",
+      "account": "Account",
+      "theme": "Theme",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeSystem": "System",
+      "language": "Language",
+      "skipToContent": "Skip to content",
+      "sections": "Project sections"
+    },
+    "project": {
+      "kindBuild": "Build",
+      "kindLearn": "Learn",
+      "kindResearch": "Research",
+      "statusActive": "Active",
+      "statusPaused": "Paused",
+      "statusDone": "Done",
+      "statusAbandoned": "Abandoned",
+      "sheetSlug": "Ref",
+      "sheetUpdated": "Revised",
+      "sheetKind": "Kind",
+      "sheetStatus": "Status"
+    },
+    "status": {
+      "open": "Open",
+      "doing": "Doing",
+      "blocked": "Blocked",
+      "done": "Done",
+      "dropped": "Dropped"
+    },
+    "kind": {
+      "task": "Task",
+      "question": "Question"
+    },
+    "entryKind": {
+      "note": "Note",
+      "decision": "Decision",
+      "source": "Source",
+      "session": "Session"
+    },
+    "resume": {
+      "awayBefore": "You were away",
+      "awayAfter": "days.",
+      "lastSession": "Last worked on {{when}}",
+      "firstRunTitle": "Nothing recorded yet",
+      "firstRunBody": "Write down what you did, decided, or got stuck on. The record is what makes coming back cheap.",
+      "waitingTitle": "Waiting on the world",
+      "waitingCaption": "Blocked items whose date has passed.",
+      "overdueDays": "{{count}} days past due",
+      "overdueToday": "Due today",
+      "overdueOne": "1 day past due",
+      "blockedSince": "Blocked since {{when}}",
+      "openTitle": "What's open",
+      "openEmpty": "Nothing open.",
+      "leftOffTitle": "Where you left off",
+      "leftOffEmpty": "No entries yet.",
+      "decidedTitle": "What you decided",
+      "decidedEmpty": "No decisions recorded.",
+      "progressOf": "{{done}} of {{total}} done",
+      "anomalyTitle": "Some work items could not be placed",
+      "anomalyBody": "{{count}} items reference a parent that is missing or circular. They are listed at the top level."
+    },
+    "work": {
+      "title": "Work",
+      "empty": "No work items yet.",
+      "emptyBody": "Break the project into things you can finish.",
+      "addItem": "Add item",
+      "addChild": "Add sub-item",
+      "setStatus": "Set status",
+      "closeWithEntry": "What closed it?",
+      "closeSkip": "Close without a note",
+      "closeSubmit": "Close item",
+      "questionsFirst": "Questions",
+      "tasks": "Tasks"
+    },
+    "log": {
+      "title": "Log",
+      "empty": "Nothing recorded yet.",
+      "filterAll": "All",
+      "filterLabel": "Filter by kind",
+      "loadMore": "Load more",
+      "occurredAt": "Occurred"
+    },
+    "capture": {
+      "placeholder": "What happened?",
+      "kindLabel": "Kind",
+      "submit": "Record",
+      "submitting": "Recording",
+      "hint": "{{keys}} to record",
+      "attachTo": "About",
+      "attachNone": "The project",
+      "retry": "Retry",
+      "failed": "That did not save. Your text is still here."
+    },
+    "create": {
+      "title": "Start the record",
+      "body": "One project to begin with. You can add more later.",
+      "titleLabel": "What are you building or learning?",
+      "titlePlaceholder": "Bandsaw sawmill",
+      "briefLabel": "Brief",
+      "briefPlaceholder": "What is it for, and what does done look like?",
+      "kindLabel": "Kind",
+      "submit": "Create project",
+      "submitting": "Creating"
+    },
+    "errors": {
+      "validation": "Check the highlighted fields.",
+      "generic": "Something went wrong. Try again.",
+      "captureFailed": "That did not save. Your text is still here.",
+      "projectMissing": "That project no longer exists.",
+      "moveRejected": "That move would put an item inside its own subtree.",
+      "fieldRequired": "This field is required.",
+      "fieldTooLong": "This is too long.",
+      "fieldInvalid": "This value is not valid."
+    },
+    "error": {
+      "title": "That did not load",
+      "body": "Something failed while fetching this project. Nothing you recorded is lost.",
+      "retry": "Try again"
+    },
+    "notFound": {
+      "title": "No such project",
+      "body": "This project does not exist, or it is not yours. Nothing was deleted.",
+      "back": "Back to your work"
+    },
+    "offline": {
+      "title": "Could not reach the server",
+      "body": "Your text is still in the box. Try again when you are back online."
+    }
   }
 }

@@ -25,15 +25,28 @@ export async function createTestUser(email: string): Promise<TestUser> {
   if (error) throw error;
   const id = data.user!.id;
 
-  // public.users is a separate profile table; its id must match auth.uid().
-  const { error: profileError } = await admin.from('users').insert({ id, email });
-  if (profileError) {
-    // The auth user already exists at this point. Without this cleanup, a
-    // failed profile insert leaves an orphaned auth.users row behind (the
-    // caller's variable is never assigned, so afterAll has no id to delete),
-    // and it accumulates silently across every subsequent test run.
+  // The profile row is created by the `on_auth_user_created` trigger, in the
+  // same transaction as the auth insert above. This helper used to insert it
+  // by hand, which now always collides on the primary key.
+  //
+  // Asserting instead of inserting keeps the check that matters: every
+  // phase-1 table keys owner_id off users(id), so a missing profile makes
+  // every subsequent write in these tests fail on a foreign key, with an
+  // error that points at the write rather than at the real cause.
+  const { data: profile, error: profileError } = await admin
+    .from('users')
+    .select('id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (profileError || !profile) {
+    // The auth user exists by now. Without this cleanup it is orphaned: the
+    // caller's variable is never assigned, so afterAll has no id to delete,
+    // and the rows accumulate silently across every later run.
     await admin.auth.admin.deleteUser(id);
-    throw profileError;
+    throw profileError ?? new Error(
+      `Trigger on_auth_user_created did not provision public.users for ${email}`
+    );
   }
 
   const client = createClient(url, anonKey, { auth: { persistSession: false } });

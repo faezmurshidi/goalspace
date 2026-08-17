@@ -1,26 +1,31 @@
-import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 
-import { AuthForm } from '@/components/auth-form';
+/**
+ * There were two competing auth surfaces: `/auth` (tabbed, glassmorphic) and
+ * `/login` (OAuth plus email). They drifted apart, and middleware only ever
+ * sent unauthenticated users to `/login`, so `/auth` was reachable but
+ * unmaintained.
+ *
+ * `/login` is now the single sign-in surface. This route survives only so that
+ * any link or bookmark pointing at `/auth` still lands somewhere useful.
+ * `/auth/callback` is unaffected: it is a route handler, not a page.
+ */
+export default async function AuthPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  // Forwarded, not dropped: /login reads returnUrl to restore where the user
+  // was headed, and a bare redirect would send them to the workspace root
+  // after signing in.
+  const params = await searchParams;
+  const query = new URLSearchParams();
 
-// AuthForm constructs a Supabase client at render time, so this route must
-// not be statically prerendered — that would require Supabase env vars to
-// be present at build time.
-export const dynamic = 'force-dynamic';
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) value.forEach((entry) => query.append(key, entry));
+    else if (value !== undefined) query.append(key, value);
+  }
 
-function AuthPageContent() {
-  return (
-    <div className="flex min-h-screen w-full items-center justify-center">
-      <AuthForm />
-    </div>
-  );
-}
-
-export default function AuthPage() {
-  return (
-    <Suspense
-      fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}
-    >
-      <AuthPageContent />
-    </Suspense>
-  );
+  const suffix = query.size > 0 ? `?${query.toString()}` : '';
+  redirect(`/login${suffix}`);
 }
