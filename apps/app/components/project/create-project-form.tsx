@@ -1,0 +1,116 @@
+'use client';
+
+import { useId, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button, Input, Textarea } from '@goalspace/ui';
+import { useAppTranslations } from '@goalspace/i18n';
+
+import { createProjectAction } from '@/app/(workspace)/actions';
+import { projectKinds, type ProjectKind } from '@/lib/schemas/common';
+
+export function CreateProjectForm() {
+  const { t } = useAppTranslations();
+  const router = useRouter();
+
+  const [title, setTitle] = useState('');
+  const [brief, setBrief] = useState('');
+  const [kind, setKind] = useState<ProjectKind>('build');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  const titleId = useId();
+  const briefId = useId();
+  const kindId = useId();
+  const errorId = useId();
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+
+    setBusy(true);
+    setError(null);
+    setFieldErrors({});
+
+    const result = await createProjectAction({ title, brief, kind });
+
+    if (!result.ok) {
+      setBusy(false);
+      setError(t(result.message));
+      setFieldErrors(result.fieldErrors ?? {});
+      return;
+    }
+
+    // Deliberately not clearing `busy` on success: the navigation below
+    // replaces this screen, and re-enabling the button first lets an
+    // impatient second click create a duplicate project.
+    router.push(`/projects/${result.data.slug}`);
+    router.refresh();
+  }
+
+  return (
+    <form onSubmit={submit} className="border border-rule bg-paper p-8">
+      <div className="flex flex-col gap-2">
+        <label htmlFor={titleId} className="label text-ink-soft">
+          {t('app.create.titleLabel')}
+        </label>
+        <Input
+          id={titleId}
+          autoFocus
+          required
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder={t('app.create.titlePlaceholder')}
+          aria-invalid={fieldErrors.title ? true : undefined}
+          className="h-11 bg-paper text-body text-ink placeholder:text-ink-soft"
+        />
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2">
+        <label htmlFor={kindId} className="label text-ink-soft">
+          {t('app.create.kindLabel')}
+        </label>
+        <select
+          id={kindId}
+          value={kind}
+          onChange={(event) => setKind(event.target.value as ProjectKind)}
+          className="label h-11 border border-input bg-paper px-3 text-ink"
+        >
+          {projectKinds.map((value) => (
+            <option key={value} value={value}>
+              {t(`app.project.kind${value.charAt(0).toUpperCase()}${value.slice(1)}`)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2">
+        <label htmlFor={briefId} className="label text-ink-soft">
+          {t('app.create.briefLabel')}
+        </label>
+        <Textarea
+          id={briefId}
+          rows={3}
+          value={brief}
+          onChange={(event) => setBrief(event.target.value)}
+          placeholder={t('app.create.briefPlaceholder')}
+          className="bg-paper text-body text-ink placeholder:text-ink-soft"
+        />
+      </div>
+
+      {error ? (
+        <p id={errorId} role="alert" className="label mt-6 text-oxide">
+          {error}
+        </p>
+      ) : null}
+
+      <Button
+        type="submit"
+        disabled={busy || title.trim().length === 0}
+        className="label mt-8 h-12 w-full bg-primary text-primary-foreground hover:bg-ink hover:text-paper disabled:opacity-60"
+      >
+        {busy ? t('app.create.submitting') : t('app.create.submit')}
+      </Button>
+    </form>
+  );
+}
