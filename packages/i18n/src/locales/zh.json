@@ -306,7 +306,8 @@
       "cancel": "取消",
       "save": "保存",
       "theme": "主题",
-      "language": "语言"
+      "language": "语言",
+      "loadingRegion": "正在加载"
     },
     "auth": {
       "tagline": "一个长期项目的记录",
@@ -329,7 +330,9 @@
       "errorGeneric": "出了点问题，请重试。",
       "errorProvider": "{{provider}} 登录不可用，请使用邮箱和密码。",
       "checkEmailTitle": "确认你的邮箱",
-      "checkEmailBody": "我们已向 {{email}} 发送确认链接。打开它即可完成账户创建。"
+      "checkEmailBody": "我们已向 {{email}} 发送确认链接。打开它即可完成账户创建。",
+      "errorCallbackFailed": "登录未完成，请重试。",
+      "errorServerConfig": "登录暂时不可用，请稍后再试。"
     },
     "nav": {
       "resume": "继续",
@@ -445,7 +448,10 @@
       "generic": "出了点问题，请重试。",
       "captureFailed": "没有保存成功，你的文字还在。",
       "projectMissing": "该项目已不存在。",
-      "moveRejected": "该移动会把事项放进它自己的子树里。"
+      "moveRejected": "该移动会把事项放进它自己的子树里。",
+      "fieldRequired": "此项为必填。",
+      "fieldTooLong": "内容过长。",
+      "fieldInvalid": "该值无效。"
     },
     "error": {
       "title": "加载失败",

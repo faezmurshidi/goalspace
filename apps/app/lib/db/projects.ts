@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database, Tables } from '@/types/supabase';
-import { slugify } from '@/lib/schemas/common';
+import { slugSchema, slugify } from '@/lib/schemas/common';
 import type { CreateProjectValues } from '@/lib/schemas/project';
 import type { ProjectKind, ProjectStatus, ProjectVisibility } from '@/lib/schemas/common';
 
@@ -116,7 +116,12 @@ export async function createProject(
   // A title in a script that survives slugification gives a readable slug; one
   // that reduces to nothing (an emoji-only title, say) falls back to the kind.
   const derived = slugify(values.title) ?? values.kind;
-  const base = RESERVED_SLUGS.has(derived) ? `${derived}-project` : derived;
+  const candidate = RESERVED_SLUGS.has(derived) ? `${derived}-project` : derived;
+
+  // slugify is the only producer, but running its output through the schema
+  // keeps the two from drifting apart: a slug that the rest of the system
+  // would reject must never reach the database.
+  const base = slugSchema.safeParse(candidate).success ? candidate : values.kind;
 
   const { data: taken, error: takenError } = await supabase
     .from('projects')

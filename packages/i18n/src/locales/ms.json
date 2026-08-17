@@ -307,7 +307,8 @@
       "cancel": "Batal",
       "save": "Simpan",
       "theme": "Tema",
-      "language": "Bahasa"
+      "language": "Bahasa",
+      "loadingRegion": "Sedang memuatkan"
     },
     "auth": {
       "tagline": "Rekod bagi satu projek panjang",
@@ -330,7 +331,9 @@
       "errorGeneric": "Ada sesuatu yang tidak kena. Cuba lagi.",
       "errorProvider": "Log masuk {{provider}} tidak tersedia. Guna e-mel dan kata laluan.",
       "checkEmailTitle": "Sahkan e-mel anda",
-      "checkEmailBody": "Kami hantar pautan pengesahan ke {{email}}. Buka pautan itu untuk menyiapkan akaun anda."
+      "checkEmailBody": "Kami hantar pautan pengesahan ke {{email}}. Buka pautan itu untuk menyiapkan akaun anda.",
+      "errorCallbackFailed": "Log masuk tidak selesai. Cuba lagi.",
+      "errorServerConfig": "Log masuk tidak tersedia buat masa ini. Cuba sebentar lagi."
     },
     "nav": {
       "resume": "Sambung",
@@ -446,7 +449,10 @@
       "generic": "Ada sesuatu yang tidak kena. Cuba lagi.",
       "captureFailed": "Itu tidak tersimpan. Teks anda masih ada.",
       "projectMissing": "Projek itu sudah tiada.",
-      "moveRejected": "Pemindahan itu akan meletakkan item di dalam subpokoknya sendiri."
+      "moveRejected": "Pemindahan itu akan meletakkan item di dalam subpokoknya sendiri.",
+      "fieldRequired": "Medan ini wajib diisi.",
+      "fieldTooLong": "Ini terlalu panjang.",
+      "fieldInvalid": "Nilai ini tidak sah."
     },
     "error": {
       "title": "Itu tidak dapat dimuatkan",

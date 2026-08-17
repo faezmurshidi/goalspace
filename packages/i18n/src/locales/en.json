@@ -307,7 +307,8 @@
       "cancel": "Cancel",
       "save": "Save",
       "theme": "Theme",
-      "language": "Language"
+      "language": "Language",
+      "loadingRegion": "Loading"
     },
     "auth": {
       "tagline": "The record of one long project",
@@ -330,7 +331,9 @@
       "errorGeneric": "Something went wrong. Try again.",
       "errorProvider": "{{provider}} sign-in is unavailable. Use email and password.",
       "checkEmailTitle": "Confirm your email",
-      "checkEmailBody": "We sent a confirmation link to {{email}}. Open it to finish creating your account."
+      "checkEmailBody": "We sent a confirmation link to {{email}}. Open it to finish creating your account.",
+      "errorCallbackFailed": "Sign-in did not complete. Try again.",
+      "errorServerConfig": "Sign-in is unavailable right now. Try again shortly."
     },
     "nav": {
       "resume": "Resume",
@@ -446,7 +449,10 @@
       "generic": "Something went wrong. Try again.",
       "captureFailed": "That did not save. Your text is still here.",
       "projectMissing": "That project no longer exists.",
-      "moveRejected": "That move would put an item inside its own subtree."
+      "moveRejected": "That move would put an item inside its own subtree.",
+      "fieldRequired": "This field is required.",
+      "fieldTooLong": "This is too long.",
+      "fieldInvalid": "This value is not valid."
     },
     "error": {
       "title": "That did not load",

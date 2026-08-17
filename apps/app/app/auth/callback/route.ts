@@ -1,25 +1,13 @@
 import { NextResponse } from 'next/server';
 
 import { trackEvent } from '@/utils/server-analytics';
+import { safeInternalPath } from '@/lib/safe-redirect';
 import { createClient } from '@/utils/supabase/server';
-
-/**
- * Same-origin relative paths only, mirroring the check in the auth form. This
- * value arrives in a query string that anyone can craft, so without the guard
- * a crafted link would turn the OAuth callback into an open redirect that
- * looks like it came from us.
- */
-function safeNext(raw: string | null): string {
-  if (!raw) return '/';
-  if (!raw.startsWith('/')) return '/';
-  if (raw.startsWith('//') || raw.startsWith('/\\')) return '/';
-  return raw;
-}
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const next = safeNext(requestUrl.searchParams.get('next'));
+  const next = safeInternalPath(requestUrl.searchParams.get('next'), requestUrl.origin);
 
   if (!code) {
     return NextResponse.redirect(`${requestUrl.origin}/login`);

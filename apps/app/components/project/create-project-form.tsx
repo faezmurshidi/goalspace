@@ -20,6 +20,7 @@ export function CreateProjectForm() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const titleId = useId();
+  const titleErrorId = useId();
   const briefId = useId();
   const kindId = useId();
   const errorId = useId();
@@ -62,8 +63,17 @@ export function CreateProjectForm() {
           onChange={(event) => setTitle(event.target.value)}
           placeholder={t('app.create.titlePlaceholder')}
           aria-invalid={fieldErrors.title ? true : undefined}
+          aria-describedby={fieldErrors.title ? titleErrorId : error ? errorId : undefined}
           className="h-11 bg-paper text-body text-ink placeholder:text-ink-soft"
         />
+        {/* Stored but never shown previously, so a per-field failure (a title
+            over 120 characters, say) surfaced only as the generic message and
+            the user could not tell which field to correct. */}
+        {fieldErrors.title ? (
+          <p id={titleErrorId} role="alert" className="label text-oxide">
+            {fieldErrors.title.map((key) => t(key)).join(' ')}
+          </p>
+        ) : null}
       </div>
 
       <div className="mt-6 flex flex-col gap-2">

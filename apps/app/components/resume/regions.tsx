@@ -67,6 +67,20 @@ function StatusMark({ status, label }: { status: WorkItemStatus; label: string }
   );
 }
 
+/**
+ * Truncate by code point, not by `slice`. `slice` counts UTF-16 units, so a
+ * character outside the BMP that straddles the limit is cut in half and the
+ * preview ends in a replacement glyph.
+ */
+function preview(text: string, limit: number): string {
+  let out = '';
+  for (const char of text) {
+    if (out.length + char.length > limit) return `${out}…`;
+    out += char;
+  }
+  return out;
+}
+
 function Ratio({ progress }: { progress?: Progress }) {
   // total 0 means every child was dropped, so there is genuinely nothing to
   // measure. computeProgress reports that distinctly rather than as 0%, and
@@ -307,7 +321,7 @@ export function Decided({ entries, t, locale }: Common & { entries: Entry[] }) {
                   {formatDate(entry.occurred_at, locale)}
                 </time>
                 <span className="min-w-0 flex-1 text-body text-ink">
-                  {entry.title ?? entry.body.slice(0, 80)}
+                  {entry.title ?? preview(entry.body, 80)}
                 </span>
                 <span
                   aria-hidden="true"

@@ -16,6 +16,7 @@ type Params = {
 };
 
 const PAGE = 50;
+const MAX_TAKE = 500;
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
@@ -45,9 +46,7 @@ export default async function LogPage({ params, searchParams }: Params) {
   // link. Clamped because `take` is user input and an unbounded value would
   // let anyone ask the database for the entire table in one query.
   const requested = Number.parseInt(query.take ?? '', 10);
-  const take = Number.isFinite(requested)
-    ? Math.min(Math.max(requested, PAGE), 500)
-    : PAGE;
+  const take = Number.isFinite(requested) ? Math.min(Math.max(requested, PAGE), MAX_TAKE) : PAGE;
 
   // One extra row is fetched purely to answer "is there more?" without a
   // second count query, then dropped before rendering.
@@ -122,11 +121,17 @@ export default async function LogPage({ params, searchParams }: Params) {
         </ol>
       )}
 
-      {hasMore ? (
+      {/* Gated on the cap as well as on hasMore. At the ceiling the link would
+          request take=550, clamp straight back to 500, and re-render the same
+          rows, so the control would look live and do nothing. */}
+      {hasMore && take < MAX_TAKE ? (
         <Link
           href={{
             pathname: `/projects/${slug}/log`,
-            query: { ...(activeKind ? { kind: activeKind } : {}), take: take + PAGE },
+            query: {
+              ...(activeKind ? { kind: activeKind } : {}),
+              take: Math.min(take + PAGE, MAX_TAKE),
+            },
           }}
           className="label unstyled mt-6 inline-block border border-rule-strong px-5 py-3 text-ink transition-colors hover:bg-paper-shade"
         >

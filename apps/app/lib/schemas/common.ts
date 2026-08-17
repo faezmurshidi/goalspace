@@ -81,12 +81,21 @@ export function slugify(title: string): string | null {
     .toLowerCase()
     // Any run of non-alphanumerics becomes a single separator.
     .replace(/[^\p{L}\p{N}]+/gu, '-')
-    .replace(/^-+|-+$/gu, '')
-    .slice(0, 64)
-    // Truncation can land on a separator and leave it dangling.
-    .replace(/-+$/gu, '');
+    .replace(/^-+|-+$/gu, '');
 
-  return slug.length > 0 ? slug : null;
+  // Truncated by code point, not by slice. `slice` counts UTF-16 units, so a
+  // character outside the BMP straddling the limit is cut in half and leaves a
+  // lone surrogate, which is invalid in a URL and fails slugSchema.
+  let truncated = '';
+  for (const char of slug) {
+    if (truncated.length + char.length > 64) break;
+    truncated += char;
+  }
+
+  // Truncation can land on a separator and leave it dangling.
+  const cleaned = truncated.replace(/-+$/gu, '');
+
+  return cleaned.length > 0 ? cleaned : null;
 }
 
 /**

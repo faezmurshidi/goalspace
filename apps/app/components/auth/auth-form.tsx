@@ -7,6 +7,7 @@ import { Button, Input, cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
 
 import { identifyUser, trackError, trackEvent } from '@/app/_lib/analytics';
+import { safeInternalPath } from '@/lib/safe-redirect';
 import { createClient } from '@/utils/supabase/client';
 
 type Mode = 'signin' | 'signup';
@@ -21,16 +22,14 @@ type Pending = null | 'email' | 'google' | 'apple';
 const MIN_PASSWORD = 8;
 
 /**
- * Same-origin relative paths only. Both `//host` and `/\host` are treated as
- * protocol-relative by browsers, so either would carry the user off the origin
- * entirely, turning the post-login redirect into an open redirect.
+ * The callback redirects here with a code when it cannot finish, so those
+ * codes have to render. Without this the user lands on an empty sign-in form
+ * with no idea why they were sent back.
  */
-function safeReturnUrl(raw: string | null | undefined): string {
-  if (!raw) return '/';
-  if (!raw.startsWith('/')) return '/';
-  if (raw.startsWith('//') || raw.startsWith('/\\')) return '/';
-  return raw;
-}
+const CALLBACK_ERRORS: Record<string, string> = {
+  verification_failed: 'app.auth.errorCallbackFailed',
+  server_configuration: 'app.auth.errorServerConfig',
+};
 
 export function AuthForm() {
   const { t } = useAppTranslations();
@@ -50,8 +49,16 @@ export function AuthForm() {
   const errorId = useId();
   const hintId = useId();
 
-  const returnUrl = safeReturnUrl(searchParams?.get('returnUrl'));
+  const returnUrl = safeInternalPath(
+    searchParams?.get('returnUrl'),
+    typeof window === 'undefined' ? 'http://localhost' : window.location.origin
+  );
+  const callbackErrorKey = CALLBACK_ERRORS[searchParams?.get('error') ?? ''];
   const busy = pending !== null;
+
+  // The form's own error wins: it describes what the user just tried, which is
+  // more recent and more useful than why an earlier callback failed.
+  const shownError = error ?? (callbackErrorKey ? t(callbackErrorKey) : null);
 
   function switchMode(next: Mode) {
     setMode(next);
@@ -232,8 +239,8 @@ export function AuthForm() {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? errorId : undefined}
+            aria-invalid={shownError ? true : undefined}
+            aria-describedby={shownError ? errorId : undefined}
             className="h-11 bg-paper text-body focus-visible:border-oxide"
           />
         </div>
@@ -249,8 +256,8 @@ export function AuthForm() {
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={cn(mode === 'signup' && hintId, error && errorId) || undefined}
+            aria-invalid={shownError ? true : undefined}
+            aria-describedby={cn(mode === 'signup' && hintId, shownError && errorId) || undefined}
             className="h-11 bg-paper text-body focus-visible:border-oxide"
           />
           {mode === 'signup' ? (
@@ -263,9 +270,9 @@ export function AuthForm() {
         {/* Errors are inline and in label type per DESIGN.md, never colour
             alone. role="alert" so a screen reader hears the failure without
             having to go looking for it. */}
-        {error ? (
+        {shownError ? (
           <p id={errorId} role="alert" className="label text-oxide">
-            {error}
+            {shownError}
           </p>
         ) : null}
 

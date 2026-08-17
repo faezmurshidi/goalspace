@@ -1,3 +1,5 @@
+import { LoadingAnnouncement } from '@/components/shell/loading-announcement';
+
 /**
  * Shaped skeleton, not a spinner.
  *
@@ -10,30 +12,36 @@
  */
 export default function ResumeLoading() {
   return (
-    <div aria-hidden="true" className="pb-10">
-      <div className="border-b border-ink pb-5 pt-8">
-        <div className="h-7 w-72 max-w-full bg-paper-shade" />
-        <div className="mt-4 h-4 w-full max-w-lg bg-paper-shade" />
-        <div className="mt-5 h-3 w-64 max-w-full bg-paper-shade" />
-      </div>
-
-      <div className="pt-10">
-        <div className="h-12 w-80 max-w-full bg-paper-shade" />
-        <div className="mt-4 h-3 w-48 bg-paper-shade" />
-      </div>
-
-      <div className="pt-10">
-        <div className="border-b border-rule pb-2">
-          <div className="h-3 w-32 bg-paper-shade" />
+    <>
+      {/* The bars stay out of the accessibility tree, but something has to
+          announce the wait: with aria-hidden on the root and no text, a screen
+          reader heard silence between navigation and content. */}
+      <LoadingAnnouncement />
+      <div aria-hidden="true" className="pb-10">
+        <div className="border-b border-ink pb-5 pt-8">
+          <div className="h-7 w-72 max-w-full bg-paper-shade" />
+          <div className="mt-4 h-4 w-full max-w-lg bg-paper-shade" />
+          <div className="mt-5 h-3 w-64 max-w-full bg-paper-shade" />
         </div>
-        {[0, 1, 2, 3].map((row) => (
-          <div key={row} className="flex items-center gap-4 border-b border-rule py-4">
-            <div className="h-3 w-16 shrink-0 bg-paper-shade" />
-            <div className="h-3 flex-1 bg-paper-shade" />
-            <div className="h-3 w-8 shrink-0 bg-paper-shade" />
+
+        <div className="pt-10">
+          <div className="h-12 w-80 max-w-full bg-paper-shade" />
+          <div className="mt-4 h-3 w-48 bg-paper-shade" />
+        </div>
+
+        <div className="pt-10">
+          <div className="border-b border-rule pb-2">
+            <div className="h-3 w-32 bg-paper-shade" />
           </div>
-        ))}
+          {[0, 1, 2, 3].map((row) => (
+            <div key={row} className="flex items-center gap-4 border-b border-rule py-4">
+              <div className="h-3 w-16 shrink-0 bg-paper-shade" />
+              <div className="h-3 flex-1 bg-paper-shade" />
+              <div className="h-3 w-8 shrink-0 bg-paper-shade" />
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -10,6 +10,22 @@ import { redirect } from 'next/navigation';
  * any link or bookmark pointing at `/auth` still lands somewhere useful.
  * `/auth/callback` is unaffected: it is a route handler, not a page.
  */
-export default function AuthPage() {
-  redirect('/login');
+export default async function AuthPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  // Forwarded, not dropped: /login reads returnUrl to restore where the user
+  // was headed, and a bare redirect would send them to the workspace root
+  // after signing in.
+  const params = await searchParams;
+  const query = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) value.forEach((entry) => query.append(key, entry));
+    else if (value !== undefined) query.append(key, value);
+  }
+
+  const suffix = query.size > 0 ? `?${query.toString()}` : '';
+  redirect(`/login${suffix}`);
 }

@@ -70,6 +70,16 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
     }
   }, [isRefreshing]);
 
+  // `targets` excludes closed work, so an item closed on another surface
+  // disappears from the list while this still holds its id. The select would
+  // then display the first option while the next entry attaches to the item
+  // that is no longer offered.
+  useEffect(() => {
+    if (workItemId !== '' && !targets.some((target) => target.id === workItemId)) {
+      setWorkItemId('');
+    }
+  }, [targets, workItemId]);
+
   async function submit() {
     const draft = body.trim();
     if (draft.length === 0 || saving) return;
@@ -84,27 +94,37 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
     setPending((rows) => [optimistic, ...rows]);
     setSaving(true);
 
-    const result = await captureEntryAction(slug, {
-      kind,
-      body: draft,
-      work_item_id: workItemId === '' ? null : workItemId,
-    });
-
-    setSaving(false);
-
-    if (!result.ok) {
+    // The action returns typed failures for anything it handles, but the call
+    // itself still rejects on a dropped connection or a redirect thrown during
+    // auth. Unguarded, that rejection is swallowed, `saving` never clears, and
+    // the draft is gone: exactly the failure this feature exists to prevent.
+    const restoreDraft = (message: string) => {
       setPending((rows) => rows.filter((r) => r.tempId !== tempId));
-      // Losing captured text is the worst failure this product has, so the
-      // draft goes back in the box exactly as typed and the user can retry
-      // without retyping a word.
       setBody(draft);
-      setError(t(result.message));
+      setError(message);
       textareaRef.current?.focus();
-      return;
-    }
+    };
 
-    awaitingRefresh.current = true;
-    startRefresh(() => router.refresh());
+    try {
+      const result = await captureEntryAction(slug, {
+        kind,
+        body: draft,
+        work_item_id: workItemId === '' ? null : workItemId,
+      });
+
+      if (!result.ok) {
+        restoreDraft(t(result.message));
+        return;
+      }
+
+      awaitingRefresh.current = true;
+      startRefresh(() => router.refresh());
+    } catch (caught) {
+      console.error('captureEntryAction rejected', caught);
+      restoreDraft(t('app.capture.failed'));
+    } finally {
+      setSaving(false);
+    }
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {

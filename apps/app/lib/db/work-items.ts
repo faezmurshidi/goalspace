@@ -153,6 +153,11 @@ export async function changeWorkItemStatus(
     // the version that makes someone act, and this column is what renders it.
     status_changed_at: now,
     closed_at: CLOSING_STATUSES.includes(values.status) ? now : null,
+    // Reopening has to drop the closing reference too. Clearing closed_at
+    // alone leaves a row that is open but still points at the entry that once
+    // closed it, so any read treating that column as proof of closure
+    // disagrees with `status`.
+    ...(CLOSING_STATUSES.includes(values.status) ? {} : { closed_by_entry_id: null }),
   };
 
   if (closingEntryId) patch.closed_by_entry_id = closingEntryId;
@@ -222,6 +227,14 @@ export async function moveWorkItem(
 
     const all = await listWorkItems(supabase, projectId);
     const parentOf = new Map(all.map((item) => [item.id, item.parent_id]));
+
+    // The composite foreign key already refuses a parent from another project,
+    // but it surfaces as an opaque constraint violation. Checking here turns
+    // that into a message, and stops the walk below from silently treating an
+    // unknown id as a root.
+    if (!parentOf.has(parentId)) {
+      throw new Error('That parent work item is not part of this project.');
+    }
 
     // Walk up from the proposed parent. Meeting the moving item means the move
     // would close a loop. The step cap is a backstop against pre-existing

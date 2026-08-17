@@ -96,8 +96,3 @@ export async function createEntry(
   if (error) throw error;
   return data as Entry;
 }
-
-export async function deleteEntry(supabase: Client, entryId: string): Promise<void> {
-  const { error } = await supabase.from('entries').delete().eq('id', entryId);
-  if (error) throw error;
-}

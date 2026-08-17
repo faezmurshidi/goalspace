@@ -67,9 +67,17 @@ export function WorkspaceChrome({
     exact ? pathname === href : Boolean(pathname?.startsWith(href));
 
   async function signOut() {
-    await createClient().auth.signOut();
-    router.push('/login');
-    router.refresh();
+    // Navigate either way. If signOut rejects, React does not surface the
+    // rejection from a menu handler, so the user would sit on a page that
+    // still looks signed in with no feedback and an ambiguous session.
+    try {
+      await createClient().auth.signOut();
+    } catch (caught) {
+      console.error('Sign out failed', caught);
+    } finally {
+      router.push('/login');
+      router.refresh();
+    }
   }
 
   return (

@@ -29,12 +29,30 @@ export function fail(message: string, fieldErrors?: Record<string, string[]>): A
  * resolves it. Returning English here would hard-code one locale into every
  * error the workspace can produce.
  */
+function issueToKey(issue: z.ZodIssue): string {
+  // issue.message is Zod's own English prose. Returning it would put an
+  // untranslated string straight into an interface that serves en, ms and zh,
+  // so each issue is mapped to a key the client resolves in its own locale.
+  switch (issue.code) {
+    case z.ZodIssueCode.too_small:
+      return 'app.errors.fieldRequired';
+    case z.ZodIssueCode.too_big:
+      return 'app.errors.fieldTooLong';
+    default:
+      return 'app.errors.fieldInvalid';
+  }
+}
+
 export function fromZodError(error: z.ZodError): ActionResult<never> {
   const fieldErrors: Record<string, string[]> = {};
 
   for (const issue of error.issues) {
     const key = issue.path.join('.') || '_';
-    (fieldErrors[key] ??= []).push(issue.message);
+    const bucket = (fieldErrors[key] ??= []);
+    const translationKey = issueToKey(issue);
+    // One key per field is enough; repeating it renders the same sentence
+    // twice under one input.
+    if (!bucket.includes(translationKey)) bucket.push(translationKey);
   }
 
   return { ok: false, message: 'app.errors.validation', fieldErrors };

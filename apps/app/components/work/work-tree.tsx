@@ -39,21 +39,27 @@ export function WorkTree({ slug, items }: { slug: string; items: WorkItem[] }) {
     setBusyId(id);
     setError(null);
 
-    const result = await changeStatusAction(slug, {
-      id,
-      status,
-      ...(closingEntryBody ? { closingEntryBody } : {}),
-    });
+    try {
+      const result = await changeStatusAction(slug, {
+        id,
+        status,
+        ...(closingEntryBody ? { closingEntryBody } : {}),
+      });
 
-    setBusyId(null);
+      if (!result.ok) {
+        setError(t(result.message));
+        return;
+      }
 
-    if (!result.ok) {
-      setError(t(result.message));
-      return;
+      setClosing(null);
+      startRefresh(() => router.refresh());
+    } catch (caught) {
+      // A rejected action would otherwise leave the row disabled forever.
+      console.error('changeStatusAction rejected', caught);
+      setError(t('app.errors.generic'));
+    } finally {
+      setBusyId(null);
     }
-
-    setClosing(null);
-    startRefresh(() => router.refresh());
   }
 
   function onStatusPicked(item: WorkItem, next: WorkItemStatus) {
@@ -269,16 +275,23 @@ function AddItem({ slug, onAdded, t }: { slug: string; onAdded: () => void; t: T
 
     setBusy(true);
     setError(null);
-    const result = await createWorkItemAction(slug, { title: value, kind });
-    setBusy(false);
 
-    if (!result.ok) {
-      setError(t(result.message));
-      return;
+    try {
+      const result = await createWorkItemAction(slug, { title: value, kind });
+
+      if (!result.ok) {
+        setError(t(result.message));
+        return;
+      }
+
+      setTitle('');
+      onAdded();
+    } catch (caught) {
+      console.error('createWorkItemAction rejected', caught);
+      setError(t('app.errors.generic'));
+    } finally {
+      setBusy(false);
     }
-
-    setTitle('');
-    onAdded();
   }
 
   return (
