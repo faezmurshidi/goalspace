@@ -8,6 +8,7 @@ import type { Progress } from '@/lib/work-items/progress';
 import type { Absence, WokenItem } from '@/lib/work-items/reentry';
 import type { WorkItemStatus } from '@/lib/schemas/common';
 import { formatDate, formatDateTime, formatMonthYear } from '@/lib/format';
+import { previewText } from '@/lib/text';
 
 type T = (key: string, vars?: Record<string, unknown>) => string;
 
@@ -65,20 +66,6 @@ function StatusMark({ status, label }: { status: WorkItemStatus; label: string }
       {label}
     </span>
   );
-}
-
-/**
- * Truncate by code point, not by `slice`. `slice` counts UTF-16 units, so a
- * character outside the BMP that straddles the limit is cut in half and the
- * preview ends in a replacement glyph.
- */
-function preview(text: string, limit: number): string {
-  let out = '';
-  for (const char of text) {
-    if (out.length + char.length > limit) return `${out}…`;
-    out += char;
-  }
-  return out;
 }
 
 function Ratio({ progress }: { progress?: Progress }) {
@@ -321,7 +308,7 @@ export function Decided({ entries, t, locale }: Common & { entries: Entry[] }) {
                   {formatDate(entry.occurred_at, locale)}
                 </time>
                 <span className="min-w-0 flex-1 text-body text-ink">
-                  {entry.title ?? preview(entry.body, 80)}
+                  {entry.title ?? previewText(entry.body, 80)}
                 </span>
                 <span
                   aria-hidden="true"
