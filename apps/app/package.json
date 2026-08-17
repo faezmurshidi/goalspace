@@ -11,27 +11,30 @@
     "test:watch": "vitest tests/unit",
     "test:rls": "vitest run tests/rls",
     "db:start": "supabase start",
-    "db:reset": "supabase db reset"
+    "db:reset": "supabase db reset",
+    "verify:gateway": "node --experimental-strip-types scripts/verify-gateway.mts"
   },
   "dependencies": {
-    "@goalspace/ui": "workspace:*",
     "@goalspace/i18n": "workspace:*",
+    "@goalspace/ui": "workspace:*",
     "@hookform/resolvers": "^3.10.0",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.111.0",
+    "ai": "^7.0.66",
     "framer-motion": "^11.18.2",
     "lucide-react": "^0.477.0",
     "next": "^16.2.12",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.54.2",
-    "zod": "^3.24.1"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@goalspace/config": "workspace:*",
     "@types/node": "^20.6.2",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
+    "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "10.4.15",
     "dotenv": "^16.4.7",
     "postcss": "8.4.30",
@@ -39,7 +42,6 @@
     "supabase": "^2.2.1",
     "tailwindcss": "3.4.19",
     "typescript": "^5.3.3",
-    "vitest": "^4.1.10",
-    "@vitest/coverage-v8": "^4.1.10"
+    "vitest": "^4.1.10"
   }
 }
