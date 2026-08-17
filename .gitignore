@@ -42,8 +42,12 @@ next-env.d.ts
 .idea/
 *.swp
 
+# agent tooling
 # subagent-driven-development workspace (ledger, briefs, review packages)
 .superpowers/
+# MCP server definitions — machine-local, and the Supabase entry embeds the
+# project ref in its URL. Share a sanitized .mcp.json.example instead.
+.mcp.json
 
 # AI codebase dumps — these inline every file, including any pasted secrets.
 # A dump of this repo leaked a Supabase session in PR #5.
