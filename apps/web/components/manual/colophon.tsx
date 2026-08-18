@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { LanguageSelector, useAppTranslations } from '@goalspace/i18n';
 import { AS_OF } from '@/content/record';
 import packageJson from '../../package.json';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
+import { appHref } from '@/lib/app-url';
 
 /**
  * A colophon, not a four-column sitemap: the printed note that closes a
@@ -37,7 +36,7 @@ export function Colophon() {
           <Link href={`/${currentLocale}/blog`} className="label text-ink">
             {t('navigation.blog')}
           </Link>
-          <a href={APP_URL} className="label text-ink">
+          <a href={appHref('/')} className="label text-ink">
             {t('footer.appLink')}
           </a>
         </nav>

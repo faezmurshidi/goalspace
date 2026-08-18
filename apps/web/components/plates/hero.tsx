@@ -7,8 +7,7 @@ import { DrawOnView } from '@/components/manual/draw-on-view';
 import { ExplodedProject } from '@/components/manual/figures/exploded-project';
 import { record, AS_OF } from '@/content/record';
 import { daysBetween, formatElapsed, formatDayMonth, localeJoin } from '@/lib/duration';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
+import { appHref } from '@/lib/app-url';
 
 /** Lowercases the first character so a title reads as a clause mid sentence. */
 function asClause(text: string): string {
@@ -45,7 +44,7 @@ export function Hero() {
 
       <div className="mt-12 flex flex-wrap items-center gap-4">
         <a
-          href={`${APP_URL}/login`}
+          href={appHref('/login')}
           className="label bg-paper px-8 py-4 text-ink transition-colors duration-150 ease-out-expo hover:bg-ink hover:text-paper"
         >
           {t('landing.hero.cta')}

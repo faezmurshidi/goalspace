@@ -8,9 +8,9 @@ import { useAppTranslations } from '@goalspace/i18n';
 
 import { identifyUser, trackError, trackEvent } from '@/app/_lib/analytics';
 import { safeInternalPath } from '@/lib/safe-redirect';
+import { authModeFromParam, type AuthMode } from '@/lib/auth-mode';
 import { createClient } from '@/utils/supabase/client';
 
-type Mode = 'signin' | 'signup';
 type Pending = null | 'email' | 'google' | 'apple';
 
 /**
@@ -37,7 +37,9 @@ export function AuthForm() {
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  const [mode, setMode] = useState<Mode>('signin');
+  // Initial value only: once the form is open, the tabs own the mode, so a
+  // later render must not yank the user back to whatever the URL said.
+  const [mode, setMode] = useState<AuthMode>(() => authModeFromParam(searchParams?.get('mode')));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState<Pending>(null);
@@ -60,7 +62,7 @@ export function AuthForm() {
   // more recent and more useful than why an earlier callback failed.
   const shownError = error ?? (callbackErrorKey ? t(callbackErrorKey) : null);
 
-  function switchMode(next: Mode) {
+  function switchMode(next: AuthMode) {
     setMode(next);
     // Errors describe the attempt that produced them, not the form. Carrying
     // "that email and password do not match" across into the sign-up panel
