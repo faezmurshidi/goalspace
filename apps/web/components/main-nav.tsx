@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
+import { appHref } from '@/lib/app-url';
 
 /**
  * Every destination in this nav shares one class: label typography, ink
@@ -42,10 +41,10 @@ export function MainNav({
       >
         {t('navigation.blog')}
       </Link>
-      <a href={`${APP_URL}/login`} className={navItemClass}>
+      <a href={appHref('/login')} className={navItemClass}>
         {t('auth.signIn')}
       </a>
-      <a href={`${APP_URL}/auth`} className={navItemClass}>
+      <a href={appHref('/login?mode=signup')} className={navItemClass}>
         {t('auth.signUp')}
       </a>
     </nav>

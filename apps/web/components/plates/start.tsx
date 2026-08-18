@@ -3,8 +3,7 @@
 import { useAppTranslations } from '@goalspace/i18n';
 import { Plate } from '@/components/manual/plate';
 import { AS_OF } from '@/content/record';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
+import { appHref } from '@/lib/app-url';
 
 export function Start() {
   const { t } = useAppTranslations();
@@ -21,7 +20,7 @@ export function Start() {
 
       <div className="mt-12">
         <a
-          href={`${APP_URL}/login`}
+          href={appHref('/login')}
           className="label inline-block bg-paper px-8 py-4 text-ink transition-colors duration-150 ease-out-expo hover:bg-ink hover:text-paper"
         >
           {t('landing.start.cta')}

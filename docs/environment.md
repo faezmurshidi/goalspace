@@ -62,6 +62,14 @@ NEXT_PUBLIC_APP_URL=http://localhost:3001
 
 Defaulted in `apps/app/next.config.js` if unset.
 
+`NEXT_PUBLIC_APP_URL` is normalized by `apps/web/lib/app-url.ts`, which supplies
+a missing scheme rather than trusting the value. This is not decoration: Vercel
+shows deployment URLs as bare hosts and `VERCEL_URL` is scheme-less, and a value
+copied from either turns `${APP_URL}/login` into a *relative* path — which is
+exactly how every auth link on the marketing site once resolved to
+`/en/goalspace-43ru.vercel.app/login`. Marketing-site code asks `appHref()` for
+a link instead of reading the variable, and a test enforces that.
+
 ### Analytics
 
 ```text
