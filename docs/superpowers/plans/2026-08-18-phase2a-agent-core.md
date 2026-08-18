@@ -734,8 +734,8 @@ beforeAll(async () => {
 }, 60_000);
 
 afterAll(async () => {
-  if (alice) await deleteTestUser(alice);
-  if (bob) await deleteTestUser(bob);
+  if (alice) await deleteTestUser(alice.id);
+  if (bob) await deleteTestUser(bob.id);
 });
 
 describe('agent-layer isolation', () => {
