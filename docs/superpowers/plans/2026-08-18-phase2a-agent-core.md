@@ -505,26 +505,32 @@ returns table (source_type text, source_id uuid, title text, snippet text, rank 
 language sql
 stable
 as $$
-  with q as (select websearch_to_tsquery('english', p_query) as tsq)
-  select 'entry', e.id, e.title,
-         ts_headline('english', e.body, q.tsq, 'MaxFragments=1,MaxWords=40,MinWords=10'),
-         ts_rank(e.search_tsv, q.tsq)
-    from entries e, q
-   where e.project_id = p_project_id and e.search_tsv @@ q.tsq
-  union all
-  select 'work_item', w.id, w.title,
-         ts_headline('english', w.body, q.tsq, 'MaxFragments=1,MaxWords=40,MinWords=10'),
-         ts_rank(w.search_tsv, q.tsq)
-    from work_items w, q
-   where w.project_id = p_project_id and w.search_tsv @@ q.tsq
-  union all
-  select 'document', d.id, d.title,
-         ts_headline('english', d.body, q.tsq, 'MaxFragments=1,MaxWords=40,MinWords=10'),
-         ts_rank(d.search_tsv, q.tsq)
-    from documents d, q
-   where d.project_id = p_project_id and d.search_tsv @@ q.tsq
-  order by rank desc
-  limit p_limit;
+  -- The union is wrapped so ORDER BY has a named column to sort on. A bare
+  -- `order by rank` across UNION ALL branches fails: the branches never alias
+  -- their output, so there is no `rank` in scope to reference.
+  select r.source_type, r.source_id, r.title, r.snippet, r.rank
+    from (
+      with q as (select websearch_to_tsquery('english', p_query) as tsq)
+      select 'entry'::text as source_type, e.id as source_id, e.title as title,
+             ts_headline('english', e.body, q.tsq, 'MaxFragments=1,MaxWords=40,MinWords=10') as snippet,
+             ts_rank(e.search_tsv, q.tsq) as rank
+        from entries e, q
+       where e.project_id = p_project_id and e.search_tsv @@ q.tsq
+      union all
+      select 'work_item'::text, w.id, w.title,
+             ts_headline('english', w.body, q.tsq, 'MaxFragments=1,MaxWords=40,MinWords=10'),
+             ts_rank(w.search_tsv, q.tsq)
+        from work_items w, q
+       where w.project_id = p_project_id and w.search_tsv @@ q.tsq
+      union all
+      select 'document'::text, d.id, d.title,
+             ts_headline('english', d.body, q.tsq, 'MaxFragments=1,MaxWords=40,MinWords=10'),
+             ts_rank(d.search_tsv, q.tsq)
+        from documents d, q
+       where d.project_id = p_project_id and d.search_tsv @@ q.tsq
+    ) r
+   order by r.rank desc
+   limit p_limit;
 $$;
 
 alter table agents           enable row level security;
@@ -620,9 +626,12 @@ Expected: reset replays every migration including this one with no error. If `db
 
 Run:
 ```bash
-grep -c "visibility = 'public'" apps/app/supabase/migrations/20260818000100_phase2a_agents.sql
+grep -v "^\s*--" apps/app/supabase/migrations/20260818000100_phase2a_agents.sql \
+  | grep -c "visibility = 'public'"
 ```
-Expected: `0`. Any other number means a phase-1 policy was copied verbatim — fix before continuing.
+Expected: `0`. Comments are stripped first because the migration's own commentary
+explains why this pattern is absent — a naive grep matches that prose and cries
+wolf. Any non-comment match means a phase-1 policy was copied verbatim.
 
 - [ ] **Step 4: Regenerate types**
 
