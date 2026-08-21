@@ -60,7 +60,7 @@ Tasks 1–2 are phase-1 groundwork that was never built: `documents` and `docume
 - Consumes: `requiredText`, `optionalText` from `@/lib/schemas/common`.
 - Produces: `createDocumentSchema`, `updateDocumentSchema`, `type CreateDocumentValues`, `type UpdateDocumentValues`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/document-schema.test.ts
@@ -105,12 +105,12 @@ describe('updateDocumentSchema', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/document-schema.test.ts`
 Expected: FAIL — cannot resolve `@/lib/schemas/document`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```typescript
 // apps/app/lib/schemas/document.ts
@@ -145,12 +145,12 @@ export type CreateDocumentValues = z.output<typeof createDocumentSchema>;
 export type UpdateDocumentValues = z.output<typeof updateDocumentSchema>;
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/document-schema.test.ts`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/schemas/document.ts apps/app/tests/unit/document-schema.test.ts
@@ -170,7 +170,7 @@ git commit -m "feat(documents): add create and update schemas"
 
 There is no unit test here: every function is a Supabase round trip with no branching logic worth isolating. The revision behaviour is covered by Task 9's apply tests through a stub, and by `pnpm test:rls`.
 
-- [ ] **Step 1: Write the implementation**
+- [x] **Step 1: Write the implementation**
 
 ```typescript
 // apps/app/lib/db/documents.ts
@@ -295,12 +295,12 @@ export async function updateDocument(
 }
 ```
 
-- [ ] **Step 2: Verify the project typechecks**
+- [x] **Step 2: Verify the project typechecks**
 
 Run: `pnpm typecheck`
 Expected: PASS for both apps.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/app/lib/db/documents.ts
@@ -318,7 +318,7 @@ git commit -m "feat(documents): add queries, writing a revision on every update"
 **Interfaces:**
 - Produces: table `proposals`; the generated `Tables<'proposals'>` type.
 
-- [ ] **Step 1: Write the migration**
+- [x] **Step 1: Write the migration**
 
 ```sql
 -- apps/app/supabase/migrations/20260822000100_phase2b_proposals.sql
@@ -393,7 +393,7 @@ create policy proposals_delete on proposals for delete
   using (owner_id = auth.uid());
 ```
 
-- [ ] **Step 2: Apply the migration locally and verify it is reversible from scratch**
+- [x] **Step 2: Apply the migration locally and verify it is reversible from scratch**
 
 ```bash
 cd apps/app && pnpm db:reset
@@ -401,7 +401,7 @@ cd apps/app && pnpm db:reset
 
 Expected: every migration replays clean, including this one.
 
-- [ ] **Step 3: Verify the RLS carries no public branch**
+- [x] **Step 3: Verify the RLS carries no public branch**
 
 ```bash
 grep -c "visibility" apps/app/supabase/migrations/20260822000100_phase2b_proposals.sql
@@ -409,7 +409,7 @@ grep -c "visibility" apps/app/supabase/migrations/20260822000100_phase2b_proposa
 
 Expected: `0`. If this is not zero, a public-read branch has crept in — remove it.
 
-- [ ] **Step 4: Regenerate types**
+- [x] **Step 4: Regenerate types**
 
 ```bash
 cd apps/app && pnpm supabase gen types typescript --local > types/supabase.ts
@@ -417,12 +417,12 @@ cd apps/app && pnpm supabase gen types typescript --local > types/supabase.ts
 
 Do not hand-edit the result. If a generated type is wrong for a call site — as it is for nullable function arguments — put the cast in a typed wrapper in `lib/db/`, the way `startAgentRun` does. A hand edit here is reverted by the next regeneration without anyone noticing.
 
-- [ ] **Step 5: Verify the project still typechecks**
+- [x] **Step 5: Verify the project still typechecks**
 
 Run: `pnpm typecheck`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/app/supabase/migrations/20260822000100_phase2b_proposals.sql apps/app/types/supabase.ts
@@ -439,9 +439,7 @@ git commit -m "feat(db): add the proposals table with owner-only RLS"
 **Interfaces:**
 - Consumes: `createTestUser`, `deleteTestUser`, `type TestUser` from `../helpers/supabase`; the table from Task 3.
 
-**Before you start:** `pnpm test:rls` needs `SUPABASE_SERVICE_ROLE_KEY` in `apps/app/.env.local`. It is absent as of phase 2a, so this suite cannot run without adding it.
-
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/rls/proposals-isolation.test.ts
@@ -554,17 +552,17 @@ describe('proposals RLS', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails against an un-migrated database**
+- [x] **Step 2: Run to verify it fails against an un-migrated database**
 
 Run: `pnpm test:rls`
 Expected: FAIL if Task 3's migration has not reached the target project. Apply it, then continue.
 
-- [ ] **Step 3: Run to verify it passes**
+- [x] **Step 3: Run to verify it passes**
 
 Run: `pnpm test:rls`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/app/tests/rls/proposals-isolation.test.ts
@@ -583,7 +581,7 @@ git commit -m "test(rls): prove proposals stay private, including on public proj
 - Consumes: `createEntrySchema` from `@/lib/schemas/entry`; `createWorkItemSchema` from `@/lib/schemas/work-item`; `updateDocumentSchema` from `@/lib/schemas/document` (Task 1).
 - Produces: `proposalKinds`, `proposalKindSchema`, `type ProposalKind`, `citationSchema`, `citationsSchema`, `type Citation`, `documentEditPayloadSchema`, `payloadSchemaFor`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/proposal-schema.test.ts
@@ -646,12 +644,12 @@ describe('payloadSchemaFor', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/proposal-schema.test.ts`
 Expected: FAIL — cannot resolve `@/lib/schemas/proposal`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```typescript
 // apps/app/lib/schemas/proposal.ts
@@ -711,12 +709,12 @@ export function payloadSchemaFor(kind: ProposalKind): z.ZodTypeAny {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/proposal-schema.test.ts`
 Expected: PASS, 8 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/schemas/proposal.ts apps/app/tests/unit/proposal-schema.test.ts
@@ -737,7 +735,7 @@ git commit -m "feat(proposals): add citation and per-kind payload schemas"
 
 `groupCitations` is pure and carries the logic worth testing; `resolveCitations` is the thin query around it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/proposal-citations.test.ts
@@ -817,12 +815,12 @@ describe('resolveCitations', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/proposal-citations.test.ts`
 Expected: FAIL — cannot resolve `@/lib/proposals/citations`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```typescript
 // apps/app/lib/proposals/citations.ts
@@ -914,12 +912,12 @@ export async function resolveCitations(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/proposal-citations.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/proposals/citations.ts apps/app/tests/unit/proposal-citations.test.ts
@@ -942,7 +940,7 @@ git commit -m "feat(proposals): reject a proposal whose citations do not resolve
 
 **Why the context has to widen:** phase 2a's `ToolContext` is `{ supabase, projectId }`, which is all a read tool needs. A proposal row carries `owner_id`, `agent_id`, and `run_id`, and none of them may come from the model. They come from the run context, the same way `projectId` does.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/agents-write-handlers.test.ts
@@ -1071,12 +1069,12 @@ describe('propose_document_edit', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-write-handlers.test.ts`
 Expected: FAIL — `WRITE_TOOLS` is not exported and `HANDLERS.propose_entry` is undefined.
 
-- [ ] **Step 3: Widen the registry**
+- [x] **Step 3: Widen the registry**
 
 In `apps/app/lib/agents/tools/registry.ts`, extend `REGISTRY_NAMES`, add the three definitions, and export the group. Replace the module docstring's claim that every tool is `writes: false` — it is no longer true.
 
@@ -1175,7 +1173,7 @@ export const WRITE_TOOLS = [
 ] as const satisfies readonly ToolName[];
 ```
 
-- [ ] **Step 4: Widen the tool context and add the handlers**
+- [x] **Step 4: Widen the tool context and add the handlers**
 
 In `apps/app/lib/agents/tools/handlers/index.ts`, widen the interface and add the three handlers:
 
@@ -1286,7 +1284,7 @@ async function storeProposal(
   },
 ```
 
-- [ ] **Step 5: Pass the widened context through the executor**
+- [x] **Step 5: Pass the widened context through the executor**
 
 In `apps/app/lib/agents/executor.ts`, `dispatchToolCall` builds a `ToolContext` from the run context. Widen it:
 
@@ -1300,12 +1298,12 @@ In `apps/app/lib/agents/executor.ts`, `dispatchToolCall` builds a `ToolContext` 
   };
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [x] **Step 6: Run the tests to verify they pass**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-write-handlers.test.ts tests/unit/agents-registry.test.ts tests/unit/agents-executor.test.ts`
 Expected: PASS. The pre-existing executor and registry tests must still pass — the allowlist enforcement they prove is unchanged.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/app/lib/agents apps/app/tests/unit/agents-write-handlers.test.ts apps/app/tests/unit/agents-registry.test.ts
@@ -1323,7 +1321,7 @@ git commit -m "feat(agents): add the three propose tools, which write only to pr
 - Consumes: `type ProposalKind` (Task 5).
 - Produces: `type Proposal`, `listPendingProposals`, `getProposal`, `claimProposal`, `releaseProposal`, `settleProposal`. Task 11 adds `countPendingProposals` to the same module.
 
-- [ ] **Step 1: Write the implementation**
+- [x] **Step 1: Write the implementation**
 
 ```typescript
 // apps/app/lib/db/proposals.ts
@@ -1427,12 +1425,12 @@ export async function settleProposal(
 }
 ```
 
-- [ ] **Step 2: Verify the project typechecks**
+- [x] **Step 2: Verify the project typechecks**
 
 Run: `pnpm typecheck`
 Expected: PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/app/lib/db/proposals.ts
@@ -1451,7 +1449,7 @@ git commit -m "feat(proposals): add queries and a conditional claim for acceptan
 - Consumes: `payloadSchemaFor` (Task 5); `claimProposal`, `releaseProposal`, `settleProposal`, `getProposal`, `type Proposal` (Task 8); `createEntry` from `@/lib/db/entries`; `createWorkItem` from `@/lib/db/work-items`; `getDocument`, `updateDocument` (Task 2).
 - Produces: `type ApplyOutcome`, `isSuperseded`, `applyProposal`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/proposal-apply.test.ts
@@ -1484,12 +1482,12 @@ describe('isSuperseded', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/proposal-apply.test.ts`
 Expected: FAIL — cannot resolve `@/lib/proposals/apply`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 ```typescript
 // apps/app/lib/proposals/apply.ts
@@ -1630,12 +1628,12 @@ async function applyByKind(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/proposal-apply.test.ts`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/proposals/apply.ts apps/app/tests/unit/proposal-apply.test.ts
@@ -1653,7 +1651,7 @@ git commit -m "feat(proposals): apply an accepted proposal, claiming it first"
 - Consumes: `applyProposal` (Task 9); `settleProposal` (Task 8); `requireSessionContext` from `@/lib/auth/session`; `ok`, `fail`, `type ActionResult` from `@/lib/actions/result`.
 - Produces: `acceptProposalAction`, `rejectProposalAction`.
 
-- [ ] **Step 1: Write the implementation**
+- [x] **Step 1: Write the implementation**
 
 Append to `apps/app/app/(workspace)/actions.ts`:
 
@@ -1714,16 +1712,16 @@ import { applyProposal } from '@/lib/proposals/apply';
 import { settleProposal } from '@/lib/db/proposals';
 ```
 
-- [ ] **Step 2: Add the i18n keys**
+- [x] **Step 2: Add the i18n keys**
 
 Add `app.inbox.superseded`, `app.inbox.alreadyDecided`, `app.inbox.title`, `app.inbox.empty`, `app.inbox.accept`, `app.inbox.reject`, `app.inbox.rationale`, `app.inbox.citations`, and `app.inbox.edited` to each locale file in `packages/i18n` — `en`, `ms`, and `zh`. Every locale gets a real translation; an English string in the `zh` file is a bug, not a placeholder.
 
-- [ ] **Step 3: Verify the project typechecks**
+- [x] **Step 3: Verify the project typechecks**
 
 Run: `pnpm typecheck`
 Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/app/app/\(workspace\)/actions.ts packages/i18n
@@ -1748,7 +1746,7 @@ git commit -m "feat(proposals): add accept and reject server actions"
 - Citations render as links. A citation that no longer resolves renders as plain text rather than a broken link — the row may have been deleted since.
 - Empty state matters here: an inbox with nothing in it is the normal state, and it should read as calm rather than broken. No celebration, no "all caught up!" — see PRODUCT.md on the excluded register.
 
-- [ ] **Step 1: Write the page**
+- [x] **Step 1: Write the page**
 
 ```tsx
 // apps/app/app/(workspace)/projects/[slug]/inbox/page.tsx
@@ -1800,7 +1798,7 @@ export default async function InboxPage({ params }: Params) {
 }
 ```
 
-- [ ] **Step 2: Write the card**
+- [x] **Step 2: Write the card**
 
 ```tsx
 // apps/app/app/(workspace)/projects/[slug]/inbox/proposal-card.tsx
@@ -1905,7 +1903,7 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
 Add `app.inbox.edit`, `app.inbox.cancelEdit`, and `app.inbox.malformedEdit` to
 the three locale files alongside the keys from Task 10.
 
-- [ ] **Step 3: Add the inbox to the project navigation**
+- [x] **Step 3: Add the inbox to the project navigation**
 
 `app/(workspace)/projects/[slug]/layout.tsx` renders the per-project tabs. Add one for the inbox, following the existing tab markup exactly:
 
@@ -1939,12 +1937,12 @@ export async function countPendingProposals(supabase: Client, projectId: string)
 }
 ```
 
-- [ ] **Step 4: Verify the build**
+- [x] **Step 4: Verify the build**
 
 Run: `pnpm typecheck && pnpm build`
 Expected: PASS; `/projects/[slug]/inbox` appears in the route list.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/app/\(workspace\)/projects/\[slug\]/inbox apps/app/app/\(workspace\)/projects/\[slug\]/layout.tsx
@@ -1967,7 +1965,7 @@ The Critic exists to demonstrate a boundary by having no write tools. Until now 
 
 The spec's Tutor also carries `generate_audio`, which does not exist. It is left out for the same reason the Tutor itself was left out of phase 2a: an agent whose tools are absent claims capabilities it does not have. Its description must not mention audio.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // append to apps/app/tests/unit/agents-templates.test.ts
@@ -2009,12 +2007,12 @@ describe('the Tutor', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-templates.test.ts`
 Expected: FAIL — no template with slug `tutor`.
 
-- [ ] **Step 3: Add the template**
+- [x] **Step 3: Add the template**
 
 ```typescript
   {
@@ -2045,12 +2043,12 @@ Expected: FAIL — no template with slug `tutor`.
 
 Rename the `CRITIC_MODEL` constant to `DEFAULT_MODEL` now that two templates share it, and update the Critic's reference.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-templates.test.ts`
 Expected: PASS. The existing template tests must also still pass — `agentRowsFor` and the rate-table coverage test now cover two templates.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/agents/templates.ts apps/app/tests/unit/agents-templates.test.ts
@@ -2077,5 +2075,38 @@ Conversations and message persistence; the ask and run-trace surfaces; the agent
 ## Before starting
 
 - Read the "As built" section of the phase 2a plan. Several statements in its task bodies were corrected during implementation, and the corrections are what the code does.
-- `pnpm test:rls` needs `SUPABASE_SERVICE_ROLE_KEY` in `apps/app/.env.local`. It is not there as of phase 2a, and Task 4 cannot be verified without it.
+- `pnpm test:rls` runs against the local Supabase stack and reads `apps/app/.env.test`, which already exists. Start the stack with `pnpm db:start` first. (An earlier note here claimed the suite was unrunnable because `.env.local` carries no service-role key — that was wrong; the RLS suite never reads `.env.local`.)
 - The one open spec decision — how web findings are cited (§6.3 vs the Researcher) — does not block this plan. `citationSchema` deliberately admits only in-project ids, so resolving that decision later is an additive change to one enum rather than a rework.
+
+---
+
+## As built
+
+All twelve tasks shipped, verified against a local Supabase stack replayed
+from scratch. 170 unit tests, 50 database-backed tests.
+
+**One phase-2a assertion was replaced, not deleted.** `agents-registry.test.ts`
+asserted "ships no write tools in phase 2a", which the propose_* tools made
+false. The invariant that survives is the one that mattered: every `writes`
+tool is a `propose_*`, so there is still no path from a model to a row in
+entries, work_items, or documents.
+
+**A seventh test file was added beyond the plan.**
+`tests/rls/proposals-apply.test.ts` exercises the apply path against a real
+database. The plan covered `isSuperseded` with a unit test and left the rest to
+manual verification, but every remaining behaviour worth asserting is a
+database behaviour — the conditional claim under concurrent accepts, the
+revision written before a document update, the agent_id carried onto the
+applied row. A stubbed client would only have proven the stub agreed with the
+code. Done-when 3 through 6 are covered there.
+
+**The nav badge needed a grouped query.** The plan assumed the project layout
+rendered tabs; it does not — navigation is a client component in
+`components/shell/workspace-chrome.tsx`, fed from the workspace layout. The
+count comes from one `countPendingByProject` query over all projects rather
+than one per project, and `ChromeProject` gained a `pendingProposals` field.
+The per-project `countPendingProposals` the plan specified was written and then
+removed as dead code.
+
+**`ToolContext` widening broke a phase-2a test fixture**, which built the
+context with only `{ supabase, projectId }`. Updated rather than loosened.
