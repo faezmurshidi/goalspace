@@ -2,6 +2,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/supabase';
 import type { ToolName } from '@/lib/agents/tools/registry';
+import { citationsSchema, payloadSchemaFor, type ProposalKind } from '@/lib/schemas/proposal';
+import { resolveCitations } from '@/lib/proposals/citations';
 
 /**
  * Every handler takes its project from the run context, never from the model.
@@ -14,6 +16,76 @@ import type { ToolName } from '@/lib/agents/tools/registry';
 export interface ToolContext {
   supabase: SupabaseClient<Database>;
   projectId: string;
+  /**
+   * Provenance for anything this run proposes. Read tools ignore these; a
+   * proposal row cannot be written without them, and none of them may come
+   * from the model — an agent that could name its own owner_id could write
+   * into someone else's inbox.
+   */
+  ownerId: string;
+  agentId: string;
+  runId: string;
+}
+
+/**
+ * The single writer of the `proposals` table.
+ *
+ * Validation happens twice on the way in, and both halves matter. The payload
+ * goes through the same schema the human form posts through, so an agent
+ * cannot propose something a person could not have typed. The citations are
+ * resolved against the project, so a model that invents an id is told so and
+ * can correct itself — a stored proposal citing nothing would look better
+ * evidenced than one citing nothing at all, which is the worse outcome.
+ */
+async function storeProposal(
+  ctx: ToolContext,
+  kind: ProposalKind,
+  payload: unknown,
+  rationale: string,
+  rawCitations: unknown,
+  targetId: string | null
+): Promise<{ proposal_id: string }> {
+  const parsedPayload = payloadSchemaFor(kind).safeParse(payload);
+  if (!parsedPayload.success) {
+    throw new Error(
+      `That payload is not valid for a ${kind} proposal: ${parsedPayload.error.issues
+        .map((issue) => `${issue.path.join('.') || 'payload'} ${issue.message}`)
+        .join('; ')}`
+    );
+  }
+
+  const parsedCitations = citationsSchema.safeParse(rawCitations ?? []);
+  if (!parsedCitations.success) {
+    throw new Error('Citations must be {type, id} objects with uuid ids.');
+  }
+
+  const check = await resolveCitations(ctx.supabase, ctx.projectId, parsedCitations.data);
+  if (!check.ok) {
+    throw new Error(
+      `These citations do not exist in this project: ${check.missing
+        .map((citation) => `${citation.type} ${citation.id}`)
+        .join(', ')}. Cite only ids you have seen in a tool result.`
+    );
+  }
+
+  const { data, error } = await ctx.supabase
+    .from('proposals')
+    .insert({
+      project_id: ctx.projectId,
+      owner_id: ctx.ownerId,
+      agent_id: ctx.agentId,
+      run_id: ctx.runId,
+      kind,
+      target_id: targetId,
+      payload: parsedPayload.data as never,
+      rationale,
+      citations: parsedCitations.data as never,
+    })
+    .select('id')
+    .single();
+
+  if (error) throw new Error(error.message);
+  return { proposal_id: data.id };
 }
 
 const ENTRY_COLUMNS = 'id, kind, title, body, occurred_at, work_item_id';
@@ -101,5 +173,45 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
       .eq('id', args.id);
     if (error) throw new Error(error.message);
     return (data ?? [])[0] ?? null;
+  },
+
+  async propose_entry(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {
+    return storeProposal(ctx, 'entry', args.payload, args.rationale, args.citations, null);
+  },
+
+  async propose_work_item(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {
+    return storeProposal(ctx, 'work_item', args.payload, args.rationale, args.citations, null);
+  },
+
+  async propose_document_edit(
+    ctx,
+    args: {
+      payload: { id: string; title?: string; body?: string };
+      rationale: string;
+      citations?: unknown;
+    }
+  ) {
+    // base_updated_at is read from the row, never taken from the model. It is
+    // the evidence that this edit was written against the version now on
+    // record, and a model that supplied its own could defeat the staleness
+    // check simply by claiming a newer one.
+    const { data, error } = await ctx.supabase
+      .from('documents')
+      .select('id, updated_at')
+      .eq('project_id', ctx.projectId)
+      .eq('id', args.payload.id)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error(`No document ${args.payload.id} in this project.`);
+
+    return storeProposal(
+      ctx,
+      'document_edit',
+      { ...args.payload, base_updated_at: data.updated_at },
+      args.rationale,
+      args.citations,
+      args.payload.id
+    );
   },
 };

@@ -46,8 +46,14 @@ describe('REPO_READ', () => {
 });
 
 describe('REGISTRY', () => {
-  it('ships no write tools in phase 2a', () => {
-    for (const def of Object.values(REGISTRY)) expect(def.writes).toBe(false);
+  it('ships no tool that mutates the record directly', () => {
+    // This replaces phase 2a's "no write tools at all", which the propose_*
+    // tools made obsolete. The invariant that survives is the one that
+    // mattered: a `writes` tool emits a proposal, so there is still no path
+    // from a model to a row in entries, work_items, or documents.
+    for (const def of Object.values(REGISTRY)) {
+      if (def.writes) expect(def.name.startsWith('propose_')).toBe(true);
+    }
   });
 
   it('never accepts a project_id from the model', () => {

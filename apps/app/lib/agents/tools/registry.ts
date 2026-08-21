@@ -10,10 +10,11 @@ import { z } from 'zod';
  * anything outside it before a handler is reached.
  *
  * Two flags carry the meaning. `writes` marks a tool that produces a proposal
- * rather than mutating directly — every tool here is `false`, because phase 2a
- * ships no write path at all. `external` marks a tool that leaves the system;
- * REPO_READ must never contain one, which is what lets an agent be described
- * as reaching nowhere and have that be true.
+ * rather than mutating directly — a "write" tool in this system inserts into
+ * `proposals` and touches nothing else, so the flag names what the owner will
+ * be asked to approve, not what the tool changes. `external` marks a tool that
+ * leaves the system; REPO_READ must never contain one, which is what lets an
+ * agent be described as reaching nowhere and have that be true.
  *
  * No tool takes a project_id. Scope comes from the run context, so a model
  * cannot reach another project by guessing an id.
@@ -25,6 +26,9 @@ export const REGISTRY_NAMES = [
   'list_work_items',
   'get_work_item',
   'read_document',
+  'propose_entry',
+  'propose_work_item',
+  'propose_document_edit',
 ] as const;
 
 export type ToolName = (typeof REGISTRY_NAMES)[number];
@@ -33,9 +37,9 @@ export interface ToolDefinition {
   name: ToolName;
   description: string;
   inputSchema: z.ZodTypeAny;
-  /** Emits a proposal rather than mutating. Always false in phase 2a. */
+  /** Emits a proposal rather than mutating. */
   writes: boolean;
-  /** Leaves the system boundary. Always false in phase 2a. */
+  /** Leaves the system boundary. No tool does yet; web_search will. */
   external: boolean;
 }
 
@@ -93,6 +97,69 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
     writes: false,
     external: false,
   },
+  propose_entry: {
+    name: 'propose_entry',
+    description:
+      'Propose a new log entry for the owner to accept or reject. This does NOT write to the log — ' +
+      'it creates a suggestion the owner reviews. Cite the entries, work items, or documents you drew on.',
+    inputSchema: z.object({
+      payload: z.object({
+        kind: z.enum(['note', 'decision', 'source', 'session']),
+        body: z.string().min(1).describe('The entry body, written as the owner would write it.'),
+        title: z.string().max(200).nullable().optional(),
+        work_item_id: z.string().uuid().nullable().optional(),
+      }),
+      rationale: z
+        .string()
+        .min(1)
+        .describe('Why this belongs in the record. The owner reads this first.'),
+      citations: z
+        .array(z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() }))
+        .default([])
+        .describe('Ids you actually saw in a tool result. Inventing one fails the call.'),
+    }),
+    writes: true,
+    external: false,
+  },
+  propose_work_item: {
+    name: 'propose_work_item',
+    description:
+      'Propose a new work item for the owner to accept or reject. This does NOT create the item.',
+    inputSchema: z.object({
+      payload: z.object({
+        title: z.string().min(1).max(200),
+        body: z.string().nullable().optional(),
+        kind: z.enum(['task', 'question']).default('task'),
+        parent_id: z.string().uuid().nullable().optional(),
+        wake_at: z.string().datetime({ offset: true }).nullable().optional(),
+      }),
+      rationale: z.string().min(1),
+      citations: z
+        .array(z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() }))
+        .default([]),
+    }),
+    writes: true,
+    external: false,
+  },
+  propose_document_edit: {
+    name: 'propose_document_edit',
+    description:
+      'Propose a rewrite of a document for the owner to accept or reject. This does NOT change the ' +
+      'document. Read it first — an edit proposed against a stale version is rejected as superseded.',
+    inputSchema: z.object({
+      payload: z.object({
+        id: z.string().uuid().describe('The document to edit.'),
+        title: z.string().min(1).max(200).optional(),
+        body: z.string().optional(),
+      }),
+      rationale: z.string().min(1),
+      citations: z
+        .array(z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() }))
+        .default([]),
+    }),
+    writes: true,
+    external: false,
+  },
 };
 
 /**
@@ -105,6 +172,19 @@ export const REPO_READ = [
   'list_work_items',
   'get_work_item',
   'read_document',
+] as const satisfies readonly ToolName[];
+
+/**
+ * Every tool that produces a proposal. None of them is external, and none of
+ * them mutates: a "write" tool in this system writes to `proposals` and
+ * nowhere else. REPO_READ and WRITE_TOOLS are disjoint by construction, which
+ * is what lets the Critic be described as writing nothing and have that be
+ * checkable rather than claimed.
+ */
+export const WRITE_TOOLS = [
+  'propose_entry',
+  'propose_work_item',
+  'propose_document_edit',
 ] as const satisfies readonly ToolName[];
 
 function isRegistryTool(name: string): name is ToolName {
