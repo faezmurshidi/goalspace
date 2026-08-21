@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database, Tables } from '@/types/supabase';
 import { slugSchema, slugify } from '@/lib/schemas/common';
+import { agentRowsFor } from '@/lib/agents/templates';
 import type { CreateProjectValues } from '@/lib/schemas/project';
 import type { ProjectKind, ProjectStatus, ProjectVisibility } from '@/lib/schemas/common';
 
@@ -108,6 +109,20 @@ export async function getProjectBySlug(
  */
 const RESERVED_SLUGS = new Set(['new']);
 
+/**
+ * Gives a new project its seeded agents.
+ *
+ * A failure here is logged and swallowed on purpose. A project without a
+ * Critic is a perfectly usable project — the log is the whole product, the
+ * agents are an accessory to it — so a seeding error must not undo a creation
+ * the owner just completed. The agents can be added later; the project cannot
+ * be un-lost.
+ */
+async function seedAgents(supabase: Client, projectId: string, ownerId: string): Promise<void> {
+  const { error } = await supabase.from('agents').insert(agentRowsFor(projectId, ownerId));
+  if (error) console.error('Could not seed agents for project', projectId, error);
+}
+
 export async function createProject(
   supabase: Client,
   ownerId: string,
@@ -148,7 +163,10 @@ export async function createProject(
       .select(PROJECT_COLUMNS)
       .single();
 
-    if (!error) return asProject(data);
+    if (!error) {
+      await seedAgents(supabase, data.id, ownerId);
+      return asProject(data);
+    }
     // 23505 is unique_violation: someone took this slug between the read and
     // the write. Any other error is real and should surface.
     if (error.code !== '23505') throw error;
