@@ -36,15 +36,27 @@ export async function listPendingProposals(
   return (data ?? []) as unknown as Proposal[];
 }
 
-export async function countPendingProposals(supabase: Client, projectId: string): Promise<number> {
-  const { count, error } = await supabase
+/**
+ * Pending counts for every project the caller owns, in one round trip.
+ *
+ * The nav needs a badge per project and there is no sensible per-project query
+ * to run from a component that renders them all. RLS scopes the read to the
+ * owner, so counting client-side over the returned ids is safe and costs one
+ * request instead of one per project.
+ */
+export async function countPendingByProject(supabase: Client): Promise<Map<string, number>> {
+  const { data, error } = await supabase
     .from('proposals')
-    .select('id', { count: 'exact', head: true })
-    .eq('project_id', projectId)
+    .select('project_id')
     .eq('status', 'pending');
 
   if (error) throw error;
-  return count ?? 0;
+
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) {
+    counts.set(row.project_id, (counts.get(row.project_id) ?? 0) + 1);
+  }
+  return counts;
 }
 
 export async function getProposal(supabase: Client, id: string): Promise<Proposal | null> {
