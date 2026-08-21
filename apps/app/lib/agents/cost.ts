@@ -66,6 +66,26 @@ export function gatewayCostFrom(metadata: unknown): number | undefined {
   return parsed;
 }
 
+/**
+ * The most a run could cost if it spent its whole token allowance.
+ *
+ * Reserved against the monthly cap for as long as the run is in flight. The
+ * cap check cannot be made accurate by reading harder — a run's real cost is
+ * unknown until it ends, so two runs starting together will both see the same
+ * headroom. Reserving the worst case up front is what makes the check sound.
+ *
+ * Priced at the dearest of the model's rates rather than the input rate: a
+ * reservation that under-states the cost lets a run overshoot the cap by the
+ * difference, which is the overspend it exists to prevent.
+ */
+export function worstCaseUsd(model: string, tokenCap: number): number {
+  const rate = RATES[model];
+  if (!rate || !Number.isFinite(tokenCap) || tokenCap <= 0) return 0;
+
+  const dearest = Math.max(rate.inputPerMTok, rate.outputPerMTok, rate.cachedInputPerMTok);
+  return (tokenCap / 1_000_000) * dearest;
+}
+
 export function costUsd(input: CostInput): number {
   if (typeof input.gatewayCostUsd === 'number') return input.gatewayCostUsd;
 

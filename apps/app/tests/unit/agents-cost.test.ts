@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { costUsd, gatewayCostFrom } from '@/lib/agents/cost';
+import { costUsd, gatewayCostFrom, worstCaseUsd } from '@/lib/agents/cost';
 
 describe('costUsd', () => {
   it('prices a known model from the rate table', () => {
@@ -85,5 +85,33 @@ describe('gatewayCostFrom', () => {
 
   it('rejects a negative cost rather than crediting a run', () => {
     expect(gatewayCostFrom({ gateway: { cost: '-1' } })).toBeUndefined();
+  });
+});
+
+describe('worstCaseUsd', () => {
+  // What a run could cost if every token it is allowed came back at the
+  // priciest rate. This is what gets reserved against the monthly cap while
+  // the run is in flight, because the real cost is not known until it ends.
+  it('prices the whole token cap at the dearest rate', () => {
+    // sonnet-5 output is $15/MTok; 200k tokens at that rate is $3.
+    expect(worstCaseUsd('anthropic/claude-sonnet-5', 200_000)).toBeCloseTo(3, 6);
+  });
+
+  it('never under-reserves by picking the input rate', () => {
+    // Reserving at the cheaper input rate would let a run overshoot the cap by
+    // the difference — the exact overspend the reservation exists to stop.
+    const cheap = costUsd({ model: 'anthropic/claude-sonnet-5', inputTokens: 200_000 });
+    expect(worstCaseUsd('anthropic/claude-sonnet-5', 200_000)).toBeGreaterThan(cheap);
+  });
+
+  it('reserves nothing for a model it cannot price', () => {
+    // Consistent with costUsd, which returns 0 for an unknown model. The
+    // gateway still reports real spend, so the next run's check catches it.
+    expect(worstCaseUsd('acme/nope', 200_000)).toBe(0);
+  });
+
+  it('treats a missing or nonsensical cap as nothing to reserve', () => {
+    expect(worstCaseUsd('anthropic/claude-sonnet-5', 0)).toBe(0);
+    expect(worstCaseUsd('anthropic/claude-sonnet-5', -1)).toBe(0);
   });
 });

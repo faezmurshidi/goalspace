@@ -52,7 +52,7 @@
 - Consumes: nothing.
 - Produces: `costUsd(input: CostInput): number`, `type CostInput`, `RATES: Record<string, ModelRate>`, `type ModelRate = { inputPerMTok: number; outputPerMTok: number; cachedInputPerMTok: number }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/agents-cost.test.ts
@@ -103,12 +103,12 @@ describe('costUsd', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-cost.test.ts`
 Expected: FAIL — cannot resolve `@/lib/agents/cost`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```typescript
 // apps/app/lib/agents/cost.ts
@@ -165,12 +165,12 @@ export function costUsd(input: CostInput): number {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-cost.test.ts`
 Expected: PASS, 5 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/agents/cost.ts apps/app/tests/unit/agents-cost.test.ts
@@ -191,7 +191,7 @@ Every run opens with orientation rather than fragments: the work-item tree with 
 - Consumes: nothing.
 - Produces: `buildSkeleton(input: SkeletonInput, options?: SkeletonOptions): string`, `type SkeletonInput = { project: SkeletonProject; workItems: SkeletonWorkItem[]; decisions: SkeletonEntry[]; }`, `type SkeletonOptions = { maxChars?: number }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/agents-skeleton.test.ts
@@ -260,12 +260,12 @@ describe('buildSkeleton', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-skeleton.test.ts`
 Expected: FAIL — cannot resolve `@/lib/agents/skeleton`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```typescript
 // apps/app/lib/agents/skeleton.ts
@@ -364,12 +364,12 @@ export function buildSkeleton(input: SkeletonInput, options: SkeletonOptions = {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-skeleton.test.ts`
 Expected: PASS, 7 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/agents/skeleton.ts apps/app/tests/unit/agents-skeleton.test.ts
@@ -388,7 +388,7 @@ git commit -m "feat(agents): build a project skeleton for run orientation"
 - Consumes: phase-1 tables `projects`, `entries`, `work_items`, `documents`.
 - Produces: tables `agents`, `agent_runs`, `agent_tool_calls`, `ai_usage`, `project_budgets`; SQL function `search_repo(p_project_id uuid, p_query text, p_limit int)` returning `(source_type text, source_id uuid, title text, snippet text, rank real)`; foreign keys from `entries.agent_id`, `work_items.agent_id`, `documents.agent_id` to `agents(id)`.
 
-- [ ] **Step 1: Write the migration**
+- [x] **Step 1: Write the migration**
 
 ```sql
 -- apps/app/supabase/migrations/20260818000100_phase2a_agents.sql
@@ -614,7 +614,7 @@ create policy project_budgets_delete on project_budgets for delete
   using (owner_id = auth.uid());
 ```
 
-- [ ] **Step 2: Apply the migration locally and verify it is reversible from scratch**
+- [x] **Step 2: Apply the migration locally and verify it is reversible from scratch**
 
 Run:
 ```bash
@@ -622,7 +622,7 @@ cd apps/app && pnpm db:reset
 ```
 Expected: reset replays every migration including this one with no error. If `db:start` has not been run in this session, run it first.
 
-- [ ] **Step 3: Verify RLS carries no public branch**
+- [x] **Step 3: Verify RLS carries no public branch**
 
 Run:
 ```bash
@@ -633,7 +633,7 @@ Expected: `0`. Comments are stripped first because the migration's own commentar
 explains why this pattern is absent — a naive grep matches that prose and cries
 wolf. Any non-comment match means a phase-1 policy was copied verbatim.
 
-- [ ] **Step 4: Regenerate types**
+- [x] **Step 4: Regenerate types**
 
 Run:
 ```bash
@@ -641,12 +641,12 @@ cd apps/app && pnpm exec supabase gen types typescript --local > types/supabase.
 ```
 Expected: `types/supabase.ts` gains `agents`, `agent_runs`, `agent_tool_calls`, `ai_usage`, `project_budgets`. Do not hand-edit this file.
 
-- [ ] **Step 5: Verify the project still typechecks**
+- [x] **Step 5: Verify the project still typechecks**
 
 Run: `pnpm typecheck`
 Expected: PASS for both apps.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/app/supabase/migrations/20260818000100_phase2a_agents.sql apps/app/types/supabase.ts
@@ -666,7 +666,7 @@ The security regression gate. Phase 1 established that when you add a table, you
 - Consumes: `createTestUser`, `deleteTestUser`, `type TestUser` from `../helpers/supabase`; the tables from Task 3.
 - Produces: nothing importable.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/rls/agents-isolation.test.ts
@@ -797,17 +797,17 @@ describe('agent-layer isolation', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails against an un-migrated database**
+- [x] **Step 2: Run to verify it fails against an un-migrated database**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/rls/agents-isolation.test.ts`
 Expected: FAIL if Task 3's migration has not been applied to the target project. Apply it, then continue.
 
-- [ ] **Step 3: Run to verify it passes**
+- [x] **Step 3: Run to verify it passes**
 
 Run: `pnpm test:rls`
 Expected: PASS — the new file plus the existing phase-1 isolation, schema, and storage tests.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/app/tests/rls/agents-isolation.test.ts
@@ -828,7 +828,7 @@ The registry is the whole capability model. `resolveTools` is the security primi
 - Consumes: `zod`.
 - Produces: `REPO_READ: readonly string[]`, `type ToolName`, `type ToolDefinition = { name: ToolName; description: string; inputSchema: z.ZodTypeAny; writes: boolean; external: boolean }`, `REGISTRY: Record<ToolName, ToolDefinition>`, `resolveTools(allowlist: readonly string[]): ToolDefinition[]`, `isAllowed(allowlist: readonly string[], tool: string): boolean`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/agents-registry.test.ts
@@ -900,12 +900,12 @@ describe('REGISTRY', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-registry.test.ts`
 Expected: FAIL — cannot resolve `@/lib/agents/tools/registry`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```typescript
 // apps/app/lib/agents/tools/registry.ts
@@ -1032,12 +1032,12 @@ export function resolveTools(allowlist: readonly string[]): ToolDefinition[] {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-registry.test.ts`
 Expected: PASS, 11 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/agents/tools/registry.ts apps/app/tests/unit/agents-registry.test.ts
@@ -1056,7 +1056,7 @@ git commit -m "feat(agents): add the tool registry and allowlist intersection"
 - Consumes: `ToolName` from Task 5; `SupabaseClient<Database>` from `@/types/supabase`.
 - Produces: `type ToolContext = { supabase: SupabaseClient<Database>; projectId: string }`, `HANDLERS: Record<ToolName, (ctx: ToolContext, args: any) => Promise<unknown>>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/agents-handlers.test.ts
@@ -1132,12 +1132,12 @@ describe('handlers are project-scoped by context', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-handlers.test.ts`
 Expected: FAIL — cannot resolve `@/lib/agents/tools/handlers`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```typescript
 // apps/app/lib/agents/tools/handlers/index.ts
@@ -1248,12 +1248,12 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
 };
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-handlers.test.ts`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/agents/tools/handlers/index.ts apps/app/tests/unit/agents-handlers.test.ts
@@ -1274,7 +1274,7 @@ git commit -m "feat(agents): add project-scoped repo-read tool handlers"
 - Consumes: `resolveTools`, `isAllowed`, `REGISTRY`, `type ToolName` (Task 5); `HANDLERS`, `type ToolContext` (Task 6).
 - Produces: `type RunContext = { supabase: SupabaseClient<Database>; projectId: string; ownerId: string; agentId: string; runId: string; allowlist: readonly string[] }`, `type ToolOutcome = { ok: true; result: unknown } | { ok: false; error: string }`, `dispatchToolCall(ctx: RunContext, tool: string, args: unknown, handlers?: typeof HANDLERS): Promise<ToolOutcome>`, `buildToolSet(ctx: RunContext): ToolSet`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/agents-executor.test.ts
@@ -1398,12 +1398,12 @@ describe('dispatchToolCall — allowlist enforcement', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-executor.test.ts`
 Expected: FAIL — cannot resolve `@/lib/agents/executor`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```typescript
 // apps/app/lib/agents/executor.ts
@@ -1524,12 +1524,12 @@ export function describeCapabilities(allowlist: readonly string[]): string[] {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-executor.test.ts`
 Expected: PASS, 8 tests. The two that matter most are "NEVER reaches the handler" and "rejects a tool that is not in the registry".
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/agents/executor.ts apps/app/tests/unit/agents-executor.test.ts
@@ -1548,7 +1548,7 @@ git commit -m "feat(agents): enforce the tool allowlist in the executor, proven 
 - Consumes: `costUsd` (Task 1).
 - Produces: `type Budget = { monthly_cap_usd: number; per_run_token_cap: number }`, `type CapVerdict = { allowed: true } | { allowed: false; cap: 'monthly' | 'per_run'; message: string }`, `checkCaps(input: { budget: Budget; monthToDateUsd: number; runTokens: number }): CapVerdict`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/agents-caps.test.ts
@@ -1591,12 +1591,12 @@ describe('checkCaps', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-caps.test.ts`
 Expected: FAIL — cannot resolve `@/lib/agents/caps`.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```typescript
 // apps/app/lib/agents/caps.ts
@@ -1646,12 +1646,12 @@ export function checkCaps(input: {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-caps.test.ts`
 Expected: PASS, 6 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/agents/caps.ts apps/app/tests/unit/agents-caps.test.ts
@@ -1673,7 +1673,7 @@ Only the Critic is seeded in phase 2a. The Tutor and Researcher from spec §5.5 
 - Consumes: `buildToolSet`, `type RunContext` (Task 7); `buildSkeleton` (Task 2); `checkCaps` (Task 8); `costUsd` (Task 1); `REPO_READ` (Task 5).
 - Produces: `SEEDED_TEMPLATES: readonly AgentTemplate[]`, `type AgentTemplate = { slug: string; name: string; role_description: string; system_prompt: string; tools: readonly string[]; model: string }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // apps/app/tests/unit/agents-templates.test.ts
@@ -1719,12 +1719,12 @@ describe('SEEDED_TEMPLATES', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-templates.test.ts`
 Expected: FAIL — cannot resolve `@/lib/agents/templates`.
 
-- [ ] **Step 3: Write the templates**
+- [x] **Step 3: Write the templates**
 
 ```typescript
 // apps/app/lib/agents/templates.ts
@@ -1778,12 +1778,12 @@ export const SEEDED_TEMPLATES: readonly AgentTemplate[] = [
 ];
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/agents-templates.test.ts`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Write the streaming route handler**
+- [x] **Step 5: Write the streaming route handler**
 
 ```typescript
 // apps/app/app/api/agents/[agentId]/ask/route.ts
@@ -1979,7 +1979,7 @@ async function loadSkeleton(
 }
 ```
 
-- [ ] **Step 6: Verify the whole project typechecks and every test passes**
+- [x] **Step 6: Verify the whole project typechecks and every test passes**
 
 Run:
 ```bash
@@ -1987,7 +1987,7 @@ pnpm typecheck && pnpm test
 ```
 Expected: typecheck PASS for both apps; all unit tests pass, including the 125 pre-existing ones.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add apps/app/lib/agents/templates.ts apps/app/app/api/agents apps/app/tests/unit/agents-templates.test.ts
@@ -2017,3 +2017,62 @@ Proposals and the approval inbox; conversations and message persistence; the age
 ## Before starting
 
 `pnpm --filter @goalspace/app verify:gateway` must succeed. It currently fails with 403 `RestrictedModelsError` on the free tier — Tasks 1 through 8 need no model access, but Task 9 cannot be exercised end to end until AI Gateway credits are added.
+
+---
+
+## As built
+
+All nine tasks shipped. Where the code departs from the plan above, the code is
+right and this section says why — the plan was written before the SDK and the
+gateway account were known quantities.
+
+**The Critic runs on `openai/gpt-4o-mini`, not `anthropic/claude-sonnet-5`.**
+Every `anthropic/*` slug returns 403 `RestrictedModelsError` on the free
+gateway tier, so the designed model would have shipped a Critic that fails on
+its first question. `openai/gpt-4o-mini` is what the tier serves, and it does
+drive the repo-read tool loop — verified by probe before the swap. The slug is
+one constant in `templates.ts`; `cost.ts` prices both. `agents.model`'s column
+default moved with it. Move both back when the account carries credits.
+
+**`usage.cachedInputTokens` does not exist in `ai@7`.** Cached counts live in
+`usage.inputTokenDetails.cacheReadTokens`. The route records non-cached and
+cached input as *disjoint* counts, because `costUsd` prices them separately and
+adds both — recording the inclusive total as `input_tokens` would double-count
+every cached token. `onStepFinish` and `onFinish` are deprecated in v7; the
+route uses `onStepEnd` and `onEnd`.
+
+**The gateway's reported cost is read and preferred.** Task 1 built `costUsd`
+to prefer it, but nothing passed it, so the rate table — the thing that drifts
+— won every time. The gateway reports cost as a decimal *string*, which fails
+`costUsd`'s `typeof === 'number'` check and falls through silently.
+`gatewayCostFrom` parses it in one place and returns undefined rather than 0
+when absent, since a cached step can genuinely cost nothing.
+
+**`per_run_token_cap` is enforced.** The plan loaded it and never used it. It
+is a second `stopWhen` condition evaluated through `checkCaps`, so there is one
+definition of "too much", and a run stopped that way records status `capped`.
+
+**Seeding is wired into `createProject`.** The plan's Task 9 file list omitted
+it, which left `SEEDED_TEMPLATES` as data nothing read. The row mapping
+(`agentRowsFor`) is pure and tested; the insert logs and swallows, because a
+seeding failure must not undo a project the owner just created. There is no
+backfill — pre-existing projects were seeded by hand.
+
+**The monthly cap no longer races.** Migration `20260821090000_phase2a_hardening`
+adds `agent_runs.reserved_usd` and `start_agent_run`, which does the cap check
+and the run insert together under a per-project advisory lock, reserving each
+run's worst-case cost (`worstCaseUsd`) while it is in flight. Reservations from
+runs stuck `running` for over 15 minutes are ignored, so a lost process cannot
+strand the budget. The same migration pins `search_repo`'s `search_path` per
+linter 0011.
+
+### Still unverified
+
+Done-when criterion 1 has not been exercised end to end: no run has gone
+through a real signed-in session against a real project. The pieces are tested
+individually and `start_agent_run` was executed directly against production
+(allowing three concurrent runs and refusing the fourth), but the full path is
+unproven.
+
+`pnpm test:rls` cannot run locally — `apps/app/.env.local` carries no
+service-role key. That suite is the security regression gate for this layer.
