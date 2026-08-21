@@ -11,7 +11,25 @@ import { safeInternalPath } from '@/lib/safe-redirect';
 import { authModeFromParam, type AuthMode } from '@/lib/auth-mode';
 import { createClient } from '@/utils/supabase/client';
 
-type Pending = null | 'email' | 'google' | 'apple';
+type OAuthProvider = 'google' | 'apple';
+type Pending = null | 'email' | OAuthProvider;
+
+/**
+ * Which third-party providers the form offers. Empty for now: email and
+ * password only.
+ *
+ * Deliberately a list rather than deleted markup. The handler, the error
+ * copy, and the callback route all still work, so turning Google and Apple
+ * back on means naming them here — not rebuilding the block. The type is
+ * widened on purpose so the length check below stays a real branch instead of
+ * narrowing to `0 > 0`.
+ */
+const OAUTH_PROVIDERS: readonly OAuthProvider[] = [];
+
+const OAUTH_LABELS: Record<OAuthProvider, string> = {
+  google: 'app.auth.continueWithGoogle',
+  apple: 'app.auth.continueWithApple',
+};
 
 /**
  * Length is enforced on sign-up only, never on sign-in. An account created
@@ -157,7 +175,7 @@ export function AuthForm() {
     }
   }
 
-  async function onOAuth(provider: 'google' | 'apple') {
+  async function onOAuth(provider: OAuthProvider) {
     if (busy) return;
     setError(null);
     setPending(provider);
@@ -301,32 +319,32 @@ export function AuthForm() {
               : t('app.auth.submitSignUp')}
         </Button>
 
-        <div className="flex items-center gap-3" aria-hidden="true">
-          <span className="h-px flex-1 bg-rule" />
-          <span className="label text-ink-soft">{t('app.auth.dividerOr')}</span>
-          <span className="h-px flex-1 bg-rule" />
-        </div>
+        {/* The divider belongs to the providers, not to the form: with none
+            offered, an "or" rule under the submit button separates nothing. */}
+        {OAUTH_PROVIDERS.length > 0 ? (
+          <>
+            <div className="flex items-center gap-3" aria-hidden="true">
+              <span className="h-px flex-1 bg-rule" />
+              <span className="label text-ink-soft">{t('app.auth.dividerOr')}</span>
+              <span className="h-px flex-1 bg-rule" />
+            </div>
 
-        <div className="flex flex-col gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={busy}
-            onClick={() => onOAuth('google')}
-            className="label h-12 w-full border-rule-strong bg-paper text-ink hover:bg-paper-shade hover:text-ink disabled:opacity-60"
-          >
-            {t('app.auth.continueWithGoogle')}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={busy}
-            onClick={() => onOAuth('apple')}
-            className="label h-12 w-full border-rule-strong bg-paper text-ink hover:bg-paper-shade hover:text-ink disabled:opacity-60"
-          >
-            {t('app.auth.continueWithApple')}
-          </Button>
-        </div>
+            <div className="flex flex-col gap-3">
+              {OAUTH_PROVIDERS.map((provider) => (
+                <Button
+                  key={provider}
+                  type="button"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => onOAuth(provider)}
+                  className="label h-12 w-full border-rule-strong bg-paper text-ink hover:bg-paper-shade hover:text-ink disabled:opacity-60"
+                >
+                  {t(OAUTH_LABELS[provider])}
+                </Button>
+              ))}
+            </div>
+          </>
+        ) : null}
       </form>
     </div>
   );
