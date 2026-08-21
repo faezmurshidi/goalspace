@@ -3,14 +3,15 @@ import { REPO_READ } from '@/lib/agents/tools/registry';
 /**
  * Seeded per new project, all editable and deletable.
  *
- * Phase 2a seeds only the Critic. The Tutor and Researcher in the design need
- * propose_entry, generate_audio, and web_search — none of which exist until
- * the proposal layer ships — and an agent whose tools are missing would claim
- * capabilities it does not have.
+ * The Critic and the Tutor are the pair that make the capability model legible:
+ * one can read and argue and nothing else, the other can draft but never
+ * apply. Neither is a persona — the difference between them is entirely the
+ * tool set, and it is enforced server-side.
  *
- * The Critic having no write tools is the point rather than a limitation: it
- * is the clearest demonstration in the product that a tool set is a real
- * boundary and not a description.
+ * The Researcher still waits on web_search. The Tutor ships without the
+ * generate_audio the design gives it, for the same reason the Tutor itself was
+ * held back from phase 2a: an agent whose tools are absent claims capabilities
+ * it does not have.
  */
 
 export interface AgentTemplate {
@@ -23,14 +24,13 @@ export interface AgentTemplate {
 }
 
 /**
- * The design names anthropic/claude-sonnet-5, and the `agents.model` column
- * still defaults to it. Every anthropic/* slug returns 403
- * RestrictedModelsError on this account's free gateway tier, so seeding it
- * would ship a Critic that fails on its first question. gpt-4o-mini is what
- * the tier actually serves; swapping back is a one-line change here once the
+ * The design names anthropic/claude-sonnet-5. Every anthropic/* slug returns
+ * 403 RestrictedModelsError on this account's free gateway tier, so seeding it
+ * would ship agents that fail on their first question. gpt-4o-mini is what the
+ * tier actually serves; swapping back is a one-line change here once the
  * account carries credits, and cost.ts prices both.
  */
-const CRITIC_MODEL = 'openai/gpt-4o-mini';
+const DEFAULT_MODEL = 'openai/gpt-4o-mini';
 
 export const SEEDED_TEMPLATES: readonly AgentTemplate[] = [
   {
@@ -53,7 +53,31 @@ export const SEEDED_TEMPLATES: readonly AgentTemplate[] = [
       'not encouragement. If a decision looks sound, say so briefly and move on.',
     ].join('\n'),
     tools: REPO_READ,
-    model: CRITIC_MODEL,
+    model: DEFAULT_MODEL,
+  },
+  {
+    slug: 'tutor',
+    name: 'Tutor',
+    role_description:
+      'Explains what you have written back to you, and drafts entries and document edits for you to accept.',
+    system_prompt: [
+      'You help the owner understand and consolidate their own project record.',
+      '',
+      'You can read the record, and you can propose changes to it. You cannot',
+      'change anything yourself: propose_entry and propose_document_edit create',
+      'suggestions the owner reviews, and nothing you do reaches the record',
+      'until they accept it. Never say you have written, saved, or updated',
+      'anything — say what you have proposed.',
+      '',
+      'Cite what you drew on, using ids you have actually seen in a tool result.',
+      'A citation you invent will be rejected and the proposal discarded, so',
+      'read before you propose.',
+      '',
+      'Write proposals in the owner’s register: plain, specific, unsentimental.',
+      'You are drafting something they will put their name to.',
+    ].join('\n'),
+    tools: [...REPO_READ, 'propose_entry', 'propose_document_edit'],
+    model: DEFAULT_MODEL,
   },
 ];
 

@@ -76,7 +76,13 @@ export async function dispatchToolCall(
     return { ok: false, error };
   }
 
-  const toolContext: ToolContext = { supabase: ctx.supabase, projectId: ctx.projectId };
+  const toolContext: ToolContext = {
+    supabase: ctx.supabase,
+    projectId: ctx.projectId,
+    ownerId: ctx.ownerId,
+    agentId: ctx.agentId,
+    runId: ctx.runId,
+  };
   try {
     const result = await handler(toolContext, args as never);
     await recordToolCall(ctx, toolName, args, true, Date.now() - started, summarise(result));

@@ -20,6 +20,8 @@ import { createClient } from '@/utils/supabase/client';
 export interface ChromeProject {
   slug: string;
   title: string;
+  /** Pending proposals awaiting review. Drives the inbox badge. */
+  pendingProposals: number;
 }
 
 /**
@@ -60,6 +62,16 @@ export function WorkspaceChrome({
         { href: `/projects/${current.slug}`, label: t('app.nav.resume'), exact: true },
         { href: `/projects/${current.slug}/work`, label: t('app.nav.work'), exact: false },
         { href: `/projects/${current.slug}/log`, label: t('app.nav.log'), exact: false },
+        {
+          href: `/projects/${current.slug}/inbox`,
+          // A badge reading "0" is noise. An empty inbox is the normal state,
+          // not an achievement, so it gets no adornment at all.
+          label:
+            current.pendingProposals > 0
+              ? `${t('app.inbox.title')} ${current.pendingProposals}`
+              : t('app.inbox.title'),
+          exact: false,
+        },
       ]
     : [];
 

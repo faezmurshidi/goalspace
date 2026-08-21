@@ -645,6 +645,89 @@ export type Database = {
           },
         ]
       }
+      proposals: {
+        Row: {
+          agent_id: string
+          applied_id: string | null
+          citations: Json
+          created_at: string
+          decided_at: string | null
+          edited: boolean
+          id: string
+          kind: string
+          owner_id: string
+          payload: Json
+          project_id: string
+          rationale: string
+          run_id: string
+          status: string
+          target_id: string | null
+        }
+        Insert: {
+          agent_id: string
+          applied_id?: string | null
+          citations?: Json
+          created_at?: string
+          decided_at?: string | null
+          edited?: boolean
+          id?: string
+          kind: string
+          owner_id: string
+          payload: Json
+          project_id: string
+          rationale: string
+          run_id: string
+          status?: string
+          target_id?: string | null
+        }
+        Update: {
+          agent_id?: string
+          applied_id?: string | null
+          citations?: Json
+          created_at?: string
+          decided_at?: string | null
+          edited?: boolean
+          id?: string
+          kind?: string
+          owner_id?: string
+          payload?: Json
+          project_id?: string
+          rationale?: string
+          run_id?: string
+          status?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "agent_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           created_at: string
