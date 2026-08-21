@@ -5,7 +5,8 @@ import { createClient } from '@/utils/supabase/server';
 import { buildSkeleton, type SkeletonWorkItem } from '@/lib/agents/skeleton';
 import { buildToolSet, type RunContext } from '@/lib/agents/executor';
 import { checkCaps, type Budget } from '@/lib/agents/caps';
-import { costUsd, gatewayCostFrom } from '@/lib/agents/cost';
+import { startAgentRun } from '@/lib/db/agents';
+import { costUsd, gatewayCostFrom, worstCaseUsd } from '@/lib/agents/cost';
 
 /**
  * The loop runs inside the stream.
@@ -48,40 +49,51 @@ export async function POST(
   }
 
   const budget = await loadBudget(supabase, agent.project_id, auth.user.id);
-  const monthToDate = await monthToDateSpend(supabase, agent.project_id);
-  const before = checkCaps({ budget, monthToDateUsd: monthToDate, runTokens: 0 });
-  if (!before.allowed) {
-    return NextResponse.json({ error: before.message, cap: before.cap }, { status: 402 });
+
+  // Reserving and opening the run is one atomic step inside the database. The
+  // old shape — read spend, decide, then insert — let two runs starting
+  // together both read the same headroom and both proceed.
+  const start = await startAgentRun(supabase, {
+    projectId: agent.project_id,
+    agentId: agent.id,
+    workItemId: workItemId ?? null,
+    trigger: workItemId ? 'work_item_action' : 'conversation',
+    reservedUsd: worstCaseUsd(agent.model, budget.per_run_token_cap),
+  });
+
+  if (!start.started) {
+    const verdict = checkCaps({
+      budget,
+      monthToDateUsd: start.monthToDateUsd,
+      runTokens: 0,
+    });
+    return NextResponse.json(
+      {
+        // checkCaps owns the wording, but it only refuses on spend already
+        // recorded. A refusal here can also mean in-flight runs have the
+        // budget reserved, so fall back to a message that says so.
+        error: verdict.allowed
+          ? `Monthly cap of $${start.monthlyCapUsd.toFixed(2)} is fully committed to runs already in flight.`
+          : verdict.message,
+        cap: 'monthly',
+      },
+      { status: 402 }
+    );
   }
 
-  const { data: run } = await supabase
-    .from('agent_runs')
-    .insert({
-      project_id: agent.project_id,
-      owner_id: auth.user.id,
-      agent_id: agent.id,
-      work_item_id: workItemId ?? null,
-      trigger: workItemId ? 'work_item_action' : 'conversation',
-      status: 'running',
-    })
-    .select('id')
-    .single();
-  if (!run) return NextResponse.json({ error: 'Could not start a run.' }, { status: 500 });
+  const runId = start.runId;
 
   const context: RunContext = {
     supabase,
     projectId: agent.project_id,
     ownerId: auth.user.id,
     agentId: agent.id,
-    runId: run.id,
+    runId,
     allowlist: agent.tools,
   };
 
   const skeleton = await loadSkeleton(supabase, agent.project_id);
 
-  // The up-front check above can only see spend that already landed, so the
-  // per-run token cap has to be enforced from inside the loop. Reusing
-  // checkCaps rather than comparing here keeps one definition of "too much".
   let cappedByTokens = false;
 
   const result = streamText({
@@ -93,7 +105,11 @@ export async function POST(
       stepCountIs(MAX_STEPS),
       ({ steps }) => {
         const runTokens = steps.reduce((total, step) => total + (step.usage.totalTokens ?? 0), 0);
-        const verdict = checkCaps({ budget, monthToDateUsd: monthToDate, runTokens });
+        // Only the per-run token cap is live here. The monthly cap was settled
+        // atomically at start and this run's worst case is already reserved
+        // against it, so re-checking it mid-run would either duplicate that
+        // decision or act on a figure this run is itself still changing.
+        const verdict = checkCaps({ budget, monthToDateUsd: 0, runTokens });
         if (!verdict.allowed) cappedByTokens = true;
         return !verdict.allowed;
       },
@@ -114,7 +130,7 @@ export async function POST(
         project_id: agent.project_id,
         owner_id: auth.user.id,
         agent_id: agent.id,
-        run_id: run.id,
+        run_id: runId,
         work_item_id: workItemId ?? null,
         model: agent.model,
         input_tokens: nonCachedInput,
@@ -139,7 +155,7 @@ export async function POST(
           step_count: steps.length,
           ended_at: new Date().toISOString(),
         })
-        .eq('id', run.id);
+        .eq('id', runId);
     },
     onError: async ({ error }) => {
       await supabase
@@ -149,7 +165,7 @@ export async function POST(
           error: error instanceof Error ? error.message : String(error),
           ended_at: new Date().toISOString(),
         })
-        .eq('id', run.id);
+        .eq('id', runId);
     },
   });
 
@@ -174,21 +190,6 @@ async function loadBudget(
   }
   await supabase.from('project_budgets').insert({ project_id: projectId, owner_id: ownerId });
   return { monthly_cap_usd: 10, per_run_token_cap: 200_000 };
-}
-
-async function monthToDateSpend(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  projectId: string
-): Promise<number> {
-  const since = new Date();
-  since.setUTCDate(1);
-  since.setUTCHours(0, 0, 0, 0);
-  const { data } = await supabase
-    .from('ai_usage')
-    .select('cost_usd')
-    .eq('project_id', projectId)
-    .gte('created_at', since.toISOString());
-  return (data ?? []).reduce((total, row) => total + Number(row.cost_usd), 0);
 }
 
 async function loadSkeleton(

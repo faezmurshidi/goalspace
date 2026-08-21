@@ -42,6 +42,7 @@ export type Database = {
           id: string
           owner_id: string
           project_id: string
+          reserved_usd: number
           started_at: string
           status: string
           step_count: number
@@ -55,6 +56,7 @@ export type Database = {
           id?: string
           owner_id: string
           project_id: string
+          reserved_usd?: number
           started_at?: string
           status: string
           step_count?: number
@@ -68,6 +70,7 @@ export type Database = {
           id?: string
           owner_id?: string
           project_id?: string
+          reserved_usd?: number
           started_at?: string
           status?: string
           step_count?: number
@@ -813,6 +816,21 @@ export type Database = {
           title: string
           snippet: string
           rank: number
+        }[]
+      }
+      start_agent_run: {
+        Args: {
+          p_project_id: string
+          p_agent_id: string
+          p_work_item_id: string
+          p_trigger: string
+          p_reserved_usd: number
+        }
+        Returns: {
+          run_id: string
+          allowed: boolean
+          month_to_date: number
+          monthly_cap: number
         }[]
       }
     }
