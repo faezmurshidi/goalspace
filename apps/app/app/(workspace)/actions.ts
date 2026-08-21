@@ -13,6 +13,8 @@ import {
 } from '@/lib/db/work-items';
 import { createEntrySchema } from '@/lib/schemas/entry';
 import { createProjectSchema } from '@/lib/schemas/project';
+import { applyProposal } from '@/lib/proposals/apply';
+import { settleProposal } from '@/lib/db/proposals';
 import {
   changeStatusSchema,
   createWorkItemSchema,
@@ -177,6 +179,54 @@ export async function createProjectAction(input: unknown): Promise<ActionResult<
     return ok({ slug: project.slug });
   } catch (error) {
     console.error('createProjectAction failed', error);
+    return fail('app.errors.generic');
+  }
+}
+
+export async function acceptProposalAction(input: {
+  proposalId: string;
+  payloadOverride?: unknown;
+}): Promise<ActionResult<{ status: string; appliedId?: string }>> {
+  const { supabase, userId } = await requireSessionContext();
+
+  try {
+    const outcome = await applyProposal(supabase, {
+      proposalId: input.proposalId,
+      ownerId: userId,
+      payloadOverride: input.payloadOverride,
+    });
+
+    revalidatePath('/', 'layout');
+
+    switch (outcome.status) {
+      case 'applied':
+        return ok({ status: 'applied', appliedId: outcome.appliedId });
+      case 'superseded':
+        // Not an error: the proposal was honest when written and the record
+        // moved on. Saying so is more useful than a generic failure.
+        return fail('app.inbox.superseded');
+      case 'gone':
+        return fail('app.inbox.alreadyDecided');
+      case 'invalid':
+        return fail(outcome.message);
+    }
+  } catch (error) {
+    console.error('acceptProposalAction failed', error);
+    return fail('app.errors.generic');
+  }
+}
+
+export async function rejectProposalAction(
+  proposalId: string
+): Promise<ActionResult<{ status: string }>> {
+  const { supabase } = await requireSessionContext();
+
+  try {
+    await settleProposal(supabase, proposalId, 'rejected');
+    revalidatePath('/', 'layout');
+    return ok({ status: 'rejected' });
+  } catch (error) {
+    console.error('rejectProposalAction failed', error);
     return fail('app.errors.generic');
   }
 }
