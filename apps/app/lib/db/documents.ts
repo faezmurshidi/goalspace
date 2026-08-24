@@ -66,19 +66,18 @@ export async function createDocument(
 /**
  * Update a document, keeping what it said before.
  *
- * `expectedUpdatedAt` is a compare-and-set, not an optimisation. Reading the
- * document, deciding it is current, and then updating by id alone lets two
- * edits based on the same version both pass that check and overwrite each
- * other — and the first body written never becomes a revision, so it is gone
- * from the history that exists to make edits reversible. The guard is on the
- * update itself, so the loser matches no row and is told.
+ * The work happens in `apply_document_edit`, a single transaction that takes a
+ * row lock, checks the version, records the body being replaced, and writes
+ * the new one. Doing those as separate round trips cannot be made correct: put
+ * the revision first and a losing edit leaves a revision for a change that
+ * never applied; put it second and a failed insert loses the previous body
+ * altogether. The lock removes the choice.
  *
- * The revision is written *first* and records the state being replaced. If the
- * guarded update then matches nothing, that revision duplicates the current
- * body: a tidy-up cost, against the alternative of losing the previous body
- * entirely when the insert is what fails.
+ * `expectedUpdatedAt` omitted means "no expectation" — the first-party edit
+ * shape, where nothing was read in advance to be stale against.
  *
- * Returns null when the version moved, which the caller reports as superseded.
+ * Returns null when the document is gone or has moved, which the caller
+ * reports as superseded.
  */
 export async function updateDocument(
   supabase: Client,
@@ -92,39 +91,20 @@ export async function updateDocument(
 ): Promise<Document | null> {
   const { projectId, ownerId, values, agentId = null, expectedUpdatedAt } = params;
 
-  const current = await getDocument(supabase, projectId, values.id);
-  if (!current) return null;
-  if (expectedUpdatedAt !== undefined && current.updated_at !== expectedUpdatedAt) return null;
-
-  const { error: revisionError } = await supabase.from('document_revisions').insert({
-    document_id: current.id,
-    project_id: projectId,
-    owner_id: ownerId,
-    title: current.title,
-    body: current.body,
+  const { data: appliedId, error } = await supabase.rpc('apply_document_edit', {
+    p_document_id: values.id,
+    p_project_id: projectId,
+    p_owner_id: ownerId,
+    // Null means human-authored. Set on every update, so the column describes
+    // the current body's author rather than the last agent ever to touch it.
+    p_agent_id: agentId as string,
+    p_expected_updated_at: (expectedUpdatedAt ?? null) as string,
+    p_title: (values.title ?? null) as string,
+    p_body: (values.body ?? null) as string,
   });
-  if (revisionError) throw revisionError;
-
-  let query = supabase
-    .from('documents')
-    .update({
-      ...(values.title !== undefined ? { title: values.title } : {}),
-      ...(values.body !== undefined ? { body: values.body } : {}),
-      // Null means human-authored. An agent-applied edit stamps the agent that
-      // proposed it; a human edit clears it back to null, so the column always
-      // describes the *current* body rather than the last agent to touch it.
-      agent_id: agentId,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('project_id', projectId)
-    .eq('id', values.id);
-
-  // The compare-and-set. Between the read above and this write another edit
-  // can land; matching on the version we read is what makes the loser lose.
-  if (expectedUpdatedAt !== undefined) query = query.eq('updated_at', expectedUpdatedAt);
-
-  const { data, error } = await query.select(DOCUMENT_COLUMNS).maybeSingle();
 
   if (error) throw error;
-  return (data ?? null) as Document | null;
+  if (!appliedId) return null;
+
+  return getDocument(supabase, projectId, appliedId);
 }

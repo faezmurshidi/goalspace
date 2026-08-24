@@ -891,6 +891,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_document_edit: {
+        Args: {
+          p_document_id: string
+          p_project_id: string
+          p_owner_id: string
+          p_agent_id: string
+          p_expected_updated_at: string
+          p_title: string
+          p_body: string
+        }
+        Returns: string
+      }
       search_repo: {
         Args: { p_project_id: string; p_query: string; p_limit?: number }
         Returns: {

@@ -322,10 +322,14 @@ describe('concurrent document edits based on one version', () => {
     const statuses = outcomes.map((o) => o.status).sort();
     expect(statuses).toEqual(['applied', 'superseded']);
 
+    // Exactly one. The loser must not leave a revision behind for an edit it
+    // never applied — that is what the row lock inside apply_document_edit
+    // buys over a compare-and-set from the application.
     const { data: revisions } = await alice!.client
       .from('document_revisions')
       .select('body')
       .eq('document_id', document.id);
-    expect(revisions!.some((r) => r.body === 'Base version.')).toBe(true);
+    expect(revisions).toHaveLength(1);
+    expect(revisions![0].body).toBe('Base version.');
   });
 });

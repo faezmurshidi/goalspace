@@ -86,3 +86,69 @@ create policy proposals_update on proposals for update
     and exists (select 1 from projects p where p.id = proposals.project_id and p.owner_id = auth.uid()));
 create policy proposals_delete on proposals for delete
   using (owner_id = auth.uid());
+
+/**
+ * Apply a document edit: check the version, keep the old body, write the new
+ * one — as one transaction.
+ *
+ * Doing this as three round trips from the application cannot be made correct,
+ * only differently wrong. Writing the revision first can leave a revision for
+ * an edit that then lost the version check; writing it second can lose the
+ * previous body entirely if the insert fails. Under a row lock both problems
+ * disappear: the loser blocks, wakes to a version that no longer matches, and
+ * returns without having written anything.
+ *
+ * SECURITY INVOKER, as everywhere else in this schema, so RLS applies to both
+ * tables the function touches.
+ *
+ * p_expected_updated_at may be null, which skips the version check. That is
+ * the shape a first-party edit takes when nothing was read beforehand.
+ *
+ * Returns the document id, or null when the document is gone or has moved.
+ */
+create function apply_document_edit(
+  p_document_id         uuid,
+  p_project_id          uuid,
+  p_owner_id            uuid,
+  p_agent_id            uuid,
+  p_expected_updated_at timestamptz,
+  p_title               text,
+  p_body                text
+)
+returns uuid
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  v_current public.documents%rowtype;
+begin
+  -- The lock is the whole mechanism. A concurrent edit waits here rather than
+  -- racing ahead to insert a revision it will not earn.
+  select * into v_current
+    from public.documents
+   where id = p_document_id and project_id = p_project_id
+     for update;
+
+  if not found then return null; end if;
+
+  if p_expected_updated_at is not null and v_current.updated_at <> p_expected_updated_at then
+    return null;
+  end if;
+
+  insert into public.document_revisions (document_id, project_id, owner_id, title, body)
+  values (v_current.id, p_project_id, p_owner_id, v_current.title, v_current.body);
+
+  update public.documents
+     set title      = coalesce(p_title, title),
+         body       = coalesce(p_body, body),
+         agent_id   = p_agent_id,
+         updated_at = now()
+   where id = p_document_id;
+
+  return p_document_id;
+end;
+$$;
+
+comment on function apply_document_edit(uuid, uuid, uuid, uuid, timestamptz, text, text) is
+  'Version-checked document update that records the replaced body as a revision, under a row lock so concurrent edits cannot both write.';
