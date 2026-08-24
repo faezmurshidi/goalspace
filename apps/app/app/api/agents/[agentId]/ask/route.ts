@@ -90,6 +90,10 @@ export async function POST(
     agentId: agent.id,
     runId,
     allowlist: agent.tools,
+    // One map per run: read_document fills it, propose_document_edit requires
+    // it. Scoped to the run so a version read in one conversation cannot
+    // vouch for an edit proposed in another.
+    documentVersions: new Map<string, string>(),
   };
 
   const skeleton = await loadSkeleton(supabase, agent.project_id);

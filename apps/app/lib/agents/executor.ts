@@ -25,6 +25,13 @@ export interface RunContext {
   agentId: string;
   runId: string;
   allowlist: readonly string[];
+  /**
+   * Per-run memory of document versions read, populated by read_document and
+   * required by propose_document_edit. Created once per run so it survives
+   * across tool calls; see ToolContext for why the version cannot be looked up
+   * at proposal time.
+   */
+  documentVersions: Map<string, string>;
 }
 
 export type ToolOutcome = { ok: true; result: unknown } | { ok: false; error: string };
@@ -76,7 +83,14 @@ export async function dispatchToolCall(
     return { ok: false, error };
   }
 
-  const toolContext: ToolContext = { supabase: ctx.supabase, projectId: ctx.projectId };
+  const toolContext: ToolContext = {
+    supabase: ctx.supabase,
+    projectId: ctx.projectId,
+    ownerId: ctx.ownerId,
+    agentId: ctx.agentId,
+    runId: ctx.runId,
+    documentVersions: ctx.documentVersions,
+  };
   try {
     const result = await handler(toolContext, args as never);
     await recordToolCall(ctx, toolName, args, true, Date.now() - started, summarise(result));

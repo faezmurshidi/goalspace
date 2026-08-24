@@ -26,6 +26,7 @@ function context(allowlist: readonly string[], client: never): RunContext {
     ownerId: 'owner-1',
     agentId: 'agent-1',
     runId: 'run-1',
+  documentVersions: new Map<string, string>(),
     allowlist,
   };
 }

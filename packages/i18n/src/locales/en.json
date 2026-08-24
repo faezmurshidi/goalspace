@@ -467,6 +467,20 @@
     "offline": {
       "title": "Could not reach the server",
       "body": "Your text is still in the box. Try again when you are back online."
+    },
+    "inbox": {
+      "accept": "Accept",
+      "alreadyDecided": "This proposal has already been decided.",
+      "cancelEdit": "Cancel edit",
+      "citations": "Drawn from",
+      "edit": "Edit",
+      "edited": "Edited before accepting",
+      "editorLabel": "Proposal payload (JSON)",
+      "empty": "No proposals waiting.",
+      "malformedEdit": "That is not valid JSON.",
+      "reject": "Reject",
+      "superseded": "The record changed after this was proposed. Nothing was applied.",
+      "title": "Inbox"
     }
   }
 }

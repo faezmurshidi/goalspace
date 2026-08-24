@@ -72,15 +72,27 @@ export async function getLatestEntryAt(
 
 export async function createEntry(
   supabase: Client,
-  params: { projectId: string; ownerId: string; values: CreateEntryValues }
+  params: {
+    projectId: string;
+    ownerId: string;
+    values: CreateEntryValues;
+    /**
+     * Provenance, set when an accepted proposal produced this entry. Null
+     * means human-authored. Stamped on the insert rather than by a follow-up
+     * update, so an entry cannot exist for even a moment claiming an author
+     * it did not have — and so a failed update cannot silently lose it.
+     */
+    agentId?: string | null;
+  }
 ): Promise<Entry> {
-  const { projectId, ownerId, values } = params;
+  const { projectId, ownerId, values, agentId = null } = params;
 
   const { data, error } = await supabase
     .from('entries')
     .insert({
       project_id: projectId,
       owner_id: ownerId,
+      agent_id: agentId,
       kind: values.kind,
       title: values.title,
       body: values.body,

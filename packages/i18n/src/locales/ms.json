@@ -467,6 +467,20 @@
     "offline": {
       "title": "Tidak dapat menghubungi pelayan",
       "body": "Teks anda masih ada. Cuba lagi apabila anda kembali dalam talian."
+    },
+    "inbox": {
+      "accept": "Terima",
+      "alreadyDecided": "Cadangan ini sudah diputuskan.",
+      "cancelEdit": "Batal suntingan",
+      "citations": "Diambil daripada",
+      "edit": "Sunting",
+      "edited": "Disunting sebelum diterima",
+      "editorLabel": "Muatan cadangan (JSON)",
+      "empty": "Tiada cadangan menunggu.",
+      "malformedEdit": "Itu bukan JSON yang sah.",
+      "reject": "Tolak",
+      "superseded": "Rekod berubah selepas ini dicadangkan. Tiada apa-apa digunakan.",
+      "title": "Peti masuk"
     }
   }
 }

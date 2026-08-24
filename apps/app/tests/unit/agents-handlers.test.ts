@@ -37,7 +37,16 @@ function stubSupabase(rows: unknown[]) {
   };
 }
 
-const ctx = (client: never): ToolContext => ({ supabase: client, projectId: 'proj-1' });
+// The provenance fields exist for the propose_* handlers; the read handlers
+// under test here ignore them, but the context is one shape for both groups.
+const ctx = (client: never): ToolContext => ({
+  supabase: client,
+  projectId: 'proj-1',
+  ownerId: 'owner-1',
+  agentId: 'agent-1',
+  runId: 'run-1',
+  documentVersions: new Map<string, string>(),
+});
 
 describe('handlers are project-scoped by context', () => {
   it('search_repo passes the context project id, not one from args', async () => {

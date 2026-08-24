@@ -466,6 +466,20 @@
     "offline": {
       "title": "无法连接服务器",
       "body": "你的文字还在。恢复网络后请重试。"
+    },
+    "inbox": {
+      "accept": "采纳",
+      "alreadyDecided": "该提议已处理。",
+      "cancelEdit": "取消编辑",
+      "citations": "依据",
+      "edit": "编辑",
+      "edited": "采纳前已编辑",
+      "editorLabel": "提议内容（JSON）",
+      "empty": "没有待处理的提议。",
+      "malformedEdit": "这不是有效的 JSON。",
+      "reject": "拒绝",
+      "superseded": "提出该提议后记录已变更，未作任何应用。",
+      "title": "收件箱"
     }
   }
 }

@@ -23,7 +23,8 @@ document revisions, which give phase 2's agent edits an undo path for free.
 
 **Design:** [2026-07-30-goalspace-grounded-copartner-design.md](superpowers/specs/2026-07-30-goalspace-grounded-copartner-design.md)
 **Plan (2a):** [2026-08-18-phase2a-agent-core.md](superpowers/plans/2026-08-18-phase2a-agent-core.md)
-**Status:** phase 2a is built. The rest of phase 2 is designed, not started.
+**Plan (2b):** [2026-08-21-phase2b-proposals.md](superpowers/plans/2026-08-21-phase2b-proposals.md)
+**Status:** phases 2a and 2b are built. The rest of phase 2 is designed, not started.
 
 Phase 2a shipped the security spine: full-text retrieval over the project, the
 project skeleton, five repo-read tools, a registry intersected with each
@@ -31,17 +32,17 @@ agent's allowlist server-side, run and tool-call recording, cost metering with
 monthly and per-run caps, a streaming ask route, and a seeded Critic. That
 covers success criteria 2 and 4.
 
-Criteria 1, 3, and 5 are not met. All three wait on the proposal layer, which
-is where the phase's first constraint — agents propose, they never write —
-stops being a property of the Critic having no write tools and becomes
-something the product enforces. **Phase 2b is the proposals layer** and is the
-next thing to plan.
+Phase 2b added the proposal layer: three write tools that insert into
+`proposals` and nowhere else, server-side citation validation, the document
+write path phase 1 never built, an approval inbox, and the Tutor — the first
+seeded agent that can draft. That covers success criterion 3, and criterion 1
+once a run is driven end to end.
 
-Still unbuilt, in dependency order: proposals and the approval inbox; the
-`propose_entry` / `propose_work_item` / `propose_document_edit` tools with
-server-side citation validation; `conversations` and `messages` with message
-persistence; the ask, inbox, agents, and run-trace surfaces; `web_search`;
-`generate_audio`; the Tutor and Researcher templates.
+Criterion 5 is met by construction: no embedding work exists to block capture.
+
+Still unbuilt, in dependency order: `conversations` and `messages` with message
+persistence; the ask, agents, and run-trace surfaces; `web_search`;
+`generate_audio`; the Researcher template.
 
 Makes the phase-1 record answerable. The differentiating question is not "write
 me a plan" — it is *"why did I abandon that approach in month two?"*, which no

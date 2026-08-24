@@ -103,3 +103,40 @@ describe('SEEDED_TEMPLATES rate coverage', () => {
     }
   });
 });
+
+describe('the Tutor', () => {
+  it('is seeded with repo-read plus the entry and document write tools', () => {
+    const tutor = SEEDED_TEMPLATES.find((t) => t.slug === 'tutor');
+    expect(tutor).toBeDefined();
+    expect(tutor!.tools).toContain('propose_entry');
+    expect(tutor!.tools).toContain('propose_document_edit');
+    expect(tutor!.tools).toContain('search_repo');
+  });
+
+  it('cannot propose work items or reach outside the system', () => {
+    // The Researcher is the one that opens work items and searches the web.
+    // Widening the Tutor here would make the two templates indistinguishable.
+    const tutor = SEEDED_TEMPLATES.find((t) => t.slug === 'tutor')!;
+    expect(tutor.tools).not.toContain('propose_work_item');
+    for (const name of tutor.tools) {
+      expect(REGISTRY[name as keyof typeof REGISTRY].external).toBe(false);
+    }
+  });
+
+  it('does not claim a capability it has no tool for', () => {
+    // generate_audio ships in a later phase. A description that promises it
+    // now is a lie the model will repeat.
+    const tutor = SEEDED_TEMPLATES.find((t) => t.slug === 'tutor')!;
+    expect(tutor.role_description.toLowerCase()).not.toContain('audio');
+    expect(tutor.system_prompt.toLowerCase()).not.toContain('audio');
+  });
+
+  it('leaves the Critic writing nothing', () => {
+    // The regression that matters: adding write tools to the registry must not
+    // quietly widen the agent defined as reaching nowhere.
+    const critic = SEEDED_TEMPLATES.find((t) => t.slug === 'critic')!;
+    for (const name of critic.tools) {
+      expect(REGISTRY[name as keyof typeof REGISTRY].writes).toBe(false);
+    }
+  });
+});
