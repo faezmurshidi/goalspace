@@ -25,6 +25,21 @@ export interface ToolContext {
   ownerId: string;
   agentId: string;
   runId: string;
+  /**
+   * The `updated_at` each document had when this run read it, keyed by id.
+   *
+   * Written by read_document, required by propose_document_edit. It exists
+   * because the obvious alternative — looking the version up when the proposal
+   * is stored — records the version *now*, not the version the edit was
+   * written against. An owner who edits between the agent's read and its
+   * proposal would then see the staleness check pass and their work
+   * overwritten, which is the exact failure superseding exists to prevent.
+   *
+   * Lives on the context rather than in the model's arguments for the same
+   * reason project_id does: a model that could name its own base version could
+   * defeat the check by claiming a newer one.
+   */
+  documentVersions: Map<string, string>;
 }
 
 /**
@@ -172,7 +187,12 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
       .eq('project_id', ctx.projectId)
       .eq('id', args.id);
     if (error) throw new Error(error.message);
-    return (data ?? [])[0] ?? null;
+
+    const document = (data ?? [])[0] ?? null;
+    // Remember what this run saw. propose_document_edit needs the version the
+    // agent actually read, not whatever is current when it proposes.
+    if (document) ctx.documentVersions.set(document.id, document.updated_at);
+    return document;
   },
 
   async propose_entry(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {
@@ -191,24 +211,24 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
       citations?: unknown;
     }
   ) {
-    // base_updated_at is read from the row, never taken from the model. It is
-    // the evidence that this edit was written against the version now on
-    // record, and a model that supplied its own could defeat the staleness
-    // check simply by claiming a newer one.
-    const { data, error } = await ctx.supabase
-      .from('documents')
-      .select('id, updated_at')
-      .eq('project_id', ctx.projectId)
-      .eq('id', args.payload.id)
-      .maybeSingle();
-
-    if (error) throw new Error(error.message);
-    if (!data) throw new Error(`No document ${args.payload.id} in this project.`);
+    // The base version comes from what read_document returned during this run,
+    // never from a fresh lookup and never from the model. Looking it up here
+    // would stamp the version at *proposal* time: if the owner edited between
+    // the agent's read and this call, the payload was written against the old
+    // body but would carry the new version, the staleness check would pass,
+    // and the owner's work would be overwritten.
+    const baseUpdatedAt = ctx.documentVersions.get(args.payload.id);
+    if (!baseUpdatedAt) {
+      throw new Error(
+        `Read document ${args.payload.id} with read_document before proposing an edit to it. ` +
+          'An edit has to be written against a version you have actually seen.'
+      );
+    }
 
     return storeProposal(
       ctx,
       'document_edit',
-      { ...args.payload, base_updated_at: data.updated_at },
+      { ...args.payload, base_updated_at: baseUpdatedAt },
       args.rationale,
       args.citations,
       args.payload.id

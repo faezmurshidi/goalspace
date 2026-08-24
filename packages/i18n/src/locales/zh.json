@@ -474,6 +474,7 @@
       "citations": "依据",
       "edit": "编辑",
       "edited": "采纳前已编辑",
+      "editorLabel": "提议内容（JSON）",
       "empty": "没有待处理的提议。",
       "malformedEdit": "这不是有效的 JSON。",
       "reject": "拒绝",

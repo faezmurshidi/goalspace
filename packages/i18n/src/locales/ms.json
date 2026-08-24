@@ -475,6 +475,7 @@
       "citations": "Diambil daripada",
       "edit": "Sunting",
       "edited": "Disunting sebelum diterima",
+      "editorLabel": "Muatan cadangan (JSON)",
       "empty": "Tiada cadangan menunggu.",
       "malformedEdit": "Itu bukan JSON yang sah.",
       "reject": "Tolak",

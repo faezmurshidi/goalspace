@@ -5,7 +5,11 @@ import { REGISTRY, REPO_READ, WRITE_TOOLS } from '@/lib/agents/tools/registry';
 
 const UUID = '11111111-1111-4111-8111-111111111111';
 
-function contextWith(inserted: unknown[], citable: string[] = []): ToolContext {
+function contextWith(
+  inserted: unknown[],
+  citable: string[] = [],
+  currentUpdatedAt = '2026-08-21T09:00:00.000Z'
+): ToolContext {
   return {
     supabase: {
       from(table: string) {
@@ -19,6 +23,13 @@ function contextWith(inserted: unknown[], citable: string[] = []): ToolContext {
             },
           };
         }
+        const row = { id: UUID, title: 'Doc', body: 'Body', updated_at: currentUpdatedAt };
+        // read_document awaits the builder itself after two .eq() calls, so the
+        // terminal object has to be thenable as well as offering maybeSingle.
+        const terminal = {
+          maybeSingle: async () => ({ data: row, error: null }),
+          then: (resolve: (v: unknown) => unknown) => resolve({ data: [row], error: null }),
+        };
         return {
           select: () => ({
             eq: () => ({
@@ -26,12 +37,7 @@ function contextWith(inserted: unknown[], citable: string[] = []): ToolContext {
                 data: ids.filter((id) => citable.includes(id)).map((id) => ({ id })),
                 error: null,
               }),
-              eq: () => ({
-                maybeSingle: async () => ({
-                  data: { id: UUID, updated_at: '2026-08-21T00:00:00.000Z' },
-                  error: null,
-                }),
-              }),
+              eq: () => terminal,
             }),
           }),
         };
@@ -41,6 +47,7 @@ function contextWith(inserted: unknown[], citable: string[] = []): ToolContext {
     ownerId: 'owner-1',
     agentId: 'agent-1',
     runId: 'run-1',
+    documentVersions: new Map<string, string>(),
   };
 }
 
@@ -81,6 +88,25 @@ describe('propose_entry', () => {
     expect(result).toMatchObject({ proposal_id: UUID });
   });
 
+  it('carries occurred_at through, so a run can propose a backdated entry', async () => {
+    // The tool schema omitted this at first, which silently made every proposed
+    // entry land on the day it was proposed. The log orders by occurred_at, so
+    // a session written up on Monday belongs on the Saturday it happened.
+    const inserted: unknown[] = [];
+    await HANDLERS.propose_entry(contextWith(inserted), {
+      payload: {
+        kind: 'session',
+        body: 'Rewound the motor.',
+        occurred_at: '2026-08-16T10:00:00.000Z',
+      },
+      rationale: 'The work happened on Saturday.',
+      citations: [],
+    } as never);
+
+    const row = inserted[0] as { payload: { occurred_at?: string } };
+    expect(row.payload.occurred_at).toBe('2026-08-16T10:00:00.000Z');
+  });
+
   it('rejects a payload the capture form would reject', async () => {
     const inserted: unknown[] = [];
     await expect(
@@ -107,12 +133,36 @@ describe('propose_entry', () => {
 });
 
 describe('propose_document_edit', () => {
-  it('stamps the document’s current updated_at as the edit base', async () => {
-    // The agent does not supply this — it is read from the row at propose
-    // time, so the model cannot claim to have based its edit on a newer
-    // version than it actually read.
+  it('refuses to propose an edit to a document this run has not read', async () => {
+    // An edit has to be written against a version the agent actually saw.
+    // Without a read there is no such version, and inventing one is what the
+    // whole staleness mechanism exists to prevent.
     const inserted: unknown[] = [];
-    await HANDLERS.propose_document_edit(contextWith(inserted, [UUID]), {
+    await expect(
+      HANDLERS.propose_document_edit(contextWith(inserted, [UUID]), {
+        payload: { id: UUID, body: 'Rewritten' },
+        rationale: 'Tightens the summary.',
+        citations: [],
+      } as never)
+    ).rejects.toThrow(/read_document/);
+    expect(inserted).toHaveLength(0);
+  });
+
+  it('stamps the version read_document returned, not the version now', async () => {
+    // The race this closes: the agent reads version X, the owner saves version
+    // Y, then the agent proposes. Stamping Y would make the edit — written
+    // against X — look current, and accepting it would silently overwrite the
+    // owner's work instead of superseding.
+    const inserted: unknown[] = [];
+    const ctx = contextWith(inserted, [UUID], '2026-08-21T00:00:00.000Z');
+
+    await HANDLERS.read_document(ctx, { id: UUID } as never);
+
+    // The owner saves while the agent is still composing. Same `inserted`
+    // array, so the proposal still lands where the assertions look for it.
+    ctx.supabase = contextWith(inserted, [UUID], '2026-08-21T09:00:00.000Z').supabase;
+
+    await HANDLERS.propose_document_edit(ctx, {
       payload: { id: UUID, body: 'Rewritten' },
       rationale: 'Tightens the summary.',
       citations: [{ type: 'document', id: UUID }],

@@ -222,7 +222,12 @@ export async function rejectProposalAction(
   const { supabase } = await requireSessionContext();
 
   try {
-    await settleProposal(supabase, proposalId, 'rejected');
+    // Only a pending proposal can be rejected. Without the guard a stale tab
+    // could reject one that has already been applied, leaving a real row in
+    // the log whose proposal claims it was refused.
+    const settled = await settleProposal(supabase, proposalId, 'rejected', { from: 'pending' });
+    if (!settled) return fail('app.inbox.alreadyDecided');
+
     revalidatePath('/', 'layout');
     return ok({ status: 'rejected' });
   } catch (error) {

@@ -45,6 +45,7 @@ const ctx = (client: never): ToolContext => ({
   ownerId: 'owner-1',
   agentId: 'agent-1',
   runId: 'run-1',
+  documentVersions: new Map<string, string>(),
 });
 
 describe('handlers are project-scoped by context', () => {

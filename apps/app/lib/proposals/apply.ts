@@ -72,11 +72,11 @@ export async function applyProposal(
   try {
     const appliedId = await applyByKind(supabase, claimed, parsed.data, params.ownerId);
     if (appliedId === null) {
-      await settleProposal(supabase, claimed.id, 'superseded');
+      await settleProposal(supabase, claimed.id, 'superseded', { from: 'accepted' });
       return { status: 'superseded' };
     }
 
-    await settleProposal(supabase, claimed.id, 'accepted', { appliedId, edited });
+    await settleProposal(supabase, claimed.id, 'accepted', { from: 'accepted', appliedId, edited });
     return { status: 'applied', appliedId };
   } catch (error) {
     await releaseProposal(supabase, claimed.id);
@@ -92,14 +92,17 @@ async function applyByKind(
   ownerId: string
 ): Promise<string | null> {
   if (proposal.kind === 'entry') {
-    // agent_id is what makes provenance visible in the log. It is set from the
-    // proposal, never from the payload — the owner edits content, not authorship.
+    // agent_id is stamped on the insert, not by a follow-up update. It comes
+    // from the proposal, never from the payload — the owner edits content in
+    // the inbox, not authorship — and doing it in one statement means a failed
+    // second write cannot leave an accepted proposal whose entry claims to be
+    // human-authored.
     const entry = await createEntry(supabase, {
       projectId: proposal.project_id,
       ownerId,
       values: payload as CreateEntryValues,
+      agentId: proposal.agent_id,
     });
-    await supabase.from('entries').update({ agent_id: proposal.agent_id }).eq('id', entry.id);
     return entry.id;
   }
 
@@ -108,8 +111,8 @@ async function applyByKind(
       projectId: proposal.project_id,
       ownerId,
       values: payload as CreateWorkItemValues,
+      agentId: proposal.agent_id,
     });
-    await supabase.from('work_items').update({ agent_id: proposal.agent_id }).eq('id', item.id);
     return item.id;
   }
 
@@ -118,6 +121,11 @@ async function applyByKind(
   if (!current) return null;
   if (isSuperseded(edit.base_updated_at, current.updated_at)) return null;
 
+  // The read above answers "is this proposal stale"; expectedUpdatedAt answers
+  // "did it go stale while we were deciding". Both are needed: the first gives
+  // the owner a truthful superseded, the second stops two proposals built on
+  // one version from overwriting each other.
+  //
   // updateDocument writes the revision before the update, so this is where
   // phase 1's revision table gives every agent edit its undo path.
   const updated = await updateDocument(supabase, {
@@ -125,6 +133,7 @@ async function applyByKind(
     ownerId,
     values: payload as UpdateDocumentValues,
     agentId: proposal.agent_id,
+    expectedUpdatedAt: current.updated_at,
   });
-  return updated.id;
+  return updated?.id ?? null;
 }

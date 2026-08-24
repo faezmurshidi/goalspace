@@ -22,8 +22,15 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
   function decide(action: () => Promise<{ ok: boolean; message?: string }>) {
     setError(null);
     startTransition(async () => {
-      const result = await action();
-      if (!result.ok) setError(result.message ?? 'app.errors.generic');
+      try {
+        const result = await action();
+        if (!result.ok) setError(result.message ?? 'app.errors.generic');
+      } catch {
+        // A server action can reject rather than resolve — a lost session, a
+        // network drop. Without this the transition ends silently and the card
+        // looks like nothing was clicked.
+        setError('app.errors.generic');
+      }
     });
   }
 
@@ -57,6 +64,7 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           rows={12}
+          aria-label={t('app.inbox.editorLabel')}
           className="w-full border border-rule-strong bg-paper p-3 font-mono text-sm"
         />
       )}

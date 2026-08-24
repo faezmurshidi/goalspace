@@ -73,9 +73,15 @@ export async function getLatestStatusChangeAt(
 
 export async function createWorkItem(
   supabase: Client,
-  params: { projectId: string; ownerId: string; values: CreateWorkItemValues }
+  params: {
+    projectId: string;
+    ownerId: string;
+    values: CreateWorkItemValues;
+    /** Provenance, as on createEntry. Null means human-authored. */
+    agentId?: string | null;
+  }
 ): Promise<WorkItem> {
-  const { projectId, ownerId, values } = params;
+  const { projectId, ownerId, values, agentId = null } = params;
 
   // New siblings go last. Computed rather than defaulted to 0, because a
   // default would silently stack every new item at the top of its level and
@@ -95,6 +101,7 @@ export async function createWorkItem(
     .insert({
       project_id: projectId,
       owner_id: ownerId,
+      agent_id: agentId,
       title: values.title,
       body: values.body ?? '',
       kind: values.kind,

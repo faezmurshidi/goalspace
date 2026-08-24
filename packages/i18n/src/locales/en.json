@@ -475,6 +475,7 @@
       "citations": "Drawn from",
       "edit": "Edit",
       "edited": "Edited before accepting",
+      "editorLabel": "Proposal payload (JSON)",
       "empty": "No proposals waiting.",
       "malformedEdit": "That is not valid JSON.",
       "reject": "Reject",

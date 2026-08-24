@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 import { applyProposal } from '@/lib/proposals/apply';
+import { releaseProposal, settleProposal } from '@/lib/db/proposals';
 
 /**
  * The apply path against a real database.
@@ -247,5 +248,84 @@ describe('applying a document edit', () => {
       .eq('id', id)
       .single();
     expect(proposal!.status).toBe('superseded');
+  });
+});
+
+describe('state transitions are guarded by current status', () => {
+  it('refuses to reject a proposal that was already applied', async () => {
+    // Without the guard this flipped an applied proposal to 'rejected',
+    // leaving a real entry in the log whose proposal claimed it was refused.
+    const id = await proposalOf({
+      kind: 'entry',
+      payload: { kind: 'note', body: 'Already accepted.' },
+    });
+
+    const applied = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(applied.status).toBe('applied');
+
+    const rejected = await settleProposal(client(), id, 'rejected', { from: 'pending' });
+    expect(rejected).toBe(false);
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('status, applied_id')
+      .eq('id', id)
+      .single();
+    expect(proposal!.status).toBe('accepted');
+    expect(proposal!.applied_id).not.toBeNull();
+  });
+
+  it('refuses to release a proposal that is not currently claimed', async () => {
+    const id = await proposalOf({ kind: 'entry', payload: { kind: 'note', body: 'Pending.' } });
+
+    // Nothing claimed it, so there is nothing to put back.
+    expect(await releaseProposal(client(), id)).toBe(false);
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('status')
+      .eq('id', id)
+      .single();
+    expect(proposal!.status).toBe('pending');
+  });
+});
+
+describe('concurrent document edits based on one version', () => {
+  it('applies the first and supersedes the second', async () => {
+    // Both proposals were written against the same body. Whichever lands
+    // second must not overwrite the first, and the first body must survive in
+    // the revision history that makes the edit reversible.
+    const document = await insert(alice!, 'documents', {
+      project_id: projectId,
+      owner_id: alice!.id,
+      title: 'Contended',
+      body: 'Base version.',
+    });
+
+    const base = document.updated_at as string;
+    const first = await proposalOf({
+      kind: 'document_edit',
+      target_id: document.id,
+      payload: { id: document.id, body: 'First edit.', base_updated_at: base },
+    });
+    const second = await proposalOf({
+      kind: 'document_edit',
+      target_id: document.id,
+      payload: { id: document.id, body: 'Second edit.', base_updated_at: base },
+    });
+
+    const outcomes = await Promise.all([
+      applyProposal(client(), { proposalId: first, ownerId: alice!.id }),
+      applyProposal(client(), { proposalId: second, ownerId: alice!.id }),
+    ]);
+
+    const statuses = outcomes.map((o) => o.status).sort();
+    expect(statuses).toEqual(['applied', 'superseded']);
+
+    const { data: revisions } = await alice!.client
+      .from('document_revisions')
+      .select('body')
+      .eq('document_id', document.id);
+    expect(revisions!.some((r) => r.body === 'Base version.')).toBe(true);
   });
 });

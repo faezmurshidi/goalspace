@@ -108,6 +108,14 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
         body: z.string().min(1).describe('The entry body, written as the owner would write it.'),
         title: z.string().max(200).nullable().optional(),
         work_item_id: z.string().uuid().nullable().optional(),
+        occurred_at: z
+          .string()
+          .datetime({ offset: true })
+          .optional()
+          .describe(
+            'When it happened, if that is not now. The log orders by this, so a session ' +
+              'written up days later belongs on the day it happened.'
+          ),
       }),
       rationale: z
         .string()

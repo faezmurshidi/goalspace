@@ -91,23 +91,42 @@ export async function claimProposal(supabase: Client, id: string): Promise<Propo
   return (data ?? null) as unknown as Proposal | null;
 }
 
-/** Put a claimed proposal back, for when applying it failed. */
-export async function releaseProposal(supabase: Client, id: string): Promise<void> {
-  const { error } = await supabase
+/**
+ * Put a claimed proposal back, for when applying it failed.
+ *
+ * Guarded on 'accepted' — the state claimProposal leaves behind. Without the
+ * guard a late release could resurrect a proposal that some other request had
+ * already settled, putting a decided suggestion back in the inbox.
+ */
+export async function releaseProposal(supabase: Client, id: string): Promise<boolean> {
+  const { data, error } = await supabase
     .from('proposals')
     .update({ status: 'pending', decided_at: null })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('status', 'accepted')
+    .select('id')
+    .maybeSingle();
 
   if (error) throw error;
+  return data !== null;
 }
 
+/**
+ * Move a proposal to its final state.
+ *
+ * `from` is required rather than optional because every transition here has
+ * exactly one legal predecessor, and updating by id alone let a stale request
+ * flip an already-applied proposal to 'rejected' — leaving a real row in the
+ * log whose proposal claims it was refused. Returns false when the guard
+ * matched nothing, which the caller reports rather than ignoring.
+ */
 export async function settleProposal(
   supabase: Client,
   id: string,
   status: 'accepted' | 'rejected' | 'superseded',
-  params: { appliedId?: string | null; edited?: boolean } = {}
-): Promise<void> {
-  const { error } = await supabase
+  params: { from: 'pending' | 'accepted'; appliedId?: string | null; edited?: boolean }
+): Promise<boolean> {
+  const { data, error } = await supabase
     .from('proposals')
     .update({
       status,
@@ -115,7 +134,11 @@ export async function settleProposal(
       ...(params.appliedId !== undefined ? { applied_id: params.appliedId } : {}),
       ...(params.edited !== undefined ? { edited: params.edited } : {}),
     })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('status', params.from)
+    .select('id')
+    .maybeSingle();
 
   if (error) throw error;
+  return data !== null;
 }
