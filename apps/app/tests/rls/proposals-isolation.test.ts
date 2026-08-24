@@ -8,6 +8,8 @@ let aliceProjectId: string;
 let aliceProposalId: string;
 let alicePublicProposalId: string;
 let bobProjectId: string;
+let bobAgentId: string;
+let bobRunId: string;
 
 const insert = async (user: TestUser, table: string, values: Record<string, unknown>) => {
   const { data, error } = await user.client.from(table).insert(values).select().single();
@@ -15,7 +17,7 @@ const insert = async (user: TestUser, table: string, values: Record<string, unkn
   return data as { id: string };
 };
 
-const seedProposal = async (user: TestUser, projectId: string, rationale: string) => {
+const seedAgentAndRun = async (user: TestUser, projectId: string) => {
   const agentId = (
     await insert(user, 'agents', {
       project_id: projectId,
@@ -37,6 +39,11 @@ const seedProposal = async (user: TestUser, projectId: string, rationale: string
     })
   ).id;
 
+  return { agentId, runId };
+};
+
+const seedProposal = async (user: TestUser, projectId: string, rationale: string) => {
+  const { agentId, runId } = await seedAgentAndRun(user, projectId);
   return (
     await insert(user, 'proposals', {
       project_id: projectId,
@@ -83,6 +90,10 @@ beforeAll(async () => {
     })
   ).id;
 
+  const bobOwn = await seedAgentAndRun(bob, bobProjectId);
+  bobAgentId = bobOwn.agentId;
+  bobRunId = bobOwn.runId;
+
   aliceProposalId = await seedProposal(alice, aliceProjectId, 'Because the log says so.');
   alicePublicProposalId = await seedProposal(alice, alicePublicProjectId, 'Secret rationale.');
 });
@@ -115,25 +126,39 @@ describe('proposals RLS', () => {
   });
 
   it('refuses an insert that forges ownership', async () => {
+    // Bob's own agent and run, so the row is referentially valid and the
+    // insert can only fail on the policy. Using Alice's ids here would fail on
+    // a foreign key first and hide an RLS regression behind a passing test.
     const { error } = await bob!.client.from('proposals').insert({
-      project_id: aliceProjectId,
+      project_id: bobProjectId,
       owner_id: alice!.id,
-      agent_id: aliceProposalId,
-      run_id: aliceProposalId,
+      agent_id: bobAgentId,
+      run_id: bobRunId,
       kind: 'entry',
-      payload: {},
+      payload: { kind: 'note', body: 'forged' },
       rationale: 'forged',
     });
     expect(error).toBeTruthy();
   });
 
   it('refuses to relocate a proposal into another user’s project', async () => {
-    const { data } = await bob!.client
+    // Attempted by Alice, who *can* see the row. Bob cannot select it, so an
+    // update by Bob matches nothing and the WITH CHECK clause never runs —
+    // the assertion would pass without the policy existing at all.
+    const { data, error } = await alice!.client
       .from('proposals')
       .update({ project_id: bobProjectId })
       .eq('id', aliceProposalId)
       .select();
-    expect(data ?? []).toHaveLength(0);
+
+    expect(error ?? (data ?? []).length === 0).toBeTruthy();
+
+    const { data: unmoved } = await alice!.client
+      .from('proposals')
+      .select('project_id')
+      .eq('id', aliceProposalId)
+      .single();
+    expect(unmoved!.project_id).toBe(aliceProjectId);
   });
 
   it('refuses a delete by another user', async () => {

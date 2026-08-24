@@ -31,6 +31,14 @@ describe('updateDocumentSchema', () => {
     expect(updateDocumentSchema.safeParse({ title: 'Spec' }).success).toBe(false);
   });
 
+  it('rejects an update that changes nothing', () => {
+    // An id-only payload used to validate, write a revision identical to the
+    // current body, and advance updated_at — invalidating every proposal based
+    // on the previous version for an edit that changed nothing.
+    const id = '11111111-1111-4111-8111-111111111111';
+    expect(updateDocumentSchema.safeParse({ id }).success).toBe(false);
+  });
+
   it('accepts a title-only or body-only edit', () => {
     const id = '11111111-1111-4111-8111-111111111111';
     expect(updateDocumentSchema.safeParse({ id, title: 'New' }).success).toBe(true);

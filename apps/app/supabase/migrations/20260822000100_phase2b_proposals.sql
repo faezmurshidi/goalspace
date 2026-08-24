@@ -4,12 +4,17 @@
 -- Every write tool inserts here and nowhere else. Acceptance is what produces
 -- a real row, and it is always a human action.
 
+-- agent_runs needs a composite uniqueness contract before proposals can point
+-- at (run, project) as a pair. agents already carries one from phase 2a.
+alter table agent_runs add constraint agent_runs_id_project_key unique (id, project_id);
+
 create table proposals (
   id          uuid primary key default gen_random_uuid(),
   project_id  uuid not null references projects(id) on delete cascade,
   owner_id    uuid not null references users(id) on delete cascade,
-  agent_id    uuid not null references agents(id) on delete cascade,
-  run_id      uuid not null references agent_runs(id) on delete cascade,
+  agent_id    uuid not null,
+  run_id      uuid not null,
+
   kind        text not null check (kind in ('entry','work_item','document_edit')),
 
   -- The document being edited, for kind = 'document_edit'. Null otherwise.
@@ -36,13 +41,27 @@ create table proposals (
   applied_id  uuid,
 
   created_at  timestamptz not null default now(),
-  decided_at  timestamptz
+  decided_at  timestamptz,
+
+  -- Composite, not simple, foreign keys.
+  --
+  -- Pointing agent_id at agents(id) alone proves only that the agent exists.
+  -- The owner of two projects could then file a proposal in one and attribute
+  -- it to an agent or run belonging to the other — RLS would allow it, because
+  -- both rows are theirs. Matching on (id, project_id) makes provenance and
+  -- scope agree at the database, which is the only place it cannot be
+  -- forgotten.
+  foreign key (agent_id, project_id) references agents(id, project_id) on delete cascade,
+  foreign key (run_id, project_id) references agent_runs(id, project_id) on delete cascade
 );
 
 -- The inbox reads pending proposals for one project, newest first.
 create index proposals_project_status_idx on proposals (project_id, status, created_at desc);
 -- The run trace reads every proposal a run produced.
 create index proposals_run_idx on proposals (run_id, created_at);
+-- Every policy below filters on owner_id, so every read pays for this index.
+-- Without it RLS degrades to a scan as the table grows.
+create index proposals_owner_idx on proposals (owner_id);
 
 alter table proposals enable row level security;
 

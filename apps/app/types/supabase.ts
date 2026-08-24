@@ -699,11 +699,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "proposals_agent_id_fkey"
-            columns: ["agent_id"]
+            foreignKeyName: "proposals_agent_id_project_id_fkey"
+            columns: ["agent_id", "project_id"]
             isOneToOne: false
             referencedRelation: "agents"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "project_id"]
           },
           {
             foreignKeyName: "proposals_owner_id_fkey"
@@ -720,11 +720,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "proposals_run_id_fkey"
-            columns: ["run_id"]
+            foreignKeyName: "proposals_run_id_project_id_fkey"
+            columns: ["run_id", "project_id"]
             isOneToOne: false
             referencedRelation: "agent_runs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "project_id"]
           },
         ]
       }

@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 import { createEntrySchema } from './entry';
 import { createWorkItemSchema } from './work-item';
-import { updateDocumentSchema } from './document';
+import {
+  CHANGES_SOMETHING_MESSAGE,
+  changesSomething,
+  updateDocumentFields,
+} from './document';
 
 export const proposalKinds = ['entry', 'work_item', 'document_edit'] as const;
 export const proposalKindSchema = z.enum(proposalKinds);
@@ -31,9 +35,12 @@ export type Citation = z.infer<typeof citationSchema>;
  * generated an hour ago would overwrite whatever the owner has written since,
  * and neither side would know.
  */
-export const documentEditPayloadSchema = updateDocumentSchema.extend({
-  base_updated_at: z.string().datetime({ offset: true }),
-});
+export const documentEditPayloadSchema = updateDocumentFields
+  .extend({ base_updated_at: z.string().datetime({ offset: true }) })
+  // Extends the fields rather than the refined schema, because .refine turns a
+  // ZodObject into a ZodEffects and ZodEffects has no .extend. The rule is
+  // re-applied from the same predicate so the two cannot drift.
+  .refine(changesSomething, { message: CHANGES_SOMETHING_MESSAGE });
 
 /**
  * One validation path.
