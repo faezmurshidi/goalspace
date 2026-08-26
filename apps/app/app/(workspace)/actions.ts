@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug, createProject } from '@/lib/db/projects';
 import { createEntry } from '@/lib/db/entries';
-import { createDocument } from '@/lib/db/documents';
+import { createDocument, getDocument, getRevision, updateDocument } from '@/lib/db/documents';
 import {
   changeWorkItemStatus,
   createWorkItem,
@@ -13,7 +13,7 @@ import {
   updateWorkItem,
 } from '@/lib/db/work-items';
 import { createEntrySchema } from '@/lib/schemas/entry';
-import { createDocumentSchema } from '@/lib/schemas/document';
+import { createDocumentSchema, updateDocumentSchema } from '@/lib/schemas/document';
 import { createProjectSchema } from '@/lib/schemas/project';
 import { applyProposal } from '@/lib/proposals/apply';
 import { settleProposal } from '@/lib/db/proposals';
@@ -261,6 +261,77 @@ export async function createDocumentAction(
     return ok({ id: document.id });
   } catch (error) {
     console.error('createDocumentAction failed', error);
+    return fail('app.errors.generic');
+  }
+}
+
+export async function updateDocumentAction(
+  slug: string,
+  input: unknown,
+  expectedUpdatedAt: string
+): Promise<ActionResult<{ updatedAt: string }>> {
+  const parsed = updateDocumentSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, userId } = await requireSessionContext();
+
+  try {
+    const project = await getProjectBySlug(supabase, userId, slug);
+    if (!project) return fail('app.errors.projectMissing');
+
+    const updated = await updateDocument(supabase, {
+      projectId: project.id,
+      ownerId: userId,
+      values: parsed.data,
+      // A person saving clears the agent stamp: the column describes who wrote
+      // the body that is there now, and that is now them.
+      agentId: null,
+      expectedUpdatedAt,
+    });
+
+    // Null means the version moved under us — another tab, or an accepted
+    // proposal. Refusing beats overwriting work the owner cannot see.
+    if (!updated) return fail('app.documents.conflict');
+
+    revalidatePath('/', 'layout');
+    return ok({ updatedAt: updated.updated_at });
+  } catch (error) {
+    console.error('updateDocumentAction failed', error);
+    return fail('app.errors.generic');
+  }
+}
+
+export async function restoreRevisionAction(
+  slug: string,
+  documentId: string,
+  revisionId: string,
+  expectedUpdatedAt: string
+): Promise<ActionResult<{ updatedAt: string }>> {
+  const { supabase, userId } = await requireSessionContext();
+
+  try {
+    const project = await getProjectBySlug(supabase, userId, slug);
+    if (!project) return fail('app.errors.projectMissing');
+
+    const revision = await getRevision(supabase, project.id, revisionId);
+    if (!revision || revision.document_id !== documentId) return fail('app.errors.generic');
+
+    const updated = await updateDocument(supabase, {
+      projectId: project.id,
+      ownerId: userId,
+      values: { id: documentId, title: revision.title, body: revision.body },
+      // A restore is the owner's decision, whoever originally wrote the words.
+      // The revision keeps the original attribution; the current body is theirs.
+      agentId: null,
+      expectedUpdatedAt,
+    });
+
+    if (!updated) return fail('app.documents.conflict');
+
+    revalidatePath('/', 'layout');
+    return ok({ updatedAt: updated.updated_at });
+  } catch (error) {
+    console.error('restoreRevisionAction failed', error);
     return fail('app.errors.generic');
   }
 }
