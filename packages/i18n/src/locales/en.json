@@ -484,6 +484,27 @@
       "reject": "Reject",
       "superseded": "The record changed after this was proposed. Nothing was applied.",
       "title": "Inbox"
+    },
+    "documents": {
+      "title": "Documents",
+      "empty": "No documents yet.",
+      "new": "New document",
+      "titleLabel": "Title",
+      "bodyLabel": "Body",
+      "save": "Save",
+      "saving": "Saving",
+      "saved": "Saved",
+      "conflict": "This document changed since you opened it. Reload to see the current version.",
+      "untitled": "Untitled",
+      "changedAt": "Last changed",
+      "history": "History",
+      "historyEmpty": "No earlier versions.",
+      "byAgent": "By an agent",
+      "byOwner": "By you",
+      "viewingRevision": "An earlier version, read-only",
+      "restore": "Restore this version",
+      "restored": "Restored.",
+      "backToDocument": "Back to the document"
     }
   }
 }

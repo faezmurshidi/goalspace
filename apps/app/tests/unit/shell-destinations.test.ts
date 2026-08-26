@@ -28,11 +28,20 @@ describe('projectSlugFrom', () => {
 });
 
 describe('destinationsFor', () => {
-  it('ships exactly the four sections that exist', () => {
-    // Slice A advertises nothing it cannot open. Documents, Agents, and
-    // Settings arrive with their own slices.
+  it('ships exactly the sections that exist', () => {
+    // Nothing is advertised that cannot be opened. Agents and Settings arrive
+    // with their own slices and must not appear before their routes do.
     const keys = destinationsFor('ev-bike', { inbox: 0 }).map((d) => d.key);
-    expect(keys).toEqual(['resume', 'work', 'log', 'inbox']);
+    expect(keys).toEqual(['resume', 'work', 'log', 'inbox', 'documents']);
+  });
+
+  it('keeps Documents after Inbox, and gives it no count', () => {
+    // Documents has no pending state to report. A count here would be a number
+    // with nothing to mean.
+    const documents = destinationsFor('ev-bike', { inbox: 3 }).find((d) => d.key === 'documents');
+    expect(documents!.count).toBeUndefined();
+    expect(documents!.href).toBe('/projects/ev-bike/documents');
+    expect(documents!.exact).toBe(false);
   });
 
   it('points every destination at the given project', () => {

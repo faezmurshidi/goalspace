@@ -484,6 +484,27 @@
       "reject": "Tolak",
       "superseded": "Rekod berubah selepas ini dicadangkan. Tiada apa-apa digunakan.",
       "title": "Peti masuk"
+    },
+    "documents": {
+      "title": "Dokumen",
+      "empty": "Belum ada dokumen.",
+      "new": "Dokumen baharu",
+      "titleLabel": "Tajuk",
+      "bodyLabel": "Kandungan",
+      "save": "Simpan",
+      "saving": "Menyimpan",
+      "saved": "Disimpan",
+      "conflict": "Dokumen ini berubah sejak anda membukanya. Muat semula untuk melihat versi terkini.",
+      "untitled": "Tanpa tajuk",
+      "changedAt": "Kali terakhir berubah",
+      "history": "Sejarah",
+      "historyEmpty": "Tiada versi terdahulu.",
+      "byAgent": "Oleh ejen",
+      "byOwner": "Oleh anda",
+      "viewingRevision": "Versi terdahulu, baca sahaja",
+      "restore": "Pulihkan versi ini",
+      "restored": "Dipulihkan.",
+      "backToDocument": "Kembali ke dokumen"
     }
   }
 }

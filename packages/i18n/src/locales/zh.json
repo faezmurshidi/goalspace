@@ -483,6 +483,27 @@
       "reject": "拒绝",
       "superseded": "提出该提议后记录已变更，未作任何应用。",
       "title": "收件箱"
+    },
+    "documents": {
+      "title": "文档",
+      "empty": "尚无文档。",
+      "new": "新建文档",
+      "titleLabel": "标题",
+      "bodyLabel": "正文",
+      "save": "保存",
+      "saving": "保存中",
+      "saved": "已保存",
+      "conflict": "自您打开后此文档已更改。请重新加载以查看当前版本。",
+      "untitled": "无标题",
+      "changedAt": "最后更改",
+      "history": "历史版本",
+      "historyEmpty": "没有更早的版本。",
+      "byAgent": "由代理撰写",
+      "byOwner": "由您撰写",
+      "viewingRevision": "较早版本，只读",
+      "restore": "恢复此版本",
+      "restored": "已恢复。",
+      "backToDocument": "返回文档"
     }
   }
 }
