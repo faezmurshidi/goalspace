@@ -60,7 +60,7 @@ export function HeaderRail({ title, hasSidebar }: { title: string | null; hasSid
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="min-w-48 border border-rule-strong bg-paper p-0"
+            className="min-w-48 rounded-none border border-rule-strong bg-paper p-0 shadow-none"
           >
             <div className="label border-b border-rule px-3 py-2 text-ink-soft">
               {t('app.nav.theme')}
@@ -70,7 +70,7 @@ export function HeaderRail({ title, hasSidebar }: { title: string | null; hasSid
                 key={value}
                 onSelect={() => setTheme(value)}
                 className={cn(
-                  'label cursor-pointer px-3 py-2 focus:bg-paper-shade',
+                  'label cursor-pointer rounded-none px-3 py-2 focus:bg-paper-shade',
                   theme === value ? 'text-oxide' : 'text-ink'
                 )}
               >
@@ -86,7 +86,7 @@ export function HeaderRail({ title, hasSidebar }: { title: string | null; hasSid
             <DropdownMenuSeparator className="bg-rule" />
             <DropdownMenuItem
               onSelect={signOut}
-              className="label cursor-pointer px-3 py-2 text-ink focus:bg-paper-shade"
+              className="label cursor-pointer rounded-none px-3 py-2 text-ink focus:bg-paper-shade"
             >
               {t('app.common.signOut')}
             </DropdownMenuItem>

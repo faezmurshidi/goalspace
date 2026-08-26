@@ -30,7 +30,8 @@ export default async function ProjectLayout({
   const t = getFixedT(await getLocale());
 
   return (
-    <div className="flex min-h-[calc(100svh-3.25rem)] flex-col">
+    // The subtraction is the header rail: h-14 (3.5rem) plus its 1px bottom border.
+    <div className="flex min-h-[calc(100svh-3.5rem-1px)] flex-col">
       <div className="flex-1">{children}</div>
       <section aria-label={t('app.capture.region')}>
         <CaptureBar slug={slug} targets={captureTargetsFrom(workItems)} />

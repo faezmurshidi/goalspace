@@ -33,14 +33,19 @@ export function WorkspaceSidebar({
   pathname: string;
 }) {
   const { t } = useAppTranslations();
-  const { open } = useSidebar();
+  const { open, isMobile } = useSidebar();
+
+  // The sheet is always full width, so it is never "collapsed" — `open` is the
+  // desktop rail's state and means nothing on mobile. Reading it there rendered
+  // the rail's single-letter labels inside a full-width sheet.
+  const collapsed = !isMobile && !open;
 
   const destinations = destinationsFor(current.slug, { inbox: current.pendingProposals });
 
   return (
     <Sidebar label={t('app.nav.projectNav')}>
       <SidebarHeader>
-        <ProjectSwitcher current={current} projects={projects} collapsed={!open} />
+        <ProjectSwitcher current={current} projects={projects} collapsed={collapsed} />
       </SidebarHeader>
 
       <SidebarContent>
@@ -53,16 +58,18 @@ export function WorkspaceSidebar({
               return (
                 <SidebarMenuItem key={destination.key}>
                   <SidebarMenuButton asChild isActive={active}>
-                    <Link href={destination.href} title={open ? undefined : label}>
+                    <Link href={destination.href} title={collapsed ? label : undefined}>
                       {/* Collapsed, the first letter stands in for the label —
                           and `sr-only` keeps the real name in the a11y tree,
                           so the rail is never an unlabelled control. */}
-                      <span aria-hidden="true" className={cn(open && 'hidden')}>
+                      <span aria-hidden="true" className={cn(!collapsed && 'hidden')}>
                         {Array.from(label)[0] ?? ''}
                       </span>
-                      <span className={cn('flex-1 truncate', !open && 'sr-only')}>{label}</span>
+                      <span className={cn('flex-1 truncate', collapsed && 'sr-only')}>
+                        {label}
+                      </span>
                       {destination.count !== undefined ? (
-                        <span className={cn('text-ink-soft', !open && 'sr-only')}>
+                        <span className={cn('text-ink-soft', collapsed && 'sr-only')}>
                           {destination.count}
                         </span>
                       ) : null}

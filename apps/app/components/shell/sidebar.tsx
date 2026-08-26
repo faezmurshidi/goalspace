@@ -132,12 +132,6 @@ export function SidebarContent({ className, children }: React.ComponentProps<'di
   return <div className={cn('flex-1 overflow-y-auto py-3', className)}>{children}</div>;
 }
 
-export function SidebarFooter({ className, children }: React.ComponentProps<'div'>) {
-  return (
-    <div className={cn('border-t border-rule px-3 py-3', className)}>{children}</div>
-  );
-}
-
 export function SidebarGroup({ className, children }: React.ComponentProps<'div'>) {
   return <div className={cn('px-2 py-1', className)}>{children}</div>;
 }
