@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug, createProject } from '@/lib/db/projects';
 import { createEntry } from '@/lib/db/entries';
+import { createDocument } from '@/lib/db/documents';
 import {
   changeWorkItemStatus,
   createWorkItem,
@@ -12,6 +13,7 @@ import {
   updateWorkItem,
 } from '@/lib/db/work-items';
 import { createEntrySchema } from '@/lib/schemas/entry';
+import { createDocumentSchema } from '@/lib/schemas/document';
 import { createProjectSchema } from '@/lib/schemas/project';
 import { applyProposal } from '@/lib/proposals/apply';
 import { settleProposal } from '@/lib/db/proposals';
@@ -232,6 +234,33 @@ export async function rejectProposalAction(
     return ok({ status: 'rejected' });
   } catch (error) {
     console.error('rejectProposalAction failed', error);
+    return fail('app.errors.generic');
+  }
+}
+
+export async function createDocumentAction(
+  slug: string,
+  input: unknown
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = createDocumentSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, userId } = await requireSessionContext();
+
+  try {
+    const project = await getProjectBySlug(supabase, userId, slug);
+    if (!project) return fail('app.errors.projectMissing');
+
+    const document = await createDocument(supabase, {
+      projectId: project.id,
+      ownerId: userId,
+      values: parsed.data,
+    });
+
+    revalidatePath('/', 'layout');
+    return ok({ id: document.id });
+  } catch (error) {
+    console.error('createDocumentAction failed', error);
     return fail('app.errors.generic');
   }
 }
