@@ -15,10 +15,14 @@ export type ProposalKind = z.infer<typeof proposalKindSchema>;
 /**
  * What an agent may cite.
  *
- * Ids inside the project, and nothing else. A URL has no place here yet:
- * §6.3 validates every citation against the project, and there is no
- * `web_search` to produce one. When it arrives, that is a spec decision about
- * how external findings are cited — not a quiet widening of this enum.
+ * Ids inside the project, and nothing else — because there is no `web_search`
+ * yet to produce anything else.
+ *
+ * The spec decision this comment used to defer has since been made: §6.3 now
+ * defines a second, external class of citation, validated not by existence but
+ * by matching a URL against the search results logged for the same run. It
+ * ships with `web_search`, not before it, and it arrives as a discriminated
+ * union — still not a quiet widening of this enum.
  */
 export const citationSchema = z.object({
   type: z.enum(['entry', 'work_item', 'document']),
