@@ -108,3 +108,46 @@ export async function updateDocument(
 
   return getDocument(supabase, projectId, appliedId);
 }
+
+export type DocumentRevision = Tables<'document_revisions'>;
+
+const REVISION_COLUMNS = 'id, document_id, project_id, owner_id, title, body, agent_id, created_at';
+
+/**
+ * A document's history, newest first.
+ *
+ * Each row is a body that was replaced, so the list reads as "what it said
+ * before" — the newest revision is the body immediately prior to the current
+ * one, not the current one itself.
+ */
+export async function listRevisions(
+  supabase: Client,
+  projectId: string,
+  documentId: string
+): Promise<DocumentRevision[]> {
+  const { data, error } = await supabase
+    .from('document_revisions')
+    .select(REVISION_COLUMNS)
+    .eq('project_id', projectId)
+    .eq('document_id', documentId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as DocumentRevision[];
+}
+
+export async function getRevision(
+  supabase: Client,
+  projectId: string,
+  revisionId: string
+): Promise<DocumentRevision | null> {
+  const { data, error } = await supabase
+    .from('document_revisions')
+    .select(REVISION_COLUMNS)
+    .eq('project_id', projectId)
+    .eq('id', revisionId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data ?? null) as DocumentRevision | null;
+}
