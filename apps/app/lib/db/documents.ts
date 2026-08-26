@@ -108,3 +108,57 @@ export async function updateDocument(
 
   return getDocument(supabase, projectId, appliedId);
 }
+
+export type DocumentRevision = Tables<'document_revisions'>;
+
+/**
+ * A revision as the history list needs it: everything but the body.
+ *
+ * One revision is written per save, so a long-lived document accumulates them
+ * without bound. Carrying every superseded body into a list that renders none
+ * of them would make the page cost grow with the document's whole edit history.
+ */
+export type DocumentRevisionSummary = Omit<DocumentRevision, 'body'>;
+
+const REVISION_COLUMNS = 'id, document_id, project_id, owner_id, title, body, agent_id, created_at';
+
+const REVISION_LIST_COLUMNS = 'id, document_id, project_id, owner_id, title, agent_id, created_at';
+
+/**
+ * A document's history, newest first.
+ *
+ * Each row is a body that was replaced, so the list reads as "what it said
+ * before" — the newest revision is the body immediately prior to the current
+ * one, not the current one itself. Use `getRevision` to read one body.
+ */
+export async function listRevisions(
+  supabase: Client,
+  projectId: string,
+  documentId: string
+): Promise<DocumentRevisionSummary[]> {
+  const { data, error } = await supabase
+    .from('document_revisions')
+    .select(REVISION_LIST_COLUMNS)
+    .eq('project_id', projectId)
+    .eq('document_id', documentId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as DocumentRevisionSummary[];
+}
+
+export async function getRevision(
+  supabase: Client,
+  projectId: string,
+  revisionId: string
+): Promise<DocumentRevision | null> {
+  const { data, error } = await supabase
+    .from('document_revisions')
+    .select(REVISION_COLUMNS)
+    .eq('project_id', projectId)
+    .eq('id', revisionId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data ?? null) as DocumentRevision | null;
+}

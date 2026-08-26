@@ -52,6 +52,12 @@ export function destinationsFor(slug: string, counts: { inbox: number }): Destin
       exact: false,
       ...(counts.inbox > 0 ? { count: counts.inbox } : {}),
     },
+    {
+      key: 'documents',
+      href: `${base}/documents`,
+      labelKey: 'app.documents.title',
+      exact: false,
+    },
   ];
 }
 

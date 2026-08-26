@@ -377,6 +377,7 @@ export type Database = {
       }
       document_revisions: {
         Row: {
+          agent_id: string | null
           body: string
           created_at: string
           document_id: string
@@ -386,6 +387,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          agent_id?: string | null
           body: string
           created_at?: string
           document_id: string
@@ -395,6 +397,7 @@ export type Database = {
           title: string
         }
         Update: {
+          agent_id?: string | null
           body?: string
           created_at?: string
           document_id?: string
@@ -404,6 +407,13 @@ export type Database = {
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "document_revisions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "document_revisions_document_id_project_id_fkey"
             columns: ["document_id", "project_id"]
