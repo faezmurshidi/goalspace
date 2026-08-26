@@ -220,9 +220,9 @@ git commit -m "feat(documents): record who wrote the body each revision preserve
 
 **Interfaces:**
 - Consumes: `DocumentRevision` (Task 1).
-- Produces: `type Authorship = { by: 'agent'; agentId: string } | { by: 'owner' } | { by: 'unknown' }`, `authorshipOf(row: { agent_id: string | null; created_at: string }, migratedAt: string): Authorship`.
+- Produces: `type Authorship = { by: 'agent'; agentId: string } | { by: 'owner' }`, `authorshipOf(row: { agent_id: string | null }): Authorship`.
 
-The distinction that needs a test: a null `agent_id` on a row written *before* the column existed means "we do not know", while a null on a row written after means "a person wrote it". Rendering the first as "you" would be a claim the data does not support.
+Two states, not three. An earlier draft of this plan distinguished a third — "author not recorded" — for rows written before `agent_id` existed, keyed off a hardcoded migration timestamp. That was removed before execution: the constant encoded the migration's *filename* time rather than the instant it ran in any given environment, and production holds zero documents and zero revisions, so no such row can exist. A UI branch that can never render is dead surface.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -230,58 +230,25 @@ The distinction that needs a test: a null `agent_id` on a row written *before* t
 // apps/app/tests/unit/document-authorship.test.ts
 import { describe, expect, it } from 'vitest';
 
-import { AUTHORSHIP_KNOWN_FROM, authorshipOf } from '@/lib/documents/authorship';
+import { authorshipOf } from '@/lib/documents/authorship';
 
 const AGENT = '11111111-1111-4111-8111-111111111111';
 
 describe('authorshipOf', () => {
   it('names the agent when one is recorded', () => {
-    const result = authorshipOf(
-      { agent_id: AGENT, created_at: '2026-09-01T00:00:00.000Z' },
-      AUTHORSHIP_KNOWN_FROM
-    );
-    expect(result).toEqual({ by: 'agent', agentId: AGENT });
+    expect(authorshipOf({ agent_id: AGENT })).toEqual({ by: 'agent', agentId: AGENT });
   });
 
-  it('reads a null agent as the owner once the column exists', () => {
-    const result = authorshipOf(
-      { agent_id: null, created_at: '2026-09-01T00:00:00.000Z' },
-      AUTHORSHIP_KNOWN_FROM
-    );
-    expect(result).toEqual({ by: 'owner' });
+  it('reads a null agent as the owner', () => {
+    // Null means human-authored, the same convention entries, work items and
+    // documents all use for their own agent_id.
+    expect(authorshipOf({ agent_id: null })).toEqual({ by: 'owner' });
   });
 
-  it('refuses to claim authorship for rows written before the column existed', () => {
-    // Backfilled nulls are absence of data, not evidence of a human. Showing
-    // them as "you" would put words in the owner's mouth.
-    const result = authorshipOf(
-      { agent_id: null, created_at: '2026-08-01T00:00:00.000Z' },
-      AUTHORSHIP_KNOWN_FROM
-    );
-    expect(result).toEqual({ by: 'unknown' });
-  });
-
-  it('treats the boundary instant itself as known', () => {
-    const result = authorshipOf(
-      { agent_id: null, created_at: AUTHORSHIP_KNOWN_FROM },
-      AUTHORSHIP_KNOWN_FROM
-    );
-    expect(result).toEqual({ by: 'owner' });
-  });
-
-  it('compares instants, not strings', () => {
-    // Postgres renders timestamptz with a +00 offset, not a Z suffix. String
-    // comparison would misclassify every row.
-    const result = authorshipOf(
-      { agent_id: null, created_at: '2026-09-01 00:00:00+00' },
-      AUTHORSHIP_KNOWN_FROM
-    );
-    expect(result).toEqual({ by: 'owner' });
-  });
-
-  it('falls back to unknown when the timestamp cannot be read', () => {
-    const result = authorshipOf({ agent_id: null, created_at: 'not a date' }, AUTHORSHIP_KNOWN_FROM);
-    expect(result).toEqual({ by: 'unknown' });
+  it('does not treat an empty string as an agent', () => {
+    // A blank id is not provenance. Rendering it as "by an agent" would name
+    // an author that does not exist, and the id would render as an empty span.
+    expect(authorshipOf({ agent_id: '' })).toEqual({ by: 'owner' });
   });
 });
 ```
@@ -299,51 +266,35 @@ Expected: FAIL — cannot resolve `@/lib/documents/authorship`.
 /**
  * Who wrote the body a revision preserves.
  *
- * `document_revisions.agent_id` was added after the table had rows in it, and
- * those rows are null not because a person wrote them but because nobody
- * recorded it. Reading every null as "the owner" would attribute an agent's
- * prose to the person who never wrote it, on their own document — so the two
- * cases are kept apart by when the row was written.
+ * A revision records the body being *replaced*, so its author is whoever wrote
+ * that body — `documents.agent_id` at the moment of replacement, which the
+ * migration in Task 1 now carries onto the revision.
+ *
+ * Null means human-authored, the same convention entries, work items and
+ * documents already use. There is deliberately no third "unknown" state: the
+ * column ships before any document can be authored, so a revision predating it
+ * cannot exist.
  */
 
-export type Authorship =
-  | { by: 'agent'; agentId: string }
-  | { by: 'owner' }
-  | { by: 'unknown' };
+export type Authorship = { by: 'agent'; agentId: string } | { by: 'owner' };
 
-/**
- * The instant `document_revisions.agent_id` began being recorded — the
- * migration's own timestamp. A null before this is missing data; a null after
- * it is a human edit.
- */
-export const AUTHORSHIP_KNOWN_FROM = '2026-08-27T00:01:00.000Z';
-
-export function authorshipOf(
-  row: { agent_id: string | null; created_at: string },
-  knownFrom: string = AUTHORSHIP_KNOWN_FROM
-): Authorship {
-  if (row.agent_id) return { by: 'agent', agentId: row.agent_id };
-
-  // Instants, not strings: Postgres renders `2026-09-01 00:00:00+00` where the
-  // constant carries a `Z`, and comparing those textually misreads every row.
-  const written = Date.parse(row.created_at);
-  const boundary = Date.parse(knownFrom);
-  if (Number.isNaN(written) || Number.isNaN(boundary)) return { by: 'unknown' };
-
-  return written >= boundary ? { by: 'owner' } : { by: 'unknown' };
+export function authorshipOf(row: { agent_id: string | null }): Authorship {
+  // A blank id is not provenance — treat it as unset rather than naming an
+  // author that does not exist.
+  return row.agent_id ? { by: 'agent', agentId: row.agent_id } : { by: 'owner' };
 }
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `pnpm --filter @goalspace/app exec vitest run tests/unit/document-authorship.test.ts`
-Expected: PASS, 6 tests.
+Expected: PASS, 3 tests.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add apps/app/lib/documents/authorship.ts apps/app/tests/unit/document-authorship.test.ts
-git commit -m "feat(documents): distinguish an unrecorded author from a human one"
+git commit -m "feat(documents): read a revision's author"
 ```
 
 ---
@@ -425,7 +376,6 @@ Create an `app.documents` object in all three locale files. Every key below is u
   "historyEmpty": "No earlier versions.",
   "byAgent": "By an agent",
   "byOwner": "By you",
-  "byUnknown": "Author not recorded",
   "viewingRevision": "An earlier version, read-only",
   "restore": "Restore this version",
   "restored": "Restored.",
@@ -451,7 +401,6 @@ Create an `app.documents` object in all three locale files. Every key below is u
   "historyEmpty": "Tiada versi terdahulu.",
   "byAgent": "Oleh ejen",
   "byOwner": "Oleh anda",
-  "byUnknown": "Penulis tidak direkodkan",
   "viewingRevision": "Versi terdahulu, baca sahaja",
   "restore": "Pulihkan versi ini",
   "restored": "Dipulihkan.",
@@ -477,7 +426,6 @@ Create an `app.documents` object in all three locale files. Every key below is u
   "historyEmpty": "没有更早的版本。",
   "byAgent": "由代理撰写",
   "byOwner": "由您撰写",
-  "byUnknown": "未记录作者",
   "viewingRevision": "较早版本，只读",
   "restore": "恢复此版本",
   "restored": "已恢复。",
@@ -1008,7 +956,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 const AUTHOR_KEY = {
   agent: 'app.documents.byAgent',
   owner: 'app.documents.byOwner',
-  unknown: 'app.documents.byUnknown',
 } as const;
 
 export default async function DocumentPage({ params }: Params) {
@@ -1228,7 +1175,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 const AUTHOR_KEY = {
   agent: 'app.documents.byAgent',
   owner: 'app.documents.byOwner',
-  unknown: 'app.documents.byUnknown',
 } as const;
 
 export default async function RevisionPage({ params }: Params) {
@@ -1391,7 +1337,7 @@ git commit -m "feat(documents): view an earlier version and restore it"
 1. The sidebar shows Documents, and it opens a working list.
 2. A person can create a document, write in it, and save.
 3. Saving from a stale editor is refused with a message naming the reason, and the other tab's work survives.
-4. Each document shows its history, with the author of each preserved body — an agent, the owner, or honestly "not recorded" for rows written before the column existed.
+4. Each document shows its history, with the author of each preserved body — the agent that wrote it, or the owner.
 5. A revision opens read-only, in full, and can be restored from that view with no dialog.
 6. Restoring makes the current body a revision in turn, so repeating it returns to where you were.
 7. `pnpm typecheck`, `pnpm test`, `pnpm test:rls` and `pnpm build` all pass.
