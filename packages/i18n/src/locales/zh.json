@@ -394,6 +394,7 @@
       "blockedSince": "自 {{when}} 起受阻",
       "openTitle": "还有什么没做完",
       "openEmpty": "没有未完成的事项。",
+      "undecidedProposals": "未决提议",
       "leftOffTitle": "你上次停在哪里",
       "leftOffEmpty": "还没有记录。",
       "decidedTitle": "你做过的决定",

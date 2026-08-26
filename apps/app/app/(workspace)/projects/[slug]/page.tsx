@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
@@ -65,6 +66,23 @@ export default async function ResumePage({ params }: Params) {
 
         <Waiting items={data.waiting} slug={slug} t={t} locale={locale} />
         <Open items={data.open} progress={data.progress} slug={slug} t={t} />
+
+        {data.undecidedProposals > 0 ? (
+          <div className="border-b border-rule">
+            <Link
+              href={`/projects/${slug}/inbox`}
+              className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+            >
+              <span className="min-w-0 flex-1 text-body text-ink">
+                {t('app.resume.undecidedProposals')}
+              </span>
+              <span className="label shrink-0 tabular-nums text-ink-soft">
+                {data.undecidedProposals}
+              </span>
+            </Link>
+          </div>
+        ) : null}
+
         <LeftOff entries={data.recentEntries} t={t} locale={locale} />
         <Decided entries={data.recentDecisions} t={t} locale={locale} />
       </div>

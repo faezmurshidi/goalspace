@@ -395,6 +395,7 @@
       "blockedSince": "Blocked since {{when}}",
       "openTitle": "What's open",
       "openEmpty": "Nothing open.",
+      "undecidedProposals": "Undecided proposals",
       "leftOffTitle": "Where you left off",
       "leftOffEmpty": "No entries yet.",
       "decidedTitle": "What you decided",

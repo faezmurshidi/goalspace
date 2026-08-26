@@ -395,6 +395,7 @@
       "blockedSince": "Tersekat sejak {{when}}",
       "openTitle": "Apa yang terbuka",
       "openEmpty": "Tiada yang terbuka.",
+      "undecidedProposals": "Cadangan belum diputuskan",
       "leftOffTitle": "Di mana anda berhenti",
       "leftOffEmpty": "Belum ada catatan.",
       "decidedTitle": "Apa yang anda putuskan",
