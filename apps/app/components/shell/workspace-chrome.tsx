@@ -67,7 +67,7 @@ export function WorkspaceChrome({
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <HeaderRail title={current?.title ?? null} />
+        <HeaderRail title={current?.title ?? null} hasSidebar={Boolean(current)} />
         <main id="workspace-main" tabIndex={-1} className="min-w-0 flex-1">
           {children}
         </main>

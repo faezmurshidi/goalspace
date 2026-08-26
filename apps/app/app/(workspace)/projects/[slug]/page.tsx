@@ -49,7 +49,7 @@ export default async function ResumePage({ params }: Params) {
   const hasRecord = data.recentEntries.length > 0 || data.open.length > 0 || data.waiting.length > 0;
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-8">
+    <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pb-10">
         <Masthead project={project} t={t} locale={locale} />
 

@@ -61,7 +61,7 @@ export default async function LogPage({ params, searchParams }: Params) {
     kind ? `/projects/${slug}/log?kind=${kind}` : `/projects/${slug}/log`;
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-8">
+    <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pb-10 pt-8">
         <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule pb-2">
           <h1 className="label text-ink-soft">{t('app.log.title')}</h1>

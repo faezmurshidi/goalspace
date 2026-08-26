@@ -27,7 +27,7 @@ export default async function WorkPage({ params }: Params) {
   const items = await listWorkItems(supabase, project.id);
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-8">
+    <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pt-8">
         <h1 className="label pb-2 text-ink-soft">{t('app.work.title')}</h1>
         <WorkTree slug={slug} items={items} />

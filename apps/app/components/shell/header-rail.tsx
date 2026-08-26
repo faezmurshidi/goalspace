@@ -17,7 +17,7 @@ import { SidebarTrigger } from './sidebar';
 import { Wordmark } from './wordmark';
 import { createClient } from '@/utils/supabase/client';
 
-export function HeaderRail({ title }: { title: string | null }) {
+export function HeaderRail({ title, hasSidebar }: { title: string | null; hasSidebar: boolean }) {
   const { t } = useAppTranslations();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -38,10 +38,12 @@ export function HeaderRail({ title }: { title: string | null }) {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-rule bg-paper px-4">
-      {/* Rendered at every width. The desktop sidebar is `hidden md:flex`, so a
-          trigger hidden above `md` would leave desktop with no way to collapse
-          it at all. */}
-      <SidebarTrigger label={t('app.nav.toggleSidebar')} />
+      {hasSidebar ? (
+        /* Rendered at every width. The desktop sidebar is `hidden md:flex`, so a
+           trigger hidden above `md` would leave desktop with no way to collapse
+           it at all. */
+        <SidebarTrigger label={t('app.nav.toggleSidebar')} />
+      ) : null}
 
       {title ? (
         <span className="truncate text-title text-ink">{title}</span>
