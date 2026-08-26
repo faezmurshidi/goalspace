@@ -209,10 +209,21 @@ Mitigations, all required:
 
 - Every `web_search` call's exact query string is stored in `agent_tool_calls`
   and rendered in the run trace, so what left is always inspectable.
+- Every result the provider returns is stored too — `url` and `title` per hit,
+  in a structured `results` column rather than the free-text `result_summary`.
+  This serves two purposes at once. The trace shows both directions of the
+  exchange, not only the outbound half, so "what did this agent actually see"
+  is answerable. And it is the record that external citations are validated
+  against (§6.3): without it, a cited URL could not be distinguished from an
+  invented one.
+- Snippets are **not** stored. They are the bulk of a search response and add
+  nothing to validation, and storing them would put a large amount of
+  third-party prose in the owner's database as a side effect of one question.
 - Only agents whose allowlist includes it can search — the seeded Tutor and
   Critic do not have it.
 - The project settings page carries a plain-language statement that this tool
-  sends queries to an external provider.
+  sends queries to an external provider, and that results are retained in the
+  run trace.
 
 Implementation sits behind a `WebSearchProvider` interface with Exa as the
 shipped implementation, so the provider is swappable without touching the
@@ -250,6 +261,8 @@ create table proposals (
   target_id   uuid,
   payload     jsonb not null,
   rationale   text not null,
+  -- Internal ids and, once `web_search` ships, external URLs. Both validated
+  -- before this row is written, by different means (§6.3).
   citations   jsonb not null default '[]',
   status      text not null default 'pending'
               check (status in ('pending','accepted','rejected','superseded')),
@@ -279,17 +292,73 @@ applying stale content over newer work.
 
 ### 6.3 Citations must resolve
 
-`citations` holds the entry, work-item, and document ids the agent drew on.
-**Before a proposal is stored, the server validates that every cited id exists
-and belongs to the project**, rejecting the tool call otherwise. A model that
-invents a citation gets an error and a retry, rather than producing a
+`citations` holds what the agent drew on. **Before a proposal is stored, the
+server validates every citation, rejecting the tool call otherwise.** A model
+that invents a citation gets an error and a retry, rather than producing a
 plausible-looking proposal that cites nothing. Fabricated provenance would be
 worse than no provenance, because it is trusted.
+
+There are two classes, and they are validated differently because they can be.
+
+**Internal.** An entry, work-item, or document id. Validated by existence: the
+row must exist and belong to this project. This is the whole check, and it is
+airtight.
+
+**External.** A URL, reachable only by an agent whose allowlist includes
+`web_search`. It cannot be validated by existence — the server would have to
+fetch and read the page, and even then could not confirm the page supports the
+claim. It is validated against the system's own record instead: **the URL must
+appear in a `web_search` result logged for the same run** (§5.4). The agent may
+therefore only cite pages the provider actually returned to it. This trusts
+neither the model nor the network, only the log.
+
+```ts
+type Citation =
+  | { type: 'entry' | 'work_item' | 'document'; id: string }
+  | {
+      type: 'external';
+      url: string;
+      title: string;
+      retrieved_at: string;
+      // The `agent_tool_calls` row this URL came back in. Kept for audit; the
+      // url and title above are denormalised deliberately, so a citation stays
+      // readable if run traces are ever pruned.
+      tool_call_id: string;
+    };
+```
+
+URLs are normalised before comparison — scheme and host lower-cased, fragment
+and common tracking parameters stripped. Without this a model that echoes back
+a `?utm_source=` variant of the URL it was given fails validation for no reason
+a person would recognise as real.
+
+Validation happens once, at propose time, while the run is still open and its
+tool calls certainly exist. After that a stored citation is trusted, exactly as
+an internal one is — the guarantee is "this resolved at least once", not "this
+is re-checked on every read".
+
+**What this proves, stated exactly.** That the URL was returned by a search this
+system logged. It does **not** prove the page says what the agent claims about
+it, and no server-side check can establish that. The distinction matters enough
+to appear in the inbox's own wording: the paragraph above is the argument for
+why overstated provenance is worse than none, and it applies to this feature as
+readily as to a fabricated id.
 
 ### 6.4 The inbox, and a payoff
 
 Review lives at `/projects/[slug]/inbox`: pending proposals with rationale,
 resolved citations, and accept / edit-and-accept / reject.
+
+Internal and external citations render as visibly separate groups. A page the
+model picked out of search results and a note the owner wrote themselves carry
+very different authority, and a card that renders them alike invites the reader
+to extend the trust owed to the second to the first.
+
+External rows show the **hostname explicitly**, alongside the title rather than
+behind it, and link with `rel="noopener noreferrer nofollow"`. This is the only
+place in the product where a link's destination was chosen by a model rather
+than by the owner, so a misleading title must not be able to disguise where a
+click goes.
 
 This is **the same inbox phase 4 needs** for outside contributions. Building it
 here means phase 4 becomes "add a second source of proposals" rather than a new
@@ -323,6 +392,11 @@ create table agent_tool_calls (
   tool           text not null,
   args           jsonb not null,
   result_summary text,
+  -- Structured results, for `web_search` only: `[{url, title}]`, no snippets
+  -- (§5.4). `result_summary` stays free text for every other tool; this column
+  -- exists because external citations are validated against it (§6.3), which
+  -- free text cannot support.
+  results        jsonb,
   ok             boolean not null,
   duration_ms    integer,
   created_at     timestamptz not null default now()
@@ -442,13 +516,24 @@ Mandarin case that motivated keeping it.
 | `lib/agents/executor.ts` | allowlist intersection, step loop, cap checks, run + tool-call recording | registry, db, gateway |
 | `lib/agents/cost.ts` | tokens + model → `cost_usd` | rate table (pure) |
 | `lib/proposals/apply.ts` | validate, apply, set provenance, write revision | phase-1 schemas, db |
+| `lib/proposals/citations.ts` | resolve internal ids; match external URLs against the run's logged search results | db (`agent_tool_calls`) |
+| `lib/proposals/normalise-url.ts` | canonical form for URL comparison | nothing (pure) |
 | `lib/retrieval/search.ts` | hybrid search + reciprocal rank fusion | db |
 | `lib/retrieval/chunk.ts` | document chunking | nothing (pure) |
 | `lib/embeddings/queue.ts` | drain jobs, embed, upsert | db, gateway |
 
-`skeleton.ts`, `cost.ts`, `chunk.ts`, and the rank fusion in `search.ts` are
-pure functions over plain data, so the parts most likely to be subtly wrong are
-unit-testable without a database or a model.
+`skeleton.ts`, `cost.ts`, `chunk.ts`, `normalise-url.ts`, and the rank fusion in
+`search.ts` are pure functions over plain data, so the parts most likely to be
+subtly wrong are unit-testable without a database or a model. URL normalisation
+is split out for exactly that reason: it decides whether a citation validates,
+and its edge cases are cheap to enumerate as a table and expensive to discover
+in a run.
+
+Note the dependency `citations.ts` gains. Validating an external citation means
+reading `agent_tool_calls`, so proposal validation now depends on the run
+record. That is the intended direction — the run log is the evidence — but it
+means a proposal cannot be validated outside the context of the run that
+produced it.
 
 ---
 
@@ -461,7 +546,10 @@ unit-testable without a database or a model.
   model as an error result so it can adapt rather than aborting the run.
 - **Disallowed tool call** — rejected by the executor, recorded, returned to
   the model as an error.
-- **Invalid citation** — tool call rejected before the proposal is stored
+- **Invalid citation** — tool call rejected before the proposal is stored. An
+  internal id that does not resolve, or an external URL absent from this run's
+  logged search results, are the same class of failure and get the same
+  treatment: an error the model can act on, and a retry
   (§6.3).
 - **Cap tripped** — run ends `capped`, proposals retained, UI states which cap.
 - **Embedding job failure** — `attempts` incremented with `last_error`; retried
@@ -484,6 +572,15 @@ is not tested as one.
 **Proposal application.** Accept, reject, edit-then-accept, and supersede paths;
 provenance (`agent_id` set on the applied row); document edits creating a
 `document_revisions` row; citation validation rejecting fabricated ids.
+
+**External citation validation.** The case that matters is the adversarial one:
+a stubbed model that emits a well-formed, plausible URL which no logged
+`web_search` result contains, asserted to be rejected — because a URL that
+merely looks right is exactly what a model produces when it is guessing. Also
+covered: a URL that differs from the logged one only by tracking parameters or
+letter case is accepted, so normalisation is pinned by test rather than by
+intention; and an agent without `web_search` on its allowlist cannot register an
+external citation at all, since it can have no search results to cite.
 
 **RLS.** Same two-user isolation regime as phase 1, extended across `agents`,
 `conversations`, `messages`, `agent_runs`, `agent_tool_calls`, `proposals`,
@@ -509,9 +606,11 @@ inline, enforcing success criterion 5.
 | Risk | Response |
 |---|---|
 | Agentic retrieval loop burns budget | Hard step limit, per-run token cap, monthly cap, all enforced in the executor |
-| Fabricated citations make provenance untrustworthy | Server-side validation before a proposal is stored (§6.3) |
+| Fabricated citations make provenance untrustworthy | Server-side validation before a proposal is stored: internal ids by existence, external URLs against the run's own logged search results (§6.3) |
+| An external citation reads as stronger evidence than it is | The check proves the URL was returned by a logged search, not that the page supports the claim; inbox groups external citations separately and says so (§6.3, §6.4) |
+| A model-chosen link in the inbox misleads the reader | Hostname shown explicitly, `rel="noopener noreferrer nofollow"` (§6.4) |
 | Proposal fatigue turns the inbox into noise | No unsolicited proposals; agents act only when asked |
-| `web_search` leaks private notes to a third party | Queries stored and rendered in the run trace; tool withheld from Tutor and Critic; disclosure in settings |
+| `web_search` leaks private notes to a third party | Queries **and results** stored and rendered in the run trace; tool withheld from Tutor and Critic; disclosure in settings (§5.4) |
 | Embedding lag silently degrades answers | Queue depth and oldest-job age surfaced in project settings |
 | Skeleton grows past a usable size on very large projects | Skeleton is truncated by recency with a stated budget; the tools exist precisely so truncation is recoverable |
 | Gateway model deprecation | Model stored per agent as a gateway string; rate table and defaults are configuration, not code changes |
