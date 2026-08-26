@@ -44,7 +44,7 @@ export function HeaderRail({ title }: { title: string | null }) {
       <SidebarTrigger label={t('app.nav.toggleSidebar')} />
 
       {title ? (
-        <h1 className="truncate text-title text-ink">{title}</h1>
+        <span className="truncate text-title text-ink">{title}</span>
       ) : (
         <Link href="/" className="unstyled shrink-0">
           <Wordmark className="text-title" />

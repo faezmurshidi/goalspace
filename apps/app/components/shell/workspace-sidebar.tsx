@@ -58,7 +58,7 @@ export function WorkspaceSidebar({
                           and `sr-only` keeps the real name in the a11y tree,
                           so the rail is never an unlabelled control. */}
                       <span aria-hidden="true" className={cn(open && 'hidden')}>
-                        {label.slice(0, 1)}
+                        {Array.from(label)[0] ?? ''}
                       </span>
                       <span className={cn('flex-1 truncate', !open && 'sr-only')}>{label}</span>
                       {destination.count !== undefined ? (
@@ -96,9 +96,12 @@ function ProjectSwitcher({
 
   if (collapsed) {
     return (
-      <span aria-hidden="true" className="text-title text-ink">
-        {current.title.slice(0, 1)}
-      </span>
+      <>
+        <span aria-hidden="true" className="text-title text-ink">
+          {Array.from(current.title)[0] ?? ''}
+        </span>
+        <span className="sr-only">{current.title}</span>
+      </>
     );
   }
 
@@ -117,12 +120,15 @@ function ProjectSwitcher({
           ▾
         </span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-64 border border-rule-strong bg-paper p-0">
+      <DropdownMenuContent
+        align="start"
+        className="min-w-64 rounded-none border border-rule-strong bg-paper p-0 shadow-none"
+      >
         {projects.map((project) => (
           <DropdownMenuItem
             key={project.slug}
             asChild
-            className="cursor-pointer focus:bg-paper-shade"
+            className="cursor-pointer rounded-none focus:bg-paper-shade"
           >
             <Link
               href={`/projects/${project.slug}`}
