@@ -55,12 +55,26 @@ export function destinationsFor(slug: string, counts: { inbox: number }): Destin
   ];
 }
 
+// next.config.js sets `trailingSlash: true`, so usePathname() returns paths
+// like `/projects/ev-bike/` — with a trailing slash — while destinationsFor()
+// builds hrefs without one. Strip it off both sides before comparing so the
+// exact match (Resume) works instead of only the prefix match (Work/Log/
+// Inbox), which happened to work only because the appended `/` boundary
+// happened to line up with the one the browser adds.
+function withoutTrailingSlash(path: string): string {
+  // Never reduce the root path to '' — an empty string would then be a
+  // prefix of (and `startsWith`-match) every path.
+  if (path === '/') return path;
+  return path.endsWith('/') ? path.slice(0, -1) : path;
+}
+
 export function isActive(pathname: string, destination: Destination): boolean {
   // Compare paths only. A query string is a filter within a section, not a
   // different section — /log?kind=decision is still the log.
-  const path = pathname.split(/[?#]/)[0];
-  if (destination.exact) return path === destination.href;
+  const path = withoutTrailingSlash(pathname.split(/[?#]/)[0]);
+  const href = withoutTrailingSlash(destination.href);
+  if (destination.exact) return path === href;
 
   // The boundary check is what stops /work matching /workspaces.
-  return path === destination.href || path.startsWith(`${destination.href}/`);
+  return path === href || path.startsWith(`${href}/`);
 }

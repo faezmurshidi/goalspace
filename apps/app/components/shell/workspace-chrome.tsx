@@ -6,7 +6,12 @@ import { useAppTranslations } from '@goalspace/i18n';
 
 import { SidebarProvider } from './sidebar';
 
-import { projectSlugFrom, type ChromeProject } from '@/lib/shell/destinations';
+import {
+  destinationsFor,
+  isActive,
+  projectSlugFrom,
+  type ChromeProject,
+} from '@/lib/shell/destinations';
 import { SIDEBAR_COOKIE, SIDEBAR_MAX_AGE, serializeSidebarState } from '@/lib/shell/sidebar-state';
 import { WorkspaceSidebar } from './workspace-sidebar';
 import { HeaderRail } from './header-rail';
@@ -39,6 +44,20 @@ export function WorkspaceChrome({
   const slug = projectSlugFrom(pathname);
   const current = projects.find((project) => project.slug === slug) ?? null;
 
+  // The rail names the section (Resume, Log, …), not the project — the
+  // sidebar header already shows the project title, so repeating it here
+  // triples the same string on screen alongside the page's own <h1>.
+  const activeDestination = current
+    ? destinationsFor(current.slug, { inbox: current.pendingProposals }).find((destination) =>
+        isActive(pathname, destination)
+      )
+    : undefined;
+  const railTitle = current
+    ? activeDestination
+      ? t(activeDestination.labelKey)
+      : current.title
+    : null;
+
   const persist = useCallback((open: boolean) => {
     document.cookie = `${SIDEBAR_COOKIE}=${serializeSidebarState(open)}; path=/; max-age=${SIDEBAR_MAX_AGE}; samesite=lax`;
   }, []);
@@ -67,7 +86,7 @@ export function WorkspaceChrome({
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <HeaderRail title={current?.title ?? null} hasSidebar={Boolean(current)} />
+        <HeaderRail title={railTitle} hasSidebar={Boolean(current)} />
         <main id="workspace-main" tabIndex={-1} className="min-w-0 flex-1">
           {children}
         </main>

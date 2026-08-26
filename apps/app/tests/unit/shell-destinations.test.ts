@@ -75,4 +75,28 @@ describe('isActive', () => {
     const work = dests.find((d) => d.key === 'work')!;
     expect(isActive('/projects/ev-bike/workspaces', work)).toBe(false);
   });
+
+  describe('with the trailing slash next.config.js actually produces', () => {
+    // apps/app/next.config.js sets `trailingSlash: true`, so usePathname()
+    // returns paths like `/projects/ev-bike/`, not `/projects/ev-bike`. These
+    // are the shapes the app actually produces at runtime — the tests above,
+    // which all use paths without a trailing slash, missed the regression
+    // where Resume's exact match never lit up.
+    it('matches Resume at the trailing-slash root path', () => {
+      expect(isActive('/projects/ev-bike/', resume)).toBe(true);
+    });
+
+    it('still does not match Resume off the root', () => {
+      expect(isActive('/projects/ev-bike/log/', resume)).toBe(false);
+    });
+
+    it('matches a section on its trailing-slash subtree', () => {
+      expect(isActive('/projects/ev-bike/log/', log)).toBe(true);
+    });
+
+    it('still does not match a sibling whose name shares a prefix', () => {
+      const work = dests.find((d) => d.key === 'work')!;
+      expect(isActive('/projects/ev-bike/workspaces/', work)).toBe(false);
+    });
+  });
 });
