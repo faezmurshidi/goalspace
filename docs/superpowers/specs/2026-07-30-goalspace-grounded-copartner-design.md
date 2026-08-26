@@ -328,12 +328,34 @@ appear in a `web_search` result logged for the same run** (§5.4). The agent may
 therefore only cite pages the provider actually returned to it. This trusts
 neither the model nor the network, only the log.
 
+**The model supplies a URL and nothing else.** Everything else on a stored
+external citation — title, snippet, retrieval time, originating tool call — is
+**copied by the server from the matched result**, never accepted from the model.
+
+This is not belt-and-braces; without it the feature defeats its own argument.
+The snippet is offered to the reader below as the evidence that lets them judge
+whether a claim follows from its source. If the model wrote the snippet, it is
+not evidence — it is the claim again, in a costume that invites more trust. A
+model could then cite a genuine URL from a genuine search and attach whatever
+supporting text it liked, which is fabricated provenance of the worst kind,
+because every signal around it says the system checked.
+
+So the two shapes differ, and the distinction is load-bearing:
+
 ```ts
+// What the model may emit.
+type CitationInput =
+  | { type: 'entry' | 'work_item' | 'document'; id: string }
+  | { type: 'external'; url: string };
+
+// What the server stores, after resolving the input above.
 type Citation =
   | { type: 'entry' | 'work_item' | 'document'; id: string }
   | {
       type: 'external';
       url: string;
+      // Every field below is copied from the matched `web_search` result. None
+      // of it is model-supplied, so none of it can be fabricated.
       title: string;
       // The snippet as it was at retrieval, already truncated (§5.4). Carried
       // on the citation rather than joined from the tool call, for the same
@@ -342,11 +364,24 @@ type Citation =
       // or after traces have been pruned — must not degrade to a bare link.
       snippet: string;
       retrieved_at: string;
-      // The `agent_tool_calls` row this URL came back in. Kept for audit, so
-      // the citation can always be traced back to the search that produced it.
+      // The `agent_tool_calls` row this URL came back in, so the citation can
+      // always be traced back to the search that produced it.
       tool_call_id: string;
     };
 ```
+
+The same principle governs the tool set (§5.3): capabilities are enforced, not
+requested. A citation's evidence is constructed, not asserted.
+
+**Only `http:` and `https:` URLs may be cited.** Any other scheme is rejected
+before the citation is stored, and again before a link is rendered. URL equality
+against a logged result is not sufficient here: the results come from a third
+party, and a `javascript:` or `data:` URL that reached the log would otherwise
+become a clickable link in the owner's inbox. The `rel` attributes in §6.4 do
+not prevent scheme-based navigation and are not a substitute for this check.
+Note also that the markdown renderer's own URL protection does not cover this
+path, because an external citation renders as structured UI rather than through
+markdown.
 
 URLs are normalised before comparison — scheme and host lower-cased, fragment
 and common tracking parameters stripped. Without this a model that echoes back
@@ -368,7 +403,10 @@ readily as to a fabricated id.
 The check the server cannot make, a person can. That is why the stored snippet
 (§5.4) is part of this design rather than an optional extra: it is the evidence
 the owner needs to judge whether a claim follows from its source, and it is
-shown with the citation for exactly that reason. The system's job here is to
+shown with the citation for exactly that reason. It carries that weight only
+because the server copied it from the logged result rather than taking the
+model's word for it — an agent-written snippet would be the claim restated, not
+evidence for it. The system's job here is to
 guarantee the source is real and put what it said in front of the reader — not
 to pretend it has evaluated the argument.
 
@@ -386,7 +424,10 @@ External rows show the **hostname explicitly**, alongside the title rather than
 behind it, and link with `rel="noopener noreferrer nofollow"`. This is the only
 place in the product where a link's destination was chosen by a model rather
 than by the owner, so a misleading title must not be able to disguise where a
-click goes.
+click goes. A row whose URL is not `http:` or `https:` renders as plain text
+with no anchor at all — the scheme is rejected at storage (§6.3), and checked
+again here because this is the layer that runs against rows written before any
+bug in the first check was found.
 
 Each external row also carries the stored snippet, rendered **as plain text**
 (§5.4). Deciding whether to accept a proposal means deciding whether its sources
@@ -550,7 +591,7 @@ Mandarin case that motivated keeping it.
 | `lib/agents/executor.ts` | allowlist intersection, step loop, cap checks, run + tool-call recording | registry, db, gateway |
 | `lib/agents/cost.ts` | tokens + model → `cost_usd` | rate table (pure) |
 | `lib/proposals/apply.ts` | validate, apply, set provenance, write revision | phase-1 schemas, db |
-| `lib/proposals/citations.ts` | resolve internal ids; match external URLs against the run's logged search results | db (`agent_tool_calls`) |
+| `lib/proposals/citations.ts` | resolve internal ids; match external URLs against the run's logged search results and **build** the stored citation from the matched result | db (`agent_tool_calls`) |
 | `lib/proposals/normalise-url.ts` | canonical form for URL comparison | nothing (pure) |
 | `lib/retrieval/search.ts` | hybrid search + reciprocal rank fusion | db |
 | `lib/retrieval/chunk.ts` | document chunking | nothing (pure) |
@@ -581,9 +622,10 @@ produced it.
 - **Disallowed tool call** — rejected by the executor, recorded, returned to
   the model as an error.
 - **Invalid citation** — tool call rejected before the proposal is stored. An
-  internal id that does not resolve, or an external URL absent from this run's
-  logged search results, are the same class of failure and get the same
-  treatment: an error the model can act on, and a retry
+  internal id that does not resolve, an external URL absent from this run's
+  logged search results, and an external URL whose scheme is not `http(s)` are
+  the same class of failure and get the same treatment: an error the model can
+  act on, and a retry
   (§6.3).
 - **Cap tripped** — run ends `capped`, proposals retained, UI states which cap.
 - **Embedding job failure** — `attempts` incremented with `last_error`; retried
@@ -615,6 +657,19 @@ covered: a URL that differs from the logged one only by tracking parameters or
 letter case is accepted, so normalisation is pinned by test rather than by
 intention; and an agent without `web_search` on its allowlist cannot register an
 external citation at all, since it can have no search results to cite.
+
+**Citation metadata is server-constructed.** A stubbed model emits an external
+citation whose URL is genuinely in the run's logged results but whose
+accompanying title and snippet are its own invention. The assertion is that the
+stored citation carries the logged values, not the emitted ones — the model's
+text is discarded rather than merely flagged. The same test covers a supplied
+`tool_call_id` and `retrieved_at` pointing somewhere other than the matched
+result. This is the test that keeps the snippet worth showing.
+
+**Scheme restriction.** A `javascript:`, `data:`, or `file:` URL is rejected at
+storage even when present in a logged result, and no link is rendered for one
+that somehow reached storage. Both layers are asserted, because the second is
+the one that runs against rows written before a bug in the first was found.
 
 **Snippet rendering.** A stored snippet containing markdown and HTML — a link, an
 image tag, a script tag — is asserted to reach the trace and the inbox as
@@ -649,6 +704,8 @@ inline, enforcing success criterion 5.
 | Fabricated citations make provenance untrustworthy | Server-side validation before a proposal is stored: internal ids by existence, external URLs against the run's own logged search results (§6.3) |
 | An external citation reads as stronger evidence than it is | The check proves the URL was returned by a logged search, not that the page supports the claim; the inbox groups external citations separately, says so, and shows the stored snippet so the owner can make the judgement the server cannot (§6.3, §6.4) |
 | A crafted search result injects markup into the trace or inbox | Snippets are attacker-influenced text and render as plain text only, never through the markdown renderer (§5.4) |
+| An agent attaches invented supporting text to a real URL | The model supplies only a URL; title, snippet, retrieval time and tool-call id are copied by the server from the matched result (§6.3) |
+| A non-HTTP URL becomes a clickable link in the inbox | Only `http:` and `https:` may be cited, rejected at storage and again at render; `rel` does not prevent scheme-based navigation (§6.3, §6.4) |
 | A search result carries prompt-injection text aimed at the agent | Not preventable at this layer, but storing snippets makes it auditable after the fact rather than invisible (§5.4) |
 | A model-chosen link in the inbox misleads the reader | Hostname shown explicitly, `rel="noopener noreferrer nofollow"` (§6.4) |
 | Proposal fatigue turns the inbox into noise | No unsolicited proposals; agents act only when asked |
