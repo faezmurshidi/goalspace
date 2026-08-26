@@ -209,16 +209,32 @@ Mitigations, all required:
 
 - Every `web_search` call's exact query string is stored in `agent_tool_calls`
   and rendered in the run trace, so what left is always inspectable.
-- Every result the provider returns is stored too — `url` and `title` per hit,
-  in a structured `results` column rather than the free-text `result_summary`.
-  This serves two purposes at once. The trace shows both directions of the
-  exchange, not only the outbound half, so "what did this agent actually see"
-  is answerable. And it is the record that external citations are validated
-  against (§6.3): without it, a cited URL could not be distinguished from an
-  invented one.
-- Snippets are **not** stored. They are the bulk of a search response and add
-  nothing to validation, and storing them would put a large amount of
-  third-party prose in the owner's database as a side effect of one question.
+- Every result the provider returns is stored too — `url`, `title`, and
+  `snippet` per hit, in a structured `results` column rather than the free-text
+  `result_summary`. This serves two purposes at once. The trace shows both
+  directions of the exchange, not only the outbound half, so "what did this
+  agent actually see" is answerable. And it is the record that external
+  citations are validated against (§6.3): without it, a cited URL could not be
+  distinguished from an invented one.
+- **Snippets are stored, truncated to 500 characters.** They are what the agent
+  actually read — the title alone says which page was cited, not what was taken
+  from it. This is what makes §6.3's stated limit survivable: the server cannot
+  establish that a page supports a claim, but a person reviewing the proposal
+  can, and the snippet is what they need to do it. It is also a point-in-time
+  record, which matters because a URL cited a year ago may by then be dead or
+  rewritten. The cap is specified rather than left to whatever the provider
+  returns, so the size of a trace is bounded by this document.
+- **Snippets render as plain text, never through the markdown renderer.** A page
+  controls the text of its own snippet, so this is attacker-influenced content
+  arriving in the owner's trace UI; passing it through a renderer would let a
+  crafted result inject links or markup into a surface the owner is using to
+  audit. The same property makes snippets worth storing for a second reason: a
+  result can carry prompt-injection text aimed at the agent, and a stored
+  snippet is what turns that from invisible into auditable after the fact.
+- Note the direction of travel. The privacy risk this section is about is
+  outbound — a fragment of private notes reaching a third party. Snippets move
+  the other way: they are the provider's content arriving, not the owner's
+  leaving, and they add nothing to that risk.
 - Only agents whose allowlist includes it can search — the seeded Tutor and
   Critic do not have it.
 - The project settings page carries a plain-language statement that this tool
@@ -319,10 +335,15 @@ type Citation =
       type: 'external';
       url: string;
       title: string;
+      // The snippet as it was at retrieval, already truncated (§5.4). Carried
+      // on the citation rather than joined from the tool call, for the same
+      // reason as url and title: a citation must stay self-describing. The
+      // inbox needs it to render, and a proposal reviewed long after its run —
+      // or after traces have been pruned — must not degrade to a bare link.
+      snippet: string;
       retrieved_at: string;
-      // The `agent_tool_calls` row this URL came back in. Kept for audit; the
-      // url and title above are denormalised deliberately, so a citation stays
-      // readable if run traces are ever pruned.
+      // The `agent_tool_calls` row this URL came back in. Kept for audit, so
+      // the citation can always be traced back to the search that produced it.
       tool_call_id: string;
     };
 ```
@@ -344,6 +365,13 @@ to appear in the inbox's own wording: the paragraph above is the argument for
 why overstated provenance is worse than none, and it applies to this feature as
 readily as to a fabricated id.
 
+The check the server cannot make, a person can. That is why the stored snippet
+(§5.4) is part of this design rather than an optional extra: it is the evidence
+the owner needs to judge whether a claim follows from its source, and it is
+shown with the citation for exactly that reason. The system's job here is to
+guarantee the source is real and put what it said in front of the reader — not
+to pretend it has evaluated the argument.
+
 ### 6.4 The inbox, and a payoff
 
 Review lives at `/projects/[slug]/inbox`: pending proposals with rationale,
@@ -359,6 +387,12 @@ behind it, and link with `rel="noopener noreferrer nofollow"`. This is the only
 place in the product where a link's destination was chosen by a model rather
 than by the owner, so a misleading title must not be able to disguise where a
 click goes.
+
+Each external row also carries the stored snippet, rendered **as plain text**
+(§5.4). Deciding whether to accept a proposal means deciding whether its sources
+support it, and that judgement cannot be made from a URL alone. Putting the
+snippet on the card is what makes accept-or-reject an informed act rather than a
+vote of confidence in the agent.
 
 This is **the same inbox phase 4 needs** for outside contributions. Building it
 here means phase 4 becomes "add a second source of proposals" rather than a new
@@ -392,10 +426,10 @@ create table agent_tool_calls (
   tool           text not null,
   args           jsonb not null,
   result_summary text,
-  -- Structured results, for `web_search` only: `[{url, title}]`, no snippets
-  -- (§5.4). `result_summary` stays free text for every other tool; this column
-  -- exists because external citations are validated against it (§6.3), which
-  -- free text cannot support.
+  -- Structured results, for `web_search` only: `[{url, title, snippet}]`, the
+  -- snippet truncated to 500 chars (§5.4). `result_summary` stays free text for
+  -- every other tool; this column exists because external citations are
+  -- validated against it (§6.3), which free text cannot support.
   results        jsonb,
   ok             boolean not null,
   duration_ms    integer,
@@ -582,6 +616,12 @@ letter case is accepted, so normalisation is pinned by test rather than by
 intention; and an agent without `web_search` on its allowlist cannot register an
 external citation at all, since it can have no search results to cite.
 
+**Snippet rendering.** A stored snippet containing markdown and HTML — a link, an
+image tag, a script tag — is asserted to reach the trace and the inbox as
+literal text. This is the one place the product renders content chosen by a
+third party rather than by the owner, and the assertion is that it is never
+treated as markup.
+
 **RLS.** Same two-user isolation regime as phase 1, extended across `agents`,
 `conversations`, `messages`, `agent_runs`, `agent_tool_calls`, `proposals`,
 `embeddings`, `ai_usage`, and `project_budgets`.
@@ -607,7 +647,9 @@ inline, enforcing success criterion 5.
 |---|---|
 | Agentic retrieval loop burns budget | Hard step limit, per-run token cap, monthly cap, all enforced in the executor |
 | Fabricated citations make provenance untrustworthy | Server-side validation before a proposal is stored: internal ids by existence, external URLs against the run's own logged search results (§6.3) |
-| An external citation reads as stronger evidence than it is | The check proves the URL was returned by a logged search, not that the page supports the claim; inbox groups external citations separately and says so (§6.3, §6.4) |
+| An external citation reads as stronger evidence than it is | The check proves the URL was returned by a logged search, not that the page supports the claim; the inbox groups external citations separately, says so, and shows the stored snippet so the owner can make the judgement the server cannot (§6.3, §6.4) |
+| A crafted search result injects markup into the trace or inbox | Snippets are attacker-influenced text and render as plain text only, never through the markdown renderer (§5.4) |
+| A search result carries prompt-injection text aimed at the agent | Not preventable at this layer, but storing snippets makes it auditable after the fact rather than invisible (§5.4) |
 | A model-chosen link in the inbox misleads the reader | Hostname shown explicitly, `rel="noopener noreferrer nofollow"` (§6.4) |
 | Proposal fatigue turns the inbox into noise | No unsolicited proposals; agents act only when asked |
 | `web_search` leaks private notes to a third party | Queries **and results** stored and rendered in the run trace; tool withheld from Tutor and Critic; disclosure in settings (§5.4) |
