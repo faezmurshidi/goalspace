@@ -136,18 +136,25 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
           className="w-full max-w-[70ch] border border-rule-strong bg-paper p-3 text-body text-ink"
         />
 
-        {/* Matched to the textarea's height so switching does not jump the Save
-            button: 20 rows x 0.9375rem x 1.55 line-height, plus p-3 either
-            side, is a shade over 30rem. */}
+        {/* Contents are gated on the mode, not just hidden. `hidden` stops the
+            browser painting a subtree but not React rendering it, so without
+            the gate every keystroke in write mode re-parsed the whole draft
+            through remark and rehype to build a tree nobody could see — a cost
+            that grows with the length of the document.
+
+            The min-height is what keeps the Save button still: this panel when
+            visible is as tall as the textarea it replaces. 20 rows x 0.9375rem
+            x 1.55 line-height, plus p-3 either side, is a shade over 30rem. */}
         <div
           hidden={mode !== 'preview'}
           className="min-h-[30.5rem] w-full max-w-[70ch] border border-rule-strong bg-paper p-3"
         >
-          {body.trim() ? (
-            <Markdown>{body}</Markdown>
-          ) : (
-            <p className="text-ink-soft">{t('app.documents.previewEmpty')}</p>
-          )}
+          {mode === 'preview' &&
+            (body.trim() ? (
+              <Markdown>{body}</Markdown>
+            ) : (
+              <p className="text-ink-soft">{t('app.documents.previewEmpty')}</p>
+            ))}
         </div>
       </div>
 
