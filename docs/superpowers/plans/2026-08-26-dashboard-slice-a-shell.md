@@ -29,9 +29,9 @@
 |---|---|
 | `apps/app/lib/shell/destinations.ts` | Pure. Project slug → nav destinations, and which is active for a path. |
 | `apps/app/lib/shell/sidebar-state.ts` | Pure. The collapse cookie's name, parsing, and serialisation. |
-| `packages/ui/src/hooks/use-is-mobile.ts` | Viewport hook the sidebar needs for its sheet/rail switch. |
-| `packages/ui/src/components/sidebar.tsx` | The trimmed, skinned sidebar primitive. |
-| `packages/ui/src/index.ts` | **Modify** — export the above. |
+| `packages/ui/src/hooks/use-is-mobile.ts` | Viewport hook the sidebar needs for its sheet/rail switch. Generic and token-free, so it is shared. |
+| `packages/ui/src/index.ts` | **Modify** — export the hook. |
+| `apps/app/components/shell/sidebar.tsx` | The trimmed, skinned sidebar primitive. Lives in the app, not the shared package — see below. |
 | `apps/app/components/shell/workspace-sidebar.tsx` | The project sidebar: switcher, sections, collapse rail. |
 | `apps/app/components/shell/header-rail.tsx` | Section title, sidebar trigger, account menu (theme, sign out). |
 | `apps/app/components/shell/workspace-chrome.tsx` | **Rewrite** — composition only: skip link, provider, sidebar, rail, main. |
@@ -39,6 +39,8 @@
 | `apps/app/lib/db/resume.ts` | **Modify** — `ResumeData.undecidedProposals`. |
 | `apps/app/app/(workspace)/projects/[slug]/page.tsx` | **Modify** — render the undecided-proposals line. |
 | `packages/i18n/src/locales/{en,ms,zh}.json` | **Modify** — new nav keys. |
+
+**The skinned primitive lives in `apps/app`, not `packages/ui`.** Every existing component in that package uses shadcn's semantic tokens — 16 uses of `bg-background`, 14 of `text-foreground`, no app tokens at all — and `apps/web` defines no `paper`, `ink`, `rule`, or `oxide`. A sidebar skinned in those tokens would render unstyled the moment the other app imported it. It also keeps `ease-out-quart` resolvable, since that easing is defined in `apps/app/tailwind.config.ts` and nowhere else. `useIsMobile` is genuinely generic and stays shared.
 
 Two modules carry the logic worth testing. `destinations.ts` exists because the current shell computes its nav inline and has already produced two recorded bugs — `/projects/new` matching as a slug and rendering links to `/projects/new/work`, and a reordering that put Account above the section nav when the bar wrapped. `sidebar-state.ts` exists because the collapse state is read on the server and written on the client, and a mismatch means the first paint is wrong.
 
@@ -342,11 +344,11 @@ git commit -m "feat(shell): keep the sidebar's collapse state readable on both s
 
 **Files:**
 - Create: `packages/ui/src/hooks/use-is-mobile.ts`
-- Create: `packages/ui/src/components/sidebar.tsx`
 - Modify: `packages/ui/src/index.ts`
+- Create: `apps/app/components/shell/sidebar.tsx`
 
 **Interfaces:**
-- Produces: `useIsMobile(): boolean`; and from `sidebar.tsx`: `SidebarProvider`, `Sidebar`, `SidebarHeader`, `SidebarContent`, `SidebarFooter`, `SidebarGroup`, `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`, `SidebarTrigger`, `useSidebar`.
+- Produces: `useIsMobile(): boolean` from `@goalspace/ui`; and from `@/components/shell/sidebar`: `SidebarProvider`, `Sidebar`, `SidebarHeader`, `SidebarContent`, `SidebarFooter`, `SidebarGroup`, `SidebarMenu`, `SidebarMenuItem`, `SidebarMenuButton`, `SidebarTrigger`, `useSidebar`.
 
 This is shadcn's sidebar **trimmed to what this app uses** and reskinned. Do not paste shadcn's full file: it ships sub-menus, input, skeletons, and several variants none of which appear in the design. YAGNI.
 
@@ -387,15 +389,12 @@ export function useIsMobile(): boolean {
 - [ ] **Step 2: Write the sidebar primitive**
 
 ```tsx
-// packages/ui/src/components/sidebar.tsx
+// apps/app/components/shell/sidebar.tsx
 'use client';
 
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
-
-import { cn } from '../lib/utils';
-import { Sheet, SheetContent, SheetTitle } from './sheet';
-import { useIsMobile } from '../hooks/use-is-mobile';
+import { Sheet, SheetContent, SheetTitle, cn, useIsMobile } from '@goalspace/ui';
 
 /**
  * shadcn's sidebar, trimmed to what this product uses and reskinned.
@@ -607,27 +606,28 @@ export function SidebarTrigger({
 }
 ```
 
-- [ ] **Step 3: Export from the package**
+- [ ] **Step 3: Export the hook from the package**
 
-Add to `packages/ui/src/index.ts`, alphabetically among the existing `export * from './components/...'` lines:
+Add one line to `packages/ui/src/index.ts`, after the component exports:
 
 ```typescript
-export * from './components/sidebar';
 export * from './hooks/use-is-mobile';
 ```
+
+Only the hook. The sidebar itself is an app component and is imported by path.
 
 - [ ] **Step 4: Verify it compiles**
 
 Run: `pnpm typecheck`
 Expected: PASS for both apps.
 
-If `cn` does not resolve from `'../lib/utils'`, check how the sibling components import it — `packages/ui/src/components/button.tsx` is the reference — and match that path exactly rather than inventing one.
+`cn`, `Sheet`, `SheetContent`, and `SheetTitle` are all exported from `@goalspace/ui` — verified. Inside `packages/ui` itself, `cn` comes from `../cn`, which is why the hook file must not import it (it does not need to).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/ui/src/components/sidebar.tsx packages/ui/src/hooks/use-is-mobile.ts packages/ui/src/index.ts
-git commit -m "feat(ui): add a sidebar primitive, trimmed and skinned to the system"
+git add packages/ui/src/hooks/use-is-mobile.ts packages/ui/src/index.ts apps/app/components/shell/sidebar.tsx
+git commit -m "feat(shell): add a sidebar primitive, trimmed and skinned to the system"
 ```
 
 ---
@@ -639,7 +639,7 @@ git commit -m "feat(ui): add a sidebar primitive, trimmed and skinned to the sys
 - Modify: `packages/i18n/src/locales/en.json`, `ms.json`, `zh.json`
 
 **Interfaces:**
-- Consumes: `ChromeProject`, `destinationsFor`, `isActive` (Task 1); the sidebar primitive (Task 3).
+- Consumes: `ChromeProject`, `destinationsFor`, `isActive` (Task 1); the sidebar primitive from `@/components/shell/sidebar` (Task 3).
 - Produces: `WorkspaceSidebar({ projects, current, pathname })`.
 
 - [ ] **Step 1: Add the i18n keys**
@@ -666,6 +666,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  cn,
+} from '@goalspace/ui';
+import { useAppTranslations } from '@goalspace/i18n';
+
+import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
@@ -673,10 +678,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  cn,
   useSidebar,
-} from '@goalspace/ui';
-import { useAppTranslations } from '@goalspace/i18n';
+} from './sidebar';
 
 import { destinationsFor, isActive, type ChromeProject } from '@/lib/shell/destinations';
 
@@ -818,7 +821,7 @@ git commit -m "feat(shell): build the project sidebar"
 - Create: `apps/app/components/shell/header-rail.tsx`
 
 **Interfaces:**
-- Consumes: `SidebarTrigger`, `useSidebar` (Task 3); `Wordmark` from `./wordmark`.
+- Consumes: `SidebarTrigger` from `./sidebar` (Task 3); `Wordmark` from `./wordmark`.
 - Produces: `HeaderRail({ title })`.
 
 Everything in the account menu is lifted from the current shell unchanged. The theme control and the sign-out behaviour are not being redesigned.
@@ -838,11 +841,11 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  SidebarTrigger,
   cn,
 } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
 
+import { SidebarTrigger } from './sidebar';
 import { Wordmark } from './wordmark';
 import { createClient } from '@/utils/supabase/client';
 
@@ -867,7 +870,10 @@ export function HeaderRail({ title }: { title: string | null }) {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-rule bg-paper px-4">
-      <SidebarTrigger label={t('app.nav.toggleSidebar')} className="md:hidden" />
+      {/* Rendered at every width. The desktop sidebar is `hidden md:flex`, so a
+          trigger hidden above `md` would leave desktop with no way to collapse
+          it at all. */}
+      <SidebarTrigger label={t('app.nav.toggleSidebar')} />
 
       {title ? (
         <h1 className="truncate text-title text-ink">{title}</h1>
@@ -954,8 +960,9 @@ git commit -m "feat(shell): add the header rail, carrying the account menu over"
 
 import { useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-import { SidebarProvider } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+
+import { SidebarProvider } from './sidebar';
 
 import { projectSlugFrom, type ChromeProject } from '@/lib/shell/destinations';
 import { SIDEBAR_COOKIE, SIDEBAR_MAX_AGE, serializeSidebarState } from '@/lib/shell/sidebar-state';
@@ -1190,7 +1197,13 @@ Then include it in the returned object:
 
 - [ ] **Step 3: Render the line**
 
-In `apps/app/app/(workspace)/projects/[slug]/page.tsx`, find the block listing open questions and blocked items, and add one row in the same markup, immediately after them:
+In `apps/app/app/(workspace)/projects/[slug]/page.tsx`, add the Link import at the top — the file uses `getFixedT` and defines `const t` already, but imports no `Link`:
+
+```typescript
+import Link from 'next/link';
+```
+
+Then find the block listing open questions and blocked items, and add one row in the same markup, immediately after them:
 
 ```tsx
 {data.undecidedProposals > 0 ? (
