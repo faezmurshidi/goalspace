@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug, createProject } from '@/lib/db/projects';
 import { createEntry } from '@/lib/db/entries';
-import { createDocument, getDocument, getRevision, updateDocument } from '@/lib/db/documents';
+import { createDocument, getRevision, updateDocument } from '@/lib/db/documents';
 import {
   changeWorkItemStatus,
   createWorkItem,
@@ -268,7 +268,8 @@ export async function createDocumentAction(
 export async function updateDocumentAction(
   slug: string,
   input: unknown,
-  expectedUpdatedAt: string
+  expectedUpdatedAt: string,
+  overwrite = false
 ): Promise<ActionResult<{ updatedAt: string }>> {
   const parsed = updateDocumentSchema.safeParse(input);
   if (!parsed.success) return fromZodError(parsed.error);
@@ -286,7 +287,10 @@ export async function updateDocumentAction(
       // A person saving clears the agent stamp: the column describes who wrote
       // the body that is there now, and that is now them.
       agentId: null,
-      expectedUpdatedAt,
+      // Omitting expectedUpdatedAt skips the version check entirely, so an
+      // explicit overwrite always applies rather than repeating the same
+      // conflict it was meant to escape.
+      ...(overwrite ? {} : { expectedUpdatedAt }),
     });
 
     // Null means the version moved under us — another tab, or an accepted

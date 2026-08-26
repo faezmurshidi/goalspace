@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
@@ -26,21 +26,31 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
   const [version, setVersion] = useState(document.updated_at);
   const [message, setMessage] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  // Only the conflict failure gets an escape hatch: without it, the held
+  // `version` never updates, so every later save would repeat the exact same
+  // refusal and the person has no way out short of a hard reload.
+  const [conflict, setConflict] = useState(false);
+  const messageId = useId();
 
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
+  function save(overwrite: boolean) {
     setMessage(null);
     setFailed(false);
 
     startTransition(async () => {
       try {
-        const result = await updateDocumentAction(slug, { id: document.id, title, body }, version);
+        const result = await updateDocumentAction(
+          slug,
+          { id: document.id, title, body },
+          version,
+          overwrite
+        );
 
         if (!result.ok) {
           // The fields are deliberately left alone. Unsaved text is the most
           // valuable thing on this screen and a failed save must not cost it.
           setFailed(true);
           setMessage(result.message ?? 'app.errors.generic');
+          setConflict(result.message === 'app.documents.conflict');
           return;
         }
 
@@ -48,12 +58,19 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
         // not treated as stale.
         setVersion(result.data.updatedAt);
         setMessage('app.documents.saved');
+        setConflict(false);
         router.refresh();
       } catch {
         setFailed(true);
         setMessage('app.errors.generic');
+        setConflict(false);
       }
     });
+  }
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    save(false);
   }
 
   return (
@@ -66,6 +83,7 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
           id="document-title"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
+          aria-describedby={failed ? messageId : undefined}
           className="border border-rule-strong bg-paper px-3 py-2 text-title text-ink"
         />
       </div>
@@ -79,6 +97,7 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
           value={body}
           onChange={(event) => setBody(event.target.value)}
           rows={20}
+          aria-describedby={failed ? messageId : undefined}
           className="w-full max-w-[70ch] border border-rule-strong bg-paper p-3 text-body text-ink"
         />
       </div>
@@ -88,9 +107,24 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
           {t(pending ? 'app.documents.saving' : 'app.documents.save')}
         </Button>
         {message ? (
-          <span className={cn('label', failed ? 'text-danger' : 'text-ink-soft')}>
+          <p
+            id={messageId}
+            role={failed ? 'alert' : undefined}
+            className={cn('label', failed ? 'text-oxide' : 'text-ink-soft')}
+          >
             {t(message)}
-          </span>
+          </p>
+        ) : null}
+        {conflict ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pending}
+            onClick={() => save(true)}
+            className="label rounded-none"
+          >
+            {t('app.documents.overwrite')}
+          </Button>
         ) : null}
       </div>
     </form>

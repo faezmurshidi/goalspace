@@ -495,6 +495,7 @@
       "saving": "Saving",
       "saved": "Saved",
       "conflict": "This document changed since you opened it. Reload to see the current version.",
+      "overwrite": "Overwrite with my version",
       "untitled": "Untitled",
       "changedAt": "Last changed",
       "history": "History",

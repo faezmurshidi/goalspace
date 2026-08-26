@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
@@ -19,6 +19,7 @@ export function NewDocumentForm({ slug }: { slug: string }) {
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const errorId = useId();
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -52,12 +53,17 @@ export function NewDocumentForm({ slug }: { slug: string }) {
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         placeholder={t('app.documents.new')}
+        aria-describedby={error ? errorId : undefined}
         className="label border border-rule bg-paper px-3 py-1.5 text-ink placeholder:text-ink-soft"
       />
       <Button type="submit" disabled={pending || !title.trim()} className="label rounded-none">
-        {t('app.documents.new')}
+        {t(pending ? 'app.documents.saving' : 'app.documents.new')}
       </Button>
-      {error ? <span className="label text-danger">{t(error)}</span> : null}
+      {error ? (
+        <p id={errorId} role="alert" className="label text-oxide">
+          {t(error)}
+        </p>
+      ) : null}
     </form>
   );
 }

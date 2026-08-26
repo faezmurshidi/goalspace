@@ -78,7 +78,11 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
         </p>
       ) : null}
 
-      {error ? <p className="text-sm text-danger">{t(error)}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm text-oxide">
+          {t(error)}
+        </p>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         <Button type="button" disabled={pending} onClick={accept}>
