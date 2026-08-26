@@ -1,6 +1,6 @@
 # Workspace Dashboard Design
 
-**Status:** approved design, not built.
+**Status:** slice A (the shell) is built; slices B, C and D are planned. See §9.
 **Supersedes:** the top-bar shell in `apps/app/components/shell/workspace-chrome.tsx`.
 **Related:** [PRODUCT.md](../../../PRODUCT.md) · [grounded co-partner design](2026-07-30-goalspace-grounded-copartner-design.md) · [ROADMAP](../../ROADMAP.md)
 
@@ -71,8 +71,12 @@ Concretely, when the shadcn block and the system disagree, the system wins:
 | Badge component for counts | A right-aligned numeral in `ink-soft`. A count of zero renders nothing. |
 
 `packages/ui` already carries every primitive shadcn's sidebar depends on:
-sheet, tooltip, separator, skeleton, input, button, slot. Only the `useIsMobile`
-hook is missing and is added with it.
+sheet, tooltip, separator, skeleton, input, button, slot. **As built, the
+skinned primitive itself lives in `apps/app/components/shell/sidebar.tsx`, not
+in `packages/ui`** — every component in that package uses shadcn's semantic
+tokens, and `apps/web` defines no `paper`, `ink`, `rule` or `oxide`, so a
+sidebar skinned in them would render unstyled there. Only `useIsMobile` is
+generic enough to be shared, and it went to `packages/ui/src/hooks/`.
 
 **Anti-references still apply.** No progress celebration, no streaks, no
 badges in the achievement sense. A count next to Inbox is a quantity, not a
@@ -256,7 +260,7 @@ alone.
 
 | Slice | Contents | Depends on |
 |---|---|---|
-| **A. Shell** | Sidebar primitive in `packages/ui`, the new shell, the four existing routes reflowed, and Resume's undecided-proposals line (§6.5). Placeholder-free: only working destinations appear. | — |
+| **A. Shell** — *built* | Sidebar primitive in `apps/app/components/shell/`, the new shell, the four existing routes reflowed, and Resume's undecided-proposals line (§6.5). Placeholder-free: only working destinations appear. | — |
 | **B. Documents** | List, editor, revision history. | A |
 | **C. Agents + runs** | Agent schemas, db module, list, editor with grouped tools, run trace. | A |
 | **D. Settings** | Migration for locale and time zone; project settings incl. spend, caps, delete; account settings. | A |

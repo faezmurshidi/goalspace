@@ -33,7 +33,7 @@ export function WorkspaceSidebar({
   pathname: string;
 }) {
   const { t } = useAppTranslations();
-  const { open, isMobile } = useSidebar();
+  const { open, isMobile, setOpenMobile } = useSidebar();
 
   // The sheet is always full width, so it is never "collapsed" — `open` is the
   // desktop rail's state and means nothing on mobile. Reading it there rendered
@@ -42,10 +42,22 @@ export function WorkspaceSidebar({
 
   const destinations = destinationsFor(current.slug, { inbox: current.pendingProposals });
 
+  // The provider lives in the chrome, which the workspace layout keeps mounted
+  // across route changes — so nothing dismisses the sheet on its own, and
+  // following a link inside it left it sitting open over the page it had just
+  // navigated to. Closing on click is the whole fix; on desktop there is no
+  // sheet and this is a no-op.
+  const dismissSheet = () => setOpenMobile(false);
+
   return (
     <Sidebar label={t('app.nav.projectNav')}>
       <SidebarHeader>
-        <ProjectSwitcher current={current} projects={projects} collapsed={collapsed} />
+        <ProjectSwitcher
+          current={current}
+          projects={projects}
+          collapsed={collapsed}
+          onNavigate={dismissSheet}
+        />
       </SidebarHeader>
 
       <SidebarContent>
@@ -58,7 +70,11 @@ export function WorkspaceSidebar({
               return (
                 <SidebarMenuItem key={destination.key}>
                   <SidebarMenuButton asChild isActive={active}>
-                    <Link href={destination.href} title={collapsed ? label : undefined}>
+                    <Link
+                      href={destination.href}
+                      title={collapsed ? label : undefined}
+                      onClick={dismissSheet}
+                    >
                       {/* Collapsed, the first letter stands in for the label —
                           and `sr-only` keeps the real name in the a11y tree,
                           so the rail is never an unlabelled control. */}
@@ -94,10 +110,13 @@ function ProjectSwitcher({
   current,
   projects,
   collapsed,
+  onNavigate,
 }: {
   current: ChromeProject;
   projects: ChromeProject[];
   collapsed: boolean;
+  /** Dismisses the mobile sheet; switching project navigates away. */
+  onNavigate: () => void;
 }) {
   const { t } = useAppTranslations();
 
@@ -139,6 +158,7 @@ function ProjectSwitcher({
           >
             <Link
               href={`/projects/${project.slug}`}
+              onClick={onNavigate}
               className={cn(
                 'unstyled block px-3 py-2 text-body',
                 project.slug === current.slug ? 'text-oxide' : 'text-ink'

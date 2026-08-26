@@ -46,7 +46,14 @@ export default async function ResumePage({ params }: Params) {
   const now = new Date();
   const data = await getResumeData(supabase, project, now);
 
-  const hasRecord = data.recentEntries.length > 0 || data.open.length > 0 || data.waiting.length > 0;
+  // Undecided proposals count as a record. Without them a project whose only
+  // content is a pending proposal renders "nothing recorded yet" directly
+  // above a row saying three things are waiting on a decision.
+  const hasRecord =
+    data.recentEntries.length > 0 ||
+    data.open.length > 0 ||
+    data.waiting.length > 0 ||
+    data.undecidedProposals > 0;
 
   return (
     <div className="mx-auto w-full max-w-4xl px-6">
