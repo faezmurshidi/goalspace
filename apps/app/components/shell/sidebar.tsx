@@ -92,7 +92,7 @@ export function Sidebar({
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>
         <SheetContent
           side="left"
-          className="w-72 border-r border-rule-strong bg-paper p-0"
+          className="w-72 border-r border-rule-strong bg-paper p-0 shadow-none"
         >
           {/* Radix requires a title for the dialog's accessible name. It is
               visually hidden because the sheet already shows the project. */}
@@ -111,8 +111,6 @@ export function Sidebar({
       data-state={open ? 'open' : 'collapsed'}
       className={cn(
         'sticky top-0 hidden h-svh shrink-0 flex-col border-r border-rule bg-paper md:flex',
-        // Width is the only thing that animates, and motion-reduce removes it.
-        'transition-[width] duration-200 ease-out-quart motion-reduce:transition-none',
         open ? 'w-64' : 'w-14',
         className
       )}
