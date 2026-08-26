@@ -7,6 +7,7 @@ import { useAppTranslations } from '@goalspace/i18n';
 
 import { updateDocumentAction } from '@/app/(workspace)/actions';
 import type { Document } from '@/lib/db/documents';
+import { Markdown } from '@/components/docs/markdown';
 
 /**
  * Every save is a compare-and-set against the version this editor loaded.
@@ -30,6 +31,9 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
   // `version` never updates, so every later save would repeat the exact same
   // refusal and the person has no way out short of a hard reload.
   const [conflict, setConflict] = useState(false);
+  // Which half of the body field is showing. Preview renders the current
+  // draft, not the saved body, so it shows what a save would store.
+  const [mode, setMode] = useState<'write' | 'preview'>('write');
   const messageId = useId();
 
   function save(overwrite: boolean) {
@@ -89,17 +93,69 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="document-body" className="label text-ink-soft">
-          {t('app.documents.bodyLabel')}
-        </label>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <label htmlFor="document-body" className="label text-ink-soft">
+            {t('app.documents.bodyLabel')}
+          </label>
+          {/* Toggle buttons with aria-pressed rather than role="tab". They look
+              like tabs, but the tab role carries an arrow-key contract from the
+              APG, and a half-implemented one is worse for a keyboard user than
+              a pattern that promises less and keeps its promise. */}
+          <div className="flex" role="group" aria-label={t('app.documents.bodyLabel')}>
+            {(['write', 'preview'] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={mode === value}
+                onClick={() => setMode(value)}
+                className={cn(
+                  'label border border-rule px-3 py-1 transition-colors',
+                  value === 'preview' && '-ml-px',
+                  mode === value
+                    ? 'border-rule-strong bg-paper-shade text-ink'
+                    : 'bg-paper text-ink-soft hover:text-ink'
+                )}
+              >
+                {t(`app.documents.${value}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Both panels stay mounted and one is `hidden`, rather than swapping
+            which is rendered. Unmounting the textarea would discard the
+            browser's native undo stack for it, so a preview-and-back would
+            silently cost the writer every ctrl-Z they had. */}
         <textarea
           id="document-body"
           value={body}
           onChange={(event) => setBody(event.target.value)}
           rows={20}
+          hidden={mode !== 'write'}
           aria-describedby={failed ? messageId : undefined}
           className="w-full max-w-[70ch] border border-rule-strong bg-paper p-3 text-body text-ink"
         />
+
+        {/* Contents are gated on the mode, not just hidden. `hidden` stops the
+            browser painting a subtree but not React rendering it, so without
+            the gate every keystroke in write mode re-parsed the whole draft
+            through remark and rehype to build a tree nobody could see — a cost
+            that grows with the length of the document.
+
+            The min-height is what keeps the Save button still: this panel when
+            visible is as tall as the textarea it replaces. 20 rows x 0.9375rem
+            x 1.55 line-height, plus p-3 either side, is a shade over 30rem. */}
+        <div
+          hidden={mode !== 'preview'}
+          className="min-h-[30.5rem] w-full max-w-[70ch] border border-rule-strong bg-paper p-3"
+        >
+          {mode === 'preview' &&
+            (body.trim() ? (
+              <Markdown>{body}</Markdown>
+            ) : (
+              <p className="text-ink-soft">{t('app.documents.previewEmpty')}</p>
+            ))}
+        </div>
       </div>
 
       {/* Wraps because in the conflict state this row carries three things —

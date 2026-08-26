@@ -503,7 +503,10 @@
       "byOwner": "Oleh anda",
       "viewingRevision": "Versi terdahulu, baca sahaja",
       "restore": "Pulihkan versi ini",
-      "backToDocument": "Kembali ke dokumen"
+      "backToDocument": "Kembali ke dokumen",
+      "write": "Tulis",
+      "preview": "Pratonton",
+      "previewEmpty": "Tiada apa-apa untuk dipratonton lagi."
     }
   }
 }

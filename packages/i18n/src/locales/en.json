@@ -503,7 +503,10 @@
       "byOwner": "By you",
       "viewingRevision": "An earlier version, read-only",
       "restore": "Restore this version",
-      "backToDocument": "Back to the document"
+      "backToDocument": "Back to the document",
+      "write": "Write",
+      "preview": "Preview",
+      "previewEmpty": "Nothing to preview yet."
     }
   }
 }

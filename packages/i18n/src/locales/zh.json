@@ -502,7 +502,10 @@
       "byOwner": "由您撰写",
       "viewingRevision": "较早版本，只读",
       "restore": "恢复此版本",
-      "backToDocument": "返回文档"
+      "backToDocument": "返回文档",
+      "write": "编写",
+      "preview": "预览",
+      "previewEmpty": "暂无可预览的内容。"
     }
   }
 }

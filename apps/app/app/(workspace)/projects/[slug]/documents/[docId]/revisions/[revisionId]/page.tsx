@@ -7,6 +7,7 @@ import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { getDocument, getRevision } from '@/lib/db/documents';
 import { authorshipOf, AUTHOR_KEY } from '@/lib/documents/authorship';
+import { Markdown } from '@/components/docs/markdown';
 import { formatDateTime, getLocale } from '@/lib/format';
 import { RestoreButton } from './restore-button';
 
@@ -58,9 +59,11 @@ export default async function RevisionPage({ params }: Params) {
           {revision.title || t('app.documents.untitled')}
         </h1>
 
-        <p className="mt-4 max-w-[70ch] whitespace-pre-wrap text-body text-ink">
-          {revision.body}
-        </p>
+        {/* Rendered, not raw. A `<p>` wrapper would be invalid here — markdown
+            produces block elements, and nesting a list or a heading inside a
+            paragraph makes the browser close the p early and the server and
+            client trees disagree. */}
+        <Markdown className="mt-4 max-w-[70ch]">{revision.body}</Markdown>
 
         <div className="mt-8 flex items-center gap-4 border-t border-rule pt-4">
           <RestoreButton
