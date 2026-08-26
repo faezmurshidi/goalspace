@@ -30,7 +30,7 @@ agents list and editor; the run trace; project settings; account settings.
 
 | Non-goal | Rationale |
 |---|---|
-| Redesigning Resume, Work, or Log | They are reflowed into the new shell and otherwise untouched. Their content is not the problem. |
+| Redesigning Resume, Work, or Log | They are reflowed into the new shell. Resume gains exactly one line — see §6.5 — and is otherwise untouched. Their content is not the problem. |
 | Changing quick capture | The highest-frequency interaction in the product. It stays mounted in the project layout, at the bottom of the content area, unchanged. |
 | A conversations or ask surface | Phase 2c. The sidebar leaves room for it; this spec does not build it. |
 | Multi-project navigation | One project is in focus. The switcher changes which. See §5. |
@@ -136,8 +136,14 @@ current body. The editor is a title field and a body field, saving through
 `updateDocument`, which already writes a revision before every update.
 
 Each document shows its revision history: when, and who — an `agent_id` or the
-owner. Restoring a revision is an ordinary update whose body is the old body,
-so it becomes a new revision rather than erasing the intervening one.
+owner.
+
+**Restoring goes through the revision, not around it.** A revision opens
+read-only, in full, with the restore action on that view. There is no
+confirmation dialog: a dialog asking whether you are sure about a body you
+cannot see is worse than simply showing you the body. Restoring is an ordinary
+update whose body is the old body, so the current body becomes a revision in
+turn and nothing is lost — the operation is reversible by repeating it.
 
 This closes the oddity that an agent can propose edits to documents a person
 cannot author. `lib/db/documents.ts` already exists from phase 2b.
@@ -188,7 +194,20 @@ arguments are shown verbatim.
   document, attachment, agent, run, proposal, and usage row. Requires typing
   the project's slug to confirm.
 
-### 6.5 Account settings — `/settings`
+### 6.5 Resume — one addition
+
+Resume exists to surface open loops on return. Phase 2b created a new kind of
+open loop and left it invisible: a proposal you never decided sits in the inbox
+and is nowhere on the surface designed to answer *what is outstanding*.
+
+Resume gains one line — undecided proposals, in the existing idiom alongside
+open questions and blocked items. Nothing else about it changes.
+
+This is safe from becoming noise because agents never run proactively (a stated
+non-goal of the phase-2 design): the only proposals that can exist are ones a
+run you started produced, and the only ones counted are ones you left undecided.
+
+### 6.6 Account settings — `/settings`
 
 Theme, language, time zone, email notifications.
 
@@ -237,18 +256,20 @@ alone.
 
 | Slice | Contents | Depends on |
 |---|---|---|
-| **A. Shell** | Sidebar primitive in `packages/ui`, the new shell, the four existing routes reflowed. Placeholder-free: only working destinations appear. | — |
+| **A. Shell** | Sidebar primitive in `packages/ui`, the new shell, the four existing routes reflowed, and Resume's undecided-proposals line (§6.5). Placeholder-free: only working destinations appear. | — |
 | **B. Documents** | List, editor, revision history. | A |
 | **C. Agents + runs** | Agent schemas, db module, list, editor with grouped tools, run trace. | A |
 | **D. Settings** | Migration for locale and time zone; project settings incl. spend, caps, delete; account settings. | A |
 
 B, C, and D are independent of each other. A is the only ordering constraint.
 
-## 10. Open questions
+## 10. Decisions taken during review
 
-- **Restoring a document revision** — offered in 6.1 as a new update. Whether
-  it also needs a confirmation step depends on how long bodies get; deferred to
-  the slice-B plan.
-- **Whether Resume should change.** It is the product's centrepiece and this
-  spec leaves it alone deliberately. If the sidebar makes it feel thin, that is
-  a separate design, not a rider on this one.
+- **Restoring a revision needs no dialog.** It needs the revision on screen.
+  Resolved in §6.1: view read-only, restore from there.
+- **Resume gains one line, not a redesign.** Resolved in §6.5. The wider
+  question — whether the re-entry surface wants rethinking once agents are
+  conversational — is deliberately left to phase 2c, so it is answered once
+  rather than twice.
+
+No open questions remain.
