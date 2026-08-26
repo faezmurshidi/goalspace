@@ -347,7 +347,8 @@
       "themeSystem": "Sistem",
       "language": "Bahasa",
       "skipToContent": "Terus ke kandungan",
-      "sections": "Bahagian projek"
+      "toggleSidebar": "Togol bar sisi",
+      "projectNav": "Navigasi projek"
     },
     "project": {
       "kindBuild": "Bina",
@@ -393,6 +394,7 @@
       "blockedSince": "Tersekat sejak {{when}}",
       "openTitle": "Apa yang terbuka",
       "openEmpty": "Tiada yang terbuka.",
+      "undecidedProposals": "Cadangan belum diputuskan",
       "leftOffTitle": "Di mana anda berhenti",
       "leftOffEmpty": "Belum ada catatan.",
       "decidedTitle": "Apa yang anda putuskan",
@@ -431,7 +433,8 @@
       "attachTo": "Berkenaan",
       "attachNone": "Projek ini",
       "retry": "Cuba lagi",
-      "failed": "Itu tidak tersimpan. Teks anda masih ada."
+      "failed": "Itu tidak tersimpan. Teks anda masih ada.",
+      "region": "Tangkapan pantas"
     },
     "create": {
       "title": "Mulakan rekod",

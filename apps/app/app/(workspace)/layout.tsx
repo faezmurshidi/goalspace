@@ -1,6 +1,9 @@
+import { cookies } from 'next/headers';
+
 import { requireSessionContext } from '@/lib/auth/session';
 import { listProjects } from '@/lib/db/projects';
 import { countPendingByProject } from '@/lib/db/proposals';
+import { SIDEBAR_COOKIE, parseSidebarState } from '@/lib/shell/sidebar-state';
 import { WorkspaceChrome } from '@/components/shell/workspace-chrome';
 
 // The workspace is per-user and reads live rows on every request, so nothing
@@ -12,6 +15,11 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
   const projects = await listProjects(supabase, userId);
   const pending = await countPendingByProject(supabase);
 
+  // Read here rather than in an effect: deciding on the client means the first
+  // paint shows the wrong width and the sidebar visibly snaps.
+  const store = await cookies();
+  const defaultSidebarOpen = parseSidebarState(store.get(SIDEBAR_COOKIE)?.value);
+
   return (
     <WorkspaceChrome
       projects={projects.map(({ id, slug, title }) => ({
@@ -19,6 +27,7 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
         title,
         pendingProposals: pending.get(id) ?? 0,
       }))}
+      defaultSidebarOpen={defaultSidebarOpen}
     >
       {children}
     </WorkspaceChrome>

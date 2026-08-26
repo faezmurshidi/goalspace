@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
@@ -45,27 +46,53 @@ export default async function ResumePage({ params }: Params) {
   const now = new Date();
   const data = await getResumeData(supabase, project, now);
 
-  const hasRecord = data.recentEntries.length > 0 || data.open.length > 0 || data.waiting.length > 0;
+  // Undecided proposals count as a record. Without them a project whose only
+  // content is a pending proposal renders "nothing recorded yet" directly
+  // above a row saying three things are waiting on a decision.
+  const hasRecord =
+    data.recentEntries.length > 0 ||
+    data.open.length > 0 ||
+    data.waiting.length > 0 ||
+    data.undecidedProposals > 0;
 
   return (
-    <div className="pb-10">
-      <Masthead project={project} t={t} locale={locale} />
+    <div className="mx-auto w-full max-w-4xl px-6">
+      <div className="pb-10">
+        <Masthead project={project} t={t} locale={locale} />
 
-      <ReEntry
-        absence={data.absence}
-        lastActivityAt={data.lastActivityAt}
-        t={t}
-        locale={locale}
-      />
+        <ReEntry
+          absence={data.absence}
+          lastActivityAt={data.lastActivityAt}
+          t={t}
+          locale={locale}
+        />
 
-      <Anomalies orphans={data.anomalies.orphans} cyclic={data.anomalies.cyclic} t={t} />
+        <Anomalies orphans={data.anomalies.orphans} cyclic={data.anomalies.cyclic} t={t} />
 
-      {hasRecord ? null : <FirstRun t={t} />}
+        {hasRecord ? null : <FirstRun t={t} />}
 
-      <Waiting items={data.waiting} slug={slug} t={t} locale={locale} />
-      <Open items={data.open} progress={data.progress} slug={slug} t={t} />
-      <LeftOff entries={data.recentEntries} t={t} locale={locale} />
-      <Decided entries={data.recentDecisions} t={t} locale={locale} />
+        <Waiting items={data.waiting} slug={slug} t={t} locale={locale} />
+        <Open items={data.open} progress={data.progress} slug={slug} t={t} />
+
+        {data.undecidedProposals > 0 ? (
+          <div className="border-b border-rule">
+            <Link
+              href={`/projects/${slug}/inbox`}
+              className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+            >
+              <span className="min-w-0 flex-1 text-body text-ink">
+                {t('app.resume.undecidedProposals')}
+              </span>
+              <span className="label shrink-0 tabular-nums text-ink-soft">
+                {data.undecidedProposals}
+              </span>
+            </Link>
+          </div>
+        ) : null}
+
+        <LeftOff entries={data.recentEntries} t={t} locale={locale} />
+        <Decided entries={data.recentDecisions} t={t} locale={locale} />
+      </div>
     </div>
   );
 }

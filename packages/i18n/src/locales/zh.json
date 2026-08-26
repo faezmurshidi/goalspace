@@ -346,7 +346,8 @@
       "themeSystem": "跟随系统",
       "language": "语言",
       "skipToContent": "跳到主要内容",
-      "sections": "项目分区"
+      "toggleSidebar": "切换侧边栏",
+      "projectNav": "项目导航"
     },
     "project": {
       "kindBuild": "制作",
@@ -392,6 +393,7 @@
       "blockedSince": "自 {{when}} 起受阻",
       "openTitle": "还有什么没做完",
       "openEmpty": "没有未完成的事项。",
+      "undecidedProposals": "未决提议",
       "leftOffTitle": "你上次停在哪里",
       "leftOffEmpty": "还没有记录。",
       "decidedTitle": "你做过的决定",
@@ -430,7 +432,8 @@
       "attachTo": "关于",
       "attachNone": "本项目",
       "retry": "重试",
-      "failed": "没有保存成功，你的文字还在。"
+      "failed": "没有保存成功，你的文字还在。",
+      "region": "快速记录"
     },
     "create": {
       "title": "开始记录",

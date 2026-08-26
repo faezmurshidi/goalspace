@@ -59,6 +59,23 @@ export async function countPendingByProject(supabase: Client): Promise<Map<strin
   return counts;
 }
 
+/**
+ * Pending count for a single project. The single-project counterpart to
+ * `countPendingByProject`, which stays as-is because the nav badge genuinely
+ * needs every project in one round trip. A head-only exact count, so no rows
+ * travel for a number the caller is about to discard down to one integer.
+ */
+export async function countPendingProposals(supabase: Client, projectId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('proposals')
+    .select('id', { count: 'exact', head: true })
+    .eq('project_id', projectId)
+    .eq('status', 'pending');
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
 export async function getProposal(supabase: Client, id: string): Promise<Proposal | null> {
   const { data, error } = await supabase
     .from('proposals')

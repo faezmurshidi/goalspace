@@ -6,6 +6,7 @@ import { computeProgress, type Progress } from '@/lib/work-items/progress';
 import { describeAbsence, wokenItems, type Absence, type WokenItem } from '@/lib/work-items/reentry';
 import { getLatestEntryAt, listEntries, type Entry } from './entries';
 import { getLatestStatusChangeAt, listWorkItems, type WorkItem } from './work-items';
+import { countPendingProposals } from './proposals';
 import type { Project } from './projects';
 
 type Client = SupabaseClient<Database>;
@@ -27,6 +28,11 @@ export interface ResumeData {
   overall: Progress;
   /** Set when the fetched tree is structurally corrupt. Surfaced, not hidden. */
   anomalies: { orphans: string[]; cyclic: string[] };
+  /**
+   * Proposals awaiting a decision. An open loop like any other, and the one
+   * phase 2b created and left off this surface.
+   */
+  undecidedProposals: number;
 }
 
 /**
@@ -46,13 +52,14 @@ export async function getResumeData(
   // probes are separate one-row queries rather than being derived from the
   // lists above, because the lists are capped and the newest row is not
   // guaranteed to be inside the cap once filters are applied.
-  const [workItems, recentEntries, recentDecisions, latestEntryAt, latestStatusAt] =
+  const [workItems, recentEntries, recentDecisions, latestEntryAt, latestStatusAt, undecidedProposals] =
     await Promise.all([
       listWorkItems(supabase, project.id),
       listEntries(supabase, project.id, { limit: 8 }),
       listEntries(supabase, project.id, { kinds: ['decision'], limit: 5 }),
       getLatestEntryAt(supabase, project.id),
       getLatestStatusChangeAt(supabase, project.id),
+      countPendingProposals(supabase, project.id),
     ]);
 
   const { roots, orphans, cyclic } = buildTree(workItems);
@@ -113,5 +120,6 @@ export async function getResumeData(
     progress,
     overall,
     anomalies: { orphans, cyclic },
+    undecidedProposals,
   };
 }

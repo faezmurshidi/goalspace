@@ -347,7 +347,8 @@
       "themeSystem": "System",
       "language": "Language",
       "skipToContent": "Skip to content",
-      "sections": "Project sections"
+      "toggleSidebar": "Toggle sidebar",
+      "projectNav": "Project navigation"
     },
     "project": {
       "kindBuild": "Build",
@@ -393,6 +394,7 @@
       "blockedSince": "Blocked since {{when}}",
       "openTitle": "What's open",
       "openEmpty": "Nothing open.",
+      "undecidedProposals": "Undecided proposals",
       "leftOffTitle": "Where you left off",
       "leftOffEmpty": "No entries yet.",
       "decidedTitle": "What you decided",
@@ -431,7 +433,8 @@
       "attachTo": "About",
       "attachNone": "The project",
       "retry": "Retry",
-      "failed": "That did not save. Your text is still here."
+      "failed": "That did not save. Your text is still here.",
+      "region": "Quick capture"
     },
     "create": {
       "title": "Start the record",

@@ -52,3 +52,5 @@ export * from './components/toggle';
 export * from './components/toggle-group';
 export * from './components/tooltip';
 export * from './components/use-toast';
+
+export * from './hooks/use-is-mobile';
