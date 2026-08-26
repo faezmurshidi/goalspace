@@ -136,8 +136,13 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
     }
   }
 
+  // No negative margin on the bar below. It used to carry `-mx-5` to bleed its
+  // rule to the edges of a `px-5` ancestor; the dashboard shell gives <main> no
+  // horizontal padding, so that margin pushed the bar 20px past the content
+  // column on both sides and put a horizontal scrollbar on every project route,
+  // at every viewport width.
   return (
-    <div className="sticky bottom-0 z-20 -mx-5 border-t border-rule bg-paper px-5 pb-4 pt-3">
+    <div className="sticky bottom-0 z-20 border-t border-rule bg-paper px-5 pb-4 pt-3">
       {/* Optimistic rows sit directly above the composer, so what was just
           written is visible without looking anywhere else. */}
       {pending.length > 0 ? (

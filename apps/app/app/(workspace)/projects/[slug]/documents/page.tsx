@@ -36,7 +36,10 @@ export default async function DocumentsPage({ params }: Params) {
   return (
     <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pt-8">
-        <div className="flex items-baseline justify-between border-b border-rule pb-2">
+        {/* Wraps for the same reason the rows below do: at phone widths the
+            heading and the create form do not fit on one line, and without
+            this the form ran off the right edge of the viewport. */}
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 border-b border-rule pb-2">
           <h1 className="label text-ink-soft">{t('app.documents.title')}</h1>
           <NewDocumentForm slug={slug} />
         </div>

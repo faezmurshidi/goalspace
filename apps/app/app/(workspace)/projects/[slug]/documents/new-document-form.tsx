@@ -44,7 +44,7 @@ export function NewDocumentForm({ slug }: { slug: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="flex items-center gap-2">
+    <form onSubmit={submit} className="flex min-w-0 items-center gap-2">
       <label htmlFor="new-document-title" className="sr-only">
         {t('app.documents.titleLabel')}
       </label>
@@ -55,9 +55,15 @@ export function NewDocumentForm({ slug }: { slug: string }) {
         onChange={(event) => setTitle(event.target.value)}
         placeholder={t('app.documents.new')}
         aria-describedby={error ? errorId : undefined}
-        className="label border border-rule bg-paper px-3 py-1.5 text-ink placeholder:text-ink-soft"
+        // min-w-0 so the input can shrink inside the flex row rather than
+        // holding its intrinsic size and pushing the button off-screen.
+        className="label min-w-0 flex-1 border border-rule bg-paper px-3 py-1.5 text-ink placeholder:text-ink-soft"
       />
-      <Button type="submit" disabled={pending || !title.trim()} className="label rounded-none">
+      <Button
+        type="submit"
+        disabled={pending || !title.trim()}
+        className="label shrink-0 rounded-none"
+      >
         {t(pending ? 'app.documents.saving' : 'app.documents.new')}
       </Button>
       {error ? (

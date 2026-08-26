@@ -102,15 +102,20 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
         />
       </div>
 
-      <div className="flex items-center gap-4">
-        <Button type="submit" disabled={pending} className="label rounded-none">
+      {/* Wraps because in the conflict state this row carries three things —
+          Save, the explanation, and Overwrite. On a phone they do not fit on
+          one line, and unwrapped the Overwrite button rendered off the right
+          edge of the viewport: the one control that escapes a conflict was
+          the one you could not reach. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <Button type="submit" disabled={pending} className="label shrink-0 rounded-none">
           {t(pending ? 'app.documents.saving' : 'app.documents.save')}
         </Button>
         {message ? (
           <p
             id={messageId}
             role={failed ? 'alert' : undefined}
-            className={cn('label', failed ? 'text-oxide' : 'text-ink-soft')}
+            className={cn('label min-w-0 flex-1', failed ? 'text-oxide' : 'text-ink-soft')}
           >
             {t(message)}
           </p>
@@ -121,7 +126,7 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
             variant="outline"
             disabled={pending}
             onClick={() => save(true)}
-            className="label rounded-none"
+            className="label shrink-0 rounded-none"
           >
             {t('app.documents.overwrite')}
           </Button>
