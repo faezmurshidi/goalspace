@@ -16,7 +16,8 @@
 - **Nothing is advertised that does not exist.** This slice adds exactly one destination — Documents. Agents and Settings arrive with slices C and D.
 - **A count of zero renders nothing.** No streaks, no badges in the achievement sense, no progress celebration.
 - **Strings are i18n keys, never prose**, and every new key lands in `en`, `ms` and `zh`. Layouts must survive strings roughly 40% longer than the English.
-- **WCAG 2.1 AA.** Every form control has a label. Status is never colour alone. Body measure capped at 65–75 characters for document prose.
+- **WCAG 2.1 AA.** Every form control has a label. Status is never colour alone. Body measure capped at 65–75 characters for document prose. An error message carries `role="alert"`, and `aria-describedby` from its control where it has one — `capture-bar.tsx` and `create-project-form.tsx` are the reference.
+- **There is no `danger` colour token.** `apps/app/tailwind.config.ts` and the shared preset define `paper` / `paper-shade` / `ink` / `ink-soft` / `rule` / `rule-strong` / `oxide` / `oxide-deep` / `waiting` and nothing else. `text-danger` compiles to nothing and renders in the inherited colour. Error text uses `text-oxide`.
 - **`apps/app` has no component-test infrastructure** — vitest runs `environment: 'node'` with `include: ['tests/**/*.test.ts']`, and there is no jsdom or testing-library. Do not add any. Test pure logic and the database layer; verify components with `pnpm typecheck && pnpm build`.
 - **RLS is the boundary.** Every query is owner-scoped by policy. Do not add a service-role path.
 - **Node 22+.** This machine defaults to Node 20; run `source ~/.nvm/nvm.sh && nvm use 22` first and invoke pnpm as `corepack pnpm`, or every command fails on `engines.node`.
@@ -33,6 +34,7 @@
 | `apps/app/lib/shell/destinations.ts` | **Modify** — the Documents destination. |
 | `apps/app/lib/documents/authorship.ts` | Pure. Revision rows → who wrote each body. |
 | `apps/app/app/(workspace)/projects/[slug]/documents/page.tsx` | The list, and the control that creates one. |
+| `apps/app/app/(workspace)/projects/[slug]/documents/loading.tsx` | Skeleton for the list, matching the sibling routes. |
 | `apps/app/app/(workspace)/projects/[slug]/documents/[docId]/page.tsx` | The editor and its revision history. |
 | `apps/app/app/(workspace)/projects/[slug]/documents/[docId]/document-editor.tsx` | Client. Title and body fields, save, conflict reporting. |
 | `apps/app/app/(workspace)/projects/[slug]/documents/[docId]/revisions/[revisionId]/page.tsx` | One revision, read-only. |
@@ -639,7 +641,7 @@ export function NewDocumentForm({ slug }: { slug: string }) {
       <Button type="submit" disabled={pending || !title.trim()} className="label rounded-none">
         {t('app.documents.new')}
       </Button>
-      {error ? <span className="label text-danger">{t(error)}</span> : null}
+      {error ? <span className="label text-oxide">{t(error)}</span> : null}
     </form>
   );
 }
@@ -1107,7 +1109,7 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
           {t(pending ? 'app.documents.saving' : 'app.documents.save')}
         </Button>
         {message ? (
-          <span className={cn('label', failed ? 'text-danger' : 'text-ink-soft')}>
+          <span className={cn('label', failed ? 'text-oxide' : 'text-ink-soft')}>
             {t(message)}
           </span>
         ) : null}
@@ -1304,7 +1306,14 @@ export function RestoreButton({
       <Button type="button" onClick={restore} disabled={pending} className="label rounded-none">
         {t('app.documents.restore')}
       </Button>
-      {error ? <span className="label text-danger">{t(error)}</span> : null}
+      {/* role="alert" so a failure is announced, not just shown. `text-oxide`
+          because this repo defines no `danger` token — `text-danger` compiles
+          to nothing and renders in the inherited body colour. */}
+      {error ? (
+        <p role="alert" className="label text-oxide">
+          {t(error)}
+        </p>
+      ) : null}
     </div>
   );
 }
