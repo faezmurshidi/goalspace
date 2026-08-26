@@ -497,14 +497,12 @@
       "conflict": "This document changed since you opened it. Reload to see the current version.",
       "overwrite": "Overwrite with my version",
       "untitled": "Untitled",
-      "changedAt": "Last changed",
       "history": "History",
       "historyEmpty": "No earlier versions.",
       "byAgent": "By an agent",
       "byOwner": "By you",
       "viewingRevision": "An earlier version, read-only",
       "restore": "Restore this version",
-      "restored": "Restored.",
       "backToDocument": "Back to the document"
     }
   }

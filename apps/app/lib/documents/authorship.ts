@@ -18,3 +18,13 @@ export function authorshipOf(row: { agent_id: string | null }): Authorship {
   // author that does not exist.
   return row.agent_id ? { by: 'agent', agentId: row.agent_id } : { by: 'owner' };
 }
+
+/**
+ * The i18n key for each possible `Authorship['by']`. Kept beside the function
+ * that produces those values, so a third state could never be added here
+ * without also being added to its label.
+ */
+export const AUTHOR_KEY = {
+  agent: 'app.documents.byAgent',
+  owner: 'app.documents.byOwner',
+} as const;

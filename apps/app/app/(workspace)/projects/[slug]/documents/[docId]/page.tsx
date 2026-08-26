@@ -6,7 +6,7 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { getDocument, listRevisions } from '@/lib/db/documents';
-import { authorshipOf } from '@/lib/documents/authorship';
+import { authorshipOf, AUTHOR_KEY } from '@/lib/documents/authorship';
 import { formatDateTime, getLocale } from '@/lib/format';
 import { DocumentEditor } from './document-editor';
 
@@ -20,11 +20,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const t = getFixedT(await getLocale());
   return { title: `${document?.title || t('app.documents.untitled')} · ${slug}` };
 }
-
-const AUTHOR_KEY = {
-  agent: 'app.documents.byAgent',
-  owner: 'app.documents.byOwner',
-} as const;
 
 export default async function DocumentPage({ params }: Params) {
   const { slug, docId } = await params;

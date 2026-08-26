@@ -6,7 +6,7 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { getDocument, getRevision } from '@/lib/db/documents';
-import { authorshipOf } from '@/lib/documents/authorship';
+import { authorshipOf, AUTHOR_KEY } from '@/lib/documents/authorship';
 import { formatDateTime, getLocale } from '@/lib/format';
 import { RestoreButton } from './restore-button';
 
@@ -17,11 +17,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const t = getFixedT(await getLocale());
   return { title: `${t('app.documents.viewingRevision')} · ${slug}` };
 }
-
-const AUTHOR_KEY = {
-  agent: 'app.documents.byAgent',
-  owner: 'app.documents.byOwner',
-} as const;
 
 export default async function RevisionPage({ params }: Params) {
   const { slug, docId, revisionId } = await params;

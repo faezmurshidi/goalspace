@@ -497,14 +497,12 @@
       "conflict": "Dokumen ini berubah sejak anda membukanya. Muat semula untuk melihat versi terkini.",
       "overwrite": "Ganti dengan versi saya",
       "untitled": "Tanpa tajuk",
-      "changedAt": "Kali terakhir berubah",
       "history": "Sejarah",
       "historyEmpty": "Tiada versi terdahulu.",
       "byAgent": "Oleh ejen",
       "byOwner": "Oleh anda",
       "viewingRevision": "Versi terdahulu, baca sahaja",
       "restore": "Pulihkan versi ini",
-      "restored": "Dipulihkan.",
       "backToDocument": "Kembali ke dokumen"
     }
   }
