@@ -347,7 +347,9 @@
       "themeSystem": "Sistem",
       "language": "Bahasa",
       "skipToContent": "Terus ke kandungan",
-      "sections": "Bahagian projek"
+      "sections": "Bahagian projek",
+      "toggleSidebar": "Togol bar sisi",
+      "projectNav": "Navigasi projek"
     },
     "project": {
       "kindBuild": "Bina",

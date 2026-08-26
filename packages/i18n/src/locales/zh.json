@@ -346,7 +346,9 @@
       "themeSystem": "跟随系统",
       "language": "语言",
       "skipToContent": "跳到主要内容",
-      "sections": "项目分区"
+      "sections": "项目分区",
+      "toggleSidebar": "切换侧边栏",
+      "projectNav": "项目导航"
     },
     "project": {
       "kindBuild": "制作",
