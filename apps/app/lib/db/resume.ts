@@ -6,7 +6,7 @@ import { computeProgress, type Progress } from '@/lib/work-items/progress';
 import { describeAbsence, wokenItems, type Absence, type WokenItem } from '@/lib/work-items/reentry';
 import { getLatestEntryAt, listEntries, type Entry } from './entries';
 import { getLatestStatusChangeAt, listWorkItems, type WorkItem } from './work-items';
-import { countPendingByProject } from './proposals';
+import { countPendingProposals } from './proposals';
 import type { Project } from './projects';
 
 type Client = SupabaseClient<Database>;
@@ -52,14 +52,14 @@ export async function getResumeData(
   // probes are separate one-row queries rather than being derived from the
   // lists above, because the lists are capped and the newest row is not
   // guaranteed to be inside the cap once filters are applied.
-  const [workItems, recentEntries, recentDecisions, latestEntryAt, latestStatusAt, pending] =
+  const [workItems, recentEntries, recentDecisions, latestEntryAt, latestStatusAt, undecidedProposals] =
     await Promise.all([
       listWorkItems(supabase, project.id),
       listEntries(supabase, project.id, { limit: 8 }),
       listEntries(supabase, project.id, { kinds: ['decision'], limit: 5 }),
       getLatestEntryAt(supabase, project.id),
       getLatestStatusChangeAt(supabase, project.id),
-      countPendingByProject(supabase),
+      countPendingProposals(supabase, project.id),
     ]);
 
   const { roots, orphans, cyclic } = buildTree(workItems);
@@ -120,6 +120,6 @@ export async function getResumeData(
     progress,
     overall,
     anomalies: { orphans, cyclic },
-    undecidedProposals: pending.get(project.id) ?? 0,
+    undecidedProposals,
   };
 }
