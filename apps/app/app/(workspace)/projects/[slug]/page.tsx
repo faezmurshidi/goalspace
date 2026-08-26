@@ -48,24 +48,26 @@ export default async function ResumePage({ params }: Params) {
   const hasRecord = data.recentEntries.length > 0 || data.open.length > 0 || data.waiting.length > 0;
 
   return (
-    <div className="pb-10">
-      <Masthead project={project} t={t} locale={locale} />
+    <div className="mx-auto w-full max-w-4xl px-6 py-8">
+      <div className="pb-10">
+        <Masthead project={project} t={t} locale={locale} />
 
-      <ReEntry
-        absence={data.absence}
-        lastActivityAt={data.lastActivityAt}
-        t={t}
-        locale={locale}
-      />
+        <ReEntry
+          absence={data.absence}
+          lastActivityAt={data.lastActivityAt}
+          t={t}
+          locale={locale}
+        />
 
-      <Anomalies orphans={data.anomalies.orphans} cyclic={data.anomalies.cyclic} t={t} />
+        <Anomalies orphans={data.anomalies.orphans} cyclic={data.anomalies.cyclic} t={t} />
 
-      {hasRecord ? null : <FirstRun t={t} />}
+        {hasRecord ? null : <FirstRun t={t} />}
 
-      <Waiting items={data.waiting} slug={slug} t={t} locale={locale} />
-      <Open items={data.open} progress={data.progress} slug={slug} t={t} />
-      <LeftOff entries={data.recentEntries} t={t} locale={locale} />
-      <Decided entries={data.recentDecisions} t={t} locale={locale} />
+        <Waiting items={data.waiting} slug={slug} t={t} locale={locale} />
+        <Open items={data.open} progress={data.progress} slug={slug} t={t} />
+        <LeftOff entries={data.recentEntries} t={t} locale={locale} />
+        <Decided entries={data.recentDecisions} t={t} locale={locale} />
+      </div>
     </div>
   );
 }

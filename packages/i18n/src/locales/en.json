@@ -433,7 +433,8 @@
       "attachTo": "About",
       "attachNone": "The project",
       "retry": "Retry",
-      "failed": "That did not save. Your text is still here."
+      "failed": "That did not save. Your text is still here.",
+      "region": "Quick capture"
     },
     "create": {
       "title": "Start the record",

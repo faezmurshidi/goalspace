@@ -433,7 +433,8 @@
       "attachTo": "Berkenaan",
       "attachNone": "Projek ini",
       "retry": "Cuba lagi",
-      "failed": "Itu tidak tersimpan. Teks anda masih ada."
+      "failed": "Itu tidak tersimpan. Teks anda masih ada.",
+      "region": "Tangkapan pantas"
     },
     "create": {
       "title": "Mulakan rekod",

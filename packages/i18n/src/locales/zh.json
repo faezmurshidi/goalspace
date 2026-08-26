@@ -432,7 +432,8 @@
       "attachTo": "关于",
       "attachNone": "本项目",
       "retry": "重试",
-      "failed": "没有保存成功，你的文字还在。"
+      "failed": "没有保存成功，你的文字还在。",
+      "region": "快速记录"
     },
     "create": {
       "title": "开始记录",

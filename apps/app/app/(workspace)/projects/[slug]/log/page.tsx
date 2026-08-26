@@ -61,83 +61,85 @@ export default async function LogPage({ params, searchParams }: Params) {
     kind ? `/projects/${slug}/log?kind=${kind}` : `/projects/${slug}/log`;
 
   return (
-    <div className="pb-10 pt-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule pb-2">
-        <h1 className="label text-ink-soft">{t('app.log.title')}</h1>
+    <div className="mx-auto w-full max-w-4xl px-6 py-8">
+      <div className="pb-10 pt-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule pb-2">
+          <h1 className="label text-ink-soft">{t('app.log.title')}</h1>
 
-        <nav aria-label={t('app.log.filterLabel')} className="flex flex-wrap gap-4">
-          <Link
-            href={filterHref(null)}
-            aria-current={activeKind === null ? 'true' : undefined}
-            className={cn(
-              'label unstyled border-b-2 pb-0.5 transition-colors',
-              activeKind === null
-                ? 'border-oxide text-ink'
-                : 'border-transparent text-ink-soft hover:text-ink'
-            )}
-          >
-            {t('app.log.filterAll')}
-          </Link>
-          {entryKinds.map((kind) => (
+          <nav aria-label={t('app.log.filterLabel')} className="flex flex-wrap gap-4">
             <Link
-              key={kind}
-              href={filterHref(kind)}
-              aria-current={activeKind === kind ? 'true' : undefined}
+              href={filterHref(null)}
+              aria-current={activeKind === null ? 'true' : undefined}
               className={cn(
                 'label unstyled border-b-2 pb-0.5 transition-colors',
-                activeKind === kind
+                activeKind === null
                   ? 'border-oxide text-ink'
                   : 'border-transparent text-ink-soft hover:text-ink'
               )}
             >
-              {t(`app.entryKind.${kind}`)}
+              {t('app.log.filterAll')}
             </Link>
-          ))}
-        </nav>
-      </div>
+            {entryKinds.map((kind) => (
+              <Link
+                key={kind}
+                href={filterHref(kind)}
+                aria-current={activeKind === kind ? 'true' : undefined}
+                className={cn(
+                  'label unstyled border-b-2 pb-0.5 transition-colors',
+                  activeKind === kind
+                    ? 'border-oxide text-ink'
+                    : 'border-transparent text-ink-soft hover:text-ink'
+                )}
+              >
+                {t(`app.entryKind.${kind}`)}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-      {entries.length === 0 ? (
-        <p className="py-10 text-body text-ink-soft">{t('app.log.empty')}</p>
-      ) : (
-        <ol>
-          {entries.map((entry) => (
-            <li key={entry.id} className="border-b border-rule py-4">
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <time dateTime={entry.occurred_at} className="label shrink-0 text-ink-soft">
-                  {formatDate(entry.occurred_at, locale)}
-                </time>
-                <span className="label shrink-0 text-ink-soft">
-                  {t(`app.entryKind.${entry.kind}`)}
-                </span>
-                {entry.title ? (
-                  <span className="min-w-0 flex-1 text-title text-ink">{entry.title}</span>
+        {entries.length === 0 ? (
+          <p className="py-10 text-body text-ink-soft">{t('app.log.empty')}</p>
+        ) : (
+          <ol>
+            {entries.map((entry) => (
+              <li key={entry.id} className="border-b border-rule py-4">
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                  <time dateTime={entry.occurred_at} className="label shrink-0 text-ink-soft">
+                    {formatDate(entry.occurred_at, locale)}
+                  </time>
+                  <span className="label shrink-0 text-ink-soft">
+                    {t(`app.entryKind.${entry.kind}`)}
+                  </span>
+                  {entry.title ? (
+                    <span className="min-w-0 flex-1 text-title text-ink">{entry.title}</span>
+                  ) : null}
+                </div>
+                {entry.body ? (
+                  <p className="prose-measure mt-2 whitespace-pre-line text-ink">{entry.body}</p>
                 ) : null}
-              </div>
-              {entry.body ? (
-                <p className="prose-measure mt-2 whitespace-pre-line text-ink">{entry.body}</p>
-              ) : null}
-            </li>
-          ))}
-        </ol>
-      )}
+              </li>
+            ))}
+          </ol>
+        )}
 
-      {/* Gated on the cap as well as on hasMore. At the ceiling the link would
-          request take=550, clamp straight back to 500, and re-render the same
-          rows, so the control would look live and do nothing. */}
-      {hasMore && take < MAX_TAKE ? (
-        <Link
-          href={{
-            pathname: `/projects/${slug}/log`,
-            query: {
-              ...(activeKind ? { kind: activeKind } : {}),
-              take: Math.min(take + PAGE, MAX_TAKE),
-            },
-          }}
-          className="label unstyled mt-6 inline-block border border-rule-strong px-5 py-3 text-ink transition-colors hover:bg-paper-shade"
-        >
-          {t('app.log.loadMore')}
-        </Link>
-      ) : null}
+        {/* Gated on the cap as well as on hasMore. At the ceiling the link would
+            request take=550, clamp straight back to 500, and re-render the same
+            rows, so the control would look live and do nothing. */}
+        {hasMore && take < MAX_TAKE ? (
+          <Link
+            href={{
+              pathname: `/projects/${slug}/log`,
+              query: {
+                ...(activeKind ? { kind: activeKind } : {}),
+                take: Math.min(take + PAGE, MAX_TAKE),
+              },
+            }}
+            className="label unstyled mt-6 inline-block border border-rule-strong px-5 py-3 text-ink transition-colors hover:bg-paper-shade"
+          >
+            {t('app.log.loadMore')}
+          </Link>
+        ) : null}
+      </div>
     </div>
   );
 }
