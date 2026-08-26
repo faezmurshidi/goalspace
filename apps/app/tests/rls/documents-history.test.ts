@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
-import { listRevisions, updateDocument } from '@/lib/db/documents';
+import { getRevision, listRevisions, updateDocument } from '@/lib/db/documents';
 
 /**
  * Revision authorship and the compare-and-set, against a real database.
@@ -73,8 +73,10 @@ describe('revision authorship', () => {
 
     const revisions = await listRevisions(client(), projectId, document.id);
     expect(revisions).toHaveLength(1);
-    expect(revisions[0].body).toBe('Agent wrote this.');
     expect(revisions[0].agent_id).toBe(agentId);
+
+    const preserved = await getRevision(client(), projectId, revisions[0].id);
+    expect(preserved!.body).toBe('Agent wrote this.');
 
     // And the document itself is now human-authored.
     expect(updated!.agent_id).toBeNull();
@@ -151,17 +153,22 @@ describe('the compare-and-set a human edit relies on', () => {
       expectedUpdatedAt: document.updated_at as string,
     });
 
-    const [original] = await listRevisions(client(), projectId, document.id);
-    expect(original.body).toBe('Original.');
+    // The list carries no bodies — restoring reads the one revision it needs.
+    const [summary] = await listRevisions(client(), projectId, document.id);
+    const original = await getRevision(client(), projectId, summary.id);
+    expect(original!.body).toBe('Original.');
 
     await updateDocument(client(), {
       projectId,
       ownerId: alice!.id,
-      values: { id: document.id, body: original.body },
+      values: { id: document.id, body: original!.body },
       expectedUpdatedAt: edited!.updated_at,
     });
 
     const revisions = await listRevisions(client(), projectId, document.id);
-    expect(revisions.map((r) => r.body)).toEqual(['Edited.', 'Original.']);
+    const bodies = await Promise.all(
+      revisions.map(async (r) => (await getRevision(client(), projectId, r.id))!.body)
+    );
+    expect(bodies).toEqual(['Edited.', 'Original.']);
   });
 });

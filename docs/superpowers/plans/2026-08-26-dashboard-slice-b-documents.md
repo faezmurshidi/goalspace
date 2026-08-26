@@ -1323,7 +1323,7 @@ export function RestoreButton({
 
 ```bash
 source ~/.nvm/nvm.sh && nvm use 22
-cd /Users/faez/Documents/goalspace
+cd "$(git rev-parse --show-toplevel)"
 corepack pnpm typecheck && corepack pnpm test && corepack pnpm test:rls
 NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder corepack pnpm build
 ```

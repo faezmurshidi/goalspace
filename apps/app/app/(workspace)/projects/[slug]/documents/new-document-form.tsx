@@ -50,6 +50,7 @@ export function NewDocumentForm({ slug }: { slug: string }) {
       </label>
       <input
         id="new-document-title"
+        required
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         placeholder={t('app.documents.new')}
