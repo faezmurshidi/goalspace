@@ -17,7 +17,8 @@
     "settings": "设置",
     "knowledgeBase": "知识库",
     "logout": "退出登录",
-    "activeSpaces": "活跃空间"
+    "activeSpaces": "活跃空间",
+    "toggleSidebar": "切换侧边栏"
   },
   "auth": {
     "signIn": "登录",
