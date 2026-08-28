@@ -533,6 +533,29 @@
         "external": "离开本系统",
         "none": "暂无。"
       }
+    },
+    "runs": {
+      "title": "运行",
+      "steps_one": "{{count}} 步",
+      "steps_other": "{{count}} 步",
+      "duration": "耗时",
+      "cost": "费用",
+      "toolCalls": "工具调用",
+      "noToolCalls": "无工具调用。",
+      "proposals": "提议",
+      "noProposals": "无提议。",
+      "arguments": "参数",
+      "result": "结果",
+      "failed": "失败",
+      "succeeded": "成功",
+      "viewRun": "查看运行",
+      "status": {
+        "running": "运行中",
+        "succeeded": "成功",
+        "failed": "失败",
+        "cancelled": "已取消",
+        "capped": "已达上限停止"
+      }
     }
   }
 }

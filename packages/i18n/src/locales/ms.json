@@ -533,6 +533,29 @@
         "external": "Keluar dari sistem",
         "none": "Belum ada."
       }
+    },
+    "runs": {
+      "title": "Larian",
+      "steps_one": "{{count}} langkah",
+      "steps_other": "{{count}} langkah",
+      "duration": "Tempoh",
+      "cost": "Kos",
+      "toolCalls": "Panggilan alat",
+      "noToolCalls": "Tiada panggilan alat.",
+      "proposals": "Cadangan",
+      "noProposals": "Tiada cadangan.",
+      "arguments": "Argumen",
+      "result": "Keputusan",
+      "failed": "Gagal",
+      "succeeded": "Berjaya",
+      "viewRun": "Lihat larian",
+      "status": {
+        "running": "Sedang berjalan",
+        "succeeded": "Berjaya",
+        "failed": "Gagal",
+        "cancelled": "Dibatalkan",
+        "capped": "Berhenti pada had"
+      }
     }
   }
 }

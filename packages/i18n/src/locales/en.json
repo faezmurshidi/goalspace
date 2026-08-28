@@ -533,6 +533,29 @@
         "external": "Leaves the system",
         "none": "None yet."
       }
+    },
+    "runs": {
+      "title": "Run",
+      "steps_one": "{{count}} step",
+      "steps_other": "{{count}} steps",
+      "duration": "Duration",
+      "cost": "Cost",
+      "toolCalls": "Tool calls",
+      "noToolCalls": "No tool calls.",
+      "proposals": "Proposals",
+      "noProposals": "No proposals.",
+      "arguments": "Arguments",
+      "result": "Result",
+      "failed": "Failed",
+      "succeeded": "Succeeded",
+      "viewRun": "View the run",
+      "status": {
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "capped": "Stopped at the cap"
+      }
     }
   }
 }
