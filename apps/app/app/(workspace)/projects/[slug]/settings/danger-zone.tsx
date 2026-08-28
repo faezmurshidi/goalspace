@@ -35,7 +35,10 @@ export function DangerZone({ slug }: { slug: string }) {
   const confirmInputId = useId();
   const confirmErrorId = useId();
 
-  const matches = confirmSlug.length > 0 && confirmSlug === slug;
+  // Trimmed to match `requiredText`, which trims server-side: an untrimmed
+  // comparison here would leave the button disabled on a trailing space with
+  // no visible reason, while the server would have accepted it.
+  const matches = confirmSlug.trim().length > 0 && confirmSlug.trim() === slug;
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -77,7 +80,7 @@ export function DangerZone({ slug }: { slug: string }) {
       </h2>
 
       <form onSubmit={submit} className="flex flex-col gap-4">
-        <p className="max-w-[60ch] text-body text-ink-soft">{t('app.settings.deleteExplain')}</p>
+        <p className="max-w-[65ch] text-body text-ink-soft">{t('app.settings.deleteExplain')}</p>
 
         <div className="flex flex-col gap-1">
           <label htmlFor={confirmInputId} className="label text-ink-soft">
@@ -102,25 +105,28 @@ export function DangerZone({ slug }: { slug: string }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          {/* oxide-deep, not the shared `destructive` variant (which resolves
-              to plain oxide): this is the single most severe control in the
-              product and gets the darker of the two signal colours. There is
-              no `danger` token in this palette — `bg-danger`/`text-danger`
-              compile to nothing, which has shipped an unstyled destructive
-              button here three times. `text-destructive-foreground` is reused
-              rather than hardcoded because it already carries the correct
-              paper/ink inversion for both themes. */}
+          {/* This is the single most severe control in the product, and what
+              marks it as such is not a colour — `bg-oxide-deep` here resolves
+              to the exact same paint as the Save buttons on this page, since
+              `--primary` is `--oxide-deep` and both `--primary-foreground`
+              and `--destructive-foreground` share the same paper/ink
+              inversion. The palette has no colour reserved for danger; this
+              system separates by rule and ground, never by a new hue or a
+              shadow. So the distinction is everything else: the heading
+              above, the explanatory copy, the typed-slug gate that keeps the
+              button disabled until it matches, and a hairline
+              `border-rule-strong` around the control itself. */}
           <Button
             type="submit"
             disabled={!matches || pending}
-            className="label shrink-0 rounded-none bg-oxide-deep text-destructive-foreground hover:bg-ink hover:text-paper disabled:opacity-60"
+            className="label shrink-0 rounded-none border border-rule-strong bg-oxide-deep text-destructive-foreground hover:bg-ink hover:text-paper disabled:opacity-60"
           >
             {t(pending ? 'app.settings.deleting' : 'app.settings.delete')}
           </Button>
           {message ? (
             <p
               id={messageId}
-              role={failed ? 'alert' : undefined}
+              role={failed ? 'alert' : 'status'}
               className={cn('label min-w-0 flex-1', failed ? 'text-oxide' : 'text-ink-soft')}
             >
               {t(message)}

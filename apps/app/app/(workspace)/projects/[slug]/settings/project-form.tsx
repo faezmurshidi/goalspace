@@ -133,7 +133,7 @@ export function ProjectForm({ slug, project }: { slug: string; project: Project 
         {message ? (
           <p
             id={messageId}
-            role={failed ? 'alert' : undefined}
+            role={failed ? 'alert' : 'status'}
             className={cn('label min-w-0 flex-1', failed ? 'text-oxide' : 'text-ink-soft')}
           >
             {t(message)}
