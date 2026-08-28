@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database } from '@/types/supabase';
+import type { Database, Tables } from '@/types/supabase';
+import type { UpdateAgentValues } from '@/lib/schemas/agent';
 
 type Client = SupabaseClient<Database>;
 
@@ -60,4 +61,68 @@ export async function startAgentRun(
   }
 
   return { started: true, runId: verdict.run_id };
+}
+
+export type Agent = Tables<'agents'>;
+
+const AGENT_COLUMNS =
+  'id, project_id, owner_id, slug, name, role_description, system_prompt, tools, model, is_active, created_at, updated_at';
+
+export async function listAgents(supabase: Client, projectId: string): Promise<Agent[]> {
+  const { data, error } = await supabase
+    .from('agents')
+    .select(AGENT_COLUMNS)
+    .eq('project_id', projectId)
+    .order('name');
+
+  if (error) throw error;
+  return (data ?? []) as Agent[];
+}
+
+export async function getAgent(
+  supabase: Client,
+  projectId: string,
+  id: string
+): Promise<Agent | null> {
+  const { data, error } = await supabase
+    .from('agents')
+    .select(AGENT_COLUMNS)
+    .eq('project_id', projectId)
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data ?? null) as Agent | null;
+}
+
+/**
+ * Update an agent, scoped to the project it belongs to.
+ *
+ * The `project_id` filter is not redundant with RLS. RLS stops another owner's
+ * agent being written; this stops *this* owner writing an agent through the
+ * wrong project's page, which is the difference between a policy violation and
+ * a routing bug. Returns null when nothing matched, so the caller can tell
+ * "refused" from "changed", rather than reporting a silent no-op as success.
+ *
+ * `tools` and `model` are validated by `updateAgentSchema` before they arrive.
+ * Neither is re-checked here — but note that both must be, somewhere: an
+ * unknown tool name is dropped silently by `resolveTools` at run time, and an
+ * unpriced model silently zeroes both the spend cap and the run reservation.
+ */
+export async function updateAgent(
+  supabase: Client,
+  { projectId, values }: { projectId: string; values: UpdateAgentValues }
+): Promise<Agent | null> {
+  const { id, ...fields } = values;
+
+  const { data, error } = await supabase
+    .from('agents')
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('project_id', projectId)
+    .select(AGENT_COLUMNS)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data ?? null) as Agent | null;
 }
