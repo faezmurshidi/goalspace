@@ -482,6 +482,12 @@
       "empty": "没有待处理的提议。",
       "malformedEdit": "这不是有效的 JSON。",
       "reject": "拒绝",
+      "status": {
+        "pending": "待处理",
+        "accepted": "已接受",
+        "rejected": "已拒绝",
+        "superseded": "已被取代"
+      },
       "superseded": "提出该提议后记录已变更，未作任何应用。",
       "title": "收件箱"
     },

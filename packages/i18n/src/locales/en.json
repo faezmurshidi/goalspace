@@ -482,6 +482,12 @@
       "empty": "No proposals waiting.",
       "malformedEdit": "That is not valid JSON.",
       "reject": "Reject",
+      "status": {
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "superseded": "Superseded"
+      },
       "superseded": "The record changed after this was proposed. Nothing was applied.",
       "title": "Inbox"
     },

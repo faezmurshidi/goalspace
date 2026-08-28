@@ -1,13 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
-import { getRun, listRunsForAgent, listToolCalls, runCostUsd } from '@/lib/db/runs';
+import { getRun, listRunProposals, listRunsForAgent, listToolCalls, runCostUsd } from '@/lib/db/runs';
 
 let alice: TestUser | undefined;
 let bob: TestUser | undefined;
 let projectId: string;
 let agentId: string;
 let runId: string;
+let proposalId: string;
 
 const client = () => alice!.client as never;
 
@@ -93,6 +94,21 @@ beforeAll(async () => {
       cost_usd: 0.05,
     },
   ]);
+
+  const { data: proposal } = await alice.client
+    .from('proposals')
+    .insert({
+      project_id: projectId,
+      owner_id: alice.id,
+      agent_id: agentId,
+      run_id: runId,
+      kind: 'entry',
+      payload: { body: 'Servo calibrated.' },
+      rationale: 'The log has no entry for this session yet.',
+    })
+    .select()
+    .single();
+  proposalId = proposal!.id;
 });
 
 afterAll(async () => {
@@ -125,6 +141,12 @@ describe('run reads', () => {
     expect(await runCostUsd(client(), runId)).toBeCloseTo(0.3, 6);
   });
 
+  it('lists the proposals a run produced', async () => {
+    const proposals = await listRunProposals(client(), runId);
+    expect(proposals.map((p) => p.id)).toEqual([proposalId]);
+    expect(proposals[0].rationale).toBe('The log has no entry for this session yet.');
+  });
+
   it('reports zero for a run with no usage rows', async () => {
     const { data: bare } = await alice!.client
       .from('agent_runs')
@@ -147,5 +169,6 @@ describe('a second user is isolated from these runs', () => {
     expect(await getRun(bob.client as never, projectId, runId)).toBeNull();
     expect(await listToolCalls(bob.client as never, runId)).toEqual([]);
     expect(await runCostUsd(bob.client as never, runId)).toBe(0);
+    expect(await listRunProposals(bob.client as never, runId)).toEqual([]);
   });
 });

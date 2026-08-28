@@ -482,6 +482,12 @@
       "empty": "Tiada cadangan menunggu.",
       "malformedEdit": "Itu bukan JSON yang sah.",
       "reject": "Tolak",
+      "status": {
+        "pending": "Menunggu",
+        "accepted": "Diterima",
+        "rejected": "Ditolak",
+        "superseded": "Digantikan"
+      },
       "superseded": "Rekod berubah selepas ini dicadangkan. Tiada apa-apa digunakan.",
       "title": "Peti masuk"
     },
