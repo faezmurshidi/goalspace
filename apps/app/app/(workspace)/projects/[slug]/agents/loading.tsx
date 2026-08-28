@@ -1,7 +1,11 @@
+import { LoadingAnnouncement } from '@/components/shell/loading-announcement';
+
 /** Matches the list's row rhythm so the swap does not jump. */
 export default function Loading() {
   return (
-    <div className="mx-auto w-full max-w-4xl px-6">
+    <>
+      <LoadingAnnouncement />
+      <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pt-8">
         <div className="h-4 w-24 border-b border-rule bg-paper-shade" />
         <ul aria-hidden="true">
@@ -13,5 +17,6 @@ export default function Loading() {
         </ul>
       </div>
     </div>
+    </>
   );
 }
