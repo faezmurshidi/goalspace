@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { buildSkeleton, type SkeletonWorkItem } from '@/lib/agents/skeleton';
 import { buildToolSet, type RunContext } from '@/lib/agents/executor';
-import { checkCaps, type Budget } from '@/lib/agents/caps';
+import { checkCaps } from '@/lib/agents/caps';
 import { startAgentRun } from '@/lib/db/agents';
 import { getBudget } from '@/lib/db/budgets';
 import { costUsd, gatewayCostFrom, worstCaseUsd } from '@/lib/agents/cost';
