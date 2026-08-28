@@ -51,6 +51,11 @@ beforeAll(async () => {
     .single();
   runId = run!.id;
 
+  // Explicit, distinct `created_at` values on purpose: both rows come from a
+  // single multi-row INSERT, and `now()` is transaction time — every row in
+  // that INSERT would otherwise get the identical timestamp, leaving the
+  // ordering test below unable to distinguish an `order()` clause from no
+  // ordering at all.
   await alice.client.from('agent_tool_calls').insert([
     {
       run_id: runId,
@@ -61,6 +66,7 @@ beforeAll(async () => {
       ok: true,
       duration_ms: 12,
       result_summary: '3 hits',
+      created_at: '2026-01-01T00:00:00.000Z',
     },
     {
       run_id: runId,
@@ -70,6 +76,7 @@ beforeAll(async () => {
       args: { id: 'x' },
       ok: false,
       duration_ms: 4,
+      created_at: '2026-01-01T00:00:01.000Z',
     },
   ]);
 
@@ -131,8 +138,55 @@ describe('run reads', () => {
   });
 
   it('lists an agent’s runs newest first', async () => {
-    const runs = await listRunsForAgent(client(), agentId);
-    expect(runs[0].id).toBe(runId);
+    // A dedicated agent, not `agentId`: the 'reports zero for a run with no
+    // usage rows' test below also inserts a run under `agentId`, and this
+    // test must not depend on whether that fixture happens to run before or
+    // after this one. With only one run, `runs[0].id === runId` would pass
+    // against ascending order or no ordering at all — the assertion needs a
+    // second run with a distinct, explicit `started_at` to actually pin
+    // `order('started_at', { ascending: false })`.
+    const { data: orderingAgent } = await alice!.client
+      .from('agents')
+      .insert({
+        project_id: projectId,
+        owner_id: alice!.id,
+        slug: `runs-order-${Date.now()}`,
+        name: 'Order Check',
+        system_prompt: 'Review.',
+        model: 'openai/gpt-4o-mini',
+      })
+      .select()
+      .single();
+    const orderingAgentId = orderingAgent!.id;
+
+    const { data: older } = await alice!.client
+      .from('agent_runs')
+      .insert({
+        project_id: projectId,
+        owner_id: alice!.id,
+        agent_id: orderingAgentId,
+        trigger: 'conversation',
+        status: 'succeeded',
+        started_at: '2026-01-01T00:00:00.000Z',
+      })
+      .select()
+      .single();
+
+    const { data: newer } = await alice!.client
+      .from('agent_runs')
+      .insert({
+        project_id: projectId,
+        owner_id: alice!.id,
+        agent_id: orderingAgentId,
+        trigger: 'conversation',
+        status: 'succeeded',
+        started_at: '2026-01-02T00:00:00.000Z',
+      })
+      .select()
+      .single();
+
+    const runs = await listRunsForAgent(client(), orderingAgentId);
+    expect(runs.map((r) => r.id)).toEqual([newer!.id, older!.id]);
   });
 
   it('sums cost across every usage row for the run', async () => {
