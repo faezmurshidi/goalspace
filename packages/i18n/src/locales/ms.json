@@ -482,6 +482,12 @@
       "empty": "Tiada cadangan menunggu.",
       "malformedEdit": "Itu bukan JSON yang sah.",
       "reject": "Tolak",
+      "status": {
+        "pending": "Menunggu",
+        "accepted": "Diterima",
+        "rejected": "Ditolak",
+        "superseded": "Digantikan"
+      },
       "superseded": "Rekod berubah selepas ini dicadangkan. Tiada apa-apa digunakan.",
       "title": "Peti masuk"
     },
@@ -507,6 +513,54 @@
       "write": "Tulis",
       "preview": "Pratonton",
       "previewEmpty": "Tiada apa-apa untuk dipratonton lagi."
+    },
+    "agents": {
+      "title": "Ejen",
+      "missing": "Ejen itu tidak wujud lagi.",
+      "empty": "Belum ada ejen.",
+      "nameLabel": "Nama",
+      "roleLabel": "Peranan",
+      "promptLabel": "Gesaan sistem",
+      "modelLabel": "Model",
+      "activeLabel": "Aktif",
+      "inactive": "Tidak aktif",
+      "toolCount_one": "{{count}} alat",
+      "toolCount_other": "{{count}} alat",
+      "save": "Simpan",
+      "saving": "Menyimpan",
+      "saved": "Disimpan",
+      "recentRuns": "Larian terkini",
+      "noRuns": "Belum ada larian.",
+      "tools": {
+        "heading": "Alat",
+        "reads": "Membaca rekod",
+        "proposes": "Mencadangkan perubahan",
+        "proposesNote": "anda meluluskan setiap satu",
+        "external": "Keluar dari sistem",
+        "none": "Belum ada."
+      }
+    },
+    "runs": {
+      "title": "Larian",
+      "steps_one": "{{count}} langkah",
+      "steps_other": "{{count}} langkah",
+      "started": "Bermula",
+      "duration": "Tempoh",
+      "cost": "Kos",
+      "toolCalls": "Panggilan alat",
+      "noToolCalls": "Tiada panggilan alat.",
+      "proposals": "Cadangan",
+      "noProposals": "Tiada cadangan.",
+      "failed": "Gagal",
+      "succeeded": "Berjaya",
+      "viewRun": "Lihat larian",
+      "status": {
+        "running": "Sedang berjalan",
+        "succeeded": "Berjaya",
+        "failed": "Gagal",
+        "cancelled": "Dibatalkan",
+        "capped": "Berhenti pada had"
+      }
     }
   }
 }

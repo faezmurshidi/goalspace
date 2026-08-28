@@ -46,7 +46,7 @@ export default async function InboxPage({ params }: Params) {
         <ul className="flex flex-col gap-4">
           {proposals.map((proposal) => (
             <li key={proposal.id}>
-              <ProposalCard proposal={proposal} />
+              <ProposalCard proposal={proposal} slug={slug} />
             </li>
           ))}
         </ul>

@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { Button } from '@goalspace/ui';
 
 import { useAppTranslations } from '@goalspace/i18n';
 import { acceptProposalAction, rejectProposalAction } from '@/app/(workspace)/actions';
 import type { Proposal } from '@/lib/db/proposals';
 
-export function ProposalCard({ proposal }: { proposal: Proposal }) {
+export function ProposalCard({ proposal, slug }: { proposal: Proposal; slug: string }) {
   const { t } = useAppTranslations();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +77,12 @@ export function ProposalCard({ proposal }: { proposal: Proposal }) {
             .map((citation) => `${citation.type} ${citation.id.slice(0, 8)}`)
             .join(', ')}
         </p>
+      ) : null}
+
+      {proposal.run_id ? (
+        <Link href={`/projects/${slug}/runs/${proposal.run_id}`} className="label text-ink-soft">
+          {t('app.runs.viewRun')}
+        </Link>
       ) : null}
 
       {error ? (

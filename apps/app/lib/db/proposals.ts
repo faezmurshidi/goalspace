@@ -18,7 +18,7 @@ export type Proposal = Omit<Tables<'proposals'>, 'kind' | 'status' | 'citations'
   citations: Citation[];
 };
 
-const PROPOSAL_COLUMNS =
+export const PROPOSAL_COLUMNS =
   'id, project_id, owner_id, agent_id, run_id, kind, target_id, payload, rationale, citations, status, edited, applied_id, created_at, decided_at';
 
 export async function listPendingProposals(
@@ -31,6 +31,22 @@ export async function listPendingProposals(
     .eq('project_id', projectId)
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as Proposal[];
+}
+
+/**
+ * All proposals a run produced, oldest first — the run trace's proposal
+ * section. Ascending for the same reason `listToolCalls` is: it is a
+ * narrative of what the run did, not a list of what changed.
+ */
+export async function listRunProposals(supabase: Client, runId: string): Promise<Proposal[]> {
+  const { data, error } = await supabase
+    .from('proposals')
+    .select(PROPOSAL_COLUMNS)
+    .eq('run_id', runId)
+    .order('created_at', { ascending: true });
 
   if (error) throw error;
   return (data ?? []) as unknown as Proposal[];

@@ -29,10 +29,10 @@ describe('projectSlugFrom', () => {
 
 describe('destinationsFor', () => {
   it('ships exactly the sections that exist', () => {
-    // Nothing is advertised that cannot be opened. Agents and Settings arrive
-    // with their own slices and must not appear before their routes do.
+    // Nothing is advertised that cannot be opened. Settings arrives with its
+    // own slice and must not appear before its route does.
     const keys = destinationsFor('ev-bike', { inbox: 0 }).map((d) => d.key);
-    expect(keys).toEqual(['resume', 'work', 'log', 'inbox', 'documents']);
+    expect(keys).toEqual(['resume', 'work', 'log', 'inbox', 'documents', 'agents']);
   });
 
   it('keeps Documents after Inbox, and gives it no count', () => {
@@ -107,5 +107,27 @@ describe('isActive', () => {
       const work = dests.find((d) => d.key === 'work')!;
       expect(isActive('/projects/ev-bike/workspaces/', work)).toBe(false);
     });
+  });
+});
+
+describe('the agents destination', () => {
+  it('sits after documents in the sidebar', () => {
+    const keys = destinationsFor('robot', { inbox: 0 }).map((d) => d.key);
+    expect(keys).toEqual(['resume', 'work', 'log', 'inbox', 'documents', 'agents']);
+  });
+
+  it('is active on the agent editor, not only on the list', () => {
+    // isActive takes (pathname, destination) in that order, and pathname
+    // arrives from usePathname() with a trailing slash because next.config.js
+    // sets trailingSlash: true. Both are why this is asserted rather than
+    // assumed — the same pairing broke Resume's active state in slice A.
+    const agents = destinationsFor('robot', { inbox: 0 }).find((d) => d.key === 'agents')!;
+    expect(isActive('/projects/robot/agents/', agents)).toBe(true);
+    expect(isActive('/projects/robot/agents/abc-123/', agents)).toBe(true);
+  });
+
+  it('is not active on a run trace, which is reached from an agent but is not one', () => {
+    const agents = destinationsFor('robot', { inbox: 0 }).find((d) => d.key === 'agents')!;
+    expect(isActive('/projects/robot/runs/abc-123/', agents)).toBe(false);
   });
 });

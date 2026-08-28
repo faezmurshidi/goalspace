@@ -482,6 +482,12 @@
       "empty": "No proposals waiting.",
       "malformedEdit": "That is not valid JSON.",
       "reject": "Reject",
+      "status": {
+        "pending": "Pending",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "superseded": "Superseded"
+      },
       "superseded": "The record changed after this was proposed. Nothing was applied.",
       "title": "Inbox"
     },
@@ -507,6 +513,54 @@
       "write": "Write",
       "preview": "Preview",
       "previewEmpty": "Nothing to preview yet."
+    },
+    "agents": {
+      "title": "Agents",
+      "missing": "That agent no longer exists.",
+      "empty": "No agents yet.",
+      "nameLabel": "Name",
+      "roleLabel": "Role",
+      "promptLabel": "System prompt",
+      "modelLabel": "Model",
+      "activeLabel": "Active",
+      "inactive": "Inactive",
+      "toolCount_one": "{{count}} tool",
+      "toolCount_other": "{{count}} tools",
+      "save": "Save",
+      "saving": "Saving",
+      "saved": "Saved",
+      "recentRuns": "Recent runs",
+      "noRuns": "No runs yet.",
+      "tools": {
+        "heading": "Tools",
+        "reads": "Reads the record",
+        "proposes": "Proposes changes",
+        "proposesNote": "you approve each",
+        "external": "Leaves the system",
+        "none": "None yet."
+      }
+    },
+    "runs": {
+      "title": "Run",
+      "steps_one": "{{count}} step",
+      "steps_other": "{{count}} steps",
+      "started": "Started",
+      "duration": "Duration",
+      "cost": "Cost",
+      "toolCalls": "Tool calls",
+      "noToolCalls": "No tool calls.",
+      "proposals": "Proposals",
+      "noProposals": "No proposals.",
+      "failed": "Failed",
+      "succeeded": "Succeeded",
+      "viewRun": "View the run",
+      "status": {
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "capped": "Stopped at the cap"
+      }
     }
   }
 }
