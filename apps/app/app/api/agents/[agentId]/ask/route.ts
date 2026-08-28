@@ -6,6 +6,7 @@ import { buildSkeleton, type SkeletonWorkItem } from '@/lib/agents/skeleton';
 import { buildToolSet, type RunContext } from '@/lib/agents/executor';
 import { checkCaps, type Budget } from '@/lib/agents/caps';
 import { startAgentRun } from '@/lib/db/agents';
+import { getBudget } from '@/lib/db/budgets';
 import { costUsd, gatewayCostFrom, worstCaseUsd } from '@/lib/agents/cost';
 
 /**
@@ -48,7 +49,7 @@ export async function POST(
     return NextResponse.json({ error: 'Agent not found.' }, { status: 404 });
   }
 
-  const budget = await loadBudget(supabase, agent.project_id, auth.user.id);
+  const budget = await getBudget(supabase, agent.project_id, auth.user.id);
 
   // Reserving and opening the run is one atomic step inside the database. The
   // old shape — read spend, decide, then insert — let two runs starting
@@ -174,26 +175,6 @@ export async function POST(
   });
 
   return result.toTextStreamResponse();
-}
-
-async function loadBudget(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  projectId: string,
-  ownerId: string
-): Promise<Budget> {
-  const { data } = await supabase
-    .from('project_budgets')
-    .select('monthly_cap_usd, per_run_token_cap')
-    .eq('project_id', projectId)
-    .maybeSingle();
-  if (data) {
-    return {
-      monthly_cap_usd: Number(data.monthly_cap_usd),
-      per_run_token_cap: data.per_run_token_cap,
-    };
-  }
-  await supabase.from('project_budgets').insert({ project_id: projectId, owner_id: ownerId });
-  return { monthly_cap_usd: 10, per_run_token_cap: 200_000 };
 }
 
 async function loadSkeleton(
