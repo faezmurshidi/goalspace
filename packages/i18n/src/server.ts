@@ -33,6 +33,34 @@ function lookup(bundle: unknown, key: string): string | undefined {
   return typeof cursor === 'string' ? cursor : undefined;
 }
 
+/**
+ * Resolves a key to its plural-suffixed form when `vars.count` is a number,
+ * mirroring i18next's own plural key convention (`key_one`, `key_other`, …)
+ * without pulling in i18next's runtime.
+ *
+ * `Intl.PluralRules` is locale-aware: English has `one`/`other`, Chinese has
+ * only `other` for every count. The `_one` entries in zh.json are therefore
+ * never selected — that is correct, not a bug, and is why they must stay in
+ * the bundle for locale parity rather than being pruned.
+ */
+function resolveKey(
+  bundle: unknown,
+  key: string,
+  locale: Locale,
+  vars?: Record<string, unknown>
+): string | undefined {
+  const count = vars?.count;
+
+  if (typeof count === 'number') {
+    const category = new Intl.PluralRules(locale).select(count);
+    return (
+      lookup(bundle, `${key}_${category}`) ?? lookup(bundle, `${key}_other`) ?? lookup(bundle, key)
+    );
+  }
+
+  return lookup(bundle, key);
+}
+
 function interpolate(template: string, vars?: Record<string, unknown>): string {
   if (!vars) return template;
 
@@ -53,7 +81,13 @@ export function getFixedT(locale: Locale = defaultLocale): ServerTFunction {
   return (key, vars) => {
     // Translations land at different times per locale. Falling back to English
     // shows usable text instead of a raw key sitting in the middle of the UI.
-    const template = lookup(primary, key) ?? lookup(fallback, key) ?? key;
+    //
+    // The plural category is always selected for the requested locale, even
+    // when the lookup itself falls back to the English bundle: a missing `ms`
+    // translation should still pick the `ms` plural category so a future `ms`
+    // string lands in the right slot, not silently switch grammar to English.
+    const template =
+      resolveKey(primary, key, locale, vars) ?? resolveKey(fallback, key, locale, vars) ?? key;
     return interpolate(template, vars);
   };
 }

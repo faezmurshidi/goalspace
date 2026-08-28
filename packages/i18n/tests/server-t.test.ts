@@ -46,4 +46,34 @@ describe('getFixedT', () => {
     // into the page is worse than showing the key.
     expect(getFixedT('en')('app.nav')).toBe('app.nav');
   });
+
+  describe('plural resolution', () => {
+    it('selects the _one form for a singular count in English', () => {
+      expect(getFixedT('en')('app.runs.steps', { count: 1 })).toBe('1 step');
+    });
+
+    it('selects the _other form for a plural count', () => {
+      expect(getFixedT('en')('app.runs.steps', { count: 3 })).toBe('3 steps');
+    });
+
+    it('selects the _other form for a zero count', () => {
+      expect(getFixedT('en')('app.runs.steps', { count: 0 })).toBe('0 steps');
+    });
+
+    it('selects the inert _other form for every count in Chinese', () => {
+      // Intl.PluralRules('zh') has only one category, "other" — the zh.json
+      // _one entries exist solely to satisfy locale parity and are never
+      // selected. That is correct, by design.
+      expect(getFixedT('zh')('app.runs.steps', { count: 1 })).toBe('1 步');
+      expect(getFixedT('zh')('app.runs.steps', { count: 5 })).toBe('5 步');
+    });
+
+    it('still resolves a key with no plural forms normally', () => {
+      expect(getFixedT('en')('app.resume.overdueDays', { count: 12 })).toBe('12 days past due');
+    });
+
+    it('still returns the key when nothing resolves, count included', () => {
+      expect(getFixedT('en')('app.nope.missing', { count: 2 })).toBe('app.nope.missing');
+    });
+  });
 });
