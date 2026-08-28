@@ -1877,30 +1877,45 @@ export default async function RunPage({ params }: Params) {
 }
 ```
 
-- [ ] **Step 2: Add the status strings the proposal list needs**
+- [ ] **Step 2: Add the proposal status strings**
 
-Check whether `app.inbox.status.pending` / `accepted` / `rejected` / `superseded` already exist in the locale files (the inbox card may render status differently). If any are missing, add them to all three:
+`app.inbox` currently has no `status` block — verified, it holds only
+`accept`, `alreadyDecided`, `cancelEdit`, `citations`, `edit`, `edited`,
+`editorLabel`, `empty`, `malformedEdit`, `reject`, `superseded`, `title`. Add
+the block to all three locales, nested under the existing `app.inbox`:
 
 `en`: `"status": { "pending": "Pending", "accepted": "Accepted", "rejected": "Rejected", "superseded": "Superseded" }`
 `ms`: `"status": { "pending": "Menunggu", "accepted": "Diterima", "rejected": "Ditolak", "superseded": "Digantikan" }`
 `zh`: `"status": { "pending": "待处理", "accepted": "已接受", "rejected": "已拒绝", "superseded": "已被取代" }`
 
+Note the pre-existing top-level `app.inbox.superseded` is a different string
+(a card-level message) and stays where it is. Do not move or reuse it.
+
 - [ ] **Step 3: Link the proposal card to its run**
 
-In `apps/app/app/(workspace)/projects/[slug]/inbox/proposal-card.tsx`, add a link beside the existing citations line. The card already receives `proposal`; `proposal.run_id` is on the row.
+`ProposalCard` currently takes `{ proposal }: { proposal: Proposal }` and does
+**not** receive `slug` — verified. Two edits are needed.
+
+First, widen the props and add the link, beside the existing citations line:
+
+```tsx
+export function ProposalCard({ proposal, slug }: { proposal: Proposal; slug: string }) {
+```
 
 ```tsx
 {proposal.run_id ? (
-  <Link
-    href={`/projects/${slug}/runs/${proposal.run_id}`}
-    className="label text-ink-soft"
-  >
+  <Link href={`/projects/${slug}/runs/${proposal.run_id}`} className="label text-ink-soft">
     {t('app.runs.viewRun')}
   </Link>
 ) : null}
 ```
 
-Add `import Link from 'next/link';` if the file does not already import it, and thread `slug` through from the inbox page if the card does not already receive it.
+The file does not import `Link`; add `import Link from 'next/link';` to the
+existing import block.
+
+Second, pass `slug` from the inbox page where `<ProposalCard>` is rendered. The
+page already has `slug` from its own params, so this is threading an existing
+value, not fetching a new one.
 
 - [ ] **Step 4: Verify**
 
