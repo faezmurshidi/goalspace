@@ -85,6 +85,18 @@ afterAll(async () => {
 });
 
 describe('getBudget', () => {
+  it('refuses to create the budget row for a non-owner', async () => {
+    // Bob has never read this project's budget, so this hits the insert path
+    // getBudget takes on a cache miss — the row does not exist yet, so the
+    // select finds nothing and getBudget tries to create it. That insert's
+    // project_id is alice's project, not bob's, and getBudget places no owner
+    // filter of its own around an insert — there is nothing here but RLS's
+    // insert-time check (project_budgets_insert's `exists` clause) to refuse
+    // it, so a refusal proves RLS is enforced rather than the app.
+    bob = await createTestUser(`budgets-bob-${Date.now()}@example.test`);
+    await expect(getBudget(bob.client as never, projectId, bob.id)).rejects.toThrow();
+  });
+
   it('creates the row with its defaults on first read', async () => {
     const budget = await getBudget(client(), projectId, alice!.id);
     expect(budget.monthly_cap_usd).toBe(10);
@@ -113,10 +125,13 @@ describe('updateBudget', () => {
   });
 
   it('refuses another owner', async () => {
-    bob = await createTestUser(`budgets-bob-${Date.now()}@example.test`);
-    const updated = await updateBudget(bob.client as never, {
+    // Bob's client, but ALICE's ownerId — so the explicit .eq('owner_id')
+    // filter cannot be what refuses this; RLS has to be. Passing bob's own id
+    // would make this pass even with RLS disabled entirely (see
+    // project-settings.test.ts, which does the same).
+    const updated = await updateBudget(bob!.client as never, {
       projectId,
-      ownerId: bob.id,
+      ownerId: alice!.id,
       values: { monthly_cap_usd: 0, per_run_token_cap: 1_000 },
     });
     expect(updated).toBeNull();
