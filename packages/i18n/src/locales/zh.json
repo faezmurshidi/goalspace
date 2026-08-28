@@ -551,8 +551,6 @@
       "noToolCalls": "无工具调用。",
       "proposals": "提议",
       "noProposals": "无提议。",
-      "arguments": "参数",
-      "result": "结果",
       "failed": "失败",
       "succeeded": "成功",
       "viewRun": "查看运行",

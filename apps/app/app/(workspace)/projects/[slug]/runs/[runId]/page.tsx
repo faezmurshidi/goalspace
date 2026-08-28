@@ -6,7 +6,8 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { getAgent } from '@/lib/db/agents';
-import { getRun, listRunProposals, listToolCalls, runCostUsd } from '@/lib/db/runs';
+import { getRun, listToolCalls, runCostUsd } from '@/lib/db/runs';
+import { listRunProposals } from '@/lib/db/proposals';
 import { formatDateTime, getLocale } from '@/lib/format';
 
 type Params = { params: Promise<{ slug: string; runId: string }> };
@@ -87,7 +88,7 @@ export default async function RunPage({ params }: Params) {
         </dl>
 
         {run.error ? (
-          <p role="alert" className="label py-3 text-oxide">
+          <p role="alert" className="label max-w-[70ch] py-3 text-oxide">
             {run.error}
           </p>
         ) : null}
@@ -145,7 +146,9 @@ export default async function RunPage({ params }: Params) {
                   key={proposal.id}
                   className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-rule py-3"
                 >
-                  <span className="min-w-0 flex-1 text-body text-ink">{proposal.rationale}</span>
+                  <span className="min-w-0 max-w-[70ch] flex-1 text-body text-ink">
+                    {proposal.rationale}
+                  </span>
                   <span className="label shrink-0 text-ink-soft">
                     {t(`app.inbox.status.${proposal.status}`)}
                   </span>

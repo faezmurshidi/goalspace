@@ -551,8 +551,6 @@
       "noToolCalls": "No tool calls.",
       "proposals": "Proposals",
       "noProposals": "No proposals.",
-      "arguments": "Arguments",
-      "result": "Result",
       "failed": "Failed",
       "succeeded": "Succeeded",
       "viewRun": "View the run",

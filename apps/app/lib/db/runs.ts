@@ -1,11 +1,20 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database, Tables } from '@/types/supabase';
-import type { Proposal } from '@/lib/db/proposals';
 
 type Client = SupabaseClient<Database>;
 
-export type Run = Tables<'agent_runs'>;
+/**
+ * The generated type widens `status` to `string`, but the `agent_runs` CHECK
+ * constraint limits it to exactly these five values — which are exactly the
+ * `app.runs.status.*` locale keys. Narrowed here, the same way
+ * `lib/db/proposals.ts` narrows `Proposal['status']`, so `t('app.runs.status.'
+ * + run.status)` is checked against the keys at compile time instead of
+ * failing silently at render time on a typo.
+ */
+export type Run = Omit<Tables<'agent_runs'>, 'status'> & {
+  status: 'running' | 'succeeded' | 'failed' | 'cancelled' | 'capped';
+};
 export type ToolCall = Tables<'agent_tool_calls'>;
 
 const RUN_COLUMNS =
@@ -27,7 +36,7 @@ export async function getRun(
     .maybeSingle();
 
   if (error) throw error;
-  return (data ?? null) as Run | null;
+  return (data ?? null) as unknown as Run | null;
 }
 
 /**
@@ -62,18 +71,7 @@ export async function listRunsForAgent(
     .limit(limit);
 
   if (error) throw error;
-  return (data ?? []) as Run[];
-}
-
-export async function listRunProposals(supabase: Client, runId: string): Promise<Proposal[]> {
-  const { data, error } = await supabase
-    .from('proposals')
-    .select('*')
-    .eq('run_id', runId)
-    .order('created_at', { ascending: true });
-
-  if (error) throw error;
-  return (data ?? []) as unknown as Proposal[];
+  return (data ?? []) as unknown as Run[];
 }
 
 /**

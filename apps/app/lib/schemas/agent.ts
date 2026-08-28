@@ -25,7 +25,7 @@ export const updateAgentSchema = z.object({
   // `not null default ''` in the database, so empty is legitimate.
   role_description: z.string().max(280).default(''),
   system_prompt: requiredText(8_000),
-  model: z.string().refine((m) => m in RATES, {
+  model: z.string().refine((m) => MODEL_CHOICES.includes(m), {
     message: 'Choose a model with a known rate.',
   }),
   is_active: z.boolean(),

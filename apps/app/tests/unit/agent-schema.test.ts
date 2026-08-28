@@ -46,6 +46,17 @@ describe('updateAgentSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('rejects prototype-chain keys that a bare `in` check would let through', () => {
+    // `m in RATES` walks the prototype chain, so `"constructor"`,
+    // `"toString"`, and `"hasOwnProperty"` all pass — and RATES[those] is
+    // truthy, so costUsd/worstCaseUsd return NaN instead of 0, which breaks
+    // the monthly spend cap silently. MODEL_CHOICES.includes must reject them.
+    for (const model of ['constructor', 'toString', 'hasOwnProperty', 'valueOf']) {
+      const result = updateAgentSchema.safeParse({ ...valid, model });
+      expect(result.success).toBe(false);
+    }
+  });
+
   it('offers exactly the priced models as choices', () => {
     expect([...MODEL_CHOICES].sort()).toEqual(Object.keys(RATES).sort());
     expect(MODEL_CHOICES.length).toBeGreaterThan(0);

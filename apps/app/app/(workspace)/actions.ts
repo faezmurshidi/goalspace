@@ -356,7 +356,11 @@ export async function updateAgentAction(
     const updated = await updateAgent(supabase, { projectId: project.id, values: parsed.data });
     if (!updated) return fail('app.agents.missing');
 
-    revalidateProject(slug);
+    // Not revalidateProject: an agent edit changes name, role description,
+    // model, active state, and tools, none of which resume/log/work render.
+    // Only the agents list and this agent's own detail page show them.
+    revalidatePath(`/projects/${slug}/agents`);
+    revalidatePath(`/projects/${slug}/agents/${updated.id}`);
     return ok({ id: updated.id });
   } catch {
     return fail('app.errors.generic');

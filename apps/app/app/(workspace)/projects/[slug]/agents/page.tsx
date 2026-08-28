@@ -44,21 +44,31 @@ export default async function AgentsPage({ params }: Params) {
               <li key={agent.id} className="border-b border-rule">
                 <Link
                   href={`/projects/${slug}/agents/${agent.id}`}
-                  className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+                  className="unstyled flex flex-col gap-1 py-3 transition-colors hover:bg-paper-shade"
                 >
-                  <span className="min-w-0 flex-1 text-body text-ink">{agent.name}</span>
+                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                    <span className="min-w-0 flex-1 text-body text-ink">{agent.name}</span>
 
-                  {/* Inactive is stated in words, not signalled by colour: the
-                      palette has no disabled tone, and status must never be
-                      colour alone. */}
-                  {!agent.is_active ? (
-                    <span className="label shrink-0 text-ink-soft">{t('app.agents.inactive')}</span>
+                    {/* Inactive is stated in words, not signalled by colour: the
+                        palette has no disabled tone, and status must never be
+                        colour alone. */}
+                    {!agent.is_active ? (
+                      <span className="label shrink-0 text-ink-soft">
+                        {t('app.agents.inactive')}
+                      </span>
+                    ) : null}
+
+                    <span className="label shrink-0 text-ink-soft">{agent.model}</span>
+                    <span className="label shrink-0 tabular-nums text-ink-soft">
+                      {t('app.agents.toolCount', { count: agent.tools.length })}
+                    </span>
+                  </div>
+
+                  {agent.role_description ? (
+                    <p className="min-w-0 truncate text-micro text-ink-soft">
+                      {agent.role_description}
+                    </p>
                   ) : null}
-
-                  <span className="label shrink-0 text-ink-soft">{agent.model}</span>
-                  <span className="label shrink-0 tabular-nums text-ink-soft">
-                    {t('app.agents.toolCount', { count: agent.tools.length })}
-                  </span>
                 </Link>
               </li>
             ))}
