@@ -591,6 +591,7 @@ describe('deleteProject', () => {
     }
   });
 });
+```
 
 - [ ] **Step 2: Run to verify it fails**
 
