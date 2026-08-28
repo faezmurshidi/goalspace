@@ -3,10 +3,11 @@
 import { revalidatePath } from 'next/cache';
 
 import { requireSessionContext } from '@/lib/auth/session';
-import { getProjectBySlug, createProject } from '@/lib/db/projects';
+import { getProjectBySlug, createProject, updateProject, deleteProject } from '@/lib/db/projects';
 import { createEntry } from '@/lib/db/entries';
 import { createDocument, getRevision, updateDocument } from '@/lib/db/documents';
 import { updateAgent } from '@/lib/db/agents';
+import { updateBudget } from '@/lib/db/budgets';
 import {
   changeWorkItemStatus,
   createWorkItem,
@@ -16,7 +17,8 @@ import {
 import { createEntrySchema } from '@/lib/schemas/entry';
 import { createDocumentSchema, updateDocumentSchema } from '@/lib/schemas/document';
 import { updateAgentSchema } from '@/lib/schemas/agent';
-import { createProjectSchema } from '@/lib/schemas/project';
+import { createProjectSchema, updateProjectSchema, deleteProjectSchema } from '@/lib/schemas/project';
+import { updateBudgetSchema } from '@/lib/schemas/budget';
 import { applyProposal } from '@/lib/proposals/apply';
 import { settleProposal } from '@/lib/db/proposals';
 import {
@@ -362,6 +364,92 @@ export async function updateAgentAction(
     revalidatePath(`/projects/${slug}/agents`);
     revalidatePath(`/projects/${slug}/agents/${updated.id}`);
     return ok({ id: updated.id });
+  } catch {
+    return fail('app.errors.generic');
+  }
+}
+
+export async function updateProjectAction(
+  slug: string,
+  input: unknown
+): Promise<ActionResult<{ slug: string }>> {
+  const parsed = updateProjectSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, userId, project } = await resolveProject(slug);
+  if (!project) return fail('app.errors.projectMissing');
+
+  try {
+    // The schema carries an id, but the row updated is the one the *slug*
+    // resolved to. Trusting the client's id here would let a caller aim an
+    // update at another of their own projects through this page's URL.
+    const updated = await updateProject(supabase, {
+      id: project.id,
+      ownerId: userId,
+      values: parsed.data,
+    });
+    if (!updated) return fail('app.errors.projectMissing');
+
+    revalidatePath(`/projects/${slug}/settings`);
+    revalidateProject(slug);
+    return ok({ slug: updated.slug });
+  } catch {
+    return fail('app.errors.generic');
+  }
+}
+
+export async function updateBudgetAction(
+  slug: string,
+  input: unknown
+): Promise<ActionResult<{ monthlyCapUsd: number }>> {
+  const parsed = updateBudgetSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, userId, project } = await resolveProject(slug);
+  if (!project) return fail('app.errors.projectMissing');
+
+  try {
+    const updated = await updateBudget(supabase, {
+      projectId: project.id,
+      ownerId: userId,
+      values: parsed.data,
+    });
+    if (!updated) return fail('app.errors.projectMissing');
+
+    revalidatePath(`/projects/${slug}/settings`);
+    return ok({ monthlyCapUsd: updated.monthly_cap_usd });
+  } catch {
+    return fail('app.errors.generic');
+  }
+}
+
+/**
+ * Delete a project, after checking the typed slug on the server.
+ *
+ * The browser also checks it, to disable the button — but that check is a
+ * convenience. This one is the control, because it is the only one an attacker
+ * or a mis-wired client cannot skip.
+ */
+export async function deleteProjectAction(
+  slug: string,
+  input: unknown
+): Promise<ActionResult<{ deleted: true }>> {
+  const parsed = deleteProjectSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, userId, project } = await resolveProject(slug);
+  if (!project) return fail('app.errors.projectMissing');
+
+  if (parsed.data.confirmSlug !== project.slug) {
+    return fail('app.settings.deleteMismatch');
+  }
+
+  try {
+    const removed = await deleteProject(supabase, { id: project.id, ownerId: userId });
+    if (!removed) return fail('app.errors.projectMissing');
+
+    revalidatePath('/', 'layout');
+    return ok({ deleted: true });
   } catch {
     return fail('app.errors.generic');
   }

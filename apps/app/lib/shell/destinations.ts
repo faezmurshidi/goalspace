@@ -25,6 +25,12 @@ export interface Destination {
   exact: boolean;
   /** Absent means nothing to show — a rendered "0" is noise. */
   count?: number;
+  /**
+   * Marks a project-scope entry that sits below the sidebar's hairline rule,
+   * rather than being one more section of the record. Carried as data so the
+   * sidebar can rule it off without hardcoding a key name.
+   */
+  trailing?: true;
 }
 
 /** Routes under /projects that are not a project. */
@@ -63,6 +69,13 @@ export function destinationsFor(slug: string, counts: { inbox: number }): Destin
       href: `${base}/agents`,
       labelKey: 'app.agents.title',
       exact: false,
+    },
+    {
+      key: 'settings',
+      href: `${base}/settings`,
+      labelKey: 'app.settings.title',
+      exact: false,
+      trailing: true,
     },
   ];
 }

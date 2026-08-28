@@ -63,12 +63,21 @@ export function WorkspaceSidebar({
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {destinations.map((destination) => {
+            {destinations.map((destination, index) => {
               const active = isActive(pathname, destination);
               const label = t(destination.labelKey);
+              // The first trailing destination gets a rule above it: project
+              // scope, not one more section of the record. Checking the
+              // previous entry (rather than every destination.trailing) keeps
+              // the rule to a single line even if more trailing entries join
+              // settings later.
+              const isFirstTrailing = destination.trailing && !destinations[index - 1]?.trailing;
 
               return (
-                <SidebarMenuItem key={destination.key}>
+                <SidebarMenuItem
+                  key={destination.key}
+                  className={cn(isFirstTrailing && 'border-t border-rule pt-1')}
+                >
                   <SidebarMenuButton asChild isActive={active}>
                     <Link
                       href={destination.href}
