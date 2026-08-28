@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Tables } from '@/types/supabase';
 import { slugSchema, slugify } from '@/lib/schemas/common';
 import { agentRowsFor } from '@/lib/agents/templates';
-import type { CreateProjectValues } from '@/lib/schemas/project';
+import type { CreateProjectValues, UpdateProjectValues } from '@/lib/schemas/project';
 import type { ProjectKind, ProjectStatus, ProjectVisibility } from '@/lib/schemas/common';
 
 type Client = SupabaseClient<Database>;
@@ -174,4 +174,71 @@ export async function createProject(
   }
 
   throw new Error(`Could not find a free slug for "${values.title}"`);
+}
+
+/**
+ * Update a project's own fields.
+ *
+ * Filtered on `owner_id` as well as `id`. RLS already refuses another owner's
+ * row, but stating ownership here means the function returns null rather than
+ * relying on a policy to raise — and null is what lets the caller tell
+ * "refused" from "changed" instead of reporting a silent no-op as success.
+ *
+ * `updated_at` is not set here: `update_projects_updated_at` already does it.
+ * (`project_budgets` has no such trigger, which is why `updateBudget` does set
+ * it — the asymmetry is in the schema, not an oversight here.)
+ */
+export async function updateProject(
+  supabase: Client,
+  { id, ownerId, values }: { id: string; ownerId: string; values: UpdateProjectValues }
+): Promise<Project | null> {
+  // `values` carries the client's id. It names nothing here — the row is
+  // chosen by the `id` argument, resolved from the slug — so it must not reach
+  // the SET clause, where it would rewrite a primary key or trip the child
+  // foreign keys. Same destructure as `updateAgent` in lib/db/agents.ts.
+  const { id: _clientId, ...fields } = values;
+
+  const { data, error } = await supabase
+    .from('projects')
+    .update(fields)
+    .eq('id', id)
+    .eq('owner_id', ownerId)
+    .select(PROJECT_COLUMNS)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data ?? null) as Project | null;
+}
+
+/**
+ * Delete a project and everything that hangs off it.
+ *
+ * Every child table declares `on delete cascade` against `projects(id)`, so
+ * this one statement removes entries, work items, documents and their
+ * revisions, attachment rows, agents, runs, tool calls, proposals, and usage
+ * rows. That breadth is the reason the caller must confirm by typing the slug.
+ *
+ * What it does not remove: the objects those attachment rows point at in
+ * Supabase Storage. Nothing cleans that bucket up, so deleting a project
+ * orphans its files. No upload path exists yet, so this is a note for whoever
+ * builds one, not a live leak — but the user-facing copy must not claim the
+ * files are gone.
+ *
+ * Returns whether a row was actually removed, so a refusal is distinguishable
+ * from a success. `select()` after `delete()` returns the deleted rows, which
+ * is how we know.
+ */
+export async function deleteProject(
+  supabase: Client,
+  { id, ownerId }: { id: string; ownerId: string }
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('projects')
+    .delete()
+    .eq('id', id)
+    .eq('owner_id', ownerId)
+    .select('id');
+
+  if (error) throw error;
+  return (data ?? []).length > 0;
 }
