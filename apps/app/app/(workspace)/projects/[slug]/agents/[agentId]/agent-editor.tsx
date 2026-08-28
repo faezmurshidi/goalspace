@@ -28,7 +28,11 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
   const [tools, setTools] = useState<string[]>(agent.tools);
   const [message, setMessage] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const messageId = useId();
+  const nameErrorId = useId();
+  const roleErrorId = useId();
+  const promptErrorId = useId();
 
   function toggleTool(toolName: string) {
     setTools((current) =>
@@ -42,6 +46,7 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
     event.preventDefault();
     setMessage(null);
     setFailed(false);
+    setFieldErrors({});
 
     startTransition(async () => {
       try {
@@ -58,6 +63,10 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
         if (!result.ok) {
           setFailed(true);
           setMessage(result.message ?? 'app.errors.generic');
+          // Stored but never shown previously, so a per-field failure (a name
+          // over 80 characters, say) surfaced only as the generic message and
+          // the user could not tell which control to correct.
+          setFieldErrors(result.fieldErrors ?? {});
           return;
         }
         setMessage('app.agents.saved');
@@ -79,11 +88,20 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
         <input
           id="agent-name"
           required
+          maxLength={80}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          aria-describedby={failed ? messageId : undefined}
+          aria-invalid={fieldErrors.name ? true : undefined}
+          aria-describedby={
+            fieldErrors.name ? nameErrorId : failed ? messageId : undefined
+          }
           className="border border-rule-strong bg-paper px-3 py-2 text-title text-ink"
         />
+        {fieldErrors.name ? (
+          <p id={nameErrorId} role="alert" className="label text-oxide">
+            {fieldErrors.name.map((key) => t(key)).join(' ')}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -92,10 +110,18 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
         </label>
         <input
           id="agent-role"
+          maxLength={280}
           value={role}
           onChange={(e) => setRole(e.target.value)}
+          aria-invalid={fieldErrors.role_description ? true : undefined}
+          aria-describedby={fieldErrors.role_description ? roleErrorId : undefined}
           className="border border-rule-strong bg-paper px-3 py-2 text-body text-ink"
         />
+        {fieldErrors.role_description ? (
+          <p id={roleErrorId} role="alert" className="label text-oxide">
+            {fieldErrors.role_description.map((key) => t(key)).join(' ')}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -106,10 +132,18 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
           id="agent-prompt"
           required
           rows={10}
+          maxLength={8000}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
+          aria-invalid={fieldErrors.system_prompt ? true : undefined}
+          aria-describedby={fieldErrors.system_prompt ? promptErrorId : undefined}
           className="w-full max-w-[70ch] border border-rule-strong bg-paper p-3 text-body text-ink"
         />
+        {fieldErrors.system_prompt ? (
+          <p id={promptErrorId} role="alert" className="label text-oxide">
+            {fieldErrors.system_prompt.map((key) => t(key)).join(' ')}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-end gap-6">
