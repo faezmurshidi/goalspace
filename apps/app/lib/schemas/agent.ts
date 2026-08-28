@@ -17,7 +17,7 @@ import { RATES } from '@/lib/agents/cost';
  */
 export const MODEL_CHOICES = Object.keys(RATES);
 
-const toolName = z.enum([...REGISTRY_NAMES] as [string, ...string[]]);
+const toolName = z.enum(REGISTRY_NAMES);
 
 export const updateAgentSchema = z.object({
   id: z.string().uuid(),
