@@ -583,6 +583,8 @@
       "perRunTokenCap": "Per-run token cap",
       "worstCase": "Worst case per run, at this project's models",
       "worstCaseNote": "This figure, not the average, is what decides whether a run is refused.",
+      "unpricedModels": "No rate is known for: {{models}}. A run on one of these reserves nothing, so the cap cannot stop it.",
+      "noActiveAgents": "No active agents, so nothing here can start a run.",
       "dangerZone": "Danger zone",
       "deleteExplain": "Deleting this project removes every entry, work item, document, revision, agent, run, and proposal in it. This cannot be undone.",
       "deleteConfirmLabel": "Type the project's slug to confirm",

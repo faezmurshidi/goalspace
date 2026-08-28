@@ -583,6 +583,8 @@
       "perRunTokenCap": "Had token setiap larian",
       "worstCase": "Kes terburuk setiap larian, pada model projek ini",
       "worstCaseNote": "Angka ini, bukan purata, yang menentukan sama ada sesuatu larian ditolak.",
+      "unpricedModels": "Tiada kadar diketahui untuk: {{models}}. Larian pada model ini tidak menempah apa-apa, jadi had tidak dapat menghentikannya.",
+      "noActiveAgents": "Tiada ejen aktif, jadi tiada apa-apa di sini boleh memulakan larian.",
       "dangerZone": "Zon bahaya",
       "deleteExplain": "Memadam projek ini akan membuang setiap catatan, item kerja, dokumen, semakan, ejen, larian, dan cadangan di dalamnya. Ini tidak boleh dibatalkan.",
       "deleteConfirmLabel": "Taip slug projek untuk mengesahkan",
