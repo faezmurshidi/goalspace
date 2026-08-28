@@ -48,7 +48,8 @@ Straight from §5 of the spec: *"Run traces are not in the sidebar. A run is rea
 | `apps/app/lib/agents/tool-groups.ts` | **Create.** Pure: `REGISTRY` → three named capability groups. No I/O. |
 | `apps/app/lib/schemas/agent.ts` | **Create.** zod schema for an agent update, including the tools and model allowlists. |
 | `apps/app/lib/db/agents.ts` | **Modify.** Gains `listAgents`, `getAgent`, `updateAgent` alongside the existing `startAgentRun`. |
-| `apps/app/lib/db/runs.ts` | **Create.** `getRun`, `listToolCalls`, `listRunProposals`, `listRunsForAgent`, `runCostUsd`. |
+| `apps/app/lib/db/runs.ts` | **Create.** `getRun`, `listToolCalls`, `listRunsForAgent`, `runCostUsd`. |
+| `apps/app/lib/db/proposals.ts` | **Modify.** Gains `listRunProposals`, alongside the existing proposal reads. |
 | `apps/app/app/(workspace)/actions.ts` | **Modify.** Gains `updateAgentAction`. |
 | `apps/app/lib/shell/destinations.ts` | **Modify.** Adds the agents destination. |
 | `apps/app/app/(workspace)/projects/[slug]/agents/page.tsx` | **Create.** The list. |
@@ -634,7 +635,7 @@ git commit -m "feat(agents): read and update paths, project-scoped and isolation
 **Interfaces:**
 - Consumes: nothing from earlier tasks.
 - Produces: `type Run = Tables<'agent_runs'>`, `type ToolCall = Tables<'agent_tool_calls'>`, `getRun(supabase, projectId, id): Promise<Run | null>`, `listToolCalls(supabase, runId): Promise<ToolCall[]>`, `listRunsForAgent(supabase, agentId, limit?): Promise<Run[]>`, `runCostUsd(supabase, runId): Promise<number>`.
-- Run proposals reuse the existing `Proposal` type from `@/lib/db/proposals`; this module adds `listRunProposals(supabase, runId): Promise<Proposal[]>`.
+- Run proposals reuse the existing `Proposal` type from `@/lib/db/proposals`; `listRunProposals(supabase, runId): Promise<Proposal[]>` is added there rather than to this module, since it queries `proposals`, not a `runs` table.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -805,7 +806,6 @@ Expected: FAIL — cannot resolve `@/lib/db/runs`.
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database, Tables } from '@/types/supabase';
-import type { Proposal } from '@/lib/db/proposals';
 
 type Client = SupabaseClient<Database>;
 
@@ -869,16 +869,19 @@ export async function listRunsForAgent(
   return (data ?? []) as Run[];
 }
 
-export async function listRunProposals(supabase: Client, runId: string): Promise<Proposal[]> {
-  const { data, error } = await supabase
-    .from('proposals')
-    .select('*')
-    .eq('run_id', runId)
-    .order('created_at', { ascending: true });
-
-  if (error) throw error;
-  return (data ?? []) as Proposal[];
-}
+// `listRunProposals` is not defined here — it belongs to
+// `apps/app/lib/db/proposals.ts`, since it queries `proposals`:
+//
+//   export async function listRunProposals(supabase: Client, runId: string): Promise<Proposal[]> {
+//     const { data, error } = await supabase
+//       .from('proposals')
+//       .select(PROPOSAL_COLUMNS)
+//       .eq('run_id', runId)
+//       .order('created_at', { ascending: true });
+//
+//     if (error) throw error;
+//     return (data ?? []) as unknown as Proposal[];
+//   }
 
 /**
  * What a run actually cost, summed from `ai_usage`.
@@ -1711,7 +1714,7 @@ git commit -m "feat(agents): the editor, with tools grouped by consequence"
 - Modify: `apps/app/app/(workspace)/projects/[slug]/inbox/proposal-card.tsx`
 
 **Interfaces:**
-- Consumes: `getRun`, `listToolCalls`, `listRunProposals`, `runCostUsd` (Task 4); the `app.runs.*` strings (Task 7).
+- Consumes: `getRun`, `listToolCalls`, `runCostUsd` (Task 4); `listRunProposals` (`@/lib/db/proposals`); the `app.runs.*` strings (Task 7).
 
 - [ ] **Step 1: Write the page**
 
@@ -1725,7 +1728,8 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { getAgent } from '@/lib/db/agents';
-import { getRun, listRunProposals, listToolCalls, runCostUsd } from '@/lib/db/runs';
+import { getRun, listToolCalls, runCostUsd } from '@/lib/db/runs';
+import { listRunProposals } from '@/lib/db/proposals';
 import { formatDateTime, getLocale } from '@/lib/format';
 
 type Params = { params: Promise<{ slug: string; runId: string }> };
