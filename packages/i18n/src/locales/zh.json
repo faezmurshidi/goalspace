@@ -507,6 +507,32 @@
       "write": "编写",
       "preview": "预览",
       "previewEmpty": "暂无可预览的内容。"
+    },
+    "agents": {
+      "title": "代理",
+      "missing": "该代理已不存在。",
+      "empty": "尚无代理。",
+      "nameLabel": "名称",
+      "roleLabel": "角色",
+      "promptLabel": "系统提示词",
+      "modelLabel": "模型",
+      "activeLabel": "启用",
+      "inactive": "已停用",
+      "toolCount_one": "{{count}} 个工具",
+      "toolCount_other": "{{count}} 个工具",
+      "save": "保存",
+      "saving": "保存中",
+      "saved": "已保存",
+      "recentRuns": "最近运行",
+      "noRuns": "尚无运行记录。",
+      "tools": {
+        "heading": "工具",
+        "reads": "读取记录",
+        "proposes": "提出更改",
+        "proposesNote": "每项均需你批准",
+        "external": "离开本系统",
+        "none": "暂无。"
+      }
     }
   }
 }

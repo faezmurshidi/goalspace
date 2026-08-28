@@ -6,6 +6,7 @@ import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug, createProject } from '@/lib/db/projects';
 import { createEntry } from '@/lib/db/entries';
 import { createDocument, getRevision, updateDocument } from '@/lib/db/documents';
+import { updateAgent } from '@/lib/db/agents';
 import {
   changeWorkItemStatus,
   createWorkItem,
@@ -14,6 +15,7 @@ import {
 } from '@/lib/db/work-items';
 import { createEntrySchema } from '@/lib/schemas/entry';
 import { createDocumentSchema, updateDocumentSchema } from '@/lib/schemas/document';
+import { updateAgentSchema } from '@/lib/schemas/agent';
 import { createProjectSchema } from '@/lib/schemas/project';
 import { applyProposal } from '@/lib/proposals/apply';
 import { settleProposal } from '@/lib/db/proposals';
@@ -336,6 +338,27 @@ export async function restoreRevisionAction(
     return ok({ updatedAt: updated.updated_at });
   } catch (error) {
     console.error('restoreRevisionAction failed', error);
+    return fail('app.errors.generic');
+  }
+}
+
+export async function updateAgentAction(
+  slug: string,
+  input: unknown
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = updateAgentSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, project } = await resolveProject(slug);
+  if (!project) return fail('app.errors.projectMissing');
+
+  try {
+    const updated = await updateAgent(supabase, { projectId: project.id, values: parsed.data });
+    if (!updated) return fail('app.agents.missing');
+
+    revalidateProject(slug);
+    return ok({ id: updated.id });
+  } catch {
     return fail('app.errors.generic');
   }
 }

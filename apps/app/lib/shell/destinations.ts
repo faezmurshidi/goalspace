@@ -58,6 +58,12 @@ export function destinationsFor(slug: string, counts: { inbox: number }): Destin
       labelKey: 'app.documents.title',
       exact: false,
     },
+    {
+      key: 'agents',
+      href: `${base}/agents`,
+      labelKey: 'app.agents.title',
+      exact: false,
+    },
   ];
 }
 
