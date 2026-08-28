@@ -33,8 +33,12 @@
 **R2 — the budget helpers move out of the ask route rather than being copied.**
 `loadBudget` is currently a private function inside `app/api/agents/[agentId]/ask/route.ts`. §7 says these "move to `lib/db/`". A second copy for the settings page would be the worst outcome: two definitions of what a project's cap is, drifting silently. The ask route is refactored to import from the new module in the same task, so there is never a moment with two.
 
-**R3 — `monthToDateSpend` must use the same window as the cap that refuses runs.**
-`start_agent_run` sums `ai_usage` where `created_at >= (date_trunc('month', (now() at time zone 'utc')) at time zone 'utc')` — a UTC calendar month, with an explicit cast documented in the migration to avoid leaning on the server's timezone. The settings page must use that window exactly. A page that computes month-to-date any other way would show a number that disagrees with what actually stops a run, which is worse than showing nothing.
+**R3 — month-to-date is summed in SQL, in the same window the cap uses.**
+`start_agent_run` sums `ai_usage` where `created_at >= (date_trunc('month', (now() at time zone 'utc')) at time zone 'utc')` — a UTC calendar month, cast explicitly so it does not lean on the server's timezone.
+
+The obvious implementation — select the month's rows and add them up in JavaScript — is **wrong here, and wrong silently.** `apps/app/supabase/config.toml` sets `max_rows = 1000`, so PostgREST truncates the response server-side with no error. The ask route writes one `ai_usage` row *per step* and `MAX_STEPS` is 12, so a project crosses 1000 rows at roughly 84 runs in a month and the page begins under-reporting — worst at exactly the moment spend matters. A fixture of three rows can never catch it.
+
+So the sum happens in Postgres, in a function that sits beside `start_agent_run` and shares its window by construction rather than by a comment asking someone to keep two definitions in step.
 
 **R4 — the worst-case reservation is the maximum across the project's active agents.**
 §6.4 requires the page to state "the worst-case reservation at the project's current models, because that figure — not the average — is what decides whether a run is refused." A project has several agents on possibly different models. The figure shown is `max(worstCaseUsd(agent.model, per_run_token_cap))` over the project's **active** agents — the largest single reservation any one run could take. An average or a sum would both be wrong: the average understates the refusal threshold, and the sum describes a scenario (every agent running at once, each at full token cap) that the per-run check never evaluates.
@@ -48,7 +52,7 @@
 
 | Path | Responsibility |
 |---|---|
-| `apps/app/supabase/migrations/20260829000100_user_settings_locale_tz.sql` | **Create.** Adds `user_settings.locale` and `time_zone`. |
+| `apps/app/supabase/migrations/20260829000100_user_settings_locale_tz.sql` | **Create.** Adds `user_settings.locale`, `time_zone`, and `project_month_to_date_usd()`. |
 | `apps/app/lib/schemas/project.ts` | **Modify.** Gains `deleteProjectSchema`. `updateProjectSchema` already exists here and is reused unchanged. |
 | `apps/app/lib/schemas/budget.ts` | **Create.** `updateBudgetSchema`. |
 | `apps/app/lib/db/projects.ts` | **Modify.** Gains `updateProject`, `deleteProject`. |
@@ -58,6 +62,7 @@
 | `apps/app/lib/shell/destinations.ts` | **Modify.** Adds the trailing `settings` destination. |
 | `apps/app/components/shell/workspace-sidebar.tsx` | **Modify.** Renders a rule before the trailing group. |
 | `apps/app/app/(workspace)/projects/[slug]/settings/page.tsx` | **Create.** The settings route. |
+| `apps/app/app/(workspace)/projects/[slug]/settings/loading.tsx` | **Create.** Skeleton, matching the sibling routes. |
 | `apps/app/app/(workspace)/projects/[slug]/settings/project-form.tsx` | **Create.** Title, brief, status. |
 | `apps/app/app/(workspace)/projects/[slug]/settings/budget-form.tsx` | **Create.** Caps, with spend shown against them. |
 | `apps/app/app/(workspace)/projects/[slug]/settings/danger-zone.tsx` | **Create.** Delete, confirmed by slug. |
@@ -72,7 +77,7 @@
 - Test: `apps/app/tests/rls/schema.test.ts` (extend the existing column assertions)
 
 **Interfaces:**
-- Produces: `user_settings.locale text not null default 'en'`, `user_settings.time_zone text not null default 'UTC'`.
+- Produces: `user_settings.locale text not null default 'en'`, `user_settings.time_zone text not null default 'UTC'`, and the SQL function `project_month_to_date_usd(p_project_id uuid) returns numeric`.
 
 - [ ] **Step 1: Write the migration**
 
@@ -99,6 +104,36 @@ comment on column user_settings.locale is
 
 comment on column user_settings.time_zone is
   'IANA zone name, e.g. "Asia/Kuala_Lumpur". Dates render in this zone from slice D2 onward. Not constrained by CHECK: the IANA list changes, and a stale constraint would reject a legitimate new zone.';
+
+/**
+ * Month-to-date agent spend for one project.
+ *
+ * In SQL, not in the application, for a reason that is easy to miss: PostgREST
+ * caps a response at `max_rows` (1000 in supabase/config.toml) and truncates
+ * silently. The ask route writes one ai_usage row per step with a 12-step
+ * ceiling, so a project passes 1000 rows at roughly 84 runs in a month, and a
+ * client-side sum would quietly start under-reporting — worst precisely when
+ * spend is high enough to matter.
+ *
+ * The window is the one start_agent_run enforces against, character for
+ * character. Two copies of that expression is already one more than ideal;
+ * a third, in another language, in a page whose whole job is to agree with
+ * the cap, would be indefensible.
+ *
+ * SECURITY INVOKER so RLS applies: a caller sums only projects they can read.
+ */
+create or replace function project_month_to_date_usd(p_project_id uuid)
+returns numeric
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select coalesce(sum(u.cost_usd), 0)
+    from public.ai_usage u
+   where u.project_id = p_project_id
+     and u.created_at >= (date_trunc('month', (now() at time zone 'utc')) at time zone 'utc');
+$$;
 ```
 
 - [ ] **Step 2: Apply to the local stack and confirm**
@@ -120,7 +155,19 @@ Expected: a JSON array (empty or with rows), not a "column does not exist" error
 
 - [ ] **Step 3: Extend the schema test**
 
-`apps/app/tests/rls/schema.test.ts` already asserts the shape of every table. Add `locale` and `time_zone` to its `user_settings` column expectations, following the existing idiom in that file exactly — read it first rather than inventing an assertion style.
+Read `apps/app/tests/rls/schema.test.ts` first. It does **not** assert columns — it has two tests that assert each table *exists*, by selecting `id` with `limit(1)` and checking there is no error. There is no column-assertion idiom to copy, so add one test in the same shape, selecting the two new columns:
+
+```typescript
+it('exposes the account preference columns added for settings', async () => {
+  // Same shape as the table-existence tests above: a select that names the
+  // columns fails with a PostgREST error if either is missing, which is the
+  // regression this guards.
+  const { error } = await alice!.client.from('user_settings').select('locale, time_zone').limit(1);
+  expect(error).toBeNull();
+});
+```
+
+Match the file's actual variable names for the test user — read them rather than assuming `alice`.
 
 - [ ] **Step 4: Run the RLS suite**
 
@@ -167,6 +214,22 @@ const valid = { monthly_cap_usd: 25, per_run_token_cap: 200_000 };
 describe('updateBudgetSchema', () => {
   it('accepts a well-formed budget', () => {
     expect(updateBudgetSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it('accepts a genuine two-decimal cap', () => {
+    // `valid` uses an integer, so without this the accept path for the
+    // decimal rule is never exercised at all.
+    for (const cap of [0.07, 1.1, 42.5, 12.34]) {
+      expect(updateBudgetSchema.safeParse({ ...valid, monthly_cap_usd: cap }).success).toBe(true);
+    }
+  });
+
+  it('accepts a large cap without floating-point false rejections', () => {
+    // The obvious `n * 100` form of this rule rejects these; the toFixed form
+    // does not. Both are inside numeric(10,2).
+    for (const cap of [131_072.02, 272_522.35, 20_000_000.01]) {
+      expect(updateBudgetSchema.safeParse({ ...valid, monthly_cap_usd: cap }).success).toBe(true);
+    }
   });
 
   it('accepts a zero monthly cap, which stops every run', () => {
@@ -296,7 +359,12 @@ export const updateBudgetSchema = z.object({
     .min(0)
     // numeric(10,2): eight digits before the point, two after.
     .max(99_999_999.99)
-    .refine((n) => Number.isInteger(Math.round(n * 100)) && Math.abs(n * 100 - Math.round(n * 100)) < 1e-9, {
+    // `Number(n.toFixed(2)) === n` rather than arithmetic on `n * 100`. The
+    // multiply-and-compare form looks equivalent and is not: floating-point
+    // error in `n * 100` grows with magnitude, so a fixed epsilon starts
+    // rejecting legitimate values partway up the allowed range (131072.02 is
+    // the first). toFixed rounds decimally and the comparison is exact.
+    .refine((n) => Number(n.toFixed(2)) === n, {
       message: 'A cap is set to the cent.',
     }),
   per_run_token_cap: z.number().int().min(MIN_PER_RUN_TOKEN_CAP).max(MAX_PER_RUN_TOKEN_CAP),
@@ -386,11 +454,14 @@ afterAll(async () => {
 });
 
 describe('updateProject', () => {
+  // The values object carries `id` because updateProjectSchema requires it —
+  // this is the payload the action actually sends, so the test must send it
+  // too, or it exercises a shape that never occurs and does not typecheck.
   it('changes title, brief and status', async () => {
     const updated = await updateProject(client(), {
       id: projectId,
       ownerId: alice!.id,
-      values: { title: 'Desk robot', brief: 'Sits on a desk.', status: 'paused' },
+      values: { id: projectId, title: 'Desk robot', brief: 'Sits on a desk.', status: 'paused' },
     });
     expect(updated?.title).toBe('Desk robot');
     expect(updated?.status).toBe('paused');
@@ -401,33 +472,51 @@ describe('updateProject', () => {
     expect(after?.slug).toBe(slug);
   });
 
-  it('returns null for a project this caller does not own', async () => {
+  it('ignores an id in the payload that disagrees with the row being updated', async () => {
+    // A client that sends someone else's id must not steer the write. The row
+    // is chosen by the id argument; the payload's id is discarded.
+    const other = '22222222-2222-4222-8222-222222222222';
+    const updated = await updateProject(client(), {
+      id: projectId,
+      ownerId: alice!.id,
+      values: { id: other, title: 'Still mine', brief: '', status: 'active' },
+    });
+    expect(updated?.id).toBe(projectId);
+    expect(updated?.title).toBe('Still mine');
+  });
+
+  it('returns null for a project this caller cannot write', async () => {
+    // Bob passes ALICE's ownerId, so the explicit .eq('owner_id') filter
+    // cannot be what refuses this — RLS has to. Passing bob's own id would
+    // make the test pass even with RLS disabled.
     bob = await createTestUser(`proj-bob-${Date.now()}@example.test`);
     const updated = await updateProject(bob.client as never, {
       id: projectId,
-      ownerId: bob.id,
-      values: { title: 'Bob was here', brief: '', status: 'active' },
+      ownerId: alice!.id,
+      values: { id: projectId, title: 'Bob was here', brief: '', status: 'active' },
     });
     expect(updated).toBeNull();
 
     const untouched = await getProjectBySlug(client(), alice!.id, slug);
-    expect(untouched?.title).toBe('Desk robot');
+    expect(untouched?.title).toBe('Still mine');
   });
 });
 
 describe('deleteProject', () => {
-  it('refuses a project this caller does not own, and leaves it standing', async () => {
+  it('refuses a caller who does not own it, and leaves it standing', async () => {
+    // Again with alice's ownerId, so RLS is what refuses.
     const removed = await deleteProject(bob!.client as never, {
       id: projectId,
-      ownerId: bob!.id,
+      ownerId: alice!.id,
     });
     expect(removed).toBe(false);
     expect(await getProjectBySlug(client(), alice!.id, slug)).not.toBeNull();
   });
 
-  it('deletes the owner’s own project and cascades to its rows', async () => {
-    // Seed one child row per cascading table, so the assertion is that the
-    // cascade actually fired rather than that the project row vanished.
+  it('deletes the owner’s own project and cascades across the whole graph', async () => {
+    // One row per cascading table, including the three with the more involved
+    // foreign-key graph — a run, its usage, and a proposal — because those are
+    // the ones a cascade is most likely to trip over, and §6.4 names them.
     const { data: entry } = await alice!.client
       .from('entries')
       .insert({ project_id: projectId, owner_id: alice!.id, kind: 'note', body: 'x' })
@@ -438,20 +527,70 @@ describe('deleteProject', () => {
       .insert({ project_id: projectId, owner_id: alice!.id, title: 'D', body: 'x' })
       .select()
       .single();
+    const { data: agent } = await alice!.client
+      .from('agents')
+      .insert({
+        project_id: projectId,
+        owner_id: alice!.id,
+        slug: 'critic',
+        name: 'Critic',
+        system_prompt: 'Review.',
+        model: 'openai/gpt-4o-mini',
+      })
+      .select()
+      .single();
+    const { data: run } = await alice!.client
+      .from('agent_runs')
+      .insert({
+        project_id: projectId,
+        owner_id: alice!.id,
+        agent_id: agent!.id,
+        trigger: 'conversation',
+        status: 'succeeded',
+      })
+      .select()
+      .single();
+    const { data: usage } = await alice!.client
+      .from('ai_usage')
+      .insert({
+        project_id: projectId,
+        owner_id: alice!.id,
+        run_id: run!.id,
+        model: 'openai/gpt-4o-mini',
+        cost_usd: 0.5,
+      })
+      .select()
+      .single();
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .insert({
+        project_id: projectId,
+        owner_id: alice!.id,
+        agent_id: agent!.id,
+        run_id: run!.id,
+        kind: 'entry',
+        payload: { kind: 'note', body: 'x' },
+        rationale: 'because',
+      })
+      .select()
+      .single();
 
     expect(await deleteProject(client(), { id: projectId, ownerId: alice!.id })).toBe(true);
     expect(await getProjectBySlug(client(), alice!.id, slug)).toBeNull();
 
-    const { data: entriesLeft } = await alice!.client
-      .from('entries')
-      .select('id')
-      .eq('id', entry!.id);
-    const { data: docsLeft } = await alice!.client.from('documents').select('id').eq('id', doc!.id);
-    expect(entriesLeft).toEqual([]);
-    expect(docsLeft).toEqual([]);
+    for (const [table, id] of [
+      ['entries', entry!.id],
+      ['documents', doc!.id],
+      ['agents', agent!.id],
+      ['agent_runs', run!.id],
+      ['ai_usage', usage!.id],
+      ['proposals', proposal!.id],
+    ] as const) {
+      const { data } = await alice!.client.from(table).select('id').eq('id', id);
+      expect({ table, rows: data }).toEqual({ table, rows: [] });
+    }
   });
 });
-```
 
 - [ ] **Step 2: Run to verify it fails**
 
@@ -470,14 +609,24 @@ Append to `apps/app/lib/db/projects.ts`, following the `PROJECT_COLUMNS` / cast 
  * row, but stating ownership here means the function returns null rather than
  * relying on a policy to raise — and null is what lets the caller tell
  * "refused" from "changed" instead of reporting a silent no-op as success.
+ *
+ * `updated_at` is not set here: `update_projects_updated_at` already does it.
+ * (`project_budgets` has no such trigger, which is why `updateBudget` does set
+ * it — the asymmetry is in the schema, not an oversight here.)
  */
 export async function updateProject(
   supabase: Client,
   { id, ownerId, values }: { id: string; ownerId: string; values: UpdateProjectValues }
 ): Promise<Project | null> {
+  // `values` carries the client's id. It names nothing here — the row is
+  // chosen by the `id` argument, resolved from the slug — so it must not reach
+  // the SET clause, where it would rewrite a primary key or trip the child
+  // foreign keys. Same destructure as `updateAgent` in lib/db/agents.ts.
+  const { id: _clientId, ...fields } = values;
+
   const { data, error } = await supabase
     .from('projects')
-    .update({ ...values, updated_at: new Date().toISOString() })
+    .update(fields)
     .eq('id', id)
     .eq('owner_id', ownerId)
     .select(PROJECT_COLUMNS)
@@ -492,8 +641,14 @@ export async function updateProject(
  *
  * Every child table declares `on delete cascade` against `projects(id)`, so
  * this one statement removes entries, work items, documents and their
- * revisions, attachments, agents, runs, tool calls, proposals, and usage rows.
- * That breadth is the reason the caller must confirm by typing the slug.
+ * revisions, attachment rows, agents, runs, tool calls, proposals, and usage
+ * rows. That breadth is the reason the caller must confirm by typing the slug.
+ *
+ * What it does not remove: the objects those attachment rows point at in
+ * Supabase Storage. Nothing cleans that bucket up, so deleting a project
+ * orphans its files. No upload path exists yet, so this is a note for whoever
+ * builds one, not a live leak — but the user-facing copy must not claim the
+ * files are gone.
  *
  * Returns whether a row was actually removed, so a refusal is distinguishable
  * from a success. `select()` after `delete()` returns the deleted rows, which
@@ -540,7 +695,8 @@ git commit -m "feat(settings): update and delete a project, owner-scoped and cas
 
 **Interfaces:**
 - Consumes: `UpdateBudgetValues` (Task 2), `worstCaseUsd` from `@/lib/agents/cost`.
-- Produces: `type Budget = { monthly_cap_usd: number; per_run_token_cap: number }`, `getBudget(supabase, projectId, ownerId): Promise<Budget>`, `updateBudget(supabase, { projectId, ownerId, values }): Promise<Budget | null>`, `monthToDateSpend(supabase, projectId): Promise<number>`, `worstCaseReservationUsd(models: string[], perRunTokenCap: number): number`.
+- Produces: `getBudget(supabase, projectId, ownerId): Promise<Budget>`, `updateBudget(supabase, { projectId, ownerId, values }): Promise<Budget | null>`, `monthToDateSpend(supabase, projectId): Promise<number>`, `worstCaseReservationUsd(models: string[], perRunTokenCap: number): { usd: number; unpriced: string[] }`.
+- Re-uses: `Budget` from `@/lib/agents/caps` — imported, never redeclared.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -561,22 +717,34 @@ describe('worstCaseReservationUsd', () => {
     const cap = 200_000;
     const expected = Math.max(...models.map((m) => worstCaseUsd(m, cap)));
 
-    expect(worstCaseReservationUsd(models, cap)).toBeCloseTo(expected, 9);
-    expect(worstCaseReservationUsd(models, cap)).toBeGreaterThan(
+    expect(worstCaseReservationUsd(models, cap).usd).toBeCloseTo(expected, 9);
+    expect(worstCaseReservationUsd(models, cap).usd).toBeGreaterThan(
       worstCaseUsd('openai/gpt-4o-mini', cap)
     );
   });
 
-  it('reports zero when a project has no agents', () => {
-    expect(worstCaseReservationUsd([], 200_000)).toBe(0);
+  it('reports zero and nothing unpriced when a project has no agents', () => {
+    expect(worstCaseReservationUsd([], 200_000)).toEqual({ usd: 0, unpriced: [] });
   });
 
-  it('ignores a model with no rate rather than treating it as free', () => {
-    // worstCaseUsd returns 0 for an unpriced model. Letting that 0 win a
-    // max() is harmless; letting it be the only value would understate the
-    // figure, so a project with one unpriced model reports 0 and the reader
-    // sees a figure that is obviously wrong rather than plausibly wrong.
-    expect(worstCaseReservationUsd(['acme/unpriced'], 200_000)).toBe(0);
+  it('names an unpriced model instead of pricing it at zero', () => {
+    // worstCaseUsd returns 0 for a model absent from RATES. Folding that into
+    // the figure would render $0.0000, which on this page is indistinguishable
+    // from a cheap model at a low cap — so the surface whose job is to state
+    // the refusal threshold would hide the case where there is not one.
+    expect(worstCaseReservationUsd(['acme/unpriced'], 200_000)).toEqual({
+      usd: 0,
+      unpriced: ['acme/unpriced'],
+    });
+  });
+
+  it('still reports the priced maximum when one model among several is unpriced', () => {
+    const result = worstCaseReservationUsd(
+      ['openai/gpt-4o-mini', 'acme/unpriced'],
+      200_000
+    );
+    expect(result.usd).toBeCloseTo(worstCaseUsd('openai/gpt-4o-mini', 200_000), 9);
+    expect(result.unpriced).toEqual(['acme/unpriced']);
   });
 });
 ```
@@ -729,16 +897,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/types/supabase';
 import type { UpdateBudgetValues } from '@/lib/schemas/budget';
+import type { Budget } from '@/lib/agents/caps';
 import { worstCaseUsd } from '@/lib/agents/cost';
 
 type Client = SupabaseClient<Database>;
 
-export interface Budget {
-  monthly_cap_usd: number;
-  per_run_token_cap: number;
-}
-
-const DEFAULTS: Budget = { monthly_cap_usd: 10, per_run_token_cap: 200_000 };
+// `Budget` is imported, not redeclared. `lib/agents/caps.ts` already exports
+// it and `checkCaps` takes it; a second shape here would be exactly the drift
+// R2 moves these helpers out of the route to prevent.
 
 /**
  * A project's budget, creating it with the column defaults on first read.
@@ -769,10 +935,42 @@ export async function getBudget(
     };
   }
 
-  // Ignore a conflict: two concurrent first reads both find nothing, and the
-  // loser of the insert race still wants the defaults rather than an error.
-  await supabase.from('project_budgets').insert({ project_id: projectId, owner_id: ownerId });
-  return { ...DEFAULTS };
+  // Insert, then read back what the columns actually defaulted to, rather than
+  // returning JavaScript constants that mirror them. Mirrored defaults are a
+  // second definition: change the column default and this function keeps
+  // reporting the old one, with a test that passes because it asserts the
+  // constant.
+  //
+  // `select()` on the insert returns the stored row, including a row another
+  // concurrent first read inserted first, so the race resolves to the same
+  // values either way.
+  const { data: created, error: insertError } = await supabase
+    .from('project_budgets')
+    .insert({ project_id: projectId, owner_id: ownerId })
+    .select('monthly_cap_usd, per_run_token_cap')
+    .maybeSingle();
+
+  if (insertError && insertError.code !== '23505') throw insertError;
+
+  if (created) {
+    return {
+      monthly_cap_usd: Number(created.monthly_cap_usd),
+      per_run_token_cap: created.per_run_token_cap,
+    };
+  }
+
+  // Lost the insert race: the row exists now, so read it.
+  const { data: existing, error: rereadError } = await supabase
+    .from('project_budgets')
+    .select('monthly_cap_usd, per_run_token_cap')
+    .eq('project_id', projectId)
+    .single();
+
+  if (rereadError) throw rereadError;
+  return {
+    monthly_cap_usd: Number(existing.monthly_cap_usd),
+    per_run_token_cap: existing.per_run_token_cap,
+  };
 }
 
 export async function updateBudget(
@@ -803,24 +1001,21 @@ export async function updateBudget(
 /**
  * What this project's agents have cost since the start of the UTC month.
  *
- * The window is copied deliberately from `start_agent_run`, which sums
- * `ai_usage` where `created_at >= date_trunc('month', now() at time zone 'utc')
- * at time zone 'utc'`. Computing it any other way here would put a number on
- * the settings page that disagrees with the number that refuses a run — and
- * the page would be the one people believe.
+ * Delegates to `project_month_to_date_usd`, which sums in Postgres. Doing it
+ * here — selecting the month's rows and adding them in JavaScript — would be
+ * silently wrong: PostgREST caps a response at `max_rows` (1000) and truncates
+ * without an error, and the ask route writes one usage row per step, so a
+ * project crosses that at roughly 84 runs a month and the figure starts
+ * drifting below the one the cap enforces.
  */
 export async function monthToDateSpend(supabase: Client, projectId: string): Promise<number> {
-  const now = new Date();
-  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
-
-  const { data, error } = await supabase
-    .from('ai_usage')
-    .select('cost_usd')
-    .eq('project_id', projectId)
-    .gte('created_at', monthStart);
+  const { data, error } = await supabase.rpc('project_month_to_date_usd', {
+    p_project_id: projectId,
+  });
 
   if (error) throw error;
-  return (data ?? []).reduce((total, row) => total + Number(row.cost_usd), 0);
+  // numeric arrives as a string.
+  return Number(data ?? 0);
 }
 
 /**
@@ -831,15 +1026,28 @@ export async function monthToDateSpend(supabase: Client, projectId: string): Pro
  * time: the average understates the threshold, and the sum describes every
  * agent running at once at full token cap, which nothing ever checks.
  */
-export function worstCaseReservationUsd(models: string[], perRunTokenCap: number): number {
-  if (models.length === 0) return 0;
-  return Math.max(...models.map((model) => worstCaseUsd(model, perRunTokenCap)));
+export function worstCaseReservationUsd(
+  models: string[],
+  perRunTokenCap: number
+): { usd: number; unpriced: string[] } {
+  // Unpriced models are reported, not folded into the number. `worstCaseUsd`
+  // returns 0 for a model absent from RATES, and $0.0000 on this page is
+  // indistinguishable from a cheap model at a low cap — so the one surface
+  // whose job is to state the refusal threshold would hide the case where
+  // there effectively is none. The caller renders the names.
+  const unpriced = models.filter((model) => worstCaseUsd(model, perRunTokenCap) === 0);
+  const priced = models.filter((model) => worstCaseUsd(model, perRunTokenCap) > 0);
+
+  return {
+    usd: priced.length === 0 ? 0 : Math.max(...priced.map((m) => worstCaseUsd(m, perRunTokenCap))),
+    unpriced,
+  };
 }
 ```
 
 - [ ] **Step 4: Remove the private copy from the ask route**
 
-In `apps/app/app/api/agents/[agentId]/ask/route.ts`, delete the local `loadBudget` function and import `getBudget` from `@/lib/db/budgets` instead, updating the call site. The local `Budget` type, if declared there, is replaced by the exported one. **Leave every other line of that route alone** — it is the executor path and is out of scope for this slice.
+In `apps/app/app/api/agents/[agentId]/ask/route.ts`, delete the local `loadBudget` function and import `getBudget` from `@/lib/db/budgets` instead, updating the call site. The route imports `Budget` from `@/lib/agents/caps` already; leave that import alone. **Leave every other line of that route alone** — it is the executor path and is out of scope for this slice.
 
 - [ ] **Step 5: Run everything**
 
@@ -914,7 +1122,11 @@ describe('the settings destination', () => {
 Run: `corepack pnpm --filter @goalspace/app exec vitest run tests/unit/shell-destinations.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Add the destination**
+- [ ] **Step 3: Update the two pre-existing assertions this breaks**
+
+`tests/unit/shell-destinations.test.ts` has **two** exhaustive `toEqual([…, 'agents'])` assertions — around lines 35 and 116 — plus a comment near line 31 saying Settings "must not appear before its route does". Both assertions must gain `'settings'`, and that comment is now stale: the route arrives in this slice. Updating an exhaustive assertion because the list genuinely grew is correct; it stays exhaustive, which is the property worth keeping.
+
+- [ ] **Step 4: Add the destination**
 
 In `apps/app/lib/shell/destinations.ts`, add `trailing?: true` to the `Destination` interface with a comment explaining it marks project-scope entries that sit below the rule, and append to the array returned by `destinationsFor`:
 
@@ -930,7 +1142,7 @@ In `apps/app/lib/shell/destinations.ts`, add `trailing?: true` to the `Destinati
 
 Then, in `apps/app/components/shell/workspace-sidebar.tsx`, which maps over destinations, render a hairline rule before the first destination whose `trailing` is true — `border-t border-rule` on that item, or a separator element, whichever matches the component's existing structure. Read the component before choosing; do not restructure it.
 
-- [ ] **Step 4: Add the actions**
+- [ ] **Step 5: Add the actions**
 
 Add to `apps/app/app/(workspace)/actions.ts`, following the shape of the existing `updateDocumentAction`:
 
@@ -1024,7 +1236,7 @@ export async function deleteProjectAction(
 
 Add the needed imports: `updateProject`, `deleteProject` from `@/lib/db/projects`; `updateBudget` from `@/lib/db/budgets`; `updateProjectSchema`, `deleteProjectSchema` from `@/lib/schemas/project`; `updateBudgetSchema` from `@/lib/schemas/budget`; and `revalidatePath` if not already imported.
 
-- [ ] **Step 5: Add the strings to all three locales**
+- [ ] **Step 6: Add the strings to all three locales**
 
 Add an `app.settings` block. `en`:
 
@@ -1051,7 +1263,7 @@ Add an `app.settings` block. `en`:
   "worstCase": "Worst case per run, at this project's models",
   "worstCaseNote": "This figure, not the average, is what decides whether a run is refused.",
   "dangerZone": "Danger zone",
-  "deleteExplain": "Deleting this project removes every entry, work item, document, revision, attachment, agent, run, and proposal in it. This cannot be undone.",
+  "deleteExplain": "Deleting this project removes every entry, work item, document, revision, agent, run, and proposal in it. This cannot be undone.",
   "deleteConfirmLabel": "Type the project's slug to confirm",
   "delete": "Delete this project",
   "deleting": "Deleting",
@@ -1084,7 +1296,7 @@ Add an `app.settings` block. `en`:
   "worstCase": "Kes terburuk setiap larian, pada model projek ini",
   "worstCaseNote": "Angka ini, bukan purata, yang menentukan sama ada sesuatu larian ditolak.",
   "dangerZone": "Zon bahaya",
-  "deleteExplain": "Memadam projek ini akan membuang setiap catatan, item kerja, dokumen, semakan, lampiran, ejen, larian, dan cadangan di dalamnya. Ini tidak boleh dibatalkan.",
+  "deleteExplain": "Memadam projek ini akan membuang setiap catatan, item kerja, dokumen, semakan, ejen, larian, dan cadangan di dalamnya. Ini tidak boleh dibatalkan.",
   "deleteConfirmLabel": "Taip slug projek untuk mengesahkan",
   "delete": "Padam projek ini",
   "deleting": "Memadam",
@@ -1117,7 +1329,7 @@ Add an `app.settings` block. `en`:
   "worstCase": "按本项目模型计算的单次运行最坏情况",
   "worstCaseNote": "决定运行是否被拒绝的是这个数字，而不是平均值。",
   "dangerZone": "危险区域",
-  "deleteExplain": "删除此项目将移除其中的每一条记录、工作项、文档、修订、附件、代理、运行和提议。此操作无法撤销。",
+  "deleteExplain": "删除此项目将移除其中的每一条记录、工作项、文档、修订、代理、运行和提议。此操作无法撤销。",
   "deleteConfirmLabel": "输入项目 slug 以确认",
   "delete": "删除此项目",
   "deleting": "删除中",
@@ -1125,7 +1337,7 @@ Add an `app.settings` block. `en`:
 }
 ```
 
-- [ ] **Step 6: Verify**
+- [ ] **Step 7: Verify**
 
 ```bash
 corepack pnpm --filter @goalspace/app exec vitest run tests/unit/shell-destinations.test.ts
@@ -1134,7 +1346,7 @@ corepack pnpm typecheck
 ```
 Expected: all pass, including locale parity.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
 git add "apps/app/app/(workspace)/actions.ts" apps/app/lib/shell/destinations.ts apps/app/components/shell apps/app/tests/unit/shell-destinations.test.ts packages/i18n/src/locales
@@ -1143,40 +1355,51 @@ git commit -m "feat(settings): actions, the settings destination, and strings in
 
 ---
 
-## Task 6: The settings page and the project form
+## Task 6: The project form
 
 **Files:**
-- Create: `apps/app/app/(workspace)/projects/[slug]/settings/page.tsx`
 - Create: `apps/app/app/(workspace)/projects/[slug]/settings/project-form.tsx`
 
 **Interfaces:**
-- Consumes: `getProjectBySlug`, `getBudget`, `monthToDateSpend`, `worstCaseReservationUsd`, `listAgents`, `updateProjectAction`, `projectStatuses` (from `@/lib/schemas/common`).
+- Consumes: `updateProjectAction` (Task 5), `projectStatuses` from `@/lib/schemas/common`.
+- Produces: `<ProjectForm slug={string} project={Project} />`.
 
-- [ ] **Step 1: Write the project form**
+The forms are built before the page that composes them, so that each task's
+`build` step can actually pass. A page importing modules a later task creates
+does not compile.
 
-A client component with title, brief and status, following `apps/app/app/(workspace)/projects/[slug]/agents/[agentId]/agent-editor.tsx` for the `useTransition` / `ActionResult` / field-error pattern — **read it first**, including how it renders `result.fieldErrors` beside each control with `aria-invalid` and `aria-describedby`, and copy that rather than inventing one. Status is a `<select>` over `projectStatuses` from `@/lib/schemas/common` — the same tuple the column's check constraint was written from — each option labelled from `app.settings.status.*`. Errors use `text-oxide` with `role="alert"`.
+- [ ] **Step 1: Write the form**
 
-- [ ] **Step 2: Write the page**
+A client component with title, brief and status. Read
+`apps/app/app/(workspace)/projects/[slug]/agents/[agentId]/agent-editor.tsx` first
+and follow it: `useTransition`, the `ActionResult` handling, the `try/catch`
+around the action for a rejected server action, the message row, and
+critically **how it renders `result.fieldErrors` beside each control** with
+`aria-invalid` and `aria-describedby`. Copy that pattern rather than inventing
+one.
 
-The page resolves the project, then reads in parallel: `getBudget`, `monthToDateSpend`, and `listAgents` (for the models the worst-case figure needs). It renders three sections separated by hairline rules — project, spend, danger zone — with the project form and the budget form as client components and the spend figures as server-rendered text.
+The submitted payload is `{ id: project.id, title, brief, status }` — the id is
+required by `updateProjectSchema`, and the server ignores it in favour of the
+slug-resolved project.
 
-The spend section states, in this order: spent this month, the monthly cap, and the worst-case reservation with its explanatory note from `app.settings.worstCaseNote`. Money renders with `tabular-nums` and two decimals; the worst-case figure needs four, because at small token caps it is fractions of a cent.
+Status is a `<select>` over `projectStatuses` from `@/lib/schemas/common` — the
+same tuple the column's check constraint was written from — each option
+labelled from `app.settings.status.*`. Text controls carry `maxLength` matching
+the schema: 120 for title, 2000 for brief.
 
-Pass `worstCaseReservationUsd(agents.filter((a) => a.is_active).map((a) => a.model), budget.per_run_token_cap)` — **active agents only**, because an inactive agent cannot start a run and so cannot reserve anything.
+Errors use `text-oxide` with `role="alert"`. **There is no `danger` token.**
 
-- [ ] **Step 3: Verify**
+- [ ] **Step 2: Verify**
 
 ```bash
-corepack pnpm typecheck
-NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder corepack pnpm build
+corepack pnpm typecheck && corepack pnpm test
 ```
-Expected: pass, with `/projects/[slug]/settings` in the route list.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add "apps/app/app/(workspace)/projects/[slug]/settings"
-git commit -m "feat(settings): the project settings page, with spend against the cap"
+git add "apps/app/app/(workspace)/projects/[slug]/settings/project-form.tsx"
+git commit -m "feat(settings): edit a project's title, brief and status"
 ```
 
 ---
@@ -1186,11 +1409,34 @@ git commit -m "feat(settings): the project settings page, with spend against the
 **Files:**
 - Create: `apps/app/app/(workspace)/projects/[slug]/settings/budget-form.tsx`
 
+**Interfaces:**
+- Consumes: `updateBudgetAction` (Task 5), `MIN_PER_RUN_TOKEN_CAP` / `MAX_PER_RUN_TOKEN_CAP` (Task 2).
+
 - [ ] **Step 1: Write the form**
 
-Both caps editable, submitted through `updateBudgetAction`. Number inputs carry `min`, `max` and `step` matching the schema — `step="0.01"` for the monthly cap, `step="1"` with `min={MIN_PER_RUN_TOKEN_CAP}` and `max={MAX_PER_RUN_TOKEN_CAP}` for the token cap — so the browser refuses obviously invalid values before a round trip, and the schema still refuses them if it does not. Field errors render beside their control, same pattern as Task 6.
+Both caps editable, submitted through `updateBudgetAction`.
 
-Setting the monthly cap to `0` is legitimate and means "no agent spending this month". Do not treat it as empty or coerce it away.
+**The coercion is the part that will otherwise silently fail.** `updateBudgetSchema`
+uses `z.number()`, and an `<input type="number">` yields a **string** — so a
+verbatim implementation returns `fieldInvalid` on every save. There is no
+numeric form field anywhere in `apps/app` to copy, so this is stated rather
+than left to be discovered: read each value with `event.target.valueAsNumber`
+(which yields `NaN` for empty, not `""`), hold it in state as a number, and
+submit numbers. Do **not** loosen the schema to `z.coerce.number()` — coercion
+there would also accept `"12abc"` as `12` from any other caller.
+
+Number inputs carry `min`, `max` and `step` matching the schema — `step="0.01"`
+and `min={0}` for the monthly cap, `step="1"` with `min={MIN_PER_RUN_TOKEN_CAP}`
+and `max={MAX_PER_RUN_TOKEN_CAP}` for the token cap — so the browser refuses
+obviously invalid values before a round trip, and the schema still refuses them
+if it does not.
+
+Setting the monthly cap to `0` is legitimate and means "no agent spending this
+month". Do not treat it as empty or coerce it away — note that `valueAsNumber`
+returns `NaN` for a cleared field and `0` for a typed zero, which is exactly
+the distinction that matters here.
+
+Field errors render beside their control, same pattern as Task 6.
 
 - [ ] **Step 2: Verify**
 
@@ -1212,21 +1458,32 @@ git commit -m "feat(settings): editable spend caps"
 **Files:**
 - Create: `apps/app/app/(workspace)/projects/[slug]/settings/danger-zone.tsx`
 
+**Interfaces:**
+- Consumes: `deleteProjectAction` (Task 5).
+
 - [ ] **Step 1: Write the component**
 
-The one irreversible act in the product. It states plainly what will be removed (`app.settings.deleteExplain` enumerates the cascading tables), then requires the project's slug typed into a labelled input. The delete button is disabled until the typed value matches — and the server checks it again regardless, because the client check is a convenience and the server check is the control.
+The one irreversible act in the product. It states plainly what will be removed
+(`app.settings.deleteExplain`), then requires the project's slug typed into a
+labelled input. The delete button is disabled until the typed value matches —
+and the server checks it again regardless, because the client check is a
+convenience and the server check is the control.
 
-Use `oxide-deep` for the destructive button. **There is no `danger` token**; `text-danger` or `bg-danger` would compile to nothing and render an unstyled button on the most dangerous control in the product.
+Use `oxide-deep` for the destructive button. **There is no `danger` token**;
+`text-danger` or `bg-danger` would compile to nothing and render an unstyled
+button on the most dangerous control in the product.
 
-On success, `router.push('/')` — the project no longer exists, so staying on its settings page would render a 404 the person did not ask for.
+On success, `router.push('/')` — the project no longer exists, so staying on
+its settings page would render a 404 nobody asked for.
 
-Do **not** use a browser `confirm()` dialog. Beyond the design system, a native modal blocks the page and is not what the spec asks for: it asks for the slug to be typed.
+Do **not** use a browser `confirm()` dialog. Beyond the design system, a native
+modal blocks the page and is not what the spec asks for: it asks for the slug
+to be typed.
 
 - [ ] **Step 2: Verify**
 
 ```bash
 corepack pnpm typecheck && corepack pnpm test
-NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder corepack pnpm build
 ```
 
 - [ ] **Step 3: Commit**
@@ -1238,7 +1495,80 @@ git commit -m "feat(settings): delete a project, confirmed by typing its slug"
 
 ---
 
-## Task 9: Browser pass
+## Task 9: The settings page
+
+**Files:**
+- Create: `apps/app/app/(workspace)/projects/[slug]/settings/page.tsx`
+- Create: `apps/app/app/(workspace)/projects/[slug]/settings/loading.tsx`
+
+**Interfaces:**
+- Consumes: `getProjectBySlug`, `getBudget`, `monthToDateSpend`, `worstCaseReservationUsd`, `listAgents`, and the three components from Tasks 6–8.
+
+- [ ] **Step 1: Write the page**
+
+Resolve the project, then read in parallel: `getBudget`, `monthToDateSpend`, and
+`listAgents` (for the models the worst-case figure needs). Render three sections
+separated by hairline rules — project, spend, danger zone — composing
+`<ProjectForm>`, `<BudgetForm>` and `<DangerZone>`, with the spend figures as
+server-rendered text.
+
+The spend section states, in order: spent this month, the monthly cap, and the
+worst-case reservation with its note from `app.settings.worstCaseNote`. Money
+renders with `tabular-nums` and two decimals; the worst-case figure needs four,
+because at small token caps it is fractions of a cent.
+
+Compute it from **active** agents only — an inactive agent cannot start a run,
+so it cannot reserve anything:
+
+```tsx
+const { usd, unpriced } = worstCaseReservationUsd(
+  agents.filter((a) => a.is_active).map((a) => a.model),
+  budget.per_run_token_cap
+);
+```
+
+**When `unpriced` is non-empty, name those models rather than letting the
+figure stand alone.** `$0.0000` is what a cheap model at a low cap looks like,
+so an unpriced model rendered as zero hides the one thing this section exists
+to tell you. Render the list with `app.settings.unpricedModels`.
+
+**When there are no active agents at all, say so** rather than rendering
+`$0.0000`, which reads as "free" instead of "nothing here can run". Use
+`app.settings.noActiveAgents`.
+
+Add these two keys to all three locale files:
+
+| key | en | ms | zh |
+|---|---|---|---|
+| `app.settings.unpricedModels` | `No rate is known for: {{models}}. A run on one of these reserves nothing, so the cap cannot stop it.` | `Tiada kadar diketahui untuk: {{models}}. Larian pada model ini tidak menempah apa-apa, jadi had tidak dapat menghentikannya.` | `以下模型没有已知费率：{{models}}。使用这些模型的运行不会预留额度，因此上限无法阻止它。` |
+| `app.settings.noActiveAgents` | `No active agents, so nothing here can start a run.` | `Tiada ejen aktif, jadi tiada apa-apa di sini boleh memulakan larian.` | `没有启用的代理，因此无法开始任何运行。` |
+
+- [ ] **Step 2: Write the loading skeleton**
+
+Every other workspace route has a `loading.tsx`; this one needs one too, in the
+same idiom — read a sibling such as
+`apps/app/app/(workspace)/projects/[slug]/agents/loading.tsx` and match its
+shape to the sections this page renders, so the swap does not jump.
+
+- [ ] **Step 3: Verify**
+
+```bash
+corepack pnpm typecheck && corepack pnpm test && corepack pnpm test:rls
+NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder corepack pnpm build
+```
+Expected: all pass, with `/projects/[slug]/settings` in the route list, and the
+locale-parity test green.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add "apps/app/app/(workspace)/projects/[slug]/settings" packages/i18n/src/locales
+git commit -m "feat(settings): the project settings page, with spend against the cap"
+```
+
+---
+
+## Task 10: Browser pass
 
 Not optional. `apps/app` runs vitest in `node` with no DOM, so **nothing in the test suite can observe layout or rendering**. Every slice so far has shipped defects the suite passed over — an active-state bug, a mobile sheet ignoring its own state, a horizontal scrollbar on every route, a control rendered off-screen at 375px, and raw translation keys on three routes. Assume this slice has its own.
 
@@ -1261,7 +1591,8 @@ Measure rather than eyeball. Specifically:
 - **No raw `app.*` keys appear in the server HTML.** Fetch the route and regex the response body — do not scan a `document.write`'d iframe, which silently returns empty text and missed exactly this defect last slice.
 - The sidebar shows Settings below a rule, marks it active on this route, and does not mark it active on any other.
 - Field errors render visibly in `oxide` and carry `role="alert"` — check they are *visible*, not merely present.
-- The delete button is disabled until the slug matches, and the danger zone's button is actually styled.
+- The delete button is disabled until the slug matches, and the danger zone's button is actually styled — not an unstyled default, which is what a non-existent colour token produces.
+- Seed one agent on a model absent from `RATES` and confirm the page names it rather than showing `$0.0000`; then deactivate every agent and confirm it says nothing can run.
 
 - [ ] **Step 3: Exercise the destructive path deliberately**
 
@@ -1277,19 +1608,20 @@ Each fix gets its own commit, with the measurement in the message rather than a 
 
 1. `user_settings` carries `locale` and `time_zone`, asserted by the schema test.
 2. A project's title, brief and status are editable through the pre-existing `updateProjectSchema`, which gains its first tests and its first consumer; the slug is not editable.
-3. Month-to-date spend is shown against the monthly cap, computed over the same UTC-month window `start_agent_run` uses.
-4. The worst-case per-run reservation is shown as the maximum across the project's **active** agents' models, with the note explaining why that figure and not the average.
+3. Month-to-date spend is shown against the monthly cap, **summed in Postgres** by `project_month_to_date_usd` over the same UTC-month window `start_agent_run` uses — not summed in the client, where PostgREST's 1000-row cap would silently truncate it.
+4. The worst-case per-run reservation is shown as the maximum across the project's **active** agents' models, with the note explaining why that figure and not the average. A model with no known rate is named rather than priced at zero, and a project with no active agents says so.
 5. Both caps are editable, and a zero monthly cap is accepted.
-6. A project can be deleted after typing its slug, checked on the server, and the cascade is proven by test.
+6. A project can be deleted after typing its slug, checked on the server, and the cascade is proven across entries, documents, agents, runs, usage and proposals — the tables §6.4 names, including the ones with the more involved foreign-key graph.
 7. The budget helpers exist in exactly one place; `grep -rn "loadBudget" apps/app` returns nothing.
-8. Settings appears in the sidebar below a rule, and is active only on its own route.
-9. All three locales carry identical key sets.
-10. Zero horizontal overflow at 390px and 1440px in `en` and `ms`, measured.
-11. `corepack pnpm typecheck`, `test`, `test:rls`, and `build` all pass.
+8. Settings appears in the sidebar below a rule, is active only on its own route, and has a loading skeleton like every sibling route.
+9. An id in an update payload cannot steer which row is written; the row is chosen by the slug-resolved project.
+10. All three locales carry identical key sets.
+11. Zero horizontal overflow at 390px and 1440px in `en` and `ms`, measured.
+12. `corepack pnpm typecheck`, `test`, `test:rls`, and `build` all pass.
 
 ## Before merge
 
-**The migration is not applied to production by this plan.** Applying it is a separate, deliberate step taken with the owner present, following the procedure this repo has used four times: read the SQL, apply via the Supabase MCP, correct the recorded migration version (the tool stamps its own timestamp), verify the catalogs, and check `get_advisors(security)` for new lint. Both columns are additive with defaults, so production code that predates them is unaffected — but that is a reason it is safe to apply early, not a reason to apply it unattended.
+**The migration is not applied to production by this plan.** Applying it is a separate, deliberate step taken with the owner present, following the procedure this repo has used four times: read the SQL, apply via the Supabase MCP, correct the recorded migration version (the tool stamps its own timestamp), verify the catalogs, and check `get_advisors(security)` for new lint. Both columns are additive with defaults and the function is new, so production code that predates them is unaffected — but that is a reason it is safe to apply early, not a reason to apply it unattended. Verify after applying that `project_month_to_date_usd` is `prosecdef = false` with `search_path=""` pinned, as every other function in this schema is.
 
 ## Deliberately not in this slice
 
