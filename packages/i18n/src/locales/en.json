@@ -544,6 +544,7 @@
       "title": "Run",
       "steps_one": "{{count}} step",
       "steps_other": "{{count}} steps",
+      "started": "Started",
       "duration": "Duration",
       "cost": "Cost",
       "toolCalls": "Tool calls",

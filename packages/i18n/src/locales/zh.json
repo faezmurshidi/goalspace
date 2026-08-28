@@ -544,6 +544,7 @@
       "title": "运行",
       "steps_one": "{{count}} 步",
       "steps_other": "{{count}} 步",
+      "started": "开始",
       "duration": "耗时",
       "cost": "费用",
       "toolCalls": "工具调用",

@@ -544,6 +544,7 @@
       "title": "Larian",
       "steps_one": "{{count}} langkah",
       "steps_other": "{{count}} langkah",
+      "started": "Bermula",
       "duration": "Tempoh",
       "cost": "Kos",
       "toolCalls": "Panggilan alat",

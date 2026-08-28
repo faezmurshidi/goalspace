@@ -58,16 +58,24 @@ export default async function RunPage({ params }: Params) {
         </h1>
 
         {/* Status is a word, never a colour: the palette carries no success or
-            failure tone, and the spec forbids colour as the only signal. */}
+            failure tone, and the spec forbids colour as the only signal. The
+            step count rides along here as plain text rather than its own
+            <dt>/<dd> pair — it already reads as a complete phrase ("3
+            steps"), not a bare value that needs a label. */}
+        <p className="flex flex-wrap items-baseline gap-x-4 gap-y-1 pt-4 text-ink-soft">
+          <span className="label text-ink">{t('app.runs.status.' + run.status)}</span>
+          <span className="label tabular-nums">{t('app.runs.steps', { count: run.step_count })}</span>
+        </p>
+
         <dl className="flex flex-wrap gap-x-8 gap-y-2 border-b border-rule py-4">
           <div>
-            <dt className="label text-ink-soft">{t('app.runs.status.' + run.status)}</dt>
+            <dt className="label text-ink-soft">{t('app.runs.started')}</dt>
             <dd className="label tabular-nums text-ink">
               {formatDateTime(run.started_at, locale)}
             </dd>
           </div>
           <div>
-            <dt className="label text-ink-soft">{t('app.runs.steps', { count: run.step_count })}</dt>
+            <dt className="label text-ink-soft">{t('app.runs.duration')}</dt>
             <dd className="label tabular-nums text-ink">
               {durationMs === null ? '—' : `${(durationMs / 1000).toFixed(1)}s`}
             </dd>
