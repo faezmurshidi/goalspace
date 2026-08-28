@@ -1,4 +1,4 @@
--- apps/app/supabase/migrations/20260829000100_user_settings_locale_tz.sql
+-- apps/app/supabase/migrations/20260829000100_user_settings_and_month_to_date.sql
 --
 -- Account preferences that currently live nowhere.
 --
@@ -18,10 +18,10 @@ alter table user_settings
   add column time_zone text not null default 'UTC';
 
 comment on column user_settings.locale is
-  'Preferred UI language. Cookie remains the request-time source; this is the durable preference. Read from slice D2 onward.';
+  'Preferred UI language. Cookie remains the request-time source; this is the durable preference. Read from slice D2 onward. Constrained by CHECK because the locale set is closed and controlled by this repo — it changes only when someone ships packages/i18n support for a new one, at which point the CHECK moves in the same commit.';
 
 comment on column user_settings.time_zone is
-  'IANA zone name, e.g. "Asia/Kuala_Lumpur". Dates render in this zone from slice D2 onward. Not constrained by CHECK: the IANA list changes, and a stale constraint would reject a legitimate new zone.';
+  'IANA zone name, e.g. "Asia/Kuala_Lumpur". Dates render in this zone from slice D2 onward. Not constrained by CHECK, unlike locale: the IANA list is maintained outside this repo and changes on its own schedule, so a hardcoded list here would eventually reject a legitimate zone this repo never chose to disallow.';
 
 /**
  * Month-to-date agent spend for one project.
