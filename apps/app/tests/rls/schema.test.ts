@@ -25,6 +25,14 @@ describe('phase 1 schema', () => {
     }
   });
 
+  it('exposes the account preference columns added for settings', async () => {
+    // Same shape as the table-existence test above: a select that names the
+    // columns fails with a PostgREST error if either is missing, which is
+    // the regression this guards.
+    const { error } = await admin.from('user_settings').select('locale, time_zone').limit(1);
+    expect(error).toBeNull();
+  });
+
   it('carries no legacy tables', async () => {
     for (const table of [
       'goals',
