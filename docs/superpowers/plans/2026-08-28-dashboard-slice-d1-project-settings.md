@@ -52,7 +52,7 @@ So the sum happens in Postgres, in a function that sits beside `start_agent_run`
 
 | Path | Responsibility |
 |---|---|
-| `apps/app/supabase/migrations/20260829000100_user_settings_locale_tz.sql` | **Create.** Adds `user_settings.locale`, `time_zone`, and `project_month_to_date_usd()`. |
+| `apps/app/supabase/migrations/20260829000100_user_settings_and_month_to_date.sql` | **Create.** Adds `user_settings.locale`, `time_zone`, and `project_month_to_date_usd()`. |
 | `apps/app/lib/schemas/project.ts` | **Modify.** Gains `deleteProjectSchema`. `updateProjectSchema` already exists here and is reused unchanged. |
 | `apps/app/lib/schemas/budget.ts` | **Create.** `updateBudgetSchema`. |
 | `apps/app/lib/db/projects.ts` | **Modify.** Gains `updateProject`, `deleteProject`. |
@@ -73,7 +73,7 @@ So the sum happens in Postgres, in a function that sits beside `start_agent_run`
 ## Task 1: The migration
 
 **Files:**
-- Create: `apps/app/supabase/migrations/20260829000100_user_settings_locale_tz.sql`
+- Create: `apps/app/supabase/migrations/20260829000100_user_settings_and_month_to_date.sql`
 - Test: `apps/app/tests/rls/schema.test.ts` (extend the existing column assertions)
 
 **Interfaces:**
@@ -177,7 +177,7 @@ Expected: PASS. The suite is at 72 tests before this change.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add apps/app/supabase/migrations/20260829000100_user_settings_locale_tz.sql apps/app/tests/rls/schema.test.ts
+git add apps/app/supabase/migrations/20260829000100_user_settings_and_month_to_date.sql apps/app/tests/rls/schema.test.ts
 git commit -m "feat(settings): add locale and time zone to user settings"
 ```
 
