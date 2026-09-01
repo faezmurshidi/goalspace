@@ -12,6 +12,7 @@ const client = () => alice!.client as never;
 
 beforeAll(async () => {
   alice = await createTestUser(`proj-settings-${Date.now()}@example.test`);
+  bob = await createTestUser(`proj-bob-${Date.now()}@example.test`);
   slug = `robot-${Date.now()}`;
 
   const { data, error } = await alice.client
@@ -64,8 +65,7 @@ describe('updateProject', () => {
     // Bob passes ALICE's ownerId, so the explicit .eq('owner_id') filter
     // cannot be what refuses this — RLS has to. Passing bob's own id would
     // make the test pass even with RLS disabled.
-    bob = await createTestUser(`proj-bob-${Date.now()}@example.test`);
-    const updated = await updateProject(bob.client as never, {
+    const updated = await updateProject(bob!.client as never, {
       id: projectId,
       ownerId: alice!.id,
       values: { id: projectId, title: 'Bob was here', brief: '', status: 'active' },

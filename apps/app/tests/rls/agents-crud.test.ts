@@ -12,6 +12,7 @@ const client = () => alice!.client as never;
 
 beforeAll(async () => {
   alice = await createTestUser(`agents-crud-${Date.now()}@example.test`);
+  bob = await createTestUser(`agents-bob-${Date.now()}@example.test`);
 
   const { data: project, error: pErr } = await alice.client
     .from('projects')
@@ -139,8 +140,7 @@ describe('agent updates', () => {
 
 describe('a second user is isolated from these agents', () => {
   it('cannot read them', async () => {
-    bob = await createTestUser(`agents-bob-${Date.now()}@example.test`);
-    const seen = await listAgents(bob.client as never, projectId);
+    const seen = await listAgents(bob!.client as never, projectId);
     expect(seen).toEqual([]);
   });
 

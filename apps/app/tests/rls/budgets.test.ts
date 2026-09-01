@@ -11,6 +11,7 @@ const client = () => alice!.client as never;
 
 beforeAll(async () => {
   alice = await createTestUser(`budgets-${Date.now()}@example.test`);
+  bob = await createTestUser(`budgets-bob-${Date.now()}@example.test`);
 
   const { data: project } = await alice.client
     .from('projects')
@@ -93,8 +94,7 @@ describe('getBudget', () => {
     // filter of its own around an insert — there is nothing here but RLS's
     // insert-time check (project_budgets_insert's `exists` clause) to refuse
     // it, so a refusal proves RLS is enforced rather than the app.
-    bob = await createTestUser(`budgets-bob-${Date.now()}@example.test`);
-    await expect(getBudget(bob.client as never, projectId, bob.id)).rejects.toThrow();
+    await expect(getBudget(bob!.client as never, projectId, bob!.id)).rejects.toThrow();
   });
 
   it('creates the row with its defaults on first read', async () => {
