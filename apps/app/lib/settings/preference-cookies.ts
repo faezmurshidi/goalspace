@@ -24,8 +24,13 @@ export type ThemePreference = 'light' | 'dark' | 'system';
  * Exported because three places need it: this parser, the account form's
  * select, and the header-rail theme menu. `header-rail.tsx` already carries a
  * hardcoded copy — replace it with this one rather than adding a third.
+ *
+ * `as const`, matching `REGISTRY_NAMES` in `lib/agents/tools/registry.ts` and
+ * `proposalKinds` in `lib/schemas/proposal.ts`: it keeps the literal tuple
+ * type `z.enum` needs (see `lib/schemas/user-settings.ts`), and does not
+ * affect the `.includes()` check below, which already casts its argument.
  */
-export const THEMES: readonly ThemePreference[] = ['light', 'dark', 'system'];
+export const THEMES = ['light', 'dark', 'system'] as const;
 
 /**
  * A cookie is client-writable, so every value here is untrusted input. An

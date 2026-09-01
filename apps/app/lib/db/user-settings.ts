@@ -29,14 +29,21 @@ const USER_SETTINGS_COLUMNS =
  * functions already encode "what a missing preference falls back to", which
  * is exactly this case.
  *
- * `id`, `created_at` and `updated_at` are not meaningful for a row that does
- * not exist. `updateUserSettings` addresses rows by `user_id`, never by `id`,
- * so nothing downstream can use these placeholders to reach the wrong row.
+ * `created_at` and `updated_at` are not meaningful for a row that does not
+ * exist, and neither is `id` — `updateUserSettings` addresses rows by
+ * `user_id`, never by `id`. `id` is deliberately the nil UUID rather than
+ * `userId`: a nil UUID cannot be mistaken for a real row's primary key if
+ * this value ever escapes this function, whereas `userId` is a value that
+ * genuinely does identify something (the account) and so would read as
+ * meaningful identity when it is not. This value is not a real row id and
+ * never will be.
  */
+const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+
 function defaultUserSettings(userId: string): UserSettings {
   const now = new Date().toISOString();
   return {
-    id: userId,
+    id: NIL_UUID,
     user_id: userId,
     theme: parseTheme(undefined),
     locale: defaultLocale,

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { locales } from '@goalspace/i18n';
-import { THEMES, isSupportedTimeZone, type ThemePreference } from '@/lib/settings/preference-cookies';
+import { THEMES, isSupportedTimeZone } from '@/lib/settings/preference-cookies';
 
 /**
  * Account-wide preferences: theme, language, time zone, email notifications.
@@ -12,12 +12,12 @@ import { THEMES, isSupportedTimeZone, type ThemePreference } from '@/lib/setting
  */
 
 /**
- * `THEMES` is deliberately typed as `readonly ThemePreference[]`, not a
- * literal tuple — see `preference-cookies.ts` — because it also backs a
- * runtime `.includes()` check. `z.enum` needs a tuple type, so this narrows
- * it back rather than adding a second, hand-copied list of theme names.
+ * `THEMES` is `as const` in `preference-cookies.ts` precisely so it can be
+ * handed to `z.enum` directly, the same way `REGISTRY_NAMES` and
+ * `proposalKinds` are — one list of theme names, not a second hand-copied one
+ * here.
  */
-const themeSchema = z.enum(THEMES as readonly [ThemePreference, ...ThemePreference[]]);
+const themeSchema = z.enum(THEMES);
 
 /**
  * The locale list comes from `packages/i18n`, which is also where the

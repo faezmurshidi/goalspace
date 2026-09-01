@@ -53,6 +53,19 @@ describe('updateUserSettings', () => {
   });
 
   it('cannot be read by a second user', async () => {
+    // Confirmed directly, with alice's own client, rather than trusting that
+    // the earlier "changes all four fields" test ran first in this file.
+    // Without this, deleting or reordering that test would leave alice's row
+    // holding its own column defaults, and the assertions below would then
+    // pass vacuously — matching "system"/"en"/"UTC"/true whether RLS refused
+    // bob or not. Same fix as the dedicated `carol` user above, applied here
+    // to the read case instead of the defaults case.
+    const aliceOwn = await getUserSettings(client(), alice!.id);
+    expect(aliceOwn.theme).toBe('dark');
+    expect(aliceOwn.locale).toBe('ms');
+    expect(aliceOwn.time_zone).toBe('Asia/Kuala_Lumpur');
+    expect(aliceOwn.email_notifications).toBe(false);
+
     // Bob's client, but ALICE's userId, so the function's own .eq('user_id')
     // filter cannot be what hides this row — RLS has to be, via
     // user_settings_select. Passing bob's own id would find bob's own row (or
