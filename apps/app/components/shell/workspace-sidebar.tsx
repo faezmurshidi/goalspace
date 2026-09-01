@@ -169,7 +169,7 @@ function ProjectSwitcher({
               href={`/projects/${project.slug}`}
               onClick={onNavigate}
               className={cn(
-                'unstyled block px-3 py-2 text-body',
+                'block px-3 py-2 text-body',
                 project.slug === current.slug ? 'text-oxide' : 'text-ink'
               )}
             >

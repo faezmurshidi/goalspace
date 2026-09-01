@@ -56,7 +56,7 @@ export default async function AgentPage({ params }: Params) {
                 <li key={run.id} className="border-b border-rule">
                   <Link
                     href={`/projects/${slug}/runs/${run.id}`}
-                    className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+                    className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
                   >
                     <span className="label shrink-0 tabular-nums text-ink-soft">
                       {formatDateTime(run.started_at, locale, timeZone)}

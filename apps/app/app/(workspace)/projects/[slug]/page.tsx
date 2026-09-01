@@ -80,7 +80,7 @@ export default async function ResumePage({ params }: Params) {
           <div className="border-b border-rule">
             <Link
               href={`/projects/${slug}/inbox`}
-              className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+              className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
             >
               <span className="min-w-0 flex-1 text-body text-ink">
                 {t('app.resume.undecidedProposals')}

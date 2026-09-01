@@ -167,7 +167,7 @@ export const SidebarMenuButton = React.forwardRef<
       ref={ref}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'label unstyled flex h-9 items-center gap-3 border-l-2 px-3 transition-colors',
+        'label flex h-9 items-center gap-3 border-l-2 px-3 transition-colors',
         isActive
           ? 'border-oxide bg-paper-shade text-ink'
           : 'border-transparent text-ink-soft hover:bg-paper-shade hover:text-ink',

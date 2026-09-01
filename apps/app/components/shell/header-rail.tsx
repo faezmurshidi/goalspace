@@ -119,7 +119,7 @@ export function HeaderRail({
       {title ? (
         <span className="truncate text-title text-ink">{title}</span>
       ) : (
-        <Link href="/" className="unstyled shrink-0">
+        <Link href="/" className="shrink-0">
           <Wordmark className="text-title" />
         </Link>
       )}
@@ -153,10 +153,7 @@ export function HeaderRail({
               asChild
               className="cursor-pointer rounded-none focus:bg-paper-shade"
             >
-              <Link
-                href="/settings"
-                className="unstyled label block px-3 py-2 text-ink"
-              >
+              <Link href="/settings" className="label block px-3 py-2 text-ink">
                 {t('app.nav.accountSettings')}
               </Link>
             </DropdownMenuItem>

@@ -72,7 +72,7 @@ export default async function LogPage({ params, searchParams }: Params) {
               href={filterHref(null)}
               aria-current={activeKind === null ? 'true' : undefined}
               className={cn(
-                'label unstyled border-b-2 pb-0.5 transition-colors',
+                'label border-b-2 pb-0.5 transition-colors',
                 activeKind === null
                   ? 'border-oxide text-ink'
                   : 'border-transparent text-ink-soft hover:text-ink'
@@ -86,7 +86,7 @@ export default async function LogPage({ params, searchParams }: Params) {
                 href={filterHref(kind)}
                 aria-current={activeKind === kind ? 'true' : undefined}
                 className={cn(
-                  'label unstyled border-b-2 pb-0.5 transition-colors',
+                  'label border-b-2 pb-0.5 transition-colors',
                   activeKind === kind
                     ? 'border-oxide text-ink'
                     : 'border-transparent text-ink-soft hover:text-ink'
@@ -135,7 +135,7 @@ export default async function LogPage({ params, searchParams }: Params) {
                 take: Math.min(take + PAGE, MAX_TAKE),
               },
             }}
-            className="label unstyled mt-6 inline-block border border-rule-strong px-5 py-3 text-ink transition-colors hover:bg-paper-shade"
+            className="label mt-6 inline-block border border-rule-strong px-5 py-3 text-ink transition-colors hover:bg-paper-shade"
           >
             {t('app.log.loadMore')}
           </Link>

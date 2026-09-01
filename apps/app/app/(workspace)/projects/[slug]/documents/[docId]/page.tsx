@@ -54,7 +54,7 @@ export default async function DocumentPage({ params }: Params) {
                 <li key={revision.id} className="border-b border-rule">
                   <Link
                     href={`/projects/${slug}/documents/${document.id}/revisions/${revision.id}`}
-                    className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+                    className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
                   >
                     <span className="label shrink-0 tabular-nums text-ink-soft">
                       {formatDateTime(revision.created_at, locale, timeZone)}

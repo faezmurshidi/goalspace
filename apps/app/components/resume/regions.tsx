@@ -196,7 +196,7 @@ export function Waiting({
           <li key={item.id} className="border-b border-rule">
             <Link
               href={`/projects/${slug}/work#${item.id}`}
-              className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+              className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
             >
               <span className="label shrink-0 text-waiting">
                 {item.overdueDays === 0
@@ -241,7 +241,7 @@ export function Open({
             <li key={item.id} className="border-b border-rule">
               <Link
                 href={`/projects/${slug}/work#${item.id}`}
-                className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+                className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
               >
                 <StatusMark
                   status={item.status}
