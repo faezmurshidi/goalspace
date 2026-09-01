@@ -455,7 +455,10 @@ export async function updateAccountSettingsAction(
     if (!updated) return fail('app.errors.generic');
 
     const cookieStore = await cookies();
-    const cookieOptions = { maxAge: PREFERENCE_COOKIE_MAX_AGE };
+    // path is stated rather than left to Next's default so this matches the
+    // three pre-existing NEXT_LOCALE sites (apps/web/middleware.ts,
+    // packages/i18n/src/i18n.ts, use-translations.ts) and stays greppable.
+    const cookieOptions = { maxAge: PREFERENCE_COOKIE_MAX_AGE, path: '/' };
     cookieStore.set(NEXT_LOCALE_COOKIE, updated.locale, cookieOptions);
     cookieStore.set(THEME_COOKIE, updated.theme, cookieOptions);
     cookieStore.set(TIME_ZONE_COOKIE, updated.time_zone, cookieOptions);

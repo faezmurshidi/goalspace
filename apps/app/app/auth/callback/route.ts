@@ -84,7 +84,10 @@ export async function GET(request: Request) {
      */
     try {
       const settings = await getUserSettings(supabase, data.user.id);
-      const cookieOptions = { maxAge: PREFERENCE_COOKIE_MAX_AGE };
+      // path is stated rather than left to Next's default so this matches the
+    // three pre-existing NEXT_LOCALE sites (apps/web/middleware.ts,
+    // packages/i18n/src/i18n.ts, use-translations.ts) and stays greppable.
+    const cookieOptions = { maxAge: PREFERENCE_COOKIE_MAX_AGE, path: '/' };
       response.cookies.set(NEXT_LOCALE_COOKIE, settings.locale, cookieOptions);
       response.cookies.set(THEME_COOKIE, settings.theme, cookieOptions);
       response.cookies.set(TIME_ZONE_COOKIE, settings.time_zone, cookieOptions);
