@@ -5,6 +5,7 @@ import { ThemeProvider, Toaster } from '@goalspace/ui';
 import { I18nProvider, NEXT_LOCALE_COOKIE, localeFromCookie } from '@goalspace/i18n';
 
 import { archivo, azeret } from '@/lib/fonts';
+import { THEME_COOKIE, parseTheme } from '@/lib/settings/preference-cookies';
 
 import './globals.css';
 
@@ -33,6 +34,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const cookieStore = await cookies();
   const locale = localeFromCookie(cookieStore.get(NEXT_LOCALE_COOKIE)?.value);
+  const theme = parseTheme(cookieStore.get(THEME_COOKIE)?.value);
 
   return (
     <html
@@ -44,7 +46,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <I18nProvider locale={locale}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            defaultTheme={theme}
             enableSystem
             disableTransitionOnChange
           >
