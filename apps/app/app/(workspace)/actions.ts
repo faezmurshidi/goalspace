@@ -459,9 +459,17 @@ export async function updateAccountSettingsAction(
     // three pre-existing NEXT_LOCALE sites (apps/web/middleware.ts,
     // packages/i18n/src/i18n.ts, use-translations.ts) and stays greppable.
     const cookieOptions = { maxAge: PREFERENCE_COOKIE_MAX_AGE, path: '/' };
+    /**
+     * NEXT_LOCALE stays readable from `document.cookie` — the client hook in
+     * packages/i18n/src/use-translations.ts writes it directly. The theme and
+     * time zone are only ever read on the server, so httpOnly costs nothing
+     * and keeps a stray client-side write from drifting out of step with the
+     * stored row. Verified: no client component reads either cookie.
+     */
+    const serverOnly = { ...cookieOptions, httpOnly: true };
     cookieStore.set(NEXT_LOCALE_COOKIE, updated.locale, cookieOptions);
-    cookieStore.set(THEME_COOKIE, updated.theme, cookieOptions);
-    cookieStore.set(TIME_ZONE_COOKIE, updated.time_zone, cookieOptions);
+    cookieStore.set(THEME_COOKIE, updated.theme, serverOnly);
+    cookieStore.set(TIME_ZONE_COOKIE, updated.time_zone, serverOnly);
 
     // Locale and theme affect every rendered page, not just this one.
     revalidatePath('/', 'layout');

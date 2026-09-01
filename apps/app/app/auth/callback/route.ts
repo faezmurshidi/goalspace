@@ -84,13 +84,22 @@ export async function GET(request: Request) {
      */
     try {
       const settings = await getUserSettings(supabase, data.user.id);
-      // path is stated rather than left to Next's default so this matches the
-    // three pre-existing NEXT_LOCALE sites (apps/web/middleware.ts,
-    // packages/i18n/src/i18n.ts, use-translations.ts) and stays greppable.
-    const cookieOptions = { maxAge: PREFERENCE_COOKIE_MAX_AGE, path: '/' };
+      /**
+       * `path` is stated rather than left to Next's default so this matches
+       * the three pre-existing NEXT_LOCALE sites (apps/web/middleware.ts,
+       * packages/i18n/src/i18n.ts, use-translations.ts) and stays greppable.
+       *
+       * NEXT_LOCALE stays readable from `document.cookie` — the client hook in
+       * packages/i18n/src/use-translations.ts writes it directly. The theme and
+       * time zone are only ever read on the server, so httpOnly costs nothing
+       * and keeps a stray client-side write from drifting out of step with the
+       * stored row. Verified: no client component reads either cookie.
+       */
+      const cookieOptions = { maxAge: PREFERENCE_COOKIE_MAX_AGE, path: '/' };
+      const serverOnly = { ...cookieOptions, httpOnly: true };
       response.cookies.set(NEXT_LOCALE_COOKIE, settings.locale, cookieOptions);
-      response.cookies.set(THEME_COOKIE, settings.theme, cookieOptions);
-      response.cookies.set(TIME_ZONE_COOKIE, settings.time_zone, cookieOptions);
+      response.cookies.set(THEME_COOKIE, settings.theme, serverOnly);
+      response.cookies.set(TIME_ZONE_COOKIE, settings.time_zone, serverOnly);
     } catch (settingsError) {
       console.error('Failed to seed preference cookies at login:', settingsError);
       response.cookies.delete(NEXT_LOCALE_COOKIE);
