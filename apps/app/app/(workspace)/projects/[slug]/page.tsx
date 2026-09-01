@@ -6,7 +6,7 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { getResumeData } from '@/lib/db/resume';
-import { getLocale } from '@/lib/format';
+import { getLocale, getTimeZone } from '@/lib/format';
 import {
   Anomalies,
   Decided,
@@ -38,6 +38,7 @@ export default async function ResumePage({ params }: Params) {
   if (!project) notFound();
 
   const locale = await getLocale();
+  const timeZone = await getTimeZone();
   const t = getFixedT(locale);
 
   // One instant for the whole screen. Reading the clock per region would let a
@@ -58,20 +59,21 @@ export default async function ResumePage({ params }: Params) {
   return (
     <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pb-10">
-        <Masthead project={project} t={t} locale={locale} />
+        <Masthead project={project} t={t} locale={locale} timeZone={timeZone} />
 
         <ReEntry
           absence={data.absence}
           lastActivityAt={data.lastActivityAt}
           t={t}
           locale={locale}
+          timeZone={timeZone}
         />
 
         <Anomalies orphans={data.anomalies.orphans} cyclic={data.anomalies.cyclic} t={t} />
 
         {hasRecord ? null : <FirstRun t={t} />}
 
-        <Waiting items={data.waiting} slug={slug} t={t} locale={locale} />
+        <Waiting items={data.waiting} slug={slug} t={t} locale={locale} timeZone={timeZone} />
         <Open items={data.open} progress={data.progress} slug={slug} t={t} />
 
         {data.undecidedProposals > 0 ? (
@@ -90,8 +92,8 @@ export default async function ResumePage({ params }: Params) {
           </div>
         ) : null}
 
-        <LeftOff entries={data.recentEntries} t={t} locale={locale} />
-        <Decided entries={data.recentDecisions} t={t} locale={locale} />
+        <LeftOff entries={data.recentEntries} t={t} locale={locale} timeZone={timeZone} />
+        <Decided entries={data.recentDecisions} t={t} locale={locale} timeZone={timeZone} />
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { listEntries } from '@/lib/db/entries';
 import { entryKinds, type EntryKind } from '@/lib/schemas/common';
-import { formatDate, getLocale } from '@/lib/format';
+import { formatDate, getLocale, getTimeZone } from '@/lib/format';
 
 type Params = {
   params: Promise<{ slug: string }>;
@@ -37,6 +37,7 @@ export default async function LogPage({ params, searchParams }: Params) {
   if (!project) notFound();
 
   const locale = await getLocale();
+  const timeZone = await getTimeZone();
   const t = getFixedT(locale);
 
   const activeKind = isEntryKind(query.kind) ? query.kind : null;
@@ -105,7 +106,7 @@ export default async function LogPage({ params, searchParams }: Params) {
               <li key={entry.id} className="border-b border-rule py-4">
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                   <time dateTime={entry.occurred_at} className="label shrink-0 text-ink-soft">
-                    {formatDate(entry.occurred_at, locale)}
+                    {formatDate(entry.occurred_at, locale, timeZone)}
                   </time>
                   <span className="label shrink-0 text-ink-soft">
                     {t(`app.entryKind.${entry.kind}`)}

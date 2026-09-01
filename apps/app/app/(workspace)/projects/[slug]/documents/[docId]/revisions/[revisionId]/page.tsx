@@ -8,7 +8,7 @@ import { getProjectBySlug } from '@/lib/db/projects';
 import { getDocument, getRevision } from '@/lib/db/documents';
 import { authorshipOf, AUTHOR_KEY } from '@/lib/documents/authorship';
 import { Markdown } from '@/components/docs/markdown';
-import { formatDateTime, getLocale } from '@/lib/format';
+import { formatDateTime, getLocale, getTimeZone } from '@/lib/format';
 import { RestoreButton } from './restore-button';
 
 type Params = { params: Promise<{ slug: string; docId: string; revisionId: string }> };
@@ -36,6 +36,7 @@ export default async function RevisionPage({ params }: Params) {
   if (!document || !revision || revision.document_id !== document.id) notFound();
 
   const locale = await getLocale();
+  const timeZone = await getTimeZone();
   const t = getFixedT(locale);
 
   return (
@@ -48,7 +49,7 @@ export default async function RevisionPage({ params }: Params) {
 
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3">
           <span className="label tabular-nums text-ink-soft">
-            {formatDateTime(revision.created_at, locale)}
+            {formatDateTime(revision.created_at, locale, timeZone)}
           </span>
           <span className="label text-ink-soft">
             {t(AUTHOR_KEY[authorshipOf(revision).by])}

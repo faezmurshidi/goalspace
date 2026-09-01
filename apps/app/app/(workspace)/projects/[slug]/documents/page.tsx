@@ -6,7 +6,7 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { listDocuments } from '@/lib/db/documents';
-import { formatDate, getLocale } from '@/lib/format';
+import { formatDate, getLocale, getTimeZone } from '@/lib/format';
 import { NewDocumentForm } from './new-document-form';
 
 type Params = { params: Promise<{ slug: string }> };
@@ -31,6 +31,7 @@ export default async function DocumentsPage({ params }: Params) {
 
   const documents = await listDocuments(supabase, project.id);
   const locale = await getLocale();
+  const timeZone = await getTimeZone();
   const t = getFixedT(locale);
 
   return (
@@ -63,7 +64,7 @@ export default async function DocumentsPage({ params }: Params) {
                     </span>
                   ) : null}
                   <span className="label shrink-0 tabular-nums text-ink-soft">
-                    {formatDate(document.updated_at, locale)}
+                    {formatDate(document.updated_at, locale, timeZone)}
                   </span>
                 </Link>
               </li>
