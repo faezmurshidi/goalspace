@@ -34,7 +34,16 @@ Not a hedge, a constraint. `apps/app/app/layout.tsx` is the root layout for the 
 Without it, the column is a write-only field: you would save a preference, and a new browser would still show defaults, because nothing ever reads the column back into a cookie. `app/auth/callback/route.ts` already exchanges the code and holds a session — it sets the cookies there, on the response it is already returning.
 
 **R3 — theme resolution: localStorage wins on a device you have used, the cookie wins on a fresh one.**
-`next-themes` stores its choice in localStorage and applies the class before paint, which is what prevents a flash. Fighting that would reintroduce one. So the root layout passes the cookie value as `defaultTheme`, which `next-themes` uses **only when localStorage is empty** — precisely the new-device case. A device you have used keeps its most recent local choice, a fresh one inherits your account preference, and the two never race. Saving in account settings does both: `setTheme()` for the local mechanism, and the action for the column plus cookie.
+`next-themes` stores its choice in localStorage and applies the class before paint, which is what prevents a flash. Fighting that would reintroduce one. So the root layout passes the cookie value as `defaultTheme`, which `next-themes` uses **only when localStorage is empty** — precisely the new-device case. Verified against the installed next-themes 0.3.0: its pre-paint script falls through to `defaultTheme` only when the stored value is absent, and its state initialiser is `localStorage.getItem(key) || fallback`. Consulted exactly then, no more and no less.
+
+**The consequence, which matters more than the mechanism.** Because localStorage *unconditionally* beats `defaultTheme`, **any writer that touches localStorage without also setting the cookie makes the account preference permanently invisible on that device.** Not until next login — permanently, because nothing ever clears it.
+
+Two places in this codebase do exactly that today, and both are fixed in this slice:
+
+- The header-rail theme menu calls `setTheme()` alone (`header-rail.tsx:71`). Task 7 makes it persist as well.
+- Sign-out leaves `localStorage.theme` behind, so the next person to log in on that browser inherits the previous user's theme and their own account preference silently never applies. Task 7 clears it.
+
+A save in account settings therefore always does both: `setTheme()` for the local mechanism, and the action for the column plus cookie.
 
 **R4 — the time zone list comes from `Intl.supportedValuesOf('timeZone')`, never a hardcoded list.**
 The D1 migration deliberately left `time_zone` unconstrained by CHECK, reasoning that the IANA list is maintained outside this repo and a hardcoded copy would eventually reject a legitimate zone. A hardcoded list in the UI would be the same mistake one layer up.
@@ -49,7 +58,7 @@ The D1 migration deliberately left `time_zone` unconstrained by CHECK, reasoning
 | Path | Responsibility |
 |---|---|
 | `apps/app/lib/db/user-settings.ts` | **Create.** `getUserSettings`, `updateUserSettings`. |
-| `apps/app/lib/schemas/user-settings.ts` | **Create.** `updateAccountSettingsSchema`, `THEMES`. |
+| `apps/app/lib/schemas/user-settings.ts` | **Create.** `updateAccountSettingsSchema`. (`THEMES` lives in `preference-cookies.ts`.) |
 | `apps/app/lib/settings/preference-cookies.ts` | **Create.** Pure: cookie names, serialise/parse, the set-all helper's inputs. |
 | `apps/app/lib/format.ts` | **Modify.** Formatters take a time zone; `getTimeZone()` added beside `getLocale()`. |
 | `apps/app/app/layout.tsx` | **Modify.** Reads the theme cookie, passes it as `defaultTheme`. |
@@ -74,7 +83,7 @@ Doing this first means the cookie names exist in one place before three differen
 - Test: `apps/app/tests/unit/preference-cookies.test.ts`
 
 **Interfaces:**
-- Produces: `THEME_COOKIE`, `TIME_ZONE_COOKIE`, `PREFERENCE_COOKIE_MAX_AGE`, `type ThemePreference = 'light' | 'dark' | 'system'`, `parseTheme(value: string | undefined): ThemePreference`, `parseTimeZone(value: string | undefined): string`, `isSupportedTimeZone(value: string): boolean`.
+- Produces: `THEME_COOKIE`, `TIME_ZONE_COOKIE`, `PREFERENCE_COOKIE_MAX_AGE`, `THEMES`, `type ThemePreference = 'light' | 'dark' | 'system'`, `parseTheme(value: string | undefined): ThemePreference`, `parseTimeZone(value: string | undefined): string`, `isSupportedTimeZone(value: string): boolean`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -179,7 +188,12 @@ export const PREFERENCE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
-const THEMES: readonly ThemePreference[] = ['light', 'dark', 'system'];
+/**
+ * Exported because three places need it: this parser, the account form's
+ * select, and the header-rail theme menu. `header-rail.tsx` already carries a
+ * hardcoded copy — replace it with this one rather than adding a third.
+ */
+export const THEMES: readonly ThemePreference[] = ['light', 'dark', 'system'];
 
 /**
  * A cookie is client-writable, so every value here is untrusted input. An
@@ -216,7 +230,7 @@ export function parseTimeZone(value: string | undefined): string {
 - [ ] **Step 4: Run to verify it passes**
 
 Run: `corepack pnpm --filter @goalspace/app exec vitest run tests/unit/preference-cookies.test.ts`
-Expected: PASS, 8 tests.
+Expected: PASS, 7 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -306,7 +320,7 @@ Each formatter's doc comment should say **why** the zone is explicit: `Intl.Date
 - [ ] **Step 4: Run to verify it passes**
 
 Run: `corepack pnpm --filter @goalspace/app exec vitest run tests/unit/format.test.ts`
-Expected: PASS, 6 tests.
+Expected: PASS, 5 tests.
 
 **Typecheck will now fail** at the twelve call sites. That is intended and is Task 3's work — do not fix them here, and do not commit a broken typecheck: commit this task together with Task 3.
 
@@ -328,19 +342,25 @@ Proceed directly to Task 3. These two tasks share one commit, because the reposi
 - Modify: `apps/app/app/(workspace)/projects/[slug]/agents/[agentId]/page.tsx`
 - Modify: `apps/app/app/(workspace)/projects/[slug]/runs/[runId]/page.tsx`
 
-- [ ] **Step 1: Find every call site, from the compiler rather than from this list**
+- [ ] **Step 1: Find every call site from the compiler**
 
 ```bash
-corepack pnpm typecheck 2>&1 | grep -E "format(Date|DateTime|MonthYear)" | sort -u
+corepack pnpm typecheck 2>&1 | grep -E "error TS2554" | sort -u
 ```
 
-Trust that output over the list above. If it names a file this plan does not, that is the plan being stale — fix the site and note it in your report.
+**Grep for the error code, not the function name.** Piped output is not `--pretty`, so TypeScript emits `path(line,col): error TS2554: Expected 3 arguments, but got 2.` — the message does **not** contain `formatDate`. Grepping for the function name returns nothing, which would read as "no call sites" and cause this task to be skipped, leaving the branch unable to typecheck because Task 2 is deliberately uncommitted.
+
+Expect twelve results across seven files. Cross-check against the file list above: if the compiler names a file this plan does not, the plan is stale — fix the site and say so in your report.
 
 - [ ] **Step 2: Thread it through**
 
 Each server page already calls `getLocale()`; add `getTimeZone()` beside it and pass the value as the third argument.
 
-`components/resume/regions.tsx` is a **server** component whose exported pieces share a `Common` prop type carrying `t` and `locale`. Add `timeZone: string` to that type and pass it from `projects/[slug]/page.tsx` — one type change and one call site covers all six usages inside.
+`components/resume/regions.tsx` is a **server** component whose exported pieces share a `Common` prop type carrying `t` and `locale`. Add `timeZone: string` to `Common` and pass it from `projects/[slug]/page.tsx`.
+
+**Then fix the three components that opt out of `locale`.** `regions.tsx` types three of its exports as `Omit<Common, 'locale'>` — at lines 224, 333 and 348 — because they render no dates. Adding `timeZone` to `Common` would make those three *require* a time zone they never use, and produce three fresh errors at the call site. Widen each to `Omit<Common, 'locale' | 'timeZone'>`.
+
+An earlier draft of this plan claimed one type change and one call site would cover all six usages. It would not; that is why this paragraph exists.
 
 - [ ] **Step 3: Verify**
 
@@ -352,7 +372,10 @@ Expected: both pass. The typecheck passing is the proof that no call site was mi
 - [ ] **Step 4: Commit Tasks 2 and 3 together**
 
 ```bash
-git add apps/app/lib/format.ts apps/app/tests/unit/format.test.ts "apps/app/app/(workspace)" apps/app/components/resume/regions.tsx
+# Stage the specific files the compiler named, not the whole route tree —
+# `git add "apps/app/app/(workspace)"` would sweep in anything else in progress.
+git add apps/app/lib/format.ts apps/app/tests/unit/format.test.ts apps/app/components/resume/regions.tsx
+git add $(corepack pnpm typecheck 2>&1 | grep -oE "apps/app/app/\(workspace\)[^(]*\.tsx" | sort -u)
 git commit -m "feat(settings): render dates in the reader's time zone, not the server's"
 ```
 
@@ -380,6 +403,8 @@ The unit test covers the schema: each theme accepted, an unknown theme rejected,
 The RLS test covers isolation, and **must follow the corrected pattern**: create both users in `beforeAll`, and for the refusal case pass **alice's** userId with **bob's** client so RLS is what refuses rather than the function's own filter. Assert the refused write changed nothing by reading the value first, not by comparing to a literal another test wrote.
 
 Cases: `getUserSettings` returns the row the signup trigger created; `updateUserSettings` changes all four fields; a second user cannot read alice's settings; a second user cannot write them, and alice's row is unchanged afterwards.
+
+**The defaults case needs its own user.** Asserting that `getUserSettings` returns column defaults only holds while nothing has updated that row — so if it shares a user with the update case it silently depends on test order, which is the D1 mistake in mirror image. Create a third user in `beforeAll` used by that case alone, and delete it in `afterAll` with the others.
 
 - [ ] **Step 2: Run to verify they fail**
 
@@ -419,7 +444,9 @@ git commit -m "feat(settings): read and write account preferences, isolation-tes
 
 **Login is where the column becomes real.** In `app/auth/callback/route.ts`, after `exchangeCodeForSession` succeeds and before the redirect, read the user's settings and set the same three cookies on the response being returned. Without this the column is write-only — a new browser would show defaults forever, because nothing reads it back.
 
-Set them on the `NextResponse` the route already builds. Do not add a second redirect. If reading settings fails, **log and continue to the redirect** — a preference lookup must never cost someone their login.
+Set them on the `NextResponse` the route already builds. Do not add a second redirect.
+
+**If reading settings fails, delete the three preference cookies and continue to the redirect.** A preference lookup must never cost someone their login — but leaving the cookies untouched is not the safe fallback it looks like. On a shared browser they still hold the *previous* account's theme, language and time zone, so the new user would silently inherit them. Clearing is the correct failure mode: the app falls back to documented defaults rather than to somebody else's preferences.
 
 - [ ] **Step 1: Write the action**
 
@@ -475,21 +502,36 @@ git commit -m "feat(settings): let the account theme decide first paint on a new
 
 **This route is not project-scoped**, and the shell already handles that: `workspace-chrome.tsx` resolves the project from the pathname, finds none, and renders the wordmark instead of a section title. Do not add a sidebar destination — §5 is explicit that *"the sidebar is always project-scoped"* and that account settings live behind the account control in the header rail.
 
+The page carries a `generateMetadata` and a single `<h1>`, like all seven sibling routes — read `apps/app/app/(workspace)/projects/[slug]/settings/page.tsx` for both.
+
 **The form** carries theme, language, time zone and email notifications, following `apps/app/app/(workspace)/projects/[slug]/settings/project-form.tsx` for the `useTransition` / `ActionResult` / per-field-error pattern — read it first.
 
 - Theme is a `<select>` over `'light' | 'dark' | 'system'`. On save it calls **both** `setTheme()` from `next-themes` (so the current tab changes immediately) and the action (so it persists).
 - Language is a `<select>` over the locales `packages/i18n` actually ships.
-- Time zone is a `<select>` built from `Intl.supportedValuesOf('timeZone')`. That is several hundred entries — render it as a plain grouped `<select>`, not a custom combobox; a native select is searchable by typing and needs no new component.
+- Time zone is a `<select>` over the IANA zone list. **Build that list in `page.tsx` on the server and pass it as a prop** — do not call `Intl.supportedValuesOf('timeZone')` inside the client component. It returns 418 entries on this Node 22 (measured) and is not guaranteed to return the same set in the browser's ICU, so computing it on both sides risks a hydration mismatch across hundreds of `<option>` elements. Render it as a plain `<select>`, not a custom combobox: a native select is already type-to-search and needs no new component.
+
+  These options are raw IANA identifiers — `Asia/Kuala_Lumpur`, `Europe/London`. They are **not** translated strings and must not be added to the locale files; only the field's *label* is translated. Say so in your report, because ~418 untranslated strings on screen otherwise reads like a locale-parity omission to the next person.
 - Email notifications is a checkbox. `false` is a real value, not an absent one.
 
-**The header rail** gains a link to `/settings` in the existing account dropdown, above the sign-out item, separated by the existing separator idiom. The theme controls already in that menu **stay** — they are a shortcut, and the settings page is the full surface. Make sure both write the same places, or a person will set the theme in one and see it revert from the other.
+**The header rail** gains a link to `/settings` in the existing account dropdown, above the sign-out item, using the existing separator idiom. The theme controls already in that menu **stay** — they are a shortcut, and the settings page is the full surface — but they must be made to persist, which is its own step below rather than a line of advice.
 
 - [ ] **Step 1: Write the form and page**
 - [ ] **Step 2: Add the loading skeleton** — with `LoadingAnnouncement`, matching all seven siblings
 - [ ] **Step 3: Add strings to all three locales**
 - [ ] **Step 4: Link from the account menu**
-- [ ] **Step 5: Verify** — typecheck, `pnpm test`, `pnpm build`, and confirm `/settings` is in the route list
-- [ ] **Step 6: Commit**
+
+- [ ] **Step 5: Make the menu's theme shortcut persist, and stop sign-out shadowing the next user**
+
+Two edits in `apps/app/components/shell/header-rail.tsx`, both consequences of R3's localStorage rule:
+
+1. Each theme item currently calls `setTheme(value)` only. It must also call `updateAccountSettingsAction` so the choice reaches the column and the cookie. Without this, a theme set from the menu never follows the person to another device — **and worse**, the settings page's `<select>` reads the column and will show a different value than the app is actually rendering. Send the user's other current settings unchanged alongside the new theme, so the action's schema validates; read them from a prop the shell already has, or add one rather than guessing defaults.
+2. `signOut` must clear `localStorage.theme` along with the three preference cookies. Otherwise the next person to log in on that browser inherits the previous user's theme, and because localStorage beats `defaultTheme`, their own account preference never applies at all.
+
+Replace the menu's hardcoded theme list with `THEMES` from `@/lib/settings/preference-cookies` while you are here — there should be one list, not three.
+
+- [ ] **Step 6: Verify** — typecheck, `pnpm test`, `pnpm build`, and confirm `/settings` is in the route list
+
+- [ ] **Step 7: Commit**
 
 ---
 
