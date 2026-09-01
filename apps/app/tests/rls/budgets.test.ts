@@ -129,6 +129,13 @@ describe('updateBudget', () => {
     // filter cannot be what refuses this; RLS has to be. Passing bob's own id
     // would make this pass even with RLS disabled entirely (see
     // project-settings.test.ts, which does the same).
+    //
+    // Read the caps immediately before the refused write and compare against
+    // the same caps read after, rather than asserting a literal: this test
+    // must prove "a refused write changes nothing" on its own, regardless of
+    // what any earlier test in this file did or did not set the caps to.
+    const before = await getBudget(client(), projectId, alice!.id);
+
     const updated = await updateBudget(bob!.client as never, {
       projectId,
       ownerId: alice!.id,
@@ -136,8 +143,9 @@ describe('updateBudget', () => {
     });
     expect(updated).toBeNull();
 
-    const untouched = await getBudget(client(), projectId, alice!.id);
-    expect(untouched.monthly_cap_usd).toBe(42.5);
+    const after = await getBudget(client(), projectId, alice!.id);
+    expect(after.monthly_cap_usd).toBe(before.monthly_cap_usd);
+    expect(after.per_run_token_cap).toBe(before.per_run_token_cap);
   });
 });
 

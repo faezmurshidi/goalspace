@@ -65,6 +65,14 @@ describe('updateProject', () => {
     // Bob passes ALICE's ownerId, so the explicit .eq('owner_id') filter
     // cannot be what refuses this — RLS has to. Passing bob's own id would
     // make the test pass even with RLS disabled.
+    //
+    // Read the title immediately before the refused write and compare
+    // against the same title read after, rather than asserting a literal:
+    // this test must prove "a refused write changes nothing" on its own,
+    // regardless of what any earlier test in this file did or did not set
+    // the title to.
+    const before = await getProjectBySlug(client(), alice!.id, slug);
+
     const updated = await updateProject(bob!.client as never, {
       id: projectId,
       ownerId: alice!.id,
@@ -72,8 +80,8 @@ describe('updateProject', () => {
     });
     expect(updated).toBeNull();
 
-    const untouched = await getProjectBySlug(client(), alice!.id, slug);
-    expect(untouched?.title).toBe('Still mine');
+    const after = await getProjectBySlug(client(), alice!.id, slug);
+    expect(after?.title).toBe(before?.title);
   });
 });
 
