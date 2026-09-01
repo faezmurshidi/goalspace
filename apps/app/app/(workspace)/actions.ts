@@ -11,7 +11,7 @@ import { createEntry } from '@/lib/db/entries';
 import { createDocument, getRevision, updateDocument } from '@/lib/db/documents';
 import { updateAgent } from '@/lib/db/agents';
 import { updateBudget } from '@/lib/db/budgets';
-import { updateUserSettings } from '@/lib/db/user-settings';
+import { updateUserSettings, updateTheme } from '@/lib/db/user-settings';
 import {
   changeWorkItemStatus,
   createWorkItem,
@@ -23,7 +23,7 @@ import { createDocumentSchema, updateDocumentSchema } from '@/lib/schemas/docume
 import { updateAgentSchema } from '@/lib/schemas/agent';
 import { createProjectSchema, updateProjectSchema, deleteProjectSchema } from '@/lib/schemas/project';
 import { updateBudgetSchema } from '@/lib/schemas/budget';
-import { updateAccountSettingsSchema } from '@/lib/schemas/user-settings';
+import { updateAccountSettingsSchema, updateThemeSchema } from '@/lib/schemas/user-settings';
 import { applyProposal } from '@/lib/proposals/apply';
 import { settleProposal } from '@/lib/db/proposals';
 import {
@@ -32,7 +32,12 @@ import {
   moveWorkItemSchema,
   updateWorkItemSchema,
 } from '@/lib/schemas/work-item';
-import { THEME_COOKIE, TIME_ZONE_COOKIE, PREFERENCE_COOKIE_MAX_AGE } from '@/lib/settings/preference-cookies';
+import {
+  THEME_COOKIE,
+  TIME_ZONE_COOKIE,
+  LOCALE_COOKIE_OPTIONS,
+  SERVER_PREFERENCE_COOKIE_OPTIONS,
+} from '@/lib/settings/preference-cookies';
 import { fail, fromZodError, ok, type ActionResult } from '@/lib/actions/result';
 
 /**
@@ -455,21 +460,11 @@ export async function updateAccountSettingsAction(
     if (!updated) return fail('app.errors.generic');
 
     const cookieStore = await cookies();
-    // path is stated rather than left to Next's default so this matches the
-    // three pre-existing NEXT_LOCALE sites (apps/web/middleware.ts,
-    // packages/i18n/src/i18n.ts, use-translations.ts) and stays greppable.
-    const cookieOptions = { maxAge: PREFERENCE_COOKIE_MAX_AGE, path: '/' };
-    /**
-     * NEXT_LOCALE stays readable from `document.cookie` — the client hook in
-     * packages/i18n/src/use-translations.ts writes it directly. The theme and
-     * time zone are only ever read on the server, so httpOnly costs nothing
-     * and keeps a stray client-side write from drifting out of step with the
-     * stored row. Verified: no client component reads either cookie.
-     */
-    const serverOnly = { ...cookieOptions, httpOnly: true };
-    cookieStore.set(NEXT_LOCALE_COOKIE, updated.locale, cookieOptions);
-    cookieStore.set(THEME_COOKIE, updated.theme, serverOnly);
-    cookieStore.set(TIME_ZONE_COOKIE, updated.time_zone, serverOnly);
+    // Shared option objects (see preference-cookies.ts) so this writer cannot
+    // drift from the auth callback or clearPreferenceCookiesAction below.
+    cookieStore.set(NEXT_LOCALE_COOKIE, updated.locale, LOCALE_COOKIE_OPTIONS);
+    cookieStore.set(THEME_COOKIE, updated.theme, SERVER_PREFERENCE_COOKIE_OPTIONS);
+    cookieStore.set(TIME_ZONE_COOKIE, updated.time_zone, SERVER_PREFERENCE_COOKIE_OPTIONS);
 
     // Locale and theme affect every rendered page, not just this one.
     revalidatePath('/', 'layout');
@@ -481,13 +476,50 @@ export async function updateAccountSettingsAction(
 }
 
 /**
+ * Persist only the theme, for the header-rail shortcut in `header-rail.tsx`.
+ *
+ * `updateAccountSettingsAction` validates against `updateAccountSettingsSchema`,
+ * which requires locale, time zone and email notifications alongside the
+ * theme — so a theme click from the menu had to resend those three from
+ * whatever the current render happened to hold. That render can be
+ * arbitrarily old (a second tab, a long-open tab, a change made elsewhere),
+ * so clicking a theme could silently revert preferences the account had
+ * actually changed. This action only ever writes `theme`, so there is
+ * nothing else to go stale or to revert.
+ */
+export async function updateThemeAction(
+  input: unknown
+): Promise<ActionResult<{ theme: string }>> {
+  const parsed = updateThemeSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, userId } = await requireSessionContext();
+
+  try {
+    const updated = await updateTheme(supabase, { userId, values: parsed.data });
+    if (!updated) return fail('app.errors.generic');
+
+    const cookieStore = await cookies();
+    cookieStore.set(THEME_COOKIE, updated.theme, SERVER_PREFERENCE_COOKIE_OPTIONS);
+
+    // Theme affects every rendered page, not just this one.
+    revalidatePath('/', 'layout');
+    return ok({ theme: updated.theme });
+  } catch (error) {
+    console.error('updateThemeAction failed', error);
+    return fail('app.errors.generic');
+  }
+}
+
+/**
  * Clear the three preference cookies, so the next person on a shared browser
  * does not inherit the previous user's theme, language and time zone.
  *
- * `THEME_COOKIE` and `TIME_ZONE_COOKIE` are `httpOnly` (see this file's
- * `updateAccountSettingsAction`), so client script cannot delete them —
- * `document.cookie = 'name=; max-age=0'` on an httpOnly cookie is a silent
- * no-op. `header-rail.tsx`'s `signOut` is otherwise entirely client-side
+ * `THEME_COOKIE` and `TIME_ZONE_COOKIE` are `httpOnly` (see
+ * `SERVER_PREFERENCE_COOKIE_OPTIONS` in preference-cookies.ts), so client
+ * script cannot delete them — `document.cookie = 'name=; max-age=0'` on an
+ * httpOnly cookie is a silent no-op. `header-rail.tsx`'s `signOut` is
+ * otherwise entirely client-side
  * (`createClient().auth.signOut()`), so it calls this action to do the part
  * it no longer can. Clearing server-side is also simply more reliable than
  * `document.cookie` manipulation: it cannot miss on a path or domain
@@ -500,11 +532,12 @@ export async function updateAccountSettingsAction(
 export async function clearPreferenceCookiesAction(): Promise<void> {
   const cookieStore = await cookies();
   // maxAge: 0 rather than a past expiry date — matches the idiom `set(...,
-  // { maxAge })` already uses elsewhere in this file.
-  const expired = { path: '/', maxAge: 0 };
-  cookieStore.set(NEXT_LOCALE_COOKIE, '', expired);
-  cookieStore.set(THEME_COOKIE, '', { ...expired, httpOnly: true });
-  cookieStore.set(TIME_ZONE_COOKIE, '', { ...expired, httpOnly: true });
+  // { maxAge })` already uses elsewhere in this file. path and httpOnly still
+  // come from the shared option objects, so a clear cannot disagree with the
+  // writer on either.
+  cookieStore.set(NEXT_LOCALE_COOKIE, '', { ...LOCALE_COOKIE_OPTIONS, maxAge: 0 });
+  cookieStore.set(THEME_COOKIE, '', { ...SERVER_PREFERENCE_COOKIE_OPTIONS, maxAge: 0 });
+  cookieStore.set(TIME_ZONE_COOKIE, '', { ...SERVER_PREFERENCE_COOKIE_OPTIONS, maxAge: 0 });
 }
 
 /**

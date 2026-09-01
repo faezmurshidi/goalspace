@@ -52,3 +52,13 @@ export const updateAccountSettingsSchema = z.object({
 });
 
 export type UpdateAccountSettingsValues = z.output<typeof updateAccountSettingsSchema>;
+
+/**
+ * Theme only, for the header-rail shortcut in `header-rail.tsx`.
+ *
+ * `.pick` off `updateAccountSettingsSchema` rather than a second `z.object`:
+ * one definition of what a valid theme is, reused, not restated.
+ */
+export const updateThemeSchema = updateAccountSettingsSchema.pick({ theme: true });
+
+export type UpdateThemeValues = z.output<typeof updateThemeSchema>;

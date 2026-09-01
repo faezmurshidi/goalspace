@@ -4,6 +4,9 @@ import {
   isSupportedTimeZone,
   parseTheme,
   parseTimeZone,
+  LOCALE_COOKIE_OPTIONS,
+  PREFERENCE_COOKIE_MAX_AGE,
+  SERVER_PREFERENCE_COOKIE_OPTIONS,
   THEME_COOKIE,
   TIME_ZONE_COOKIE,
 } from '@/lib/settings/preference-cookies';
@@ -62,5 +65,29 @@ describe('cookie names', () => {
     for (const name of [THEME_COOKIE, TIME_ZONE_COOKIE]) {
       expect(name).toMatch(/^[A-Za-z0-9_.-]+$/);
     }
+  });
+});
+
+describe('cookie option objects', () => {
+  // Nothing else asserts these attributes on any of the three writers (the
+  // auth callback, updateAccountSettingsAction, clearPreferenceCookiesAction)
+  // — dropping httpOnly today would still leave every other gate green.
+
+  it('both apply to the whole app, not just the route that sets them', () => {
+    expect(LOCALE_COOKIE_OPTIONS.path).toBe('/');
+    expect(SERVER_PREFERENCE_COOKIE_OPTIONS.path).toBe('/');
+  });
+
+  it('both carry the shared preference max-age', () => {
+    expect(LOCALE_COOKIE_OPTIONS.maxAge).toBe(PREFERENCE_COOKIE_MAX_AGE);
+    expect(SERVER_PREFERENCE_COOKIE_OPTIONS.maxAge).toBe(PREFERENCE_COOKIE_MAX_AGE);
+  });
+
+  it('is httpOnly only for the server-only variant', () => {
+    // NEXT_LOCALE must stay client-readable: use-translations.ts writes it
+    // via document.cookie. The theme and time-zone cookies are never read on
+    // the client, so httpOnly must hold for that variant instead.
+    expect(SERVER_PREFERENCE_COOKIE_OPTIONS.httpOnly).toBe(true);
+    expect((LOCALE_COOKIE_OPTIONS as { httpOnly?: boolean }).httpOnly).not.toBe(true);
   });
 });

@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { defaultLocale } from '@goalspace/i18n';
 import type { Database, Tables } from '@/types/supabase';
-import type { UpdateAccountSettingsValues } from '@/lib/schemas/user-settings';
+import type { UpdateAccountSettingsValues, UpdateThemeValues } from '@/lib/schemas/user-settings';
 import { parseTheme, parseTimeZone } from '@/lib/settings/preference-cookies';
 
 type Client = SupabaseClient<Database>;
@@ -86,6 +86,31 @@ export async function getUserSettings(supabase: Client, userId: string): Promise
 export async function updateUserSettings(
   supabase: Client,
   { userId, values }: { userId: string; values: UpdateAccountSettingsValues }
+): Promise<UserSettings | null> {
+  const { data, error } = await supabase
+    .from('user_settings')
+    .update(values)
+    .eq('user_id', userId)
+    .select(USER_SETTINGS_COLUMNS)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ?? null;
+}
+
+/**
+ * Update the theme alone, for the header-rail shortcut in `header-rail.tsx`.
+ *
+ * Same shape as `updateUserSettings` — filtered on `user_id`, null on refusal
+ * — but writes only the `theme` column, so a stale render of the other three
+ * preferences can never be sent along and silently revert them. See that
+ * action's own comment (`updateThemeAction` in `app/(workspace)/actions.ts`)
+ * for why this exists as a separate write rather than reusing
+ * `updateUserSettings`.
+ */
+export async function updateTheme(
+  supabase: Client,
+  { userId, values }: { userId: string; values: UpdateThemeValues }
 ): Promise<UserSettings | null> {
   const { data, error } = await supabase
     .from('user_settings')

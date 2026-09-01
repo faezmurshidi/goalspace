@@ -16,47 +16,50 @@ import { useAppTranslations } from '@goalspace/i18n';
 import { SidebarTrigger } from './sidebar';
 import { Wordmark } from './wordmark';
 import { createClient } from '@/utils/supabase/client';
-import { updateAccountSettingsAction, clearPreferenceCookiesAction } from '@/app/(workspace)/actions';
+import { updateThemeAction, clearPreferenceCookiesAction } from '@/app/(workspace)/actions';
 import { THEMES, type ThemePreference } from '@/lib/settings/preference-cookies';
-
-/**
- * The account preferences other than theme, needed to persist a theme change
- * made from this menu: `updateAccountSettingsAction` validates against
- * `updateAccountSettingsSchema`, which requires all four fields, so a theme
- * pick from here has to resend the caller's current locale, time zone and
- * email-notifications choice unchanged rather than guessing defaults — a
- * wrong guess would silently overwrite a real preference.
- */
-export type AccountPreferences = {
-  locale: string;
-  time_zone: string;
-  email_notifications: boolean;
-};
 
 export function HeaderRail({
   title,
   hasSidebar,
-  accountPreferences,
 }: {
   title: string | null;
   hasSidebar: boolean;
-  accountPreferences: AccountPreferences;
 }) {
   const { t } = useAppTranslations();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
 
   function selectTheme(value: ThemePreference) {
+    // Captured before the optimistic write below, so a failed persist can put
+    // the device back where it was rather than leaving it pinned to a theme
+    // the account never actually stored.
+    const previous = theme as ThemePreference | undefined;
+
     // Updates the current tab immediately...
     setTheme(value);
+
     // ...and persists it, so the choice reaches the column and the cookie
     // rather than following only this tab. Without this a theme set from the
     // menu never follows the person to another device, and the settings
     // page's own <select> would show a different value than the app is
     // actually rendering.
-    updateAccountSettingsAction({ theme: value, ...accountPreferences }).catch((caught) => {
-      console.error('Persisting theme from the menu failed', caught);
-    });
+    //
+    // `updateThemeAction` resolves rather than rejects on a validation or
+    // database failure (`ActionResult`'s `fail(...)` is a resolved value), so
+    // `.catch()` alone would never see it — the result has to be checked. A
+    // silently-discarded failure would leave `localStorage.theme` (already
+    // written by `setTheme` above) pinned to a value the account never
+    // stored: `localStorage` beats `defaultTheme` in next-themes on every
+    // later visit, on this device, permanently.
+    updateThemeAction({ theme: value })
+      .then((result) => {
+        if (!result.ok && previous) setTheme(previous);
+      })
+      .catch((caught) => {
+        console.error('Persisting theme from the menu failed', caught);
+        if (previous) setTheme(previous);
+      });
   }
 
   async function signOut() {
@@ -142,13 +145,7 @@ export function HeaderRail({
                   theme === value ? 'text-oxide' : 'text-ink'
                 )}
               >
-                {t(
-                  value === 'light'
-                    ? 'app.nav.themeLight'
-                    : value === 'dark'
-                      ? 'app.nav.themeDark'
-                      : 'app.nav.themeSystem'
-                )}
+                {t(`app.account.theme.${value}`)}
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator className="bg-rule" />

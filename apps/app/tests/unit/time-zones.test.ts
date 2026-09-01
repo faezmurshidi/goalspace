@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { timeZoneOptions } from '@/lib/settings/time-zones';
+import { parseTimeZone } from '@/lib/settings/preference-cookies';
 
 describe('timeZoneOptions', () => {
   it('offers UTC, which Intl does not list', () => {
@@ -29,5 +30,31 @@ describe('timeZoneOptions', () => {
     expect(zones).toContain('Asia/Kuala_Lumpur');
     expect(zones).toContain('America/New_York');
     expect(zones.length).toBeGreaterThan(400);
+  });
+
+  it('has a matching option for every value parseTimeZone can return', () => {
+    // The UTC-missing-from-the-select bug is fixed and tested above, but that
+    // only proves the one instance. The actual invariant is broader: whatever
+    // parseTimeZone resolves a stored or cookie-carried value to, the select
+    // built from timeZoneOptions must be able to represent it — otherwise the
+    // same class of bug reappears the next time the fallback changes.
+    const zones = timeZoneOptions();
+    const candidates = [
+      'Asia/Kuala_Lumpur',
+      'America/New_York',
+      'UTC',
+      undefined,
+      '',
+      'Mars/Olympus_Mons',
+      'GMT+7',
+      '../etc',
+      '<script>',
+      '\n',
+      '🚀',
+    ];
+
+    for (const candidate of candidates) {
+      expect(zones).toContain(parseTimeZone(candidate));
+    }
   });
 });

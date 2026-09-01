@@ -1,3 +1,5 @@
+import { parseTimeZone } from '@/lib/settings/preference-cookies';
+
 /**
  * The zone list the settings page offers.
  *
@@ -13,11 +15,18 @@
  * touching the field silently rewrote `UTC` to it. Found in the browser pass —
  * no test in this repo can see a `<select>` resolve its own value.
  *
- * `'UTC'` goes first because it is the default rather than because of where it
- * sorts. The `includes` guard is for a future ICU that adds it: appending
- * unconditionally would then offer it twice.
+ * The fallback is derived from `parseTimeZone(undefined)` rather than
+ * restated as the literal `'UTC'` — `lib/db/user-settings.ts`'s
+ * `defaultUserSettings` already does this for the same reason: one definition
+ * of "what a missing time zone falls back to", not several that happen to
+ * agree today.
+ *
+ * The fallback goes first because it is the default rather than because of
+ * where it sorts. The `includes` guard is for a future ICU that adds it:
+ * appending unconditionally would then offer it twice.
  */
 export function timeZoneOptions(): string[] {
+  const fallback = parseTimeZone(undefined);
   const zones = Intl.supportedValuesOf('timeZone');
-  return zones.includes('UTC') ? zones : ['UTC', ...zones];
+  return zones.includes(fallback) ? zones : [fallback, ...zones];
 }

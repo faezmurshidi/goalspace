@@ -18,6 +18,28 @@ export const TIME_ZONE_COOKIE = 'goalspace.tz';
 /** A year. These are preferences, not sessions. */
 export const PREFERENCE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
+/**
+ * The three cookie writers — the auth callback, `updateAccountSettingsAction`,
+ * and `clearPreferenceCookiesAction`, all in `app/(workspace)/actions.ts` and
+ * `app/auth/callback/route.ts` — share these two option objects rather than
+ * each building its own, so `httpOnly`, `path` and the max-age cannot drift
+ * out of step between writers the way nothing before this caught.
+ *
+ * `path` is stated rather than left to Next's default so this matches the
+ * three pre-existing NEXT_LOCALE sites (apps/web/middleware.ts,
+ * packages/i18n/src/i18n.ts, use-translations.ts) and stays greppable.
+ *
+ * NEXT_LOCALE stays readable from `document.cookie` — the client hook in
+ * packages/i18n/src/use-translations.ts writes it directly. The theme and
+ * time zone are only ever read on the server, so `httpOnly` costs nothing and
+ * keeps a stray client-side write from drifting out of step with the stored
+ * row. Verified: no client component reads either cookie.
+ */
+export const LOCALE_COOKIE_OPTIONS = { maxAge: PREFERENCE_COOKIE_MAX_AGE, path: '/' };
+
+/** `httpOnly` variant of `LOCALE_COOKIE_OPTIONS`, for the theme and time-zone cookies. */
+export const SERVER_PREFERENCE_COOKIE_OPTIONS = { ...LOCALE_COOKIE_OPTIONS, httpOnly: true };
+
 export type ThemePreference = 'light' | 'dark' | 'system';
 
 /**
