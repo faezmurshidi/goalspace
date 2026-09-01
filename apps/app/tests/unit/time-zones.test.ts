@@ -57,4 +57,23 @@ describe('timeZoneOptions', () => {
       expect(zones).toContain(parseTimeZone(candidate));
     }
   });
+
+  it('has a matching option for known time zone aliases', () => {
+    // `Intl.supportedValuesOf('timeZone')` is specified to return only
+    // primary IANA identifiers, but `Intl.DateTimeFormat` still accepts
+    // aliases. On an engine whose list carries only the primary id
+    // (`Asia/Kolkata`) rather than the alias (`Asia/Calcutta`), a stored
+    // alias returned unchanged would have no matching <select> option — the
+    // same class of bug fixed for UTC above, through a different door. This
+    // does not reproduce on every engine (this repo's Node still returns the
+    // alias unchanged from both supportedValuesOf and resolvedOptions), so
+    // the invariant has to hold structurally rather than by reproducing the
+    // mismatch here.
+    const zones = timeZoneOptions();
+    const aliases = ['Asia/Calcutta', 'Europe/Kiev', 'America/Godthab'];
+
+    for (const alias of aliases) {
+      expect(zones).toContain(parseTimeZone(alias));
+    }
+  });
 });

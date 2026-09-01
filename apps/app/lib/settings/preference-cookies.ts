@@ -80,7 +80,31 @@ export function isSupportedTimeZone(value: string): boolean {
   }
 }
 
+/**
+ * `Intl.supportedValuesOf('timeZone')` is specified to return only *primary*
+ * IANA identifiers, but `Intl.DateTimeFormat` itself still accepts aliases
+ * (`Asia/Calcutta`, `Europe/Kiev`, `America/Godthab`, …). On a runtime whose
+ * list carries only the primary id (`Asia/Kolkata`), an alias stored as-is
+ * has no matching option in `timeZoneOptions()` — the `<select>` falls back
+ * to its first entry, and saving the form silently rewrites the user's zone.
+ * That is the same failure this file already fixes for `UTC` (7b79e73),
+ * through a different door.
+ *
+ * `resolvedOptions().timeZone` canonicalizes: it resolves an alias to the
+ * primary id `supportedValuesOf` lists, so validating and canonicalizing in
+ * one step keeps every value this function can return in step with
+ * `timeZoneOptions()`, regardless of whether a given engine canonicalizes
+ * `supportedValuesOf` itself.
+ */
 export function parseTimeZone(value: string | undefined): string {
   if (!value) return 'UTC';
-  return isSupportedTimeZone(value) ? value : 'UTC';
+  try {
+    // Constructing the formatter is the same check isSupportedTimeZone makes
+    // (it throws for an unrecognised zone); resolvedOptions().timeZone reads
+    // the canonical id back out of it, so validating and canonicalizing share
+    // this one construction rather than two.
+    return new Intl.DateTimeFormat('en', { timeZone: value }).resolvedOptions().timeZone;
+  } catch {
+    return 'UTC';
+  }
 }
