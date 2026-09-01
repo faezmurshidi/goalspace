@@ -3,6 +3,7 @@ import { getFixedT } from '@goalspace/i18n/server';
 
 import { requireSessionContext } from '@/lib/auth/session';
 import { getUserSettings } from '@/lib/db/user-settings';
+import { timeZoneOptions } from '@/lib/settings/time-zones';
 import { getLocale } from '@/lib/format';
 import { AccountForm } from './account-form';
 
@@ -25,11 +26,12 @@ export default async function AccountSettingsPage() {
   const settings = await getUserSettings(supabase, userId);
   const t = getFixedT(await getLocale());
 
-  // Built here, on the server, and passed down as a prop. `Intl.supportedValuesOf`
-  // returns 418 entries on this Node 22, and the browser's ICU is not
-  // guaranteed to return the same set, so computing this list on both sides
-  // risks a hydration mismatch across hundreds of <option> elements.
-  const timeZones = Intl.supportedValuesOf('timeZone');
+  // Built here, on the server, and passed down as a prop. The list runs to 419
+  // entries, and the browser's ICU is not guaranteed to return the same set, so
+  // computing it on both sides risks a hydration mismatch across hundreds of
+  // <option> elements. `timeZoneOptions` adds the UTC that Intl omits — see its
+  // comment; without it the stored default has no matching option at all.
+  const timeZones = timeZoneOptions();
 
   return (
     <div className="mx-auto w-full max-w-4xl px-6">
