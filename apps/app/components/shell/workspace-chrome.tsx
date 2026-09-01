@@ -14,9 +14,9 @@ import {
 } from '@/lib/shell/destinations';
 import { SIDEBAR_COOKIE, SIDEBAR_MAX_AGE, serializeSidebarState } from '@/lib/shell/sidebar-state';
 import { WorkspaceSidebar } from './workspace-sidebar';
-import { HeaderRail } from './header-rail';
+import { HeaderRail, type AccountPreferences } from './header-rail';
 
-export type { ChromeProject };
+export type { ChromeProject, AccountPreferences };
 
 /**
  * The shell is composition and nothing else.
@@ -30,10 +30,12 @@ export type { ChromeProject };
 export function WorkspaceChrome({
   projects,
   defaultSidebarOpen,
+  accountPreferences,
   children,
 }: {
   projects: ChromeProject[];
   defaultSidebarOpen: boolean;
+  accountPreferences: AccountPreferences;
   children: React.ReactNode;
 }) {
   const { t } = useAppTranslations();
@@ -86,7 +88,11 @@ export function WorkspaceChrome({
       ) : null}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <HeaderRail title={railTitle} hasSidebar={Boolean(current)} />
+        <HeaderRail
+          title={railTitle}
+          hasSidebar={Boolean(current)}
+          accountPreferences={accountPreferences}
+        />
         <main id="workspace-main" tabIndex={-1} className="min-w-0 flex-1">
           {children}
         </main>

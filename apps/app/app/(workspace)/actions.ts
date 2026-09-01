@@ -481,6 +481,33 @@ export async function updateAccountSettingsAction(
 }
 
 /**
+ * Clear the three preference cookies, so the next person on a shared browser
+ * does not inherit the previous user's theme, language and time zone.
+ *
+ * `THEME_COOKIE` and `TIME_ZONE_COOKIE` are `httpOnly` (see this file's
+ * `updateAccountSettingsAction`), so client script cannot delete them —
+ * `document.cookie = 'name=; max-age=0'` on an httpOnly cookie is a silent
+ * no-op. `header-rail.tsx`'s `signOut` is otherwise entirely client-side
+ * (`createClient().auth.signOut()`), so it calls this action to do the part
+ * it no longer can. Clearing server-side is also simply more reliable than
+ * `document.cookie` manipulation: it cannot miss on a path or domain
+ * mismatch the way a client-side clear can.
+ *
+ * No session is required: sign-out is exactly the moment the session is
+ * ending, and this only ever touches cookies, never a row, so there is
+ * nothing here that needs to know who the caller is.
+ */
+export async function clearPreferenceCookiesAction(): Promise<void> {
+  const cookieStore = await cookies();
+  // maxAge: 0 rather than a past expiry date — matches the idiom `set(...,
+  // { maxAge })` already uses elsewhere in this file.
+  const expired = { path: '/', maxAge: 0 };
+  cookieStore.set(NEXT_LOCALE_COOKIE, '', expired);
+  cookieStore.set(THEME_COOKIE, '', { ...expired, httpOnly: true });
+  cookieStore.set(TIME_ZONE_COOKIE, '', { ...expired, httpOnly: true });
+}
+
+/**
  * Delete a project, after checking the typed slug on the server.
  *
  * The browser also checks it, to disable the button — but that check is a
