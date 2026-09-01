@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import {
@@ -30,7 +31,24 @@ export function HeaderRail({
   const router = useRouter();
   const { theme, setTheme } = useTheme();
 
+  // Bumped once per selectTheme call, so each in-flight persist can tell
+  // whether it is still the latest one. Without this, picking Dark then
+  // quickly Light starts two independent writes with their own captured
+  // `previous`; if the Dark write's promise settles (resolved-failure or
+  // rejected) after the Light write already succeeded, its rollback fires
+  // and restores the pre-Dark theme, discarding the newer choice the person
+  // actually asked for.
+  //
+  // This only orders the *client* rollback — it makes the latest selection
+  // win on this tab. It does not order the *server* writes themselves: two
+  // rapid `updateThemeAction` calls can still reach the database and land
+  // out of order, so the stored row is not guaranteed to match the latest
+  // click either. That half of the race is not closed here.
+  const themeRequestId = useRef(0);
+
   function selectTheme(value: ThemePreference) {
+    const requestId = ++themeRequestId.current;
+
     // Captured before the optimistic write below, so a failed persist can put
     // the device back where it was rather than leaving it pinned to a theme
     // the account never actually stored.
@@ -54,10 +72,14 @@ export function HeaderRail({
     // later visit, on this device, permanently.
     updateThemeAction({ theme: value })
       .then((result) => {
+        // A newer selection has started since this one — its own rollback
+        // logic owns theme state now, so this stale result must not touch it.
+        if (themeRequestId.current !== requestId) return;
         if (!result.ok && previous) setTheme(previous);
       })
       .catch((caught) => {
         console.error('Persisting theme from the menu failed', caught);
+        if (themeRequestId.current !== requestId) return;
         if (previous) setTheme(previous);
       });
   }
