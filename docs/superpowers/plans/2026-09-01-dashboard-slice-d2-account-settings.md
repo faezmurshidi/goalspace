@@ -131,7 +131,8 @@ describe('parseTimeZone', () => {
   });
 
   it('does not throw on a value that would break Intl', () => {
-    expect(() => parseTimeZone(' ')).not.toThrow();
+    expect(() => parseTimeZone('\n')).not.toThrow();
+    expect(() => parseTimeZone('🚀')).not.toThrow();
   });
 });
 
