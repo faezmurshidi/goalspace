@@ -60,6 +60,37 @@ export function HeaderRail({
   }
 
   async function signOut() {
+    // Clear the preference cookies BEFORE ending the session, not after.
+    //
+    // `clearPreferenceCookiesAction` lives in the (workspace) route group, so
+    // invoking it re-renders that group's layout as part of the action
+    // response — and that layout requires a session. Called after
+    // `auth.signOut()` the re-render has no session left, the action response
+    // fails with "An unexpected response was received from the server", and
+    // the cookies are never cleared. Measured in the browser pass: the theme
+    // cookie survived sign-out, so the next person to sign in on that browser
+    // inherited the previous user's theme.
+    //
+    // The action needs no session of its own — it only touches the caller's
+    // own cookies — so running it first is safe. If sign-out then fails, the
+    // user keeps a valid session with their display preferences reset to
+    // defaults, which is recoverable; the reverse order loses the clearing
+    // entirely.
+    try {
+      await clearPreferenceCookiesAction();
+    } catch (caught) {
+      console.error('Clearing preference cookies failed', caught);
+    }
+
+    // `localStorage.theme` beats `defaultTheme` in next-themes, so leaving it
+    // would mean the next person to sign in on this browser inherits this
+    // account's theme and their own preference never applies.
+    try {
+      window.localStorage.removeItem('theme');
+    } catch (caught) {
+      console.error('Clearing the local theme failed', caught);
+    }
+
     // Navigate either way. If signOut rejects, React does not surface the
     // rejection from a menu handler, so the user would sit on a page that
     // still looks signed in with no feedback and an ambiguous session.
@@ -68,25 +99,6 @@ export function HeaderRail({
     } catch (caught) {
       console.error('Sign out failed', caught);
     } finally {
-      // `localStorage.theme` beats `defaultTheme` in next-themes, so leaving
-      // it would mean the next person to sign in on this browser inherits
-      // this account's theme and their own preference never applies.
-      try {
-        window.localStorage.removeItem('theme');
-      } catch (caught) {
-        console.error('Clearing the local theme failed', caught);
-      }
-
-      // THEME_COOKIE and TIME_ZONE_COOKIE are httpOnly, so client script
-      // cannot clear them itself — a server action is the only way. Cleanup
-      // failing must not cost anyone their sign-out, so it is caught here
-      // rather than left to propagate.
-      try {
-        await clearPreferenceCookiesAction();
-      } catch (caught) {
-        console.error('Clearing preference cookies failed', caught);
-      }
-
       router.push('/login');
       router.refresh();
     }
