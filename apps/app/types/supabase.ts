@@ -743,7 +743,9 @@ export type Database = {
           created_at: string
           email_notifications: boolean
           id: string
+          locale: string
           theme: string
+          time_zone: string
           updated_at: string
           user_id: string
         }
@@ -751,7 +753,9 @@ export type Database = {
           created_at?: string
           email_notifications?: boolean
           id?: string
+          locale?: string
           theme?: string
+          time_zone?: string
           updated_at?: string
           user_id: string
         }
@@ -759,7 +763,9 @@ export type Database = {
           created_at?: string
           email_notifications?: boolean
           id?: string
+          locale?: string
           theme?: string
+          time_zone?: string
           updated_at?: string
           user_id?: string
         }
@@ -912,6 +918,10 @@ export type Database = {
           p_body: string
         }
         Returns: string
+      }
+      project_month_to_date_usd: {
+        Args: { p_project_id: string }
+        Returns: number
       }
       search_repo: {
         Args: { p_project_id: string; p_query: string; p_limit?: number }

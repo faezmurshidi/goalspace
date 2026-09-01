@@ -29,10 +29,9 @@ describe('projectSlugFrom', () => {
 
 describe('destinationsFor', () => {
   it('ships exactly the sections that exist', () => {
-    // Nothing is advertised that cannot be opened. Settings arrives with its
-    // own slice and must not appear before its route does.
+    // Nothing is advertised that cannot be opened.
     const keys = destinationsFor('ev-bike', { inbox: 0 }).map((d) => d.key);
-    expect(keys).toEqual(['resume', 'work', 'log', 'inbox', 'documents', 'agents']);
+    expect(keys).toEqual(['resume', 'work', 'log', 'inbox', 'documents', 'agents', 'settings']);
   });
 
   it('keeps Documents after Inbox, and gives it no count', () => {
@@ -113,7 +112,7 @@ describe('isActive', () => {
 describe('the agents destination', () => {
   it('sits after documents in the sidebar', () => {
     const keys = destinationsFor('robot', { inbox: 0 }).map((d) => d.key);
-    expect(keys).toEqual(['resume', 'work', 'log', 'inbox', 'documents', 'agents']);
+    expect(keys).toEqual(['resume', 'work', 'log', 'inbox', 'documents', 'agents', 'settings']);
   });
 
   it('is active on the agent editor, not only on the list', () => {
@@ -129,5 +128,34 @@ describe('the agents destination', () => {
   it('is not active on a run trace, which is reached from an agent but is not one', () => {
     const agents = destinationsFor('robot', { inbox: 0 }).find((d) => d.key === 'agents')!;
     expect(isActive('/projects/robot/runs/abc-123/', agents)).toBe(false);
+  });
+});
+
+describe('the settings destination', () => {
+  it('comes last, after the sections', () => {
+    const keys = destinationsFor('robot', { inbox: 0 }).map((d) => d.key);
+    expect(keys).toEqual([
+      'resume',
+      'work',
+      'log',
+      'inbox',
+      'documents',
+      'agents',
+      'settings',
+    ]);
+  });
+
+  it('is marked trailing, so the sidebar can rule it off from the sections', () => {
+    // The spec's sidebar sketch puts a rule above Settings: it is project
+    // scope, not a section of the record. The flag carries that rather than
+    // the sidebar hardcoding a key name.
+    const all = destinationsFor('robot', { inbox: 0 });
+    expect(all.filter((d) => d.trailing).map((d) => d.key)).toEqual(['settings']);
+  });
+
+  it('is active on the settings route', () => {
+    const settings = destinationsFor('robot', { inbox: 0 }).find((d) => d.key === 'settings')!;
+    expect(isActive('/projects/robot/settings/', settings)).toBe(true);
+    expect(isActive('/projects/robot/documents/', settings)).toBe(false);
   });
 });

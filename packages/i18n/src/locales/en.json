@@ -561,6 +561,36 @@
         "cancelled": "Cancelled",
         "capped": "Stopped at the cap"
       }
+    },
+    "settings": {
+      "title": "Settings",
+      "project": "Project",
+      "titleLabel": "Title",
+      "briefLabel": "Brief",
+      "statusLabel": "Status",
+      "status": {
+        "active": "Active",
+        "paused": "Paused",
+        "done": "Done",
+        "abandoned": "Abandoned"
+      },
+      "save": "Save",
+      "saving": "Saving",
+      "saved": "Saved",
+      "spend": "Agent spend",
+      "spentThisMonth": "Spent this month",
+      "monthlyCap": "Monthly cap",
+      "perRunTokenCap": "Per-run token cap",
+      "worstCase": "Worst case per run, at this project's models",
+      "worstCaseNote": "This figure, not the average, is what decides whether a run is refused.",
+      "unpricedModels": "No rate is known for: {{models}}. A run on one of these reserves nothing, so the cap cannot stop it.",
+      "noActiveAgents": "No active agents, so nothing here can start a run.",
+      "dangerZone": "Danger zone",
+      "deleteExplain": "Deleting this project removes every entry, work item, document, revision, agent, run, and proposal in it. This cannot be undone.",
+      "deleteConfirmLabel": "Type the project's slug to confirm",
+      "delete": "Delete this project",
+      "deleting": "Deleting",
+      "deleteMismatch": "That is not this project's slug."
     }
   }
 }

@@ -561,6 +561,36 @@
         "cancelled": "已取消",
         "capped": "已达上限停止"
       }
+    },
+    "settings": {
+      "title": "设置",
+      "project": "项目",
+      "titleLabel": "标题",
+      "briefLabel": "简介",
+      "statusLabel": "状态",
+      "status": {
+        "active": "进行中",
+        "paused": "已暂停",
+        "done": "已完成",
+        "abandoned": "已放弃"
+      },
+      "save": "保存",
+      "saving": "保存中",
+      "saved": "已保存",
+      "spend": "代理支出",
+      "spentThisMonth": "本月已用",
+      "monthlyCap": "每月上限",
+      "perRunTokenCap": "单次运行令牌上限",
+      "worstCase": "按本项目模型计算的单次运行最坏情况",
+      "worstCaseNote": "决定运行是否被拒绝的是这个数字，而不是平均值。",
+      "unpricedModels": "以下模型没有已知费率：{{models}}。使用这些模型的运行不会预留额度，因此上限无法阻止它。",
+      "noActiveAgents": "没有启用的代理，因此无法开始任何运行。",
+      "dangerZone": "危险区域",
+      "deleteExplain": "删除此项目将移除其中的每一条记录、工作项、文档、修订、代理、运行和提议。此操作无法撤销。",
+      "deleteConfirmLabel": "输入项目 slug 以确认",
+      "delete": "删除此项目",
+      "deleting": "删除中",
+      "deleteMismatch": "这不是本项目的 slug。"
     }
   }
 }

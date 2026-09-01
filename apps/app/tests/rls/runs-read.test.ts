@@ -15,6 +15,7 @@ const client = () => alice!.client as never;
 
 beforeAll(async () => {
   alice = await createTestUser(`runs-${Date.now()}@example.test`);
+  bob = await createTestUser(`runs-bob-${Date.now()}@example.test`);
 
   const { data: project } = await alice.client
     .from('projects')
@@ -220,10 +221,9 @@ describe('run reads', () => {
 
 describe('a second user is isolated from these runs', () => {
   it('cannot read the run, its calls, or its cost', async () => {
-    bob = await createTestUser(`runs-bob-${Date.now()}@example.test`);
-    expect(await getRun(bob.client as never, projectId, runId)).toBeNull();
-    expect(await listToolCalls(bob.client as never, runId)).toEqual([]);
-    expect(await runCostUsd(bob.client as never, runId)).toBe(0);
-    expect(await listRunProposals(bob.client as never, runId)).toEqual([]);
+    expect(await getRun(bob!.client as never, projectId, runId)).toBeNull();
+    expect(await listToolCalls(bob!.client as never, runId)).toEqual([]);
+    expect(await runCostUsd(bob!.client as never, runId)).toBe(0);
+    expect(await listRunProposals(bob!.client as never, runId)).toEqual([]);
   });
 });
