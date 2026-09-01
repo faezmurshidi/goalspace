@@ -1,6 +1,9 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+
+import { NEXT_LOCALE_COOKIE } from '@goalspace/i18n';
 
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug, createProject, updateProject, deleteProject } from '@/lib/db/projects';
@@ -8,6 +11,7 @@ import { createEntry } from '@/lib/db/entries';
 import { createDocument, getRevision, updateDocument } from '@/lib/db/documents';
 import { updateAgent } from '@/lib/db/agents';
 import { updateBudget } from '@/lib/db/budgets';
+import { updateUserSettings } from '@/lib/db/user-settings';
 import {
   changeWorkItemStatus,
   createWorkItem,
@@ -19,6 +23,7 @@ import { createDocumentSchema, updateDocumentSchema } from '@/lib/schemas/docume
 import { updateAgentSchema } from '@/lib/schemas/agent';
 import { createProjectSchema, updateProjectSchema, deleteProjectSchema } from '@/lib/schemas/project';
 import { updateBudgetSchema } from '@/lib/schemas/budget';
+import { updateAccountSettingsSchema } from '@/lib/schemas/user-settings';
 import { applyProposal } from '@/lib/proposals/apply';
 import { settleProposal } from '@/lib/db/proposals';
 import {
@@ -27,6 +32,7 @@ import {
   moveWorkItemSchema,
   updateWorkItemSchema,
 } from '@/lib/schemas/work-item';
+import { THEME_COOKIE, TIME_ZONE_COOKIE, PREFERENCE_COOKIE_MAX_AGE } from '@/lib/settings/preference-cookies';
 import { fail, fromZodError, ok, type ActionResult } from '@/lib/actions/result';
 
 /**
@@ -419,6 +425,46 @@ export async function updateBudgetAction(
     revalidatePath(`/projects/${slug}/settings`);
     return ok({ monthlyCapUsd: updated.monthly_cap_usd });
   } catch {
+    return fail('app.errors.generic');
+  }
+}
+
+/**
+ * Persist theme, language, time zone and email notification preferences, and
+ * carry the change into the current session.
+ *
+ * Two writes, one act: the database row is the durable copy read back at the
+ * next login (see the callback route), and the cookies are the request-time
+ * copy `app/layout.tsx` reads before there is any session to query. Writing
+ * only one half would leave either a new device or the current tab showing a
+ * stale preference.
+ *
+ * Unlike `updateProjectAction`, there is no slug — account settings belong to
+ * the caller, not to a project the caller must first be resolved into.
+ */
+export async function updateAccountSettingsAction(
+  input: unknown
+): Promise<ActionResult<{ locale: string }>> {
+  const parsed = updateAccountSettingsSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, userId } = await requireSessionContext();
+
+  try {
+    const updated = await updateUserSettings(supabase, { userId, values: parsed.data });
+    if (!updated) return fail('app.errors.generic');
+
+    const cookieStore = await cookies();
+    const cookieOptions = { maxAge: PREFERENCE_COOKIE_MAX_AGE };
+    cookieStore.set(NEXT_LOCALE_COOKIE, updated.locale, cookieOptions);
+    cookieStore.set(THEME_COOKIE, updated.theme, cookieOptions);
+    cookieStore.set(TIME_ZONE_COOKIE, updated.time_zone, cookieOptions);
+
+    // Locale and theme affect every rendered page, not just this one.
+    revalidatePath('/', 'layout');
+    return ok({ locale: updated.locale });
+  } catch (error) {
+    console.error('updateAccountSettingsAction failed', error);
     return fail('app.errors.generic');
   }
 }
