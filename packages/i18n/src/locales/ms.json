@@ -464,7 +464,9 @@
       "interviewerMissing": "Projek ini tiada Penemuduga, jadi tiada soalan untuk ditanya.",
       "plannerMissing": "Projek ini tiada Perancang, jadi tiada kerja dicadangkan.",
       "questionsFailed": "Soalan tidak dapat dirangka. Projek anda tetap sedia.",
-      "answersFailed": "Jawapan anda tidak dapat direkodkan. Tiada apa-apa hilang — cuba lagi."
+      "answersFailed": "Jawapan anda tidak dapat direkodkan. Tiada apa-apa hilang — cuba lagi.",
+      "partialFailure_one": "{{count}} perkara tidak dapat dicipta dan sedang menunggu dalam peti masuk. Selebihnya telah dicipta.",
+      "partialFailure_other": "{{count}} perkara tidak dapat dicipta dan sedang menunggu dalam peti masuk. Selebihnya telah dicipta."
     },
     "errors": {
       "validation": "Semak medan yang ditanda.",

@@ -464,7 +464,9 @@
       "interviewerMissing": "This project has no Interviewer, so there are no questions to ask.",
       "plannerMissing": "This project has no Planner, so no work was proposed.",
       "questionsFailed": "The questions could not be drafted. Your project is ready either way.",
-      "answersFailed": "Your answers could not be recorded. Nothing was lost — try again."
+      "answersFailed": "Your answers could not be recorded. Nothing was lost — try again.",
+      "partialFailure_one": "{{count}} item could not be created and is waiting in the inbox. Everything else was created.",
+      "partialFailure_other": "{{count}} items could not be created and are waiting in the inbox. Everything else was created."
     },
     "errors": {
       "validation": "Check the highlighted fields.",

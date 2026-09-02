@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAppTranslations } from '@goalspace/i18n';
 import { Button, Textarea } from '@goalspace/ui';
 
+import { describeApplyOutcome } from '@/lib/intake/outcome';
 import type { IntakeAnswer, IntakeQuestion } from '@/lib/schemas/intake';
 import {
   applyIntakeAction,
@@ -109,6 +110,16 @@ export function IntakeWizard({ slug }: { slug: string }) {
 
     if (!result.ok) {
       setError(describe(result.message));
+      setBusy(false);
+      return;
+    }
+
+    // A failure holds the screen. Navigating away from it would leave the owner
+    // believing every item they ticked was created, and send them looking for
+    // the rest in an inbox they have no reason to open.
+    const outcome = describeApplyOutcome(result.data);
+    if (outcome) {
+      setError(t(outcome.key, { count: outcome.count }));
       setBusy(false);
       return;
     }

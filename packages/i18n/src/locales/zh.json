@@ -464,7 +464,9 @@
       "interviewerMissing": "该项目没有访谈者，因此没有问题可问。",
       "plannerMissing": "该项目没有规划者，因此没有提出工作建议。",
       "questionsFailed": "无法拟定问题。你的项目仍然可用。",
-      "answersFailed": "你的答案未能记录。没有丢失任何内容 — 请重试。"
+      "answersFailed": "你的答案未能记录。没有丢失任何内容 — 请重试。",
+      "partialFailure_one": "有 {{count}} 项无法创建，正在收件箱中等待。其余的都已创建。",
+      "partialFailure_other": "有 {{count}} 项无法创建，正在收件箱中等待。其余的都已创建。"
     },
     "errors": {
       "validation": "请检查标记的字段。",
