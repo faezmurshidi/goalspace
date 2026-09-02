@@ -10,6 +10,7 @@ import { previewText } from '@/lib/text';
 import type { Progress } from '@/lib/work-items/progress';
 import type { Absence, WokenItem } from '@/lib/work-items/reentry';
 import { RowActions } from './row-actions';
+import { WaitingActions } from './waiting-actions';
 
 type T = (key: string, vars?: Record<string, unknown>) => string;
 
@@ -198,10 +199,7 @@ export function Waiting({
       <ul>
         {items.map((item) => (
           <li key={item.id} className="border-rule border-b">
-            <Link
-              href={`/projects/${slug}/work#${item.id}`}
-              className="hover:bg-paper-shade flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors"
-            >
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3">
               <span className="label text-waiting shrink-0">
                 {item.overdueDays === 0
                   ? t('app.resume.overdueToday')
@@ -209,13 +207,19 @@ export function Waiting({
                     ? t('app.resume.overdueOne')
                     : t('app.resume.overdueDays', { count: item.overdueDays })}
               </span>
-              <span className="text-body text-ink min-w-0 flex-1">{item.title}</span>
+              <Link
+                href={`/projects/${slug}/work#${item.id}`}
+                className="text-body text-ink hover:text-ink-soft min-w-0 flex-1 transition-colors"
+              >
+                {item.title}
+              </Link>
               <span className="label text-ink-soft shrink-0">
                 {t('app.resume.blockedSince', {
                   when: formatMonthYear(item.status_changed_at, locale, timeZone),
                 })}
               </span>
-            </Link>
+              <WaitingActions slug={slug} itemId={item.id} title={item.title} />
+            </div>
           </li>
         ))}
       </ul>

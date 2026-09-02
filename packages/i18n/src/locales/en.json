@@ -410,7 +410,14 @@
       "cancel": "Cancel",
       "brainstorm": "Think it through",
       "askDraft": "About this open question — \"{{title}}\" — ",
-      "brainstormDraft": "Let us think through this piece of work — \"{{title}}\" — "
+      "brainstormDraft": "Let us think through this piece of work — \"{{title}}\" — ",
+      "unblock": "Unblock",
+      "snooze": "Wait longer",
+      "snoozeUntil": "Ask again on",
+      "unblockPlaceholder": "What unblocked it? (optional)",
+      "unblockSubmit": "No longer blocked",
+      "snoozeSubmit": "Set the date",
+      "blockedDraft": "This has been blocked a while — \"{{title}}\" — "
     },
     "work": {
       "title": "Work",

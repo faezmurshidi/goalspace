@@ -36,7 +36,20 @@ export const changeStatusSchema = z
   .object({
     id: z.string().uuid(),
     status: workItemStatusSchema,
-    closingEntryBody: requiredText(20_000).optional(),
+    /**
+     * Why the status moved, recorded in the log.
+     *
+     * Was `closingEntryBody` and allowed only on a move to `done`, on the
+     * reasoning that a note attached to a reopening would claim to have closed
+     * something still open. That reasoning was about the *link*, not the
+     * *entry*: "the flange arrived, six weeks late" is exactly what the log
+     * exists to hold, and unblocking had nowhere to put it.
+     *
+     * The entry is now written for any transition. `closed_by_entry_id` is
+     * still only set when the status actually closes the item, so that column
+     * keeps meaning precisely what it did.
+     */
+    statusEntryBody: requiredText(20_000).optional(),
 
     /**
      * Only meaningful when moving to `blocked`. Sent as null to clear a wake
@@ -45,17 +58,6 @@ export const changeStatusSchema = z
     wake_at: z.string().datetime({ offset: true }).nullable().optional(),
   })
   .superRefine((value, ctx) => {
-    // A closing entry only makes sense for a status that closes something.
-    // Accepting one on a move to `doing` would file an entry claiming to have
-    // closed an item that is still open.
-    if (value.closingEntryBody !== undefined && value.status !== 'done') {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['closingEntryBody'],
-        message: 'A closing entry can only accompany a move to done.',
-      });
-    }
-
     // wake_at describes what is being waited on. Carrying one onto a done or
     // dropped item leaves a date that will later surface the item as overdue
     // on the resume view, long after it stopped mattering.

@@ -410,7 +410,14 @@
       "cancel": "Batal",
       "brainstorm": "Fikirkan bersama",
       "askDraft": "Mengenai soalan terbuka ini — \"{{title}}\" — ",
-      "brainstormDraft": "Mari kita fikirkan kerja ini — \"{{title}}\" — "
+      "brainstormDraft": "Mari kita fikirkan kerja ini — \"{{title}}\" — ",
+      "unblock": "Nyahsekat",
+      "snooze": "Tunggu lagi",
+      "snoozeUntil": "Tanya semula pada",
+      "unblockPlaceholder": "Apa yang menyahsekatnya? (pilihan)",
+      "unblockSubmit": "Tidak lagi tersekat",
+      "snoozeSubmit": "Tetapkan tarikh",
+      "blockedDraft": "Ini sudah lama tersekat — \"{{title}}\" — "
     },
     "work": {
       "title": "Kerja",

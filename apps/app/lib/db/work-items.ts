@@ -137,19 +137,22 @@ export async function changeWorkItemStatus(
 ): Promise<WorkItem> {
   const { projectId, ownerId, values } = params;
 
-  let closingEntryId: string | null = null;
-  if (values.closingEntryBody) {
+  // Written for any transition, not only a closing one. Unblocking is worth
+  // recording — "the flange arrived, six weeks late" is the kind of thing the
+  // record exists for — and before this it had nowhere to go.
+  let statusEntryId: string | null = null;
+  if (values.statusEntryBody) {
     const entry = await createEntry(supabase, {
       projectId,
       ownerId,
       values: {
         kind: 'session',
-        body: values.closingEntryBody,
+        body: values.statusEntryBody,
         title: null,
         work_item_id: values.id,
       },
     });
-    closingEntryId = entry.id;
+    statusEntryId = entry.id;
   }
 
   const now = new Date().toISOString();
@@ -167,7 +170,13 @@ export async function changeWorkItemStatus(
     ...(CLOSING_STATUSES.includes(values.status) ? {} : { closed_by_entry_id: null }),
   };
 
-  if (closingEntryId) patch.closed_by_entry_id = closingEntryId;
+  // Linked only when the status actually closes the item. An entry explaining
+  // a reopening is still an entry about that item — it is reachable through
+  // `work_item_id` — but it did not close anything, and this column is read as
+  // proof that something did.
+  if (statusEntryId && CLOSING_STATUSES.includes(values.status)) {
+    patch.closed_by_entry_id = statusEntryId;
+  }
 
   // Leaving `blocked` clears the wake date, so a finished item cannot
   // resurface later on the resume view as something still being waited on.

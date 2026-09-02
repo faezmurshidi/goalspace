@@ -53,7 +53,7 @@ export function RowActions({
       // Optional on purpose, as in the work tree: requiring a note would turn
       // every closure into a writing task, and the predictable result is that
       // people stop closing things at all.
-      ...(body.trim() ? { closingEntryBody: body.trim() } : {}),
+      ...(body.trim() ? { statusEntryBody: body.trim() } : {}),
     });
 
     setBusy(false);

@@ -410,7 +410,14 @@
       "cancel": "取消",
       "brainstorm": "一起想想",
       "askDraft": "关于这个待解问题 —「{{title}}」— ",
-      "brainstormDraft": "我们来想想这项工作 —「{{title}}」— "
+      "brainstormDraft": "我们来想想这项工作 —「{{title}}」— ",
+      "unblock": "解除阻塞",
+      "snooze": "继续等待",
+      "snoozeUntil": "下次提醒日期",
+      "unblockPlaceholder": "是什么解除了阻塞？（可选）",
+      "unblockSubmit": "不再阻塞",
+      "snoozeSubmit": "设定日期",
+      "blockedDraft": "这件事已经阻塞很久了 —「{{title}}」— "
     },
     "work": {
       "title": "工作",

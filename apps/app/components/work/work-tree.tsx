@@ -35,7 +35,7 @@ export function WorkTree({ slug, items }: { slug: string; items: WorkItem[] }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function applyStatus(id: string, status: WorkItemStatus, closingEntryBody?: string) {
+  async function applyStatus(id: string, status: WorkItemStatus, statusEntryBody?: string) {
     setBusyId(id);
     setError(null);
 
@@ -43,7 +43,7 @@ export function WorkTree({ slug, items }: { slug: string; items: WorkItem[] }) {
       const result = await changeStatusAction(slug, {
         id,
         status,
-        ...(closingEntryBody ? { closingEntryBody } : {}),
+        ...(statusEntryBody ? { statusEntryBody } : {}),
       });
 
       if (!result.ok) {
