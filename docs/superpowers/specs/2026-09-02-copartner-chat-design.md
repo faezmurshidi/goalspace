@@ -70,6 +70,12 @@ A fifth entry in `SEEDED_TEMPLATES`, slug `partner`.
 | `record_entry` | 1 |
 | `ask_agent` | 1 |
 
+Its model is **`zai/glm-5.3-flash`**, not `DEFAULT_MODEL`. A conversation is
+the highest-volume agent surface in the product — every turn is a run — so the
+Partner is the one template where the model choice is a cost decision rather
+than a capability one. The seeded four keep `DEFAULT_MODEL`; `DEFAULT_MODEL`
+itself does not change.
+
 **It holds no `propose_*` tool.** This is the design's central choice about the
 roster. A Partner that could draft entries, work items and document edits
 itself would be a superset of the Critic, Tutor and Planner, and would make
@@ -86,7 +92,43 @@ The cost is one round trip on cases like "add a task to order bearings", which
 becomes a delegation rather than a direct `propose_work_item`. Accepted
 deliberately; the alternative is recorded in §14 with its reversal.
 
-### 4.1 System prompt substance
+### 4.1 Pricing the model
+
+`zai/glm-5.3-flash` must be added to `RATES` in `lib/agents/cost.ts` in the
+same change that seeds the Partner. This is not bookkeeping. An unpriced model
+fails *silently* in two places, both of which disable a control:
+
+- `costUsd` returns 0, recording every run as free, which stops the monthly cap
+  from ever being reached for that model. The gateway's own reported cost
+  covers the usual path, so this bites only when the gateway omits one.
+- `worstCaseUsd` returns 0, so `start_agent_run` reserves nothing and the
+  concurrency protection that makes the cap check sound lapses entirely.
+
+`agents-templates.test.ts` already asserts that every seeded model appears in
+`RATES`, so a Partner seeded without this fails the suite rather than shipping
+a free-looking agent.
+
+The rates below were read from the gateway, not looked up in a blog post:
+`gateway.getAvailableModels()` returns a `pricing` object per model in dollars
+per token. The same call reports `openai/gpt-4o-mini` at 0.15 / 0.60 / 0.075,
+matching the existing row exactly, which is what confirms the units.
+
+```ts
+'zai/glm-5.3-flash': { inputPerMTok: 0.15, outputPerMTok: 0.5, cachedInputPerMTok: 0.03 },
+```
+
+**That the gateway serves pricing programmatically also settles a question
+left open elsewhere.** Per-agent model choice is planned, and the local table
+becomes a liability the moment an owner can pick a model nobody has priced.
+The answer is now known to exist: rates can be fetched rather than mirrored.
+Out of scope here — this spec adds one row — but it is no longer an open
+question, only unbuilt work.
+
+The slug was verified against the live gateway before being written here
+(`GATEWAY_MODEL=zai/glm-5.3-flash pnpm verify:gateway`), which is how the
+`anthropic/*` 403s that forced `DEFAULT_MODEL` to `gpt-4o-mini` were found.
+
+### 4.2 System prompt substance
 
 Plain, specific, unsentimental, per PRODUCT.md. It must carry:
 
@@ -295,8 +337,9 @@ Every row ends with the owner still able to record.
 ## 13. Delivery
 
 **2d-1 — Data and delegation.** The migration, `conversations`/`messages`
-queries, `ask_agent`, the Partner template, unit and RLS tests. No UI. At the
-end of this slice delegation is provable without a chat surface existing.
+queries, `ask_agent`, the Partner template, its `RATES` row (§4.1), unit and
+RLS tests. No UI. At the end of this slice delegation is provable without a
+chat surface existing.
 
 **2d-2 — `record_entry`.** The tool, its server-side source validation, and
 its tests. Still no UI.
@@ -323,6 +366,9 @@ actually found.
 5. **`record_entry` writes directly, gated by message citation** — §6.1,
    including what would have to change to undo it.
 6. **One conversation per project** in v1.
+7. **The Partner runs on `zai/glm-5.3-flash`**, verified against the live
+   gateway and priced from the gateway's own figures. Every other seeded agent
+   keeps `DEFAULT_MODEL`.
 
 ## 15. Risks
 
