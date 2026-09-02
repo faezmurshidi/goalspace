@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { tool, type ToolSet } from 'ai';
 
-import { HANDLERS, type ToolContext } from '@/lib/agents/tools/handlers';
+import { HANDLERS, type DelegateFn, type ToolContext } from '@/lib/agents/tools/handlers';
 import { isAllowed, REGISTRY, resolveTools } from '@/lib/agents/tools/registry';
 import type { Database } from '@/types/supabase';
 
@@ -32,6 +32,10 @@ export interface RunContext {
    * at proposal time.
    */
   documentVersions: Map<string, string>;
+  /** See ToolContext.delegate. Present only on runs permitted to delegate. */
+  delegate?: DelegateFn;
+  /** See ToolContext.conversationId. Present only on conversation runs. */
+  conversationId?: string;
 }
 
 export type ToolOutcome = { ok: true; result: unknown } | { ok: false; error: string };
@@ -83,6 +87,12 @@ export async function dispatchToolCall(
     return { ok: false, error };
   }
 
+  // Every field, listed. A projection rather than a spread so that what a
+  // handler receives is stated here rather than inherited — but that cuts both
+  // ways: a field added to RunContext and forgotten here is dropped silently,
+  // and the handler sees undefined with no error until it needs the value.
+  // That is exactly how `delegate` and `conversationId` were lost on their
+  // first live run. `agents-executor.test.ts` now asserts the pass-through.
   const toolContext: ToolContext = {
     supabase: ctx.supabase,
     projectId: ctx.projectId,
@@ -90,6 +100,8 @@ export async function dispatchToolCall(
     agentId: ctx.agentId,
     runId: ctx.runId,
     documentVersions: ctx.documentVersions,
+    delegate: ctx.delegate,
+    conversationId: ctx.conversationId,
   };
   try {
     const result = await handler(toolContext, args as never);

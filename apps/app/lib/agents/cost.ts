@@ -25,6 +25,11 @@ export const RATES: Record<string, ModelRate> = {
   // What the seeded Critic runs on until the gateway account carries credits:
   // every anthropic/* slug returns 403 RestrictedModelsError on the free tier.
   'openai/gpt-4o-mini': { inputPerMTok: 0.15, outputPerMTok: 0.6, cachedInputPerMTok: 0.075 },
+  // The Partner's model. Read from the gateway, not a blog post:
+  // gateway.getAvailableModels() reports pricing per model in dollars per
+  // token. The same call gives openai/gpt-4o-mini as 0.15 / 0.60 / 0.075,
+  // matching the row above, which is what confirms these units.
+  'zai/glm-5.3-flash': { inputPerMTok: 0.15, outputPerMTok: 0.5, cachedInputPerMTok: 0.03 },
 };
 
 export interface CostInput {

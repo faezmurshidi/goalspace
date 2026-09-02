@@ -52,7 +52,11 @@ describe('REGISTRY', () => {
     // mattered: a `writes` tool emits a proposal, so there is still no path
     // from a model to a row in entries, work_items, or documents.
     for (const def of Object.values(REGISTRY)) {
-      if (def.writes) expect(def.name.startsWith('propose_')).toBe(true);
+      // 'records' writes to the log directly and is deliberately not named
+      // propose_*, because it does not propose. The check is on the category
+      // rather than on truthiness, which record_entry would silently fail.
+      if (def.writes === 'proposes') expect(def.name.startsWith('propose_')).toBe(true);
+      if (def.writes === 'records') expect(def.name.startsWith('propose_')).toBe(false);
     }
   });
 

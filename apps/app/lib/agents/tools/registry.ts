@@ -27,6 +27,8 @@ export const REGISTRY_NAMES = [
   'get_work_item',
   'read_document',
   'read_entry',
+  'ask_agent',
+  'record_entry',
   'propose_entry',
   'propose_work_item',
   'propose_document_edit',
@@ -34,12 +36,25 @@ export const REGISTRY_NAMES = [
 
 export type ToolName = (typeof REGISTRY_NAMES)[number];
 
+/**
+ * What a tool does to the record.
+ *
+ * A union rather than a boolean because there are three answers, not two, and
+ * the agents page states each of them to the owner in different words. Two
+ * booleans would let `writes: true, records: true` be written and mean
+ * nothing; this makes that state unrepresentable.
+ */
+export type ToolWrites = false | 'proposes' | 'records';
+
 export interface ToolDefinition {
   name: ToolName;
   description: string;
   inputSchema: z.ZodTypeAny;
-  /** Emits a proposal rather than mutating. */
-  writes: boolean;
+  /**
+   * 'proposes' emits a proposal the owner accepts or rejects. 'records' writes
+   * to the log directly, and only the owner's own words — see record_entry.
+   */
+  writes: ToolWrites;
   /** Leaves the system boundary. No tool does yet; web_search will. */
   external: boolean;
 }
@@ -107,6 +122,47 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
     writes: false,
     external: false,
   },
+  ask_agent: {
+    name: 'ask_agent',
+    description:
+      'Ask one of this project\u2019s specialist agents a question and return its answer. ' +
+      'The agent runs under its own tools, not yours — if it proposes something, the proposal ' +
+      'is its own and goes to the owner\u2019s inbox. Say that you asked it, never that you did it.',
+    // The enum is the guard, not a convenience. 'partner' is not a member, so a
+    // Partner naming itself fails validation before any handler runs — the
+    // allowlist alone would permit the self-call, since the Partner holds this
+    // tool. Do not widen to z.string().
+    inputSchema: z.object({
+      agent_slug: z.enum(['critic', 'tutor', 'planner']),
+      question: z.string().min(1).max(2_000),
+    }),
+    // The sub-agent may propose; this tool does not. Filing it as a write would
+    // place it in WRITE_TOOLS and make the Critic — defined as writing nothing
+    // — permanently ineligible to hold it.
+    writes: false,
+    external: false,
+  },
+  record_entry: {
+    name: 'record_entry',
+    description:
+      'Write something the owner told you into the project log. You may choose the kind and the ' +
+      'title; the body must be their own words, and every id in source_message_ids must be a ' +
+      'message they wrote in this conversation. You cannot record your own summaries or ' +
+      'conclusions \u2014 the call fails if you try.',
+    inputSchema: z.object({
+      payload: z.object({
+        kind: z.enum(['note', 'decision', 'source', 'session']),
+        title: z.string().max(200).nullable().optional(),
+        body: z.string().min(1).max(20_000),
+      }),
+      // min(1): an entry citing nothing is the agent authoring the record.
+      // Checked again in unresolvedSources, because a schema is one layer and
+      // this is the rule the whole amendment rests on.
+      source_message_ids: z.array(z.string().uuid()).min(1).max(20),
+    }),
+    writes: 'records',
+    external: false,
+  },
   propose_entry: {
     name: 'propose_entry',
     description:
@@ -138,7 +194,7 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
         .default([])
         .describe('Ids you actually saw in a tool result. Inventing one fails the call.'),
     }),
-    writes: true,
+    writes: 'proposes',
     external: false,
   },
   propose_work_item: {
@@ -160,7 +216,7 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
         )
         .default([]),
     }),
-    writes: true,
+    writes: 'proposes',
     external: false,
   },
   propose_document_edit: {
@@ -181,7 +237,7 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
         )
         .default([]),
     }),
-    writes: true,
+    writes: 'proposes',
     external: false,
   },
 };
@@ -200,11 +256,18 @@ export const REPO_READ = [
 ] as const satisfies readonly ToolName[];
 
 /**
- * Every tool that produces a proposal. None of them is external, and none of
- * them mutates: a "write" tool in this system writes to `proposals` and
- * nowhere else. REPO_READ and WRITE_TOOLS are disjoint by construction, which
- * is what lets the Critic be described as writing nothing and have that be
- * checkable rather than claimed.
+ * Every tool that produces a proposal — the `writes: 'proposes'` group, and
+ * nothing else. None is external, and none mutates the record: a proposal tool
+ * writes to `proposals` and nowhere else.
+ *
+ * That used to be true of every tool with a truthy `writes`. It no longer is:
+ * `record_entry` carries `writes: 'records'` and writes to `entries`
+ * directly, which is why the flag became a union. This group deliberately
+ * excludes it — the name means proposals, not writes in general.
+ *
+ * REPO_READ and WRITE_TOOLS are disjoint by construction, which is what lets
+ * the Critic be described as writing nothing and have that be checkable rather
+ * than claimed.
  */
 export const WRITE_TOOLS = [
   'propose_entry',

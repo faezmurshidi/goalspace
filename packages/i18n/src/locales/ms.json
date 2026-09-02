@@ -434,6 +434,29 @@
       "failed": "Itu tidak tersimpan. Teks anda masih ada.",
       "region": "Tangkapan pantas"
     },
+    "chat": {
+      "placeholder": "Tanya tentang projek ini, atau beritahu apa yang berlaku",
+      "send": "Tanya",
+      "record": "Rekod",
+      "you": "Anda",
+      "partner": "Rakan",
+      "hint": "⌘↵ untuk tanya · ⌘⇧↵ untuk rekod",
+      "empty": "Belum ada soalan. Ia membaca rekod yang sama seperti anda.",
+      "thinking": "Membaca rekod",
+      "recordOnly": "Rekod sahaja: Rakan tidak tersedia, jadi ⌘↵ menulis ke log.",
+      "failed": "Itu tidak sampai kepada Rakan. Apa yang anda taip masih ada.",
+      "proposals_one": "{{count}} cadangan daripada {{agent}} — semak dalam peti masuk",
+      "proposals_other": "{{count}} cadangan daripada {{agent}} — semak dalam peti masuk",
+      "confirmTitle": "Rekod ini sebagai {{kind}}?",
+      "confirmAccept": "Rekodkan",
+      "confirmReject": "Jangan rekod",
+      "confirmRejected": "Tidak direkodkan.",
+      "confirmAccepted": "Direkodkan.",
+      "region": "Rakan",
+      "hintAddress": "⌘↵ tanya · ⌘⇧↵ rekod · {{handles}} untuk tanya terus",
+      "reasoning": "Penaakulan",
+      "reasoningLive": "Menaakul…"
+    },
     "create": {
       "title": "Mulakan rekod",
       "body": "Satu projek dahulu. Anda boleh tambah kemudian.",
@@ -555,6 +578,8 @@
       "tools": {
         "heading": "Alat",
         "reads": "Membaca rekod",
+        "records": "Menulis apa yang anda katakan",
+        "recordsNote": "terus ke dalam log, tiada langkah kelulusan",
         "proposes": "Mencadangkan perubahan",
         "proposesNote": "anda meluluskan setiap satu",
         "external": "Keluar dari sistem",

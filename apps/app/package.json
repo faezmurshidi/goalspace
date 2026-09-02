@@ -15,6 +15,7 @@
     "verify:gateway": "node --experimental-strip-types scripts/verify-gateway.mts"
   },
   "dependencies": {
+    "@ai-sdk/react": "^4.0.93",
     "@goalspace/i18n": "workspace:*",
     "@goalspace/ui": "workspace:*",
     "@hookform/resolvers": "^3.10.0",
@@ -30,6 +31,7 @@
     "react-markdown": "^10.1.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
+    "use-stick-to-bottom": "^1.1.6",
     "zod": "^3.25.76"
   },
   "devDependencies": {

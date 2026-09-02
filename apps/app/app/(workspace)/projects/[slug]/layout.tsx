@@ -1,17 +1,23 @@
 import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
-import { CaptureBar } from '@/components/capture/capture-bar';
+import { ProjectShell } from '@/components/chat/project-shell';
 import { requireSessionContext } from '@/lib/auth/session';
 import { captureTargetsFrom } from '@/lib/capture/targets';
+import { getOrCreateConversation, listMessages } from '@/lib/db/conversations';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { listWorkItems } from '@/lib/db/work-items';
 import { getLocale } from '@/lib/format';
 
 /**
- * Project scope. Capture is mounted here rather than on each page so that it
- * is present on Resume, Work, and Log alike, and so a half-typed entry is not
- * destroyed by navigating between them.
+ * Project scope. The composer is mounted here rather than on each page so that
+ * it is present on Resume, Work, and Log alike, and so a half-typed entry is
+ * not destroyed by navigating between them.
+ *
+ * On the resume view it is the Partner chat; everywhere else it stays the
+ * capture bar. See ProjectComposer for why that decision is made from the
+ * pathname rather than passed down: a layout does not know its active child
+ * route.
  */
 export default async function ProjectLayout({
   children,
@@ -29,13 +35,62 @@ export default async function ProjectLayout({
   const workItems = await listWorkItems(supabase, project.id);
   const t = getFixedT(await getLocale());
 
+  const { data: roster } = await supabase
+    .from('agents')
+    .select('id, slug, tools, is_active')
+    .eq('project_id', project.id)
+    .eq('is_active', true);
+
+  const partner = (roster ?? []).find((a) => a.slug === 'partner');
+  // Everyone the owner can address with a leading @handle. Read from the
+  // project rather than hard-coded, so an agent they renamed or deleted is
+  // reflected in what the composer offers.
+  //
+  // An agent holding no tools is excluded: it cannot read the record, so it has
+  // nothing to answer from. That is a rule rather than a list, and it happens
+  // to exclude the Interviewer — whose empty allowlist is the whole point of it,
+  // and whose only job is the questions asked once at intake.
+  const addressable = (roster ?? [])
+    .filter((a) => a.slug !== 'partner' && (a.tools ?? []).length > 0)
+    .map((a) => a.slug);
+
+  // Resolved server-side so a reload shows the stored transcript rather than an
+  // empty conversation over the top of one. A project with no Partner —
+  // deleted, or created before this shipped — gets the capture bar unchanged.
+  const hasPartner = Boolean(partner?.is_active);
+  const seed = hasPartner
+    ? await listMessages(
+        supabase,
+        (
+          await getOrCreateConversation(supabase, {
+            projectId: project.id,
+            ownerId: userId,
+            agentId: partner!.id,
+          })
+        ).id
+      )
+    : [];
+
   return (
-    // The subtraction is the header rail: h-14 (3.5rem) plus its 1px bottom border.
-    <div className="flex min-h-[calc(100svh-3.5rem-1px)] flex-col">
-      <div className="flex-1">{children}</div>
-      <section aria-label={t('app.capture.region')}>
-        <CaptureBar slug={slug} targets={captureTargetsFrom(workItems)} />
-      </section>
-    </div>
+    <ProjectShell
+      slug={slug}
+      targets={captureTargetsFrom(workItems)}
+      hasPartner={hasPartner}
+      addressable={addressable}
+      initialMessages={seed.map((m) => ({
+        id: m.ui_message_id ?? m.id,
+        role: m.role,
+        agentSlug: m.agent_slug,
+        // The stored parts, so a reload restores the turn rather than a
+        // rendering of it. A turn written before that column existed has none,
+        // and falls back to its text.
+        parts:
+          Array.isArray(m.parts) && m.parts.length > 0
+            ? (m.parts as unknown[])
+            : [{ type: 'text', text: m.content }],
+      }))}
+    >
+      {children}
+    </ProjectShell>
   );
 }

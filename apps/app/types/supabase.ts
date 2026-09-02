@@ -31,6 +31,7 @@ export type Database = {
       agent_runs: {
         Row: {
           agent_id: string;
+          conversation_id: string | null;
           ended_at: string | null;
           error: string | null;
           id: string;
@@ -45,6 +46,7 @@ export type Database = {
         };
         Insert: {
           agent_id: string;
+          conversation_id?: string | null;
           ended_at?: string | null;
           error?: string | null;
           id?: string;
@@ -59,6 +61,7 @@ export type Database = {
         };
         Update: {
           agent_id?: string;
+          conversation_id?: string | null;
           ended_at?: string | null;
           error?: string | null;
           id?: string;
@@ -77,6 +80,13 @@ export type Database = {
             columns: ['agent_id'];
             isOneToOne: false;
             referencedRelation: 'agents';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'agent_runs_conversation_id_fkey';
+            columns: ['conversation_id'];
+            isOneToOne: false;
+            referencedRelation: 'conversations';
             referencedColumns: ['id'];
           },
           {
@@ -369,6 +379,58 @@ export type Database = {
           },
         ];
       };
+      conversations: {
+        Row: {
+          agent_id: string;
+          created_at: string;
+          id: string;
+          owner_id: string;
+          project_id: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          agent_id: string;
+          created_at?: string;
+          id?: string;
+          owner_id: string;
+          project_id: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Update: {
+          agent_id?: string;
+          created_at?: string;
+          id?: string;
+          owner_id?: string;
+          project_id?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'conversations_agent_id_project_id_fkey';
+            columns: ['agent_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'agents';
+            referencedColumns: ['id', 'project_id'];
+          },
+          {
+            foreignKeyName: 'conversations_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'conversations_project_id_fkey';
+            columns: ['project_id'];
+            isOneToOne: false;
+            referencedRelation: 'projects';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       document_revisions: {
         Row: {
           agent_id: string | null;
@@ -559,6 +621,77 @@ export type Database = {
             columns: ['work_item_id', 'project_id'];
             isOneToOne: false;
             referencedRelation: 'work_items';
+            referencedColumns: ['id', 'project_id'];
+          },
+        ];
+      };
+      messages: {
+        Row: {
+          agent_slug: string | null;
+          content: string;
+          conversation_id: string;
+          created_at: string;
+          id: string;
+          owner_id: string;
+          parts: Json;
+          project_id: string;
+          role: string;
+          run_id: string | null;
+          ui_message_id: string | null;
+        };
+        Insert: {
+          agent_slug?: string | null;
+          content: string;
+          conversation_id: string;
+          created_at?: string;
+          id?: string;
+          owner_id: string;
+          parts?: Json;
+          project_id: string;
+          role: string;
+          run_id?: string | null;
+          ui_message_id?: string | null;
+        };
+        Update: {
+          agent_slug?: string | null;
+          content?: string;
+          conversation_id?: string;
+          created_at?: string;
+          id?: string;
+          owner_id?: string;
+          parts?: Json;
+          project_id?: string;
+          role?: string;
+          run_id?: string | null;
+          ui_message_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'messages_conversation_id_fkey';
+            columns: ['conversation_id'];
+            isOneToOne: false;
+            referencedRelation: 'conversations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'messages_owner_id_fkey';
+            columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'messages_project_id_fkey';
+            columns: ['project_id'];
+            isOneToOne: false;
+            referencedRelation: 'projects';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'messages_run_id_project_id_fkey';
+            columns: ['run_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'agent_runs';
             referencedColumns: ['id', 'project_id'];
           },
         ];

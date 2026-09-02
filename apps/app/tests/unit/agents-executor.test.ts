@@ -143,3 +143,44 @@ describe('dispatchToolCall — allowlist enforcement', () => {
     expect(outcome.ok).toBe(false);
   });
 });
+
+describe('dispatchToolCall passes the whole context through', () => {
+  // The regression that shipped: the ToolContext is built field by field, and
+  // `delegate` and `conversationId` were added to RunContext without being
+  // added here. Both arrived as undefined, so ask_agent and record_entry threw
+  // on their first live run — after a paid model call had already been made.
+  //
+  // Asserted through dispatchToolCall rather than by calling a handler
+  // directly, because calling directly is what hid it: the handler tests build
+  // their own context and never exercise the projection.
+  it('carries every ToolContext field a handler may need', async () => {
+    let seen: Record<string, unknown> | null = null;
+
+    const ctx = {
+      supabase: null as never,
+      projectId: 'proj-1',
+      ownerId: 'owner-1',
+      agentId: 'agent-1',
+      runId: 'run-1',
+      allowlist: ['search_repo'],
+      documentVersions: new Map<string, string>(),
+      delegate: async () => ({ ok: true as const, text: 'delegated', proposals: 0 }),
+      conversationId: 'conv-1',
+    };
+    // recordToolCall writes through ctx.supabase, which is null here; the
+    // assertion is on what the handler received, so a failed write is fine.
+    ctx.supabase = { from: () => ({ insert: async () => ({}) }) } as never;
+
+    await dispatchToolCall(ctx, 'search_repo', { query: 'x' }, {
+      async search_repo(received: Record<string, unknown>) {
+        seen = received;
+        return [];
+      },
+    } as never);
+
+    expect(seen).not.toBeNull();
+    expect(seen!.conversationId).toBe('conv-1');
+    expect(typeof seen!.delegate).toBe('function');
+    expect(seen!.documentVersions).toBe(ctx.documentVersions);
+  });
+});

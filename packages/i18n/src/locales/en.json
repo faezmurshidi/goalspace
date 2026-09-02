@@ -434,6 +434,29 @@
       "failed": "That did not save. Your text is still here.",
       "region": "Quick capture"
     },
+    "chat": {
+      "placeholder": "Ask about this project, or tell it what happened",
+      "send": "Ask",
+      "record": "Record",
+      "you": "You",
+      "partner": "Partner",
+      "hint": "⌘↵ to ask · ⌘⇧↵ to record",
+      "empty": "Nothing asked yet. It reads the same record you do.",
+      "thinking": "Reading the record",
+      "recordOnly": "Record-only: the Partner is unavailable, so ⌘↵ writes to the log.",
+      "failed": "That did not reach the Partner. What you typed is still here.",
+      "proposals_one": "{{count}} proposal from the {{agent}} — review it in the inbox",
+      "proposals_other": "{{count}} proposals from the {{agent}} — review them in the inbox",
+      "confirmTitle": "Record this as a {{kind}}?",
+      "confirmAccept": "Record it",
+      "confirmReject": "Do not record",
+      "confirmRejected": "Not recorded.",
+      "confirmAccepted": "Recorded.",
+      "region": "Partner",
+      "hintAddress": "⌘↵ ask · ⌘⇧↵ record · {{handles}} to ask one directly",
+      "reasoning": "Reasoning",
+      "reasoningLive": "Reasoning…"
+    },
     "create": {
       "title": "Start the record",
       "body": "One project to begin with. You can add more later.",
@@ -555,6 +578,8 @@
       "tools": {
         "heading": "Tools",
         "reads": "Reads the record",
+        "records": "Writes down what you say",
+        "recordsNote": "straight into the log, no approval step",
         "proposes": "Proposes changes",
         "proposesNote": "you approve each",
         "external": "Leaves the system",

@@ -1,7 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { ToolName } from '@/lib/agents/tools/registry';
+import { unresolvedSources } from '@/lib/agents/tools/sources';
+import { listUserMessageIds } from '@/lib/db/conversations';
+import { createEntry } from '@/lib/db/entries';
 import { resolveCitations } from '@/lib/proposals/citations';
+import { createEntrySchema } from '@/lib/schemas/entry';
 import { citationsSchema, payloadSchemaFor, type ProposalKind } from '@/lib/schemas/proposal';
 import type { Database } from '@/types/supabase';
 
@@ -13,6 +17,11 @@ import type { Database } from '@/types/supabase';
  * confused model gets an empty result instead of an error, and it keeps the
  * rule readable in one place: the model chooses what to ask, never whose.
  */
+export type DelegateFn = (
+  agentSlug: string,
+  question: string
+) => Promise<{ ok: true; text: string; proposals: number } | { ok: false; message: string }>;
+
 export interface ToolContext {
   supabase: SupabaseClient<Database>;
   projectId: string;
@@ -40,6 +49,25 @@ export interface ToolContext {
    * defeat the check by claiming a newer one.
    */
   documentVersions: Map<string, string>;
+  /**
+   * Runs another agent, under that agent's own allowlist.
+   *
+   * Injected rather than imported. `ask_agent` needs `runTooled`, and importing
+   * it here would close the cycle handlers → tooled → executor → handlers.
+   * Injection also makes delegation testable without a model, which an import
+   * would not.
+   *
+   * Absent on runs that may not delegate — which is every run except the
+   * Partner's. A handler reached without it is a wiring bug, not a refusal.
+   */
+  delegate?: DelegateFn;
+  /**
+   * The conversation this run belongs to. Present only on conversation runs.
+   *
+   * record_entry validates its sources against this conversation's user turns,
+   * so a run without one has nothing to validate against and must not record.
+   */
+  conversationId?: string;
 }
 
 /**
@@ -118,6 +146,30 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
   },
 
   async list_entries(ctx, args: { kinds?: string[]; work_item_id?: string; limit?: number }) {
+    // An invented filter id is rejected, exactly as an invented citation is.
+    //
+    // Without this the call succeeds and returns nothing, because a filter on a
+    // work item that does not exist is a legal query with an empty result. A
+    // model that guessed the id then reads "0 rows" as "the record is empty"
+    // and proposes from nothing — observed three times: the intake Planner,
+    // and again through delegation. A silent zero is the worst answer a tool
+    // can give, because it is indistinguishable from a true one.
+    if (args.work_item_id) {
+      const { data: target } = await ctx.supabase
+        .from('work_items')
+        .select('id')
+        .eq('project_id', ctx.projectId)
+        .eq('id', args.work_item_id)
+        .maybeSingle();
+
+      if (!target) {
+        throw new Error(
+          `No work item ${args.work_item_id} in this project. Omit work_item_id to list the ` +
+            'whole log, or call list_work_items first to get a real id.'
+        );
+      }
+    }
+
     let query = ctx.supabase
       .from('entries')
       .select(ENTRY_COLUMNS)
@@ -211,6 +263,83 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
       .eq('id', args.id);
     if (error) throw new Error(error.message);
     return (data ?? [])[0] ?? null;
+  },
+
+  async ask_agent(ctx, args: { agent_slug: string; question: string }) {
+    if (!ctx.delegate) {
+      // Loud on purpose. An agent holding ask_agent in a run wired without a
+      // delegate is a bug in the caller; answering "I cannot" would let it ship
+      // looking like a model limitation.
+      throw new Error(
+        `ask_agent was called on run ${ctx.runId} with no delegate wired into the context.`
+      );
+    }
+
+    const outcome = await ctx.delegate(args.agent_slug, args.question);
+
+    // A refusal is data, not an exception. A delegated run stopped by the
+    // monthly cap should leave the Partner able to say so and carry on.
+    // The count is what the composer renders an inbox affordance from. It
+    // matters because the alternative is the Partner's prose, and prose is not
+    // a control: asked to delegate, it once reported four proposals "waiting in
+    // your inbox" when the delegated run had made no proposal call at all.
+    // A number from the proposals table cannot say that.
+    return outcome.ok
+      ? { agent: args.agent_slug, answer: outcome.text, proposals: outcome.proposals }
+      : { agent: args.agent_slug, refused: outcome.message, proposals: 0 };
+  },
+
+  async record_entry(
+    ctx,
+    args: {
+      payload: { kind: string; title?: string | null; body: string };
+      source_message_ids: string[];
+    }
+  ) {
+    if (!ctx.conversationId) {
+      // Loud, as with ask_agent: an agent holding record_entry outside a
+      // conversation is a wiring bug, and there is no conversation whose user
+      // turns could validate the sources.
+      throw new Error(
+        `record_entry was called on run ${ctx.runId} with no conversationId in the context.`
+      );
+    }
+
+    const allowed = await listUserMessageIds(ctx.supabase, ctx.conversationId);
+    const unresolved = unresolvedSources(args.source_message_ids, allowed);
+    if (unresolved.length > 0) {
+      // Returned rather than thrown: the model can correct itself, and the
+      // owner should not lose a run because an agent cited badly once.
+      return {
+        recorded: false,
+        error:
+          `These are not messages the owner wrote in this conversation: ${unresolved.join(', ')}. ` +
+          'Record only what they told you, citing the message ids you are recording from.',
+      };
+    }
+
+    // The one validation path, as everywhere else: the schema the human capture
+    // form posts through is the schema this passes through.
+    const parsed = createEntrySchema.safeParse({
+      kind: args.payload.kind,
+      title: args.payload.title ?? null,
+      body: args.payload.body,
+      work_item_id: null,
+    });
+    if (!parsed.success) {
+      return { recorded: false, error: 'That entry is not valid.' };
+    }
+
+    const entry = await createEntry(ctx.supabase, {
+      projectId: ctx.projectId,
+      ownerId: ctx.ownerId,
+      // Stamped, not laundered to null. The words are the owner's; the decision
+      // to write them down, and the kind and title, are the agent's.
+      agentId: ctx.agentId,
+      values: parsed.data,
+    });
+
+    return { recorded: true, id: entry.id, kind: entry.kind };
   },
 
   async propose_entry(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {
