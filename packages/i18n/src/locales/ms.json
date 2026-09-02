@@ -452,7 +452,8 @@
       "confirmReject": "Jangan rekod",
       "confirmRejected": "Tidak direkodkan.",
       "confirmAccepted": "Direkodkan.",
-      "region": "Rakan"
+      "region": "Rakan",
+      "hintAddress": "⌘↵ tanya · ⌘⇧↵ rekod · {{handles}} untuk tanya terus"
     },
     "create": {
       "title": "Mulakan rekod",

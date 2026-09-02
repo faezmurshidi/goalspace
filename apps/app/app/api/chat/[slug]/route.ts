@@ -7,6 +7,7 @@ import { buildToolSet, type RunContext } from '@/lib/agents/executor';
 import { buildSkeleton, type SkeletonWorkItem } from '@/lib/agents/skeleton';
 import { runTooled } from '@/lib/agents/tooled';
 import { finishRun, recordRunUsage } from '@/lib/agents/usage';
+import { parseMention } from '@/lib/chat/mention';
 import { textFromParts } from '@/lib/chat/parts';
 import { startAgentRun } from '@/lib/db/agents';
 import { getBudget } from '@/lib/db/budgets';
@@ -23,7 +24,7 @@ import { createClient } from '@/utils/supabase/server';
 export const maxDuration = 300;
 const MAX_STEPS = 12;
 
-const AGENT_COLUMNS = 'id, project_id, owner_id, system_prompt, tools, model, is_active';
+const AGENT_COLUMNS = 'id, slug, project_id, owner_id, system_prompt, tools, model, is_active';
 
 /**
  * One turn of the conversation.
@@ -47,28 +48,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   const project = await getProjectBySlug(supabase, auth.user.id, slug);
   if (!project) return NextResponse.json({ error: 'Project not found.' }, { status: 404 });
 
-  const { data: agent } = await supabase
-    .from('agents')
-    .select(AGENT_COLUMNS)
-    .eq('project_id', project.id)
-    .eq('slug', 'partner')
-    .maybeSingle();
-
-  if (!agent || !agent.is_active) {
-    // The composer falls back to record-only on this rather than showing a dead
-    // input. A project without a Partner is still a project.
-    return NextResponse.json({ error: 'partner_missing' }, { status: 404 });
-  }
-
-  const conversation = await getOrCreateConversation(supabase, {
-    projectId: project.id,
-    ownerId: auth.user.id,
-    agentId: agent.id,
-  });
-
-  // The last turn is what the owner just sent. Written before the run starts:
-  // record_entry validates its sources against this conversation's user turns,
-  // and a message that is not yet stored is not a citable source.
+  // The last turn is what the owner just sent, and it decides who answers.
   const latest = messages.at(-1);
   const text =
     latest?.parts
@@ -76,6 +56,44 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       .map((part) => part.text)
       .join('') ?? '';
 
+  const { data: roster } = await supabase
+    .from('agents')
+    .select(AGENT_COLUMNS)
+    .eq('project_id', project.id)
+    .eq('is_active', true);
+
+  // Matched against this project's own agents, so a renamed or deleted one is
+  // not addressable and an unknown handle reads as prose.
+  // The same rule the composer offers, applied server-side: an agent with no
+  // tools cannot read the record and has nothing to answer from. Duplicated
+  // deliberately — the composer's list is a convenience, and what may actually
+  // be addressed is decided here.
+  const mention = parseMention(
+    text,
+    (roster ?? [])
+      .filter((a) => a.slug !== 'partner' && (a.tools ?? []).length > 0)
+      .map((a) => a.slug)
+  );
+
+  const agent = (roster ?? []).find((a) => a.slug === (mention?.agentSlug ?? 'partner'));
+
+  if (!agent) {
+    // The composer falls back to record-only on this rather than showing a dead
+    // input. A project without a Partner is still a project.
+    return NextResponse.json({ error: 'partner_missing' }, { status: 404 });
+  }
+
+  const isPartner = agent.slug === 'partner';
+
+  const conversation = await getOrCreateConversation(supabase, {
+    projectId: project.id,
+    ownerId: auth.user.id,
+    agentId: agent.id,
+  });
+
+  // Written before the run starts: record_entry validates its sources against
+  // this conversation's user turns, and a message that is not yet stored is not
+  // a citable source.
   if (latest?.role === 'user' && text.trim()) {
     await appendMessage(supabase, {
       conversationId: conversation.id,
@@ -127,51 +145,57 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     runId,
     allowlist: agent.tools,
     documentVersions: new Map<string, string>(),
-    conversationId: conversation.id,
-    delegate: async (agentSlug, question) => {
-      const { data: sub } = await supabase
-        .from('agents')
-        .select(AGENT_COLUMNS)
-        .eq('project_id', project.id)
-        .eq('slug', agentSlug)
-        .maybeSingle();
+    // record_entry validates against this conversation, and only the Partner
+    // holds it. An addressed agent gets no conversation and no delegate: it
+    // answers as itself, under its own allowlist, exactly as it would if the
+    // Partner had asked it.
+    conversationId: isPartner ? conversation.id : undefined,
+    delegate: !isPartner
+      ? undefined
+      : async (agentSlug, question) => {
+          const { data: sub } = await supabase
+            .from('agents')
+            .select(AGENT_COLUMNS)
+            .eq('project_id', project.id)
+            .eq('slug', agentSlug)
+            .maybeSingle();
 
-      if (!sub || !sub.is_active) {
-        return { ok: false, message: `This project has no active ${agentSlug}.` };
-      }
+          if (!sub || !sub.is_active) {
+            return { ok: false, message: `This project has no active ${agentSlug}.` };
+          }
 
-      // Under the sub-agent's own allowlist, in its own run. The Partner gains
-      // nothing: buildToolSet is called with sub.tools, and any proposal
-      // carries sub.id.
-      const outcome = await runTooled({
-        supabase,
-        agent: sub,
-        ownerId: auth.user.id,
-        // The skeleton carries titles, never ids, so an agent that proposes
-        // straight from it cites nothing real. Saying so here rather than in
-        // the template, because it is delegation that creates the situation:
-        // asked directly, an agent has a conversation to read ids from.
-        prompt: [
-          'The owner asked this through their Partner:',
-          '',
-          question,
-          '',
-          'Read before you answer. The overview below lists titles only — use',
-          'list_entries, list_work_items or search_repo to get the ids you cite.',
-          'A citation you invent is rejected and the proposal discarded.',
-        ].join('\n'),
-        context: skeleton,
-        trigger: 'conversation',
-      });
+          // Under the sub-agent's own allowlist, in its own run. The Partner gains
+          // nothing: buildToolSet is called with sub.tools, and any proposal
+          // carries sub.id.
+          const outcome = await runTooled({
+            supabase,
+            agent: sub,
+            ownerId: auth.user.id,
+            // The skeleton carries titles, never ids, so an agent that proposes
+            // straight from it cites nothing real. Saying so here rather than in
+            // the template, because it is delegation that creates the situation:
+            // asked directly, an agent has a conversation to read ids from.
+            prompt: [
+              'The owner asked this through their Partner:',
+              '',
+              question,
+              '',
+              'Read before you answer. The overview below lists titles only — use',
+              'list_entries, list_work_items or search_repo to get the ids you cite.',
+              'A citation you invent is rejected and the proposal discarded.',
+            ].join('\n'),
+            context: skeleton,
+            trigger: 'conversation',
+          });
 
-      if (!outcome.ok) return { ok: false, message: outcome.message };
+          if (!outcome.ok) return { ok: false, message: outcome.message };
 
-      // Counted from the rows the delegated run actually produced, not from
-      // what it says it produced. This number is what the composer renders an
-      // inbox affordance from; the Partner's prose is not a control.
-      const produced = await listRunProposals(supabase, outcome.runId);
-      return { ok: true, text: outcome.text, proposals: produced.length };
-    },
+          // Counted from the rows the delegated run actually produced, not from
+          // what it says it produced. This number is what the composer renders an
+          // inbox affordance from; the Partner's prose is not a control.
+          const produced = await listRunProposals(supabase, outcome.runId);
+          return { ok: true, text: outcome.text, proposals: produced.length };
+        },
   };
 
   // Async in ai@7: it resolves file and data parts before handing the model a
@@ -280,6 +304,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
           parts: responseMessage.parts,
           runId,
           uiMessageId: responseMessage.id,
+          agentSlug: agent.slug,
         });
       } catch (error) {
         // Logged rather than left to reject. A rejection here is swallowed by

@@ -35,12 +35,24 @@ export default async function ProjectLayout({
   const workItems = await listWorkItems(supabase, project.id);
   const t = getFixedT(await getLocale());
 
-  const { data: partner } = await supabase
+  const { data: roster } = await supabase
     .from('agents')
-    .select('id, is_active')
+    .select('id, slug, tools, is_active')
     .eq('project_id', project.id)
-    .eq('slug', 'partner')
-    .maybeSingle();
+    .eq('is_active', true);
+
+  const partner = (roster ?? []).find((a) => a.slug === 'partner');
+  // Everyone the owner can address with a leading @handle. Read from the
+  // project rather than hard-coded, so an agent they renamed or deleted is
+  // reflected in what the composer offers.
+  //
+  // An agent holding no tools is excluded: it cannot read the record, so it has
+  // nothing to answer from. That is a rule rather than a list, and it happens
+  // to exclude the Interviewer — whose empty allowlist is the whole point of it,
+  // and whose only job is the questions asked once at intake.
+  const addressable = (roster ?? [])
+    .filter((a) => a.slug !== 'partner' && (a.tools ?? []).length > 0)
+    .map((a) => a.slug);
 
   // Resolved server-side so a reload shows the stored transcript rather than an
   // empty conversation over the top of one. A project with no Partner —
@@ -64,9 +76,11 @@ export default async function ProjectLayout({
       slug={slug}
       targets={captureTargetsFrom(workItems)}
       hasPartner={hasPartner}
+      addressable={addressable}
       initialMessages={seed.map((m) => ({
         id: m.ui_message_id ?? m.id,
         role: m.role,
+        agentSlug: m.agent_slug,
         // The stored parts, so a reload restores the turn rather than a
         // rendering of it. A turn written before that column existed has none,
         // and falls back to its text.

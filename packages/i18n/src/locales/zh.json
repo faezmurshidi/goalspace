@@ -452,7 +452,8 @@
       "confirmReject": "不要记录",
       "confirmRejected": "未记录。",
       "confirmAccepted": "已记录。",
-      "region": "伙伴"
+      "region": "伙伴",
+      "hintAddress": "⌘↵ 询问 · ⌘⇧↵ 记录 · {{handles}} 可直接询问"
     },
     "create": {
       "title": "开始记录",

@@ -8,7 +8,7 @@ export type Conversation = Tables<'conversations'>;
 export type Message = Omit<Tables<'messages'>, 'role'> & { role: 'user' | 'assistant' };
 
 const MESSAGE_COLUMNS =
-  'id, conversation_id, project_id, owner_id, role, content, parts, run_id, ui_message_id, created_at';
+  'id, conversation_id, project_id, owner_id, role, content, parts, run_id, ui_message_id, agent_slug, created_at';
 
 /**
  * The project's one conversation with this agent, creating it if absent.
@@ -58,6 +58,8 @@ export interface MessageInput {
   runId?: string | null;
   /** The AI SDK's id for this message, when it came from a stream. */
   uiMessageId?: string | null;
+  /** Which agent spoke. Null on the owner's own turns. */
+  agentSlug?: string | null;
 }
 
 export async function appendMessage(supabase: Client, params: MessageInput): Promise<Message> {
@@ -81,6 +83,7 @@ function rowFrom(params: MessageInput) {
     parts: (params.parts ?? []) as never,
     run_id: params.runId ?? null,
     ui_message_id: params.uiMessageId ?? null,
+    agent_slug: params.agentSlug ?? null,
   };
 }
 

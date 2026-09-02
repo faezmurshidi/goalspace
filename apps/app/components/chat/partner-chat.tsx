@@ -14,6 +14,7 @@ import {
 import { Markdown } from '@/components/docs/markdown';
 import type { CaptureTarget } from '@/lib/capture/targets';
 import { approvalOutcomesFrom, approvalRequestsFrom } from '@/lib/chat/approvals';
+import { parseMention } from '@/lib/chat/mention';
 import { proposalNoticesFrom } from '@/lib/chat/proposal-notices';
 import { sendModeFor } from '@/lib/chat/send-mode';
 import { entryKinds } from '@/lib/schemas/common';
@@ -24,6 +25,9 @@ import { Conversation, ConversationContent, ConversationScrollButton } from './c
 export interface SeedMessage {
   id: string;
   role: 'user' | 'assistant';
+  /** Which agent spoke. Null on the owner's turns, and on turns stored before
+   *  agents other than the Partner could be addressed. */
+  agentSlug?: string | null;
   /**
    * The turn as stored, tool calls and approval state included.
    *
@@ -49,6 +53,10 @@ function modelLayerDown(error: Error | undefined): boolean {
   return /partner_missing|"cap"|Monthly cap/i.test(error.message);
 }
 
+function titleCase(slug: string): string {
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
 function textOf(message: UIMessage): string {
   return (message.parts ?? [])
     .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
@@ -60,10 +68,13 @@ export function PartnerChat({
   slug,
   targets,
   initialMessages,
+  addressable,
 }: {
   slug: string;
   targets: CaptureTarget[];
   initialMessages: SeedMessage[];
+  /** The project's other agents, addressable with a leading @handle. */
+  addressable: string[];
 }) {
   const { t } = useAppTranslations();
   const [draft, setDraft] = useState('');
@@ -90,6 +101,31 @@ export function PartnerChat({
     // conversation over the top of a stored one.
     messages: initialMessages as UIMessage[],
   });
+
+  /**
+   * Who said an assistant turn.
+   *
+   * Seeded turns carry it from the row. A turn streamed in this session has no
+   * stored attribution yet, so it is taken from the handle on the user turn
+   * that prompted it — which is what the route used to pick the agent.
+   *
+   * Labelling everything "Partner" would put the Critic's argument in the
+   * Partner's mouth, which is the specific thing addressing an agent directly
+   * exists to avoid.
+   */
+  function speakerOf(messageId: string): string {
+    const seeded = initialMessages.find((m) => m.id === messageId)?.agentSlug;
+    if (seeded) return titleCase(seeded);
+
+    const index = messages.findIndex((m) => m.id === messageId);
+    for (let i = index - 1; i >= 0; i -= 1) {
+      const previous = messages[i];
+      if (previous.role !== 'user') continue;
+      const mention = parseMention(textOf(previous), addressable);
+      return mention ? titleCase(mention.agentSlug) : t('app.chat.partner');
+    }
+    return t('app.chat.partner');
+  }
 
   const fallbackOnly = modelLayerDown(error);
   const busy = status === 'submitted' || status === 'streaming' || recording;
@@ -143,7 +179,7 @@ export function PartnerChat({
             {messages.map((message) => (
               <div key={message.id}>
                 <p className="label text-ink-soft">
-                  {message.role === 'user' ? t('app.chat.you') : t('app.chat.partner')}
+                  {message.role === 'user' ? t('app.chat.you') : speakerOf(message.id)}
                 </p>
                 {message.role === 'assistant' ? (
                   <>
@@ -243,7 +279,11 @@ export function PartnerChat({
               ))}
             </select>
           ) : null}
-          <span className="label text-ink-soft ml-auto">{t('app.chat.hint')}</span>
+          <span className="label text-ink-soft ml-auto">
+            {addressable.length > 0
+              ? t('app.chat.hintAddress', { handles: addressable.map((s) => `@${s}`).join(' ') })
+              : t('app.chat.hint')}
+          </span>
           <Button
             type="button"
             disabled={busy || draft.trim().length === 0}

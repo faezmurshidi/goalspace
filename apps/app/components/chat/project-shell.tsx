@@ -27,12 +27,15 @@ export function ProjectShell({
   targets,
   initialMessages,
   hasPartner,
+  addressable,
   children,
 }: {
   slug: string;
   targets: CaptureTarget[];
   initialMessages: SeedMessage[];
   hasPartner: boolean;
+  /** The project's other agents, addressable with a leading @handle. */
+  addressable: string[];
   children: React.ReactNode;
 }) {
   const { t } = useAppTranslations();
@@ -64,7 +67,12 @@ export function ProjectShell({
         aria-label={t('app.chat.region')}
         className="border-rule flex max-h-[60svh] w-full shrink-0 flex-col border-t lg:sticky lg:top-14 lg:h-[calc(100svh-3.5rem-1px)] lg:max-h-none lg:w-[26rem] lg:border-l lg:border-t-0"
       >
-        <PartnerChat slug={slug} targets={targets} initialMessages={initialMessages} />
+        <PartnerChat
+          slug={slug}
+          targets={targets}
+          initialMessages={initialMessages}
+          addressable={addressable}
+        />
       </aside>
     </div>
   );

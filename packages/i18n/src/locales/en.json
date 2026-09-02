@@ -452,7 +452,8 @@
       "confirmReject": "Do not record",
       "confirmRejected": "Not recorded.",
       "confirmAccepted": "Recorded.",
-      "region": "Partner"
+      "region": "Partner",
+      "hintAddress": "⌘↵ ask · ⌘⇧↵ record · {{handles}} to ask one directly"
     },
     "create": {
       "title": "Start the record",

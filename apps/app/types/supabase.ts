@@ -627,6 +627,7 @@ export type Database = {
       };
       messages: {
         Row: {
+          agent_slug: string | null;
           content: string;
           conversation_id: string;
           created_at: string;
@@ -639,6 +640,7 @@ export type Database = {
           ui_message_id: string | null;
         };
         Insert: {
+          agent_slug?: string | null;
           content: string;
           conversation_id: string;
           created_at?: string;
@@ -651,6 +653,7 @@ export type Database = {
           ui_message_id?: string | null;
         };
         Update: {
+          agent_slug?: string | null;
           content?: string;
           conversation_id?: string;
           created_at?: string;
