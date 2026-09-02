@@ -14,6 +14,16 @@ export interface StartRunInput {
   trigger: RunTrigger;
   /** Worst-case cost of this run, held against the cap while it is in flight. */
   reservedUsd: number;
+  /**
+   * The conversation this run belongs to, linked immediately after it opens.
+   *
+   * Not a parameter of start_agent_run. That function exists to make the cap
+   * check and the insert atomic under an advisory lock, and a foreign key that
+   * nothing reads until the run ends does not need to be inside that lock.
+   * Adding a parameter would mean migrating a security-invoker function for a
+   * link a follow-up statement sets just as correctly.
+   */
+  conversationId?: string | null;
 }
 
 export type StartRunResult =
@@ -60,7 +70,16 @@ export async function startAgentRun(
     };
   }
 
-  return { started: true, runId: verdict.run_id };
+  const runId = verdict.run_id as string;
+
+  if (input.conversationId) {
+    await supabase
+      .from('agent_runs')
+      .update({ conversation_id: input.conversationId })
+      .eq('id', runId);
+  }
+
+  return { started: true, runId };
 }
 
 export type Agent = Tables<'agents'>;

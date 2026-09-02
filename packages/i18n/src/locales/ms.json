@@ -434,6 +434,18 @@
       "failed": "Itu tidak tersimpan. Teks anda masih ada.",
       "region": "Tangkapan pantas"
     },
+    "chat": {
+      "placeholder": "Tanya tentang projek ini, atau beritahu apa yang berlaku",
+      "send": "Tanya",
+      "record": "Rekod",
+      "you": "Anda",
+      "partner": "Rakan",
+      "hint": "⌘↵ untuk tanya · ⌘⇧↵ untuk rekod",
+      "empty": "Belum ada soalan. Ia membaca rekod yang sama seperti anda.",
+      "thinking": "Membaca rekod",
+      "recordOnly": "Rekod sahaja: Rakan tidak tersedia, jadi ⌘↵ menulis ke log.",
+      "failed": "Itu tidak sampai kepada Rakan. Apa yang anda taip masih ada."
+    },
     "create": {
       "title": "Mulakan rekod",
       "body": "Satu projek dahulu. Anda boleh tambah kemudian.",

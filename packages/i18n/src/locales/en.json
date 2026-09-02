@@ -434,6 +434,18 @@
       "failed": "That did not save. Your text is still here.",
       "region": "Quick capture"
     },
+    "chat": {
+      "placeholder": "Ask about this project, or tell it what happened",
+      "send": "Ask",
+      "record": "Record",
+      "you": "You",
+      "partner": "Partner",
+      "hint": "⌘↵ to ask · ⌘⇧↵ to record",
+      "empty": "Nothing asked yet. It reads the same record you do.",
+      "thinking": "Reading the record",
+      "recordOnly": "Record-only: the Partner is unavailable, so ⌘↵ writes to the log.",
+      "failed": "That did not reach the Partner. What you typed is still here."
+    },
     "create": {
       "title": "Start the record",
       "body": "One project to begin with. You can add more later.",
