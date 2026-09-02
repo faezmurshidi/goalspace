@@ -21,7 +21,6 @@ export default {
     '^[./]',
   ],
   importOrderParserPlugins: ['typescript', 'jsx', 'decorators-legacy'],
-  tailwindConfig: './tailwind.config.ts',
   tailwindFunctions: ['cn', 'cva'],
   jsxSingleQuote: false,
   bracketSameLine: false,

@@ -4,3 +4,19 @@ node_modules
 public
 .vercel
 coverage
+
+# Prettier formats code here, not documents or generated files.
+
+# The package manager owns this; hand-formatting it invites churn and conflicts.
+pnpm-lock.yaml
+
+# All markdown in this repo is hand-authored prose — there is no MDX or content
+# pipeline. Prettier pads markdown tables into wide aligned blocks, which fights
+# the compact tables these docs use, and the specs and plans under
+# docs/superpowers are approved designs rather than drafts: `scripts/task-brief`
+# parses their heading and fence structure to extract tasks.
+*.md
+
+# Translation catalogues are managed by languine, which owns their shape.
+packages/i18n/src/locales/
+languine.json
