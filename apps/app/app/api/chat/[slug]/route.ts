@@ -270,16 +270,23 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       // Parts, not text. The turn's substance may be a tool call waiting on the
       // owner, which has no prose at all — and which the transcript has to hold
       // if a reload is not to discard the question.
-      await upsertStreamedMessage(supabase, {
-        conversationId: conversation.id,
-        projectId: project.id,
-        ownerId: auth.user.id,
-        role: 'assistant',
-        content: textFromParts(responseMessage.parts),
-        parts: responseMessage.parts,
-        runId,
-        uiMessageId: responseMessage.id,
-      });
+      try {
+        await upsertStreamedMessage(supabase, {
+          conversationId: conversation.id,
+          projectId: project.id,
+          ownerId: auth.user.id,
+          role: 'assistant',
+          content: textFromParts(responseMessage.parts),
+          parts: responseMessage.parts,
+          runId,
+          uiMessageId: responseMessage.id,
+        });
+      } catch (error) {
+        // Logged rather than left to reject. A rejection here is swallowed by
+        // the stream, which is how a failing upsert against a partial index
+        // dropped every assistant turn without a single visible symptom.
+        console.error('[chat] could not store the assistant turn', error);
+      }
     },
   });
 }
