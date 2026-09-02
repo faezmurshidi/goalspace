@@ -444,7 +444,9 @@
       "empty": "Nothing asked yet. It reads the same record you do.",
       "thinking": "Reading the record",
       "recordOnly": "Record-only: the Partner is unavailable, so ⌘↵ writes to the log.",
-      "failed": "That did not reach the Partner. What you typed is still here."
+      "failed": "That did not reach the Partner. What you typed is still here.",
+      "proposals_one": "{{count}} proposal from the {{agent}} — review it in the inbox",
+      "proposals_other": "{{count}} proposals from the {{agent}} — review them in the inbox"
     },
     "create": {
       "title": "Start the record",

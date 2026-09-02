@@ -164,7 +164,7 @@ describe('dispatchToolCall passes the whole context through', () => {
       runId: 'run-1',
       allowlist: ['search_repo'],
       documentVersions: new Map<string, string>(),
-      delegate: async () => ({ ok: true as const, text: 'delegated' }),
+      delegate: async () => ({ ok: true as const, text: 'delegated', proposals: 0 }),
       conversationId: 'conv-1',
     };
     // recordToolCall writes through ctx.supabase, which is null here; the

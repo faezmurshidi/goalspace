@@ -444,7 +444,9 @@
       "empty": "Belum ada soalan. Ia membaca rekod yang sama seperti anda.",
       "thinking": "Membaca rekod",
       "recordOnly": "Rekod sahaja: Rakan tidak tersedia, jadi ⌘↵ menulis ke log.",
-      "failed": "Itu tidak sampai kepada Rakan. Apa yang anda taip masih ada."
+      "failed": "Itu tidak sampai kepada Rakan. Apa yang anda taip masih ada.",
+      "proposals_one": "{{count}} cadangan daripada {{agent}} — semak dalam peti masuk",
+      "proposals_other": "{{count}} cadangan daripada {{agent}} — semak dalam peti masuk"
     },
     "create": {
       "title": "Mulakan rekod",

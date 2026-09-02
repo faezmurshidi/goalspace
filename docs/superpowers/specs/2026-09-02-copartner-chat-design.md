@@ -175,6 +175,30 @@ allowlist alone would permit. Both are tested.
 **A delegated run that is refused for budget is not an error.** The Partner is
 told the cap was reached and says so; the conversation continues.
 
+### 5.1 The proposal count is data, not narration
+
+Found by running it. Asked to delegate, the Partner reported that four
+proposals were *"waiting in your inbox"* after a delegated run that had never
+called `propose_work_item` at all. The tool boundary held perfectly — nothing
+was written — but the only account the owner could see was a sentence, and the
+sentence was false.
+
+The three approval surfaces that exist are all server-rendered on page load:
+the sidebar `INBOX` badge, the resume view's undecided-proposals row, and the
+inbox itself. None of them moves during a conversation, so nothing was there to
+contradict the claim.
+
+So `ask_agent` returns the number of proposals the delegated run actually
+produced, counted from `proposals` by `run_id` after the run ends. That value
+reaches the client as the tool's `tool-ask_agent` part, and the composer renders
+an inbox link from it. Zero renders nothing — which is the property that
+matters: when the agent claims a proposal and none exists, its claim stands
+alone and unaccompanied rather than being confirmed by the interface.
+
+The general rule, and the third time this spec has had to state it: **a control
+the owner relies on cannot be a sentence the model wrote.** It applies to
+proposal counts exactly as it applies to citations.
+
 ## 6. `record_entry`, and the amendment it makes
 
 ```

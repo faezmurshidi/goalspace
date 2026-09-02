@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useChat } from '@ai-sdk/react';
 import { useAppTranslations } from '@goalspace/i18n';
 import { Button, Textarea } from '@goalspace/ui';
@@ -8,6 +9,7 @@ import { DefaultChatTransport, type UIMessage } from 'ai';
 
 import { Markdown } from '@/components/docs/markdown';
 import type { CaptureTarget } from '@/lib/capture/targets';
+import { proposalNoticesFrom } from '@/lib/chat/proposal-notices';
 import { sendModeFor } from '@/lib/chat/send-mode';
 import { entryKinds } from '@/lib/schemas/common';
 import { captureEntryAction } from '@/app/(workspace)/actions';
@@ -119,7 +121,22 @@ export function PartnerChat({
                   {message.role === 'user' ? t('app.chat.you') : t('app.chat.partner')}
                 </p>
                 {message.role === 'assistant' ? (
-                  <Markdown className="mt-1">{textOf(message)}</Markdown>
+                  <>
+                    <Markdown className="mt-1">{textOf(message)}</Markdown>
+                    {/* Drawn from the delegated run's own rows, never from what
+                        the Partner says about them. When it claims a proposal
+                        and none was filed, nothing renders here and the claim
+                        stands alone. */}
+                    {proposalNoticesFrom(message.parts).map((notice, index) => (
+                      <Link
+                        key={`${notice.agent}-${index}`}
+                        href={`/projects/${slug}/inbox`}
+                        className="label text-oxide mt-2 inline-block underline"
+                      >
+                        {t('app.chat.proposals', { count: notice.count, agent: notice.agent })}
+                      </Link>
+                    ))}
+                  </>
                 ) : (
                   // The owner's words are plain text everywhere else in this
                   // product — the log, the resume view — and must not suddenly

@@ -75,7 +75,11 @@ describe('the ask_agent handler', () => {
 
   it('returns the sub-agent’s text on success', async () => {
     const result = await HANDLERS.ask_agent(
-      ctx(async (slug, question) => ({ ok: true, text: `${slug} answered: ${question}` })),
+      ctx(async (slug: string, question: string) => ({
+        ok: true as const,
+        text: `${slug} answered: ${question}`,
+        proposals: 2,
+      })),
       { agent_slug: 'planner', question: 'Break it down' } as never
     );
     expect(JSON.stringify(result)).toContain('planner answered: Break it down');

@@ -20,7 +20,7 @@ import type { Database } from '@/types/supabase';
 export type DelegateFn = (
   agentSlug: string,
   question: string
-) => Promise<{ ok: true; text: string } | { ok: false; message: string }>;
+) => Promise<{ ok: true; text: string; proposals: number } | { ok: false; message: string }>;
 
 export interface ToolContext {
   supabase: SupabaseClient<Database>;
@@ -279,9 +279,14 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
 
     // A refusal is data, not an exception. A delegated run stopped by the
     // monthly cap should leave the Partner able to say so and carry on.
+    // The count is what the composer renders an inbox affordance from. It
+    // matters because the alternative is the Partner's prose, and prose is not
+    // a control: asked to delegate, it once reported four proposals "waiting in
+    // your inbox" when the delegated run had made no proposal call at all.
+    // A number from the proposals table cannot say that.
     return outcome.ok
-      ? { agent: args.agent_slug, answer: outcome.text }
-      : { agent: args.agent_slug, refused: outcome.message };
+      ? { agent: args.agent_slug, answer: outcome.text, proposals: outcome.proposals }
+      : { agent: args.agent_slug, refused: outcome.message, proposals: 0 };
   },
 
   async record_entry(

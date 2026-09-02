@@ -11,6 +11,7 @@ import { startAgentRun } from '@/lib/db/agents';
 import { getBudget } from '@/lib/db/budgets';
 import { appendMessage, getOrCreateConversation, listMessages } from '@/lib/db/conversations';
 import { getProjectBySlug } from '@/lib/db/projects';
+import { listRunProposals } from '@/lib/db/proposals';
 import { createClient } from '@/utils/supabase/server';
 
 export const maxDuration = 300;
@@ -155,9 +156,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
         trigger: 'conversation',
       });
 
-      return outcome.ok
-        ? { ok: true, text: outcome.text }
-        : { ok: false, message: outcome.message };
+      if (!outcome.ok) return { ok: false, message: outcome.message };
+
+      // Counted from the rows the delegated run actually produced, not from
+      // what it says it produced. This number is what the composer renders an
+      // inbox affordance from; the Partner's prose is not a control.
+      const produced = await listRunProposals(supabase, outcome.runId);
+      return { ok: true, text: outcome.text, proposals: produced.length };
     },
   };
 
