@@ -138,15 +138,26 @@ export async function submitIntakeAction(
     supabase,
     agent,
     ownerId: userId,
+    // The answers are given inline rather than by reference. An earlier
+    // version named the entry id and said "read that entry", which sent the
+    // Planner hunting for a tool that does not exist: REPO_READ can fetch a
+    // work item or a document by id, but there is no read_entry. It burned all
+    // twelve steps alternating read_document, list_entries and search_repo,
+    // and proposed nothing. Verified in the run trace.
     prompt: [
       'The owner has just created this project and answered questions about it.',
-      `Their answers are recorded in the log as entry ${entryId ?? '(none)'}.`,
-      'Read that entry, then propose the work that follows from it.',
+      'Their answers are below in full — you do not need to look them up.',
       '',
       `Project: ${project.title}`,
       `Kind: ${project.kind}`,
       '',
       ...answered.map((a) => `Q: ${a.question}\nA: ${a.answer.trim()}`),
+      '',
+      entryId
+        ? `Cite this entry on every proposal — it is where these answers are recorded: ${entryId}`
+        : 'The owner answered nothing, so propose only what the project title and kind support.',
+      '',
+      'Propose the work that follows. Do not search first; everything you need is above.',
     ].join('\n'),
   });
 
