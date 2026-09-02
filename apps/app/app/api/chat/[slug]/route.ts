@@ -290,6 +290,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   // new one, and onFinish hands back that whole turn to store.
   return result.toUIMessageStreamResponse({
     originalMessages: messages,
+    // The Partner's model reasons; the other four do not, and for them this
+    // changes nothing. Verified against the gateway rather than assumed:
+    // zai/glm-5.3-flash emits reasoning-start/delta/end, openai/gpt-4o-mini
+    // emits none.
+    sendReasoning: true,
     onFinish: async ({ responseMessage }) => {
       // Parts, not text. The turn's substance may be a tool call waiting on the
       // owner, which has no prose at all — and which the transcript has to hold

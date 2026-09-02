@@ -16,11 +16,13 @@ import type { CaptureTarget } from '@/lib/capture/targets';
 import { approvalOutcomesFrom, approvalRequestsFrom } from '@/lib/chat/approvals';
 import { parseMention } from '@/lib/chat/mention';
 import { proposalNoticesFrom } from '@/lib/chat/proposal-notices';
+import { reasoningFrom } from '@/lib/chat/reasoning';
 import { sendModeFor } from '@/lib/chat/send-mode';
 import { entryKinds } from '@/lib/schemas/common';
 import { captureEntryAction } from '@/app/(workspace)/actions';
 import { EntryConfirmation } from './confirmation';
 import { Conversation, ConversationContent, ConversationScrollButton } from './conversation';
+import { Reasoning } from './reasoning';
 
 export interface SeedMessage {
   id: string;
@@ -183,6 +185,12 @@ export function PartnerChat({
                 </p>
                 {message.role === 'assistant' ? (
                   <>
+                    {/* Above the answer, because it is what came first. Folded
+                        away, because the answer is what the owner asked for. */}
+                    <Reasoning
+                      text={reasoningFrom(message.parts)}
+                      streaming={status === 'streaming'}
+                    />
                     <Markdown className="mt-1">{textOf(message)}</Markdown>
                     {/* Drawn from the delegated run's own rows, never from what
                         the Partner says about them. When it claims a proposal

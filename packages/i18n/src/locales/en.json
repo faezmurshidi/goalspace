@@ -453,7 +453,9 @@
       "confirmRejected": "Not recorded.",
       "confirmAccepted": "Recorded.",
       "region": "Partner",
-      "hintAddress": "⌘↵ ask · ⌘⇧↵ record · {{handles}} to ask one directly"
+      "hintAddress": "⌘↵ ask · ⌘⇧↵ record · {{handles}} to ask one directly",
+      "reasoning": "Reasoning",
+      "reasoningLive": "Reasoning…"
     },
     "create": {
       "title": "Start the record",

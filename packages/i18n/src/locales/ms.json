@@ -453,7 +453,9 @@
       "confirmRejected": "Tidak direkodkan.",
       "confirmAccepted": "Direkodkan.",
       "region": "Rakan",
-      "hintAddress": "⌘↵ tanya · ⌘⇧↵ rekod · {{handles}} untuk tanya terus"
+      "hintAddress": "⌘↵ tanya · ⌘⇧↵ rekod · {{handles}} untuk tanya terus",
+      "reasoning": "Penaakulan",
+      "reasoningLive": "Menaakul…"
     },
     "create": {
       "title": "Mulakan rekod",
