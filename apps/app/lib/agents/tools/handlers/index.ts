@@ -146,6 +146,30 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
   },
 
   async list_entries(ctx, args: { kinds?: string[]; work_item_id?: string; limit?: number }) {
+    // An invented filter id is rejected, exactly as an invented citation is.
+    //
+    // Without this the call succeeds and returns nothing, because a filter on a
+    // work item that does not exist is a legal query with an empty result. A
+    // model that guessed the id then reads "0 rows" as "the record is empty"
+    // and proposes from nothing — observed three times: the intake Planner,
+    // and again through delegation. A silent zero is the worst answer a tool
+    // can give, because it is indistinguishable from a true one.
+    if (args.work_item_id) {
+      const { data: target } = await ctx.supabase
+        .from('work_items')
+        .select('id')
+        .eq('project_id', ctx.projectId)
+        .eq('id', args.work_item_id)
+        .maybeSingle();
+
+      if (!target) {
+        throw new Error(
+          `No work item ${args.work_item_id} in this project. Omit work_item_id to list the ` +
+            'whole log, or call list_work_items first to get a real id.'
+        );
+      }
+    }
+
     let query = ctx.supabase
       .from('entries')
       .select(ENTRY_COLUMNS)

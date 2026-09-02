@@ -42,12 +42,23 @@ export interface TooledRunInput {
   prompt: string;
   /** Defaults to 'intake', the only caller today. */
   trigger?: RunTrigger;
+  /**
+   * The project skeleton, appended to the system prompt.
+   *
+   * The streaming ask route has always sent this; runTooled did not, so a
+   * delegated agent ran with no idea what project it was in. Asked to break
+   * down a restoration it had never seen, the Planner proposed from the
+   * question alone and invented citation ids twenty-one times before the step
+   * cap stopped it. Orientation is not a nicety here — the citation rule is
+   * unsatisfiable without it.
+   */
+  context?: string;
 }
 
 const MAX_STEPS = 12;
 
 export async function runTooled(input: TooledRunInput): Promise<TooledRunResult> {
-  const { supabase, agent, ownerId, prompt, trigger = 'intake' } = input;
+  const { supabase, agent, ownerId, prompt, trigger = 'intake', context: projectContext } = input;
 
   // First, before any I/O — the mirror of runStructured's guard. An agent with
   // an empty allowlist in a tool loop can only talk, and a reservation would be
@@ -97,7 +108,9 @@ export async function runTooled(input: TooledRunInput): Promise<TooledRunResult>
   try {
     const result = await generateText({
       model: agent.model,
-      system: agent.system_prompt,
+      system: projectContext
+        ? `${agent.system_prompt}\n\n---\n\nThe project as it stands:\n\n${projectContext}`
+        : agent.system_prompt,
       prompt,
       tools: buildToolSet(context),
       stopWhen: [

@@ -85,4 +85,26 @@ describe('handlers are project-scoped by context', () => {
     expect(s.calls[0].filters.project_id).toBe('proj-1');
     expect(s.calls[0].filters.id).toBe('entry-1');
   });
+
+  it('refuses a work_item_id that does not exist rather than returning nothing', async () => {
+    // The silent zero this closes: filtering on a work item that is not there
+    // is a legal query with an empty result, so a model that guessed the id
+    // reads "0 rows" as "the record is empty" and proposes from nothing.
+    // Observed three times before it was diagnosed — the intake Planner, and
+    // again through delegation.
+    //
+    // Its own stub rather than the shared one, because that one answers every
+    // maybeSingle with a row — which is exactly the lookup under test.
+    const absent = {
+      from: () => ({
+        select: () => ({
+          eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }),
+        }),
+      }),
+    } as never;
+
+    await expect(
+      HANDLERS.list_entries(ctx(absent), { work_item_id: 'made-up', limit: 50 } as never)
+    ).rejects.toThrow(/No work item/);
+  });
 });

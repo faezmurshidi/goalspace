@@ -9,7 +9,7 @@ import { runTooled } from '@/lib/agents/tooled';
 import { finishRun, recordRunUsage } from '@/lib/agents/usage';
 import { startAgentRun } from '@/lib/db/agents';
 import { getBudget } from '@/lib/db/budgets';
-import { appendMessage, getOrCreateConversation } from '@/lib/db/conversations';
+import { appendMessage, getOrCreateConversation, listMessages } from '@/lib/db/conversations';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { createClient } from '@/utils/supabase/server';
 
@@ -107,6 +107,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   const runId = start.runId;
   let cappedByTokens = false;
 
+  // Loaded before the run context, which closes over it for delegation.
+  const skeleton = await loadSkeleton(supabase, project.id);
+
   const context: RunContext = {
     supabase,
     projectId: project.id,
@@ -135,7 +138,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
         supabase,
         agent: sub,
         ownerId: auth.user.id,
-        prompt: question,
+        // The skeleton carries titles, never ids, so an agent that proposes
+        // straight from it cites nothing real. Saying so here rather than in
+        // the template, because it is delegation that creates the situation:
+        // asked directly, an agent has a conversation to read ids from.
+        prompt: [
+          'The owner asked this through their Partner:',
+          '',
+          question,
+          '',
+          'Read before you answer. The overview below lists titles only — use',
+          'list_entries, list_work_items or search_repo to get the ids you cite.',
+          'A citation you invent is rejected and the proposal discarded.',
+        ].join('\n'),
+        context: skeleton,
         trigger: 'conversation',
       });
 
@@ -145,14 +161,37 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     },
   };
 
-  const skeleton = await loadSkeleton(supabase, project.id);
   // Async in ai@7: it resolves file and data parts before handing the model a
   // plain message list.
   const modelMessages = await convertToModelMessages(messages);
 
+  // record_entry requires the id of the message it is transcribing, and the
+  // model has no other way to learn one: convertToModelMessages strips ids, so
+  // the model sees role and content and nothing else. Asked to cite, it
+  // invented a uuid — the guard refused it, correctly, and the requirement was
+  // unsatisfiable until this block existed.
+  //
+  // Read after the user turn is appended, so the turn being answered is in the
+  // list. Excerpts are short: this is an index for citing, not a second copy of
+  // the transcript, which the model already has.
+  const stored = await listMessages(supabase, conversation.id);
+  const citableTurns = stored
+    .filter((message) => message.role === 'user')
+    .slice(-20)
+    .map((message) => `${message.id}  ${message.content.slice(0, 80).replace(/\s+/g, ' ')}`)
+    .join('\n');
+
   const result = streamText({
     model: agent.model,
-    system: `${agent.system_prompt}\n\n---\n\nThe project as it stands:\n\n${skeleton}`,
+    system: [
+      agent.system_prompt,
+      '---',
+      `The project as it stands:\n\n${skeleton}`,
+      '---',
+      'Things the owner has said in this conversation, with the id of each.',
+      'These are the only ids record_entry accepts; anything else is refused.',
+      citableTurns || '(nothing yet)',
+    ].join('\n\n'),
     messages: modelMessages,
     tools: buildToolSet(context),
     stopWhen: [
