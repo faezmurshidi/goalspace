@@ -446,7 +446,12 @@
       "recordOnly": "仅记录：伙伴不可用，因此 ⌘↵ 会写入日志。",
       "failed": "没有送达伙伴。你输入的内容仍在。",
       "proposals_one": "来自{{agent}}的 {{count}} 项建议 — 在收件箱中查看",
-      "proposals_other": "来自{{agent}}的 {{count}} 项建议 — 在收件箱中查看"
+      "proposals_other": "来自{{agent}}的 {{count}} 项建议 — 在收件箱中查看",
+      "confirmTitle": "将此记录为{{kind}}？",
+      "confirmAccept": "记录",
+      "confirmReject": "不要记录",
+      "confirmRejected": "未记录。",
+      "confirmAccepted": "已记录。"
     },
     "create": {
       "title": "开始记录",

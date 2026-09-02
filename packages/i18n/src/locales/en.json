@@ -446,7 +446,12 @@
       "recordOnly": "Record-only: the Partner is unavailable, so ⌘↵ writes to the log.",
       "failed": "That did not reach the Partner. What you typed is still here.",
       "proposals_one": "{{count}} proposal from the {{agent}} — review it in the inbox",
-      "proposals_other": "{{count}} proposals from the {{agent}} — review them in the inbox"
+      "proposals_other": "{{count}} proposals from the {{agent}} — review them in the inbox",
+      "confirmTitle": "Record this as a {{kind}}?",
+      "confirmAccept": "Record it",
+      "confirmReject": "Do not record",
+      "confirmRejected": "Not recorded.",
+      "confirmAccepted": "Recorded."
     },
     "create": {
       "title": "Start the record",

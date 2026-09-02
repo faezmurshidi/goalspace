@@ -199,6 +199,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     ].join('\n\n'),
     messages: modelMessages,
     tools: buildToolSet(context),
+    // record_entry asks before it writes.
+    //
+    // This is what lets "agents propose, they never write" stand unamended.
+    // The earlier design wrote directly and leaned on a required citation to
+    // the message being transcribed — but a citation constrains which message
+    // is named, never what goes in the body. The owner reading the body before
+    // it lands is the guarantee that citation was standing in for.
+    //
+    // Only record_entry. The propose_* tools already produce durable rows the
+    // owner decides on in the inbox, with claim and supersede semantics an
+    // approval that expires with the run could not offer.
+    toolApproval: { record_entry: 'user-approval' },
     stopWhen: [
       stepCountIs(MAX_STEPS),
       ({ steps }) => {

@@ -446,7 +446,12 @@
       "recordOnly": "Rekod sahaja: Rakan tidak tersedia, jadi ⌘↵ menulis ke log.",
       "failed": "Itu tidak sampai kepada Rakan. Apa yang anda taip masih ada.",
       "proposals_one": "{{count}} cadangan daripada {{agent}} — semak dalam peti masuk",
-      "proposals_other": "{{count}} cadangan daripada {{agent}} — semak dalam peti masuk"
+      "proposals_other": "{{count}} cadangan daripada {{agent}} — semak dalam peti masuk",
+      "confirmTitle": "Rekod ini sebagai {{kind}}?",
+      "confirmAccept": "Rekodkan",
+      "confirmReject": "Jangan rekod",
+      "confirmRejected": "Tidak direkodkan.",
+      "confirmAccepted": "Direkodkan."
     },
     "create": {
       "title": "Mulakan rekod",

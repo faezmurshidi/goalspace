@@ -218,28 +218,38 @@ The entry is stamped `agent_id = <partner>`. The words are the owner's; the
 decision to write them down, and the choice of kind and title, are the
 Partner's. Stamping records that honestly rather than laundering it to null.
 
-### 6.1 This is an amendment. It is deliberate.
+### 6.1 It asks first, so the constraint stands unamended
 
-CLAUDE.md states: *agents propose; they never write. Every mutation an agent
-wants becomes a proposal the owner accepts or rejects.* It also says that
-constraint should not be softened without a deliberate decision. This is that
-decision, recorded rather than slipped in.
+**Superseded.** This section previously argued that `record_entry` writing
+directly was a narrow, deliberate amendment to *"agents propose, they never
+write"* — on the reading that the constraint governs authorship, not
+transcription. That amendment is withdrawn. It is not needed.
 
-The narrow claim: **the constraint governs authorship, not transcription.** It
-exists so that no text the owner did not choose can appear in their record
-wearing their name. `record_entry` cannot produce such text — the server checks
-that every recorded body traces to something the owner typed in this
-conversation. Routing it through the inbox instead would ask the owner to
-approve their own sentences coming back to them, which is the friction
-PRODUCT.md says kills the journal.
+`record_entry` is configured for approval: `toolApproval: { record_entry:
+'user-approval' }` on the chat route. The call reaches the client as
+`state: 'approval-requested'` carrying the exact payload, the composer renders
+it with Accept and Reject, and the tool executes only after
+`addToolApprovalResponse`. Nothing reaches the log unapproved, so the
+constraint holds as written.
 
-What is **not** amended: everything the Partner authors itself still has no
-path into the record, because it holds no `propose_*` tool at all. The
-amendment is strictly narrower than "the Partner may write".
+**This is also a stronger guarantee than the one it replaces**, and that is the
+better reason for the change. The citation requirement was presented as
+ensuring the body was the owner's own words. It never did: `source_message_ids`
+constrains which message is *named*, not what goes in `body`. An agent could
+cite a real message and write anything. A person reading the body before it
+lands is the assurance the citation was standing in for.
 
-**Reversal**, if a later reviewer judges this wrong: delete `record_entry`
-from the template and the registry and give the Partner `propose_entry`
-instead. The conversation surface is unchanged; captures become inbox items.
+`source_message_ids` is kept, demoted to what it always honestly was — a
+provenance record of which turn the entry came from, checked against this
+conversation's user messages so it cannot point at an assistant turn or another
+conversation. It is no longer load-bearing.
+
+**The cost, stated plainly.** One click per capture where there were none, and
+an unanswered approval expires with the run rather than persisting the way a
+`proposals` row does. That is the right trade here because the owner is present
+— they just said the thing — but it is the reason approval is used for
+`record_entry` and **not** for the `propose_*` tools, whose whole value is that
+a decision can wait a week.
 
 ### 6.2 The tool taxonomy needs a third category
 
@@ -420,8 +430,10 @@ actually found.
    fallback. Without it, capture inherits every failure mode of the model
    layer, and PRODUCT.md's claim that capture must be one keystroke away stops
    being true exactly when the budget runs out.
-5. **`record_entry` writes directly, gated by message citation** — §6.1,
-   including what would have to change to undo it.
+5. **`record_entry` asks before it writes**, via AI SDK tool approval — §6.1.
+   Reversed from the original design, which wrote directly and amended the
+   phase-2 constraint to justify it. The amendment turned out to be
+   unnecessary, and the guarantee it rested on was weaker than it claimed.
 6. **One conversation per project** in v1.
 7. **The Partner runs on `zai/glm-5.3-flash`**, verified against the live
    gateway and priced from the gateway's own figures. Every other seeded agent

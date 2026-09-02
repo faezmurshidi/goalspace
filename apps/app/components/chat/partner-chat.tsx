@@ -9,10 +9,12 @@ import { DefaultChatTransport, type UIMessage } from 'ai';
 
 import { Markdown } from '@/components/docs/markdown';
 import type { CaptureTarget } from '@/lib/capture/targets';
+import { approvalOutcomesFrom, approvalRequestsFrom } from '@/lib/chat/approvals';
 import { proposalNoticesFrom } from '@/lib/chat/proposal-notices';
 import { sendModeFor } from '@/lib/chat/send-mode';
 import { entryKinds } from '@/lib/schemas/common';
 import { captureEntryAction } from '@/app/(workspace)/actions';
+import { EntryConfirmation } from './confirmation';
 import { Conversation, ConversationContent, ConversationScrollButton } from './conversation';
 
 export interface SeedMessage {
@@ -59,7 +61,7 @@ export function PartnerChat({
   const [notice, setNotice] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
 
-  const { messages, sendMessage, status, error } = useChat({
+  const { messages, sendMessage, status, error, addToolApprovalResponse } = useChat({
     transport: new DefaultChatTransport({ api: `/api/chat/${slug}` }),
     // The server-rendered transcript, so a reload does not start an empty
     // conversation over the top of a stored one.
@@ -135,6 +137,26 @@ export function PartnerChat({
                       >
                         {t('app.chat.proposals', { count: notice.count, agent: notice.agent })}
                       </Link>
+                    ))}
+
+                    {/* Nothing is written until one of these is answered. */}
+                    {approvalRequestsFrom(message.parts).map((entry) => (
+                      <EntryConfirmation
+                        key={entry.approvalId}
+                        entry={entry}
+                        busy={busy}
+                        onDecide={(approved) =>
+                          addToolApprovalResponse({ id: entry.approvalId, approved })
+                        }
+                      />
+                    ))}
+
+                    {approvalOutcomesFrom(message.parts).map((outcome) => (
+                      <p key={outcome.approvalId} className="label text-ink-soft mt-2">
+                        {t(
+                          outcome.approved ? 'app.chat.confirmAccepted' : 'app.chat.confirmRejected'
+                        )}
+                      </p>
                     ))}
                   </>
                 ) : (
