@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { RATES } from '@/lib/agents/cost';
 import { agentRowsFor, SEEDED_TEMPLATES } from '@/lib/agents/templates';
-import { REGISTRY } from '@/lib/agents/tools/registry';
+import { isAllowed, REGISTRY, REPO_READ } from '@/lib/agents/tools/registry';
 
 describe('SEEDED_TEMPLATES', () => {
   it('seeds only agents whose every tool exists in the registry', () => {
@@ -137,6 +137,70 @@ describe('the Tutor', () => {
     const critic = SEEDED_TEMPLATES.find((t) => t.slug === 'critic')!;
     for (const name of critic.tools) {
       expect(REGISTRY[name as keyof typeof REGISTRY].writes).toBe(false);
+    }
+  });
+});
+
+describe('the Interviewer', () => {
+  it('is seeded with no tools at all', () => {
+    const interviewer = SEEDED_TEMPLATES.find((t) => t.slug === 'interviewer');
+    expect(interviewer).toBeDefined();
+    expect(interviewer!.tools).toEqual([]);
+  });
+
+  it('is refused every tool in the registry', () => {
+    // Asserted through isAllowed rather than against the array's length,
+    // because isAllowed is the gate the executor re-checks on every call. A
+    // test of the data would still pass if the gate stopped consulting it.
+    const interviewer = SEEDED_TEMPLATES.find((t) => t.slug === 'interviewer')!;
+    for (const name of Object.keys(REGISTRY)) {
+      expect(isAllowed(interviewer.tools, name)).toBe(false);
+    }
+  });
+
+  it('does not claim a capability it has no tool for', () => {
+    // Same rule the Tutor is held to: a description that promises retrieval
+    // is a lie the model repeats to the owner.
+    const interviewer = SEEDED_TEMPLATES.find((t) => t.slug === 'interviewer')!;
+    const claims = `${interviewer.role_description} ${interviewer.system_prompt}`.toLowerCase();
+    expect(claims).not.toContain('search');
+    expect(claims).not.toContain('retrieve');
+  });
+});
+
+describe('the Planner', () => {
+  it('is seeded with repo-read plus the work-item write tool', () => {
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner');
+    expect(planner).toBeDefined();
+    expect(planner!.tools).toContain('propose_work_item');
+    for (const name of REPO_READ) {
+      expect(planner!.tools).toContain(name);
+    }
+  });
+
+  it('cannot write to the log or to documents', () => {
+    // One write tool, not three. A Planner that decides mid-run to rewrite
+    // the brief must be refused by the registry, not by its prompt.
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
+    expect(planner.tools).not.toContain('propose_entry');
+    expect(planner.tools).not.toContain('propose_document_edit');
+  });
+
+  it('shares no tool with the Interviewer', () => {
+    // The pair is the design's clearest statement that agents are capability
+    // boundaries rather than personas: same project, same model, disjoint
+    // reach. If this ever passes trivially because one of them lost its
+    // tools, the preceding cases catch it.
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
+    const interviewer = SEEDED_TEMPLATES.find((t) => t.slug === 'interviewer')!;
+    const shared = planner.tools.filter((name) => interviewer.tools.includes(name));
+    expect(shared).toEqual([]);
+  });
+
+  it('reaches nothing outside the project', () => {
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
+    for (const name of planner.tools) {
+      expect(REGISTRY[name as keyof typeof REGISTRY].external).toBe(false);
     }
   });
 });

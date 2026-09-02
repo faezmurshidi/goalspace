@@ -45,7 +45,7 @@ export function CreateProjectForm() {
     // Deliberately not clearing `busy` on success: the navigation below
     // replaces this screen, and re-enabling the button first lets an
     // impatient second click create a duplicate project.
-    router.push(`/projects/${result.data.slug}`);
+    router.push(`/projects/${result.data.slug}/intake`);
     router.refresh();
   }
 

@@ -445,6 +445,27 @@
       "submit": "创建项目",
       "submitting": "正在创建"
     },
+    "intake": {
+      "title": "几个问题",
+      "body": "答案将作为第一条记录写入日志。不适用的可以跳过。",
+      "asking": "正在拟定问题",
+      "planning": "正在阅读你的答案",
+      "submit": "继续",
+      "skip": "跳过，直接进入项目",
+      "reviewTitle": "建议的工作",
+      "reviewBody": "在你接受之前不会创建任何内容。不需要的请取消勾选。",
+      "openTitle": "你未回答的问题",
+      "openBody": "作为待解问题保留在工作树中，恢复视图会在那里显示它们。",
+      "apply_one": "创建 {{count}} 项",
+      "apply_other": "创建 {{count}} 项",
+      "applyNone": "不创建任何内容并继续",
+      "applying": "正在创建",
+      "noProposals": "规划者没有提出任何建议。你的答案仍已记录。",
+      "interviewerMissing": "该项目没有访谈者，因此没有问题可问。",
+      "plannerMissing": "该项目没有规划者，因此没有提出工作建议。",
+      "questionsFailed": "无法拟定问题。你的项目仍然可用。",
+      "answersFailed": "你的答案未能记录。没有丢失任何内容 — 请重试。"
+    },
     "errors": {
       "validation": "请检查标记的字段。",
       "generic": "出了点问题，请重试。",

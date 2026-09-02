@@ -445,6 +445,27 @@
       "submit": "Create project",
       "submitting": "Creating"
     },
+    "intake": {
+      "title": "A few questions",
+      "body": "Answers go into the log as your first entry. Skip any that do not apply.",
+      "asking": "Working out what to ask",
+      "planning": "Reading your answers",
+      "submit": "Continue",
+      "skip": "Skip and go to the project",
+      "reviewTitle": "Proposed work",
+      "reviewBody": "Nothing is created until you accept it. Untick anything you do not want.",
+      "openTitle": "Questions you left open",
+      "openBody": "Kept as open questions in the work tree, where the resume view will surface them.",
+      "apply_one": "Create {{count}} item",
+      "apply_other": "Create {{count}} items",
+      "applyNone": "Create nothing and continue",
+      "applying": "Creating",
+      "noProposals": "The Planner proposed nothing. Your answers are recorded either way.",
+      "interviewerMissing": "This project has no Interviewer, so there are no questions to ask.",
+      "plannerMissing": "This project has no Planner, so no work was proposed.",
+      "questionsFailed": "The questions could not be drafted. Your project is ready either way.",
+      "answersFailed": "Your answers could not be recorded. Nothing was lost — try again."
+    },
     "errors": {
       "validation": "Check the highlighted fields.",
       "generic": "Something went wrong. Try again.",

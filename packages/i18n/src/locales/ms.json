@@ -445,6 +445,27 @@
       "submit": "Buka projek",
       "submitting": "Membuka"
     },
+    "intake": {
+      "title": "Beberapa soalan",
+      "body": "Jawapan masuk ke dalam log sebagai catatan pertama anda. Langkau mana-mana yang tidak berkenaan.",
+      "asking": "Menentukan apa yang perlu ditanya",
+      "planning": "Membaca jawapan anda",
+      "submit": "Teruskan",
+      "skip": "Langkau dan pergi ke projek",
+      "reviewTitle": "Kerja yang dicadangkan",
+      "reviewBody": "Tiada apa-apa dicipta sehingga anda menerimanya. Nyahtanda apa-apa yang anda tidak mahu.",
+      "openTitle": "Soalan yang anda biarkan terbuka",
+      "openBody": "Disimpan sebagai soalan terbuka dalam pokok kerja, tempat paparan sambung semula akan menonjolkannya.",
+      "apply_one": "Cipta {{count}} perkara",
+      "apply_other": "Cipta {{count}} perkara",
+      "applyNone": "Jangan cipta apa-apa dan teruskan",
+      "applying": "Mencipta",
+      "noProposals": "Perancang tidak mencadangkan apa-apa. Jawapan anda tetap direkodkan.",
+      "interviewerMissing": "Projek ini tiada Penemuduga, jadi tiada soalan untuk ditanya.",
+      "plannerMissing": "Projek ini tiada Perancang, jadi tiada kerja dicadangkan.",
+      "questionsFailed": "Soalan tidak dapat dirangka. Projek anda tetap sedia.",
+      "answersFailed": "Jawapan anda tidak dapat direkodkan. Tiada apa-apa hilang — cuba lagi."
+    },
     "errors": {
       "validation": "Semak medan yang ditanda.",
       "generic": "Ada sesuatu yang tidak kena. Cuba lagi.",
