@@ -407,7 +407,10 @@
       "finishPlaceholder": "Apa yang berlaku? (pilihan)",
       "answerSubmit": "Rekod jawapan",
       "finishSubmit": "Tandakan selesai",
-      "cancel": "Batal"
+      "cancel": "Batal",
+      "brainstorm": "Fikirkan bersama",
+      "askDraft": "Mengenai soalan terbuka ini — \"{{title}}\" — ",
+      "brainstormDraft": "Mari kita fikirkan kerja ini — \"{{title}}\" — "
     },
     "work": {
       "title": "Kerja",

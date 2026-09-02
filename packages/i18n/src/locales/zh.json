@@ -407,7 +407,10 @@
       "finishPlaceholder": "发生了什么？（可选）",
       "answerSubmit": "记录答案",
       "finishSubmit": "标记为完成",
-      "cancel": "取消"
+      "cancel": "取消",
+      "brainstorm": "一起想想",
+      "askDraft": "关于这个待解问题 —「{{title}}」— ",
+      "brainstormDraft": "我们来想想这项工作 —「{{title}}」— "
     },
     "work": {
       "title": "工作",

@@ -14,7 +14,7 @@ import {
 import { Markdown } from '@/components/docs/markdown';
 import type { CaptureTarget } from '@/lib/capture/targets';
 import { approvalOutcomesFrom, approvalRequestsFrom } from '@/lib/chat/approvals';
-import { ASK_ABOUT_EVENT, askAboutDraft } from '@/lib/chat/ask-about';
+import { ASK_ABOUT_EVENT } from '@/lib/chat/ask-about';
 import { parseMention } from '@/lib/chat/mention';
 import { proposalNoticesFrom } from '@/lib/chat/proposal-notices';
 import { reasoningFrom } from '@/lib/chat/reasoning';
@@ -92,9 +92,9 @@ export function PartnerChat({
    */
   useEffect(() => {
     function onAsk(event: Event) {
-      const title = (event as CustomEvent<{ title?: string }>).detail?.title;
-      if (!title) return;
-      setDraft(askAboutDraft(title));
+      const draft = (event as CustomEvent<{ draft?: string }>).detail?.draft;
+      if (!draft) return;
+      setDraft(draft);
       composerRef.current?.focus();
     }
 

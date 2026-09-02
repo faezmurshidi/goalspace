@@ -6,17 +6,17 @@
  * around it, so neither can hold the other's state without lifting it to a
  * provider that exists for this one message.
  *
- * The composer fills its draft and takes focus. It deliberately does not send
- * — what to ask about an open question is the owner's to phrase, and a question
- * fired off unread is how you get an answer to the wrong thing.
+ * The caller passes finished text rather than a title to phrase here. The draft
+ * is user-visible and this app ships three locales; composing it in a plain
+ * module would have hard-coded English into the composer.
+ *
+ * The composer fills its draft and takes focus. It deliberately does not send —
+ * what to ask about an open item is the owner's to phrase, and a question fired
+ * off unread gets an answer to the wrong thing.
  */
 export const ASK_ABOUT_EVENT = 'goalspace:ask-about';
 
-export function askPartnerAbout(title: string): void {
+export function askPartnerAbout(draft: string): void {
   if (typeof window === 'undefined') return;
-  window.dispatchEvent(new CustomEvent(ASK_ABOUT_EVENT, { detail: { title } }));
-}
-
-export function askAboutDraft(title: string): string {
-  return `About this open question — "${title}" — `;
+  window.dispatchEvent(new CustomEvent(ASK_ABOUT_EVENT, { detail: { draft } }));
 }

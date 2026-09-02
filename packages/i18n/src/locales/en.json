@@ -407,7 +407,10 @@
       "finishPlaceholder": "What happened? (optional)",
       "answerSubmit": "Record the answer",
       "finishSubmit": "Mark it finished",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "brainstorm": "Think it through",
+      "askDraft": "About this open question — \"{{title}}\" — ",
+      "brainstormDraft": "Let us think through this piece of work — \"{{title}}\" — "
     },
     "work": {
       "title": "Work",

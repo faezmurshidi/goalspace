@@ -77,15 +77,23 @@ export function RowActions({
         >
           {isQuestion ? t('app.resume.answer') : t('app.resume.finish')}
         </button>
-        {isQuestion ? (
-          <button
-            type="button"
-            onClick={() => askPartnerAbout(title)}
-            className="label text-ink-soft hover:text-ink underline underline-offset-2"
-          >
-            {t('app.resume.askAbout')}
-          </button>
-        ) : null}
+        {/* Both kinds, different verbs. A question wants an answer; an open
+            task wants thinking through — how to approach it, what it depends
+            on, whether it should be broken up. Same mechanism, and the verb is
+            what tells the owner which conversation they are starting. */}
+        <button
+          type="button"
+          onClick={() =>
+            askPartnerAbout(
+              isQuestion
+                ? t('app.resume.askDraft', { title })
+                : t('app.resume.brainstormDraft', { title })
+            )
+          }
+          className="label text-ink-soft hover:text-ink underline underline-offset-2"
+        >
+          {isQuestion ? t('app.resume.askAbout') : t('app.resume.brainstorm')}
+        </button>
       </span>
     );
   }
