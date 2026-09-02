@@ -7,9 +7,15 @@ import { buildToolSet, type RunContext } from '@/lib/agents/executor';
 import { buildSkeleton, type SkeletonWorkItem } from '@/lib/agents/skeleton';
 import { runTooled } from '@/lib/agents/tooled';
 import { finishRun, recordRunUsage } from '@/lib/agents/usage';
+import { textFromParts } from '@/lib/chat/parts';
 import { startAgentRun } from '@/lib/db/agents';
 import { getBudget } from '@/lib/db/budgets';
-import { appendMessage, getOrCreateConversation, listMessages } from '@/lib/db/conversations';
+import {
+  appendMessage,
+  getOrCreateConversation,
+  listMessages,
+  upsertStreamedMessage,
+} from '@/lib/db/conversations';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { listRunProposals } from '@/lib/db/proposals';
 import { createClient } from '@/utils/supabase/server';
@@ -77,6 +83,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
       ownerId: auth.user.id,
       role: 'user',
       content: text,
+      parts: latest.parts,
+      uiMessageId: latest.id,
     });
   }
 
@@ -233,17 +241,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
         providerMetadata: step.providerMetadata,
       });
     },
-    onEnd: async ({ steps, text: answer }) => {
-      if (answer.trim()) {
-        await appendMessage(supabase, {
-          conversationId: conversation.id,
-          projectId: project.id,
-          ownerId: auth.user.id,
-          role: 'assistant',
-          content: answer,
-          runId,
-        });
-      }
+    onEnd: async ({ steps }) => {
+      // The assistant turn is persisted from toUIMessageStreamResponse's
+      // onFinish instead of here: this callback sees only the text, and a turn
+      // whose substance is a tool call awaiting approval would be stored as an
+      // empty message with the question thrown away.
       await finishRun(supabase, runId, {
         status: cappedByTokens ? 'capped' : 'succeeded',
         stepCount: steps.length,
@@ -259,11 +261,27 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     },
   });
 
-  // originalMessages puts the stream in persistence mode. Without it the
-  // response starts a fresh assistant message, so a continuation after a tool
-  // approval cannot be stitched onto the assistant turn that requested it —
-  // and the approved call never executes.
-  return result.toUIMessageStreamResponse({ originalMessages: messages });
+  // originalMessages puts the stream in persistence mode: the response can
+  // extend the assistant turn that requested an approval rather than starting a
+  // new one, and onFinish hands back that whole turn to store.
+  return result.toUIMessageStreamResponse({
+    originalMessages: messages,
+    onFinish: async ({ responseMessage }) => {
+      // Parts, not text. The turn's substance may be a tool call waiting on the
+      // owner, which has no prose at all — and which the transcript has to hold
+      // if a reload is not to discard the question.
+      await upsertStreamedMessage(supabase, {
+        conversationId: conversation.id,
+        projectId: project.id,
+        ownerId: auth.user.id,
+        role: 'assistant',
+        content: textFromParts(responseMessage.parts),
+        parts: responseMessage.parts,
+        runId,
+        uiMessageId: responseMessage.id,
+      });
+    },
+  });
 }
 
 async function loadSkeleton(

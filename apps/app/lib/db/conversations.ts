@@ -8,7 +8,7 @@ export type Conversation = Tables<'conversations'>;
 export type Message = Omit<Tables<'messages'>, 'role'> & { role: 'user' | 'assistant' };
 
 const MESSAGE_COLUMNS =
-  'id, conversation_id, project_id, owner_id, role, content, run_id, created_at';
+  'id, conversation_id, project_id, owner_id, role, content, parts, run_id, ui_message_id, created_at';
 
 /**
  * The project's one conversation with this agent, creating it if absent.
@@ -47,27 +47,63 @@ export async function listMessages(supabase: Client, conversationId: string): Pr
   return (data ?? []) as Message[];
 }
 
-export async function appendMessage(
+export interface MessageInput {
+  conversationId: string;
+  projectId: string;
+  ownerId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  /** The turn as it actually was, tool calls and approval state included. */
+  parts?: unknown[];
+  runId?: string | null;
+  /** The AI SDK's id for this message, when it came from a stream. */
+  uiMessageId?: string | null;
+}
+
+export async function appendMessage(supabase: Client, params: MessageInput): Promise<Message> {
+  const { data, error } = await supabase
+    .from('messages')
+    .insert(rowFrom(params))
+    .select(MESSAGE_COLUMNS)
+    .single();
+
+  if (error) throw error;
+  return data as Message;
+}
+
+function rowFrom(params: MessageInput) {
+  return {
+    conversation_id: params.conversationId,
+    project_id: params.projectId,
+    owner_id: params.ownerId,
+    role: params.role,
+    content: params.content,
+    parts: (params.parts ?? []) as never,
+    run_id: params.runId ?? null,
+    ui_message_id: params.uiMessageId ?? null,
+  };
+}
+
+/**
+ * Store a streamed turn, replacing it if this stream extended one already
+ * stored.
+ *
+ * A response can continue the assistant message that requested a tool
+ * approval rather than starting a new one, so the same SDK id arrives twice
+ * with more parts the second time. Inserting both would leave the transcript
+ * holding the question and the answer as separate turns, and the older row
+ * still showing an approval the owner has since decided.
+ *
+ * Keyed on (conversation_id, ui_message_id), which is the unique index the
+ * migration adds.
+ */
+export async function upsertStreamedMessage(
   supabase: Client,
-  params: {
-    conversationId: string;
-    projectId: string;
-    ownerId: string;
-    role: 'user' | 'assistant';
-    content: string;
-    runId?: string | null;
-  }
+  params: MessageInput & { uiMessageId: string }
 ): Promise<Message> {
   const { data, error } = await supabase
     .from('messages')
-    .insert({
-      conversation_id: params.conversationId,
-      project_id: params.projectId,
-      owner_id: params.ownerId,
-      role: params.role,
-      content: params.content,
-      run_id: params.runId ?? null,
-    })
+    .upsert(rowFrom(params), { onConflict: 'conversation_id,ui_message_id' })
     .select(MESSAGE_COLUMNS)
     .single();
 

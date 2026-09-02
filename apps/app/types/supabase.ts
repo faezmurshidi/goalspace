@@ -632,9 +632,11 @@ export type Database = {
           created_at: string;
           id: string;
           owner_id: string;
+          parts: Json;
           project_id: string;
           role: string;
           run_id: string | null;
+          ui_message_id: string | null;
         };
         Insert: {
           content: string;
@@ -642,9 +644,11 @@ export type Database = {
           created_at?: string;
           id?: string;
           owner_id: string;
+          parts?: Json;
           project_id: string;
           role: string;
           run_id?: string | null;
+          ui_message_id?: string | null;
         };
         Update: {
           content?: string;
@@ -652,9 +656,11 @@ export type Database = {
           created_at?: string;
           id?: string;
           owner_id?: string;
+          parts?: Json;
           project_id?: string;
           role?: string;
           run_id?: string | null;
+          ui_message_id?: string | null;
         };
         Relationships: [
           {

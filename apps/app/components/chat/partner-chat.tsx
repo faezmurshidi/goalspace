@@ -20,7 +20,14 @@ import { Conversation, ConversationContent, ConversationScrollButton } from './c
 export interface SeedMessage {
   id: string;
   role: 'user' | 'assistant';
-  content: string;
+  /**
+   * The turn as stored, tool calls and approval state included.
+   *
+   * Seeded rather than rebuilt from text: an approval the owner has not
+   * answered lives in an assistant turn's parts, and reconstructing the turn as
+   * one text part discarded the question along with the entry behind it.
+   */
+  parts: unknown[];
 }
 
 /**
@@ -65,11 +72,7 @@ export function PartnerChat({
     transport: new DefaultChatTransport({ api: `/api/chat/${slug}` }),
     // The server-rendered transcript, so a reload does not start an empty
     // conversation over the top of a stored one.
-    messages: initialMessages.map((message) => ({
-      id: message.id,
-      role: message.role,
-      parts: [{ type: 'text' as const, text: message.content }],
-    })) as UIMessage[],
+    messages: initialMessages as UIMessage[],
   });
 
   const fallbackOnly = modelLayerDown(error);

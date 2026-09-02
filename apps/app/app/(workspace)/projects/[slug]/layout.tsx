@@ -68,7 +68,17 @@ export default async function ProjectLayout({
           slug={slug}
           targets={captureTargetsFrom(workItems)}
           hasPartner={hasPartner}
-          initialMessages={seed.map((m) => ({ id: m.id, role: m.role, content: m.content }))}
+          initialMessages={seed.map((m) => ({
+            id: m.ui_message_id ?? m.id,
+            role: m.role,
+            // The stored parts, so a reload restores the turn rather than a
+            // rendering of it. A turn written before this column existed has
+            // none, and falls back to its text.
+            parts:
+              Array.isArray(m.parts) && m.parts.length > 0
+                ? (m.parts as unknown[])
+                : [{ type: 'text', text: m.content }],
+          }))}
         />
       </section>
     </div>
