@@ -555,6 +555,8 @@
       "tools": {
         "heading": "Tools",
         "reads": "Reads the record",
+        "records": "Writes down what you say",
+        "recordsNote": "straight into the log, no approval step",
         "proposes": "Proposes changes",
         "proposesNote": "you approve each",
         "external": "Leaves the system",

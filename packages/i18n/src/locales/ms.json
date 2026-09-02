@@ -555,6 +555,8 @@
       "tools": {
         "heading": "Alat",
         "reads": "Membaca rekod",
+        "records": "Menulis apa yang anda katakan",
+        "recordsNote": "terus ke dalam log, tiada langkah kelulusan",
         "proposes": "Mencadangkan perubahan",
         "proposesNote": "anda meluluskan setiap satu",
         "external": "Keluar dari sistem",

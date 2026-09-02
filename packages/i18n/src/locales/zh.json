@@ -555,6 +555,8 @@
       "tools": {
         "heading": "工具",
         "reads": "读取记录",
+        "records": "记录你说的话",
+        "recordsNote": "直接写入日志，无需批准",
         "proposes": "提出更改",
         "proposesNote": "每项均需你批准",
         "external": "离开本系统",

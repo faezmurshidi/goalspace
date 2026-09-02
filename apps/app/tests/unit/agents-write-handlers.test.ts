@@ -52,9 +52,12 @@ function contextWith(
 }
 
 describe('write tools in the registry', () => {
-  it('marks every write tool as writing and not external', () => {
+  it('marks every proposal tool as proposing and not external', () => {
+    // 'proposes' exactly, not merely truthy. record_entry also writes, and
+    // WRITE_TOOLS is the proposal group — the distinction the union exists to
+    // make, and the one the agents page states to the owner.
     for (const name of WRITE_TOOLS) {
-      expect(REGISTRY[name].writes).toBe(true);
+      expect(REGISTRY[name].writes).toBe('proposes');
       expect(REGISTRY[name].external).toBe(false);
     }
   });

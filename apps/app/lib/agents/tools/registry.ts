@@ -35,12 +35,25 @@ export const REGISTRY_NAMES = [
 
 export type ToolName = (typeof REGISTRY_NAMES)[number];
 
+/**
+ * What a tool does to the record.
+ *
+ * A union rather than a boolean because there are three answers, not two, and
+ * the agents page states each of them to the owner in different words. Two
+ * booleans would let `writes: true, records: true` be written and mean
+ * nothing; this makes that state unrepresentable.
+ */
+export type ToolWrites = false | 'proposes' | 'records';
+
 export interface ToolDefinition {
   name: ToolName;
   description: string;
   inputSchema: z.ZodTypeAny;
-  /** Emits a proposal rather than mutating. */
-  writes: boolean;
+  /**
+   * 'proposes' emits a proposal the owner accepts or rejects. 'records' writes
+   * to the log directly, and only the owner's own words — see record_entry.
+   */
+  writes: ToolWrites;
   /** Leaves the system boundary. No tool does yet; web_search will. */
   external: boolean;
 }
@@ -159,7 +172,7 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
         .default([])
         .describe('Ids you actually saw in a tool result. Inventing one fails the call.'),
     }),
-    writes: true,
+    writes: 'proposes',
     external: false,
   },
   propose_work_item: {
@@ -181,7 +194,7 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
         )
         .default([]),
     }),
-    writes: true,
+    writes: 'proposes',
     external: false,
   },
   propose_document_edit: {
@@ -202,7 +215,7 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
         )
         .default([]),
     }),
-    writes: true,
+    writes: 'proposes',
     external: false,
   },
 };
@@ -221,11 +234,18 @@ export const REPO_READ = [
 ] as const satisfies readonly ToolName[];
 
 /**
- * Every tool that produces a proposal. None of them is external, and none of
- * them mutates: a "write" tool in this system writes to `proposals` and
- * nowhere else. REPO_READ and WRITE_TOOLS are disjoint by construction, which
- * is what lets the Critic be described as writing nothing and have that be
- * checkable rather than claimed.
+ * Every tool that produces a proposal — the `writes: 'proposes'` group, and
+ * nothing else. None is external, and none mutates the record: a proposal tool
+ * writes to `proposals` and nowhere else.
+ *
+ * That used to be true of every tool with a truthy `writes`. It no longer is:
+ * `record_entry` carries `writes: 'records'` and writes to `entries`
+ * directly, which is why the flag became a union. This group deliberately
+ * excludes it — the name means proposals, not writes in general.
+ *
+ * REPO_READ and WRITE_TOOLS are disjoint by construction, which is what lets
+ * the Critic be described as writing nothing and have that be checkable rather
+ * than claimed.
  */
 export const WRITE_TOOLS = [
   'propose_entry',
