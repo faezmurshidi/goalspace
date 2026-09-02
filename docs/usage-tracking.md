@@ -42,12 +42,17 @@ POSTHOG_SERVER_KEY=your_posthog_server_side_key
 - `user_registered`: When a new user is created
 - `user_logged_in`: When an existing user logs in
 
-### Goal Setting Events
-- `goal_form_submitted`: When a user submits the goal form
-- `goal_analysis_started`: When goal analysis begins
-- `questions_generated`: When clarifying questions are generated
-- `goal_analysis_with_answers`: When goal analysis with user answers begins
-- `spaces_generated`: When learning spaces are successfully generated
+### Intake Events
+
+**None.** The project intake (Interviewer questions, Planner breakdown) emits no
+analytics events today. Stated rather than omitted, so the section is not
+reintroduced as aspiration.
+
+This heading replaces a "Goal Setting Events" block listing
+`goal_form_submitted`, `goal_analysis_started`, `questions_generated`,
+`goal_analysis_with_answers` and `spaces_generated`. Those described the AI
+goal-setting product deleted in `8b7245a`; none of them had fired anywhere for
+months. See CLAUDE.md's historical note.
 
 ### Feature Usage Events
 - `feature_used`: Generic event for feature usage

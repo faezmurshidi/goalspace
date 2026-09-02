@@ -96,12 +96,14 @@ purpose: security rules must be greppable. Keep it that way.
 | `lib/db/` | Typed queries, one module per entity. |
 | `lib/actions/` | Server actions and the `Result` type they return. |
 | `lib/work-items/` | Pure domain logic — tree, progress, re-entry. No I/O. |
+| `lib/intake/` | Pure intake logic — note body, dedupe, apply outcome. No I/O. |
 | `lib/auth/` | Session helpers. |
 | `app/(workspace)/` | The workspace routes. |
 | `app/login/` | The single auth surface. |
 
-`lib/work-items/*` is pure functions over plain data and is tested directly.
-Keep domain logic there rather than in components or queries.
+`lib/work-items/*` and `lib/intake/*` are pure functions over plain data and
+are tested directly. Keep domain logic there rather than in components or
+queries.
 
 ## Testing
 

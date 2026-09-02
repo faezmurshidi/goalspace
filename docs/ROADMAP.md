@@ -40,9 +40,20 @@ once a run is driven end to end.
 
 Criterion 5 is met by construction: no embedding work exists to block capture.
 
+Phase 2c added the project intake, designed in
+[2026-09-02-project-intake-design.md](superpowers/specs/2026-09-02-project-intake-design.md):
+an Interviewer holding no tools at all asks five to ten questions at project
+creation, and a Planner holding repo-read plus `propose_work_item` proposes a
+flat breakdown the owner accepts or rejects as a set. It also added the two
+metered execution paths that sit beside the streaming ask route —
+`runStructured` for structured output and `runTooled` for an awaitable tool
+loop — with cost accounting extracted to one shared definition in
+`lib/agents/usage.ts`.
+
 Still unbuilt, in dependency order: `conversations` and `messages` with message
-persistence; the ask, agents, and run-trace surfaces; `web_search`;
-`generate_audio`; the Researcher template.
+persistence; the ask and run-trace surfaces; `read_entry`, without which no
+agent can fetch a log entry by id; `web_search`; `generate_audio`; the
+Researcher template.
 
 Makes the phase-1 record answerable. The differentiating question is not "write
 me a plan" — it is *"why did I abandon that approach in month two?"*, which no
