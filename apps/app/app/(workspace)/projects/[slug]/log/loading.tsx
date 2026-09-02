@@ -13,24 +13,24 @@ export default function LogLoading() {
           reader heard silence between navigation and content. */}
       <LoadingAnnouncement />
       <div aria-hidden="true" className="pb-10 pt-8">
-        <div className="flex items-baseline justify-between border-b border-rule pb-2">
-          <div className="h-3 w-12 bg-paper-shade" />
+        <div className="border-rule flex items-baseline justify-between border-b pb-2">
+          <div className="bg-paper-shade h-3 w-12" />
           <div className="flex gap-4">
             {[0, 1, 2, 3, 4].map((chip) => (
-              <div key={chip} className="h-3 w-14 bg-paper-shade" />
+              <div key={chip} className="bg-paper-shade h-3 w-14" />
             ))}
           </div>
         </div>
 
         {[0, 1, 2, 3, 4].map((row) => (
-          <div key={row} className="border-b border-rule py-4">
+          <div key={row} className="border-rule border-b py-4">
             <div className="flex gap-4">
-              <div className="h-3 w-24 bg-paper-shade" />
-              <div className="h-3 w-16 bg-paper-shade" />
-              <div className="h-3 w-56 max-w-full bg-paper-shade" />
+              <div className="bg-paper-shade h-3 w-24" />
+              <div className="bg-paper-shade h-3 w-16" />
+              <div className="bg-paper-shade h-3 w-56 max-w-full" />
             </div>
-            <div className="mt-3 h-3 w-full max-w-xl bg-paper-shade" />
-            <div className="mt-2 h-3 w-2/3 max-w-md bg-paper-shade" />
+            <div className="bg-paper-shade mt-3 h-3 w-full max-w-xl" />
+            <div className="bg-paper-shade mt-2 h-3 w-2/3 max-w-md" />
           </div>
         ))}
       </div>

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 import { getAgent, listAgents, updateAgent } from '@/lib/db/agents';
+import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 
 let alice: TestUser | undefined;
 let bob: TestUser | undefined;

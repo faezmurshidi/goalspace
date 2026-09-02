@@ -38,7 +38,9 @@ describe('buildSkeleton', () => {
   it('omits dropped work items', () => {
     const s = buildSkeleton({
       ...base,
-      workItems: [{ id: 'w9', parent_id: null, title: 'Abandoned idea', status: 'dropped', kind: 'task' }],
+      workItems: [
+        { id: 'w9', parent_id: null, title: 'Abandoned idea', status: 'dropped', kind: 'task' },
+      ],
     });
     expect(s).not.toContain('Abandoned idea');
   });
@@ -55,7 +57,11 @@ describe('buildSkeleton', () => {
   });
 
   it('handles an empty project without throwing', () => {
-    const s = buildSkeleton({ project: { title: 'Empty', kind: 'learn', brief: null }, workItems: [], decisions: [] });
+    const s = buildSkeleton({
+      project: { title: 'Empty', kind: 'learn', brief: null },
+      workItems: [],
+      decisions: [],
+    });
     expect(s).toContain('Empty');
   });
 });

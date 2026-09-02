@@ -5,7 +5,7 @@
 @layer base {
   :root {
     --color-paper: oklch(0.96 0.008 85);
-    --color-paper-shade: oklch(0.93 0.010 85);
+    --color-paper-shade: oklch(0.93 0.01 85);
     /*
      * A dedicated soft-paper token, not a `text-paper/75` opacity modifier:
      * Tailwind v3 can only inject an alpha channel into a color that's
@@ -18,8 +18,8 @@
      */
     --color-paper-soft: oklch(0.96 0.008 85 / 75%);
     --color-ink: oklch(0.22 0.012 60);
-    --color-ink-soft: oklch(0.45 0.010 60);
-    --color-rule: oklch(0.78 0.010 70);
+    --color-ink-soft: oklch(0.45 0.01 60);
+    --color-rule: oklch(0.78 0.01 70);
     --color-oxide: oklch(0.55 0.15 35);
     --color-oxide-deep: oklch(0.44 0.14 33);
     --color-waiting: oklch(0.55 0.09 240);

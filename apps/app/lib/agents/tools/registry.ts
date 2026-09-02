@@ -122,7 +122,9 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
         .min(1)
         .describe('Why this belongs in the record. The owner reads this first.'),
       citations: z
-        .array(z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() }))
+        .array(
+          z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() })
+        )
         .default([])
         .describe('Ids you actually saw in a tool result. Inventing one fails the call.'),
     }),
@@ -143,7 +145,9 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
       }),
       rationale: z.string().min(1),
       citations: z
-        .array(z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() }))
+        .array(
+          z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() })
+        )
         .default([]),
     }),
     writes: true,
@@ -162,7 +166,9 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
       }),
       rationale: z.string().min(1),
       citations: z
-        .array(z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() }))
+        .array(
+          z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() })
+        )
         .default([]),
     }),
     writes: true,

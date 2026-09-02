@@ -1,8 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database, Tables } from '@/types/supabase';
 import type { EntryKind } from '@/lib/schemas/common';
 import type { CreateEntryValues } from '@/lib/schemas/entry';
+import type { Database, Tables } from '@/types/supabase';
 
 type Client = SupabaseClient<Database>;
 

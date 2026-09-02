@@ -1,12 +1,12 @@
 'use client';
 
 import { useId, useState, useTransition } from 'react';
-import { Button, cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button, cn } from '@goalspace/ui';
 
-import { updateProjectAction } from '@/app/(workspace)/actions';
-import { projectStatuses, type ProjectStatus } from '@/lib/schemas/common';
 import type { Project } from '@/lib/db/projects';
+import { projectStatuses, type ProjectStatus } from '@/lib/schemas/common';
+import { updateProjectAction } from '@/app/(workspace)/actions';
 
 /**
  * Title, brief and status — the fields that describe what the project is and
@@ -73,10 +73,8 @@ export function ProjectForm({ slug, project }: { slug: string; project: Project 
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           aria-invalid={fieldErrors.title ? true : undefined}
-          aria-describedby={
-            fieldErrors.title ? titleErrorId : failed ? messageId : undefined
-          }
-          className="border border-rule-strong bg-paper px-3 py-2 text-title text-ink"
+          aria-describedby={fieldErrors.title ? titleErrorId : failed ? messageId : undefined}
+          className="border-rule-strong bg-paper text-title text-ink border px-3 py-2"
         />
         {fieldErrors.title ? (
           <p id={titleErrorId} role="alert" className="label text-oxide">
@@ -97,7 +95,7 @@ export function ProjectForm({ slug, project }: { slug: string; project: Project 
           onChange={(e) => setBrief(e.target.value)}
           aria-invalid={fieldErrors.brief ? true : undefined}
           aria-describedby={fieldErrors.brief ? briefErrorId : undefined}
-          className="w-full max-w-[70ch] border border-rule-strong bg-paper p-3 text-body text-ink"
+          className="border-rule-strong bg-paper text-body text-ink w-full max-w-[70ch] border p-3"
         />
         {fieldErrors.brief ? (
           <p id={briefErrorId} role="alert" className="label text-oxide">
@@ -115,7 +113,7 @@ export function ProjectForm({ slug, project }: { slug: string; project: Project 
             id="project-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as ProjectStatus)}
-            className="label border border-rule-strong bg-paper px-3 py-2 text-ink"
+            className="label border-rule-strong bg-paper text-ink border px-3 py-2"
           >
             {projectStatuses.map((choice) => (
               <option key={choice} value={choice}>

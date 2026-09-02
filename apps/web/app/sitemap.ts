@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 // Add all important routes for SEO indexing
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://goalspace.com';
-  
+
   return [
     {
       url: baseUrl,
@@ -24,4 +24,4 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
   ];
-} 
+}

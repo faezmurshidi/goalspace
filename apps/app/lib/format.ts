@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
-import { NEXT_LOCALE_COOKIE, localeFromCookie, type Locale } from '@goalspace/i18n';
-import { TIME_ZONE_COOKIE, parseTimeZone } from '@/lib/settings/preference-cookies';
+import { localeFromCookie, NEXT_LOCALE_COOKIE, type Locale } from '@goalspace/i18n';
+
+import { parseTimeZone, TIME_ZONE_COOKIE } from '@/lib/settings/preference-cookies';
 
 /**
  * The request's locale, from the same cookie the root layout reads.

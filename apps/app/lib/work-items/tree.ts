@@ -84,9 +84,7 @@ export function buildTree<R extends TreeRow>(rows: readonly R[]): TreeResult<R> 
     for (const id of path) verdicts.set(id, verdict);
   }
 
-  const cyclic = [...verdicts.entries()]
-    .filter(([, v]) => v === 'cyclic')
-    .map(([id]) => id);
+  const cyclic = [...verdicts.entries()].filter(([, v]) => v === 'cyclic').map(([id]) => id);
 
   // Siblings sort on order_index, then id. order_index is not unique in the
   // schema, and two items reordered in one session can share a value; without

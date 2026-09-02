@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { REGISTRY_NAMES } from '@/lib/agents/tools/registry';
 import { toolGroups } from '@/lib/agents/tool-groups';
+import { REGISTRY_NAMES } from '@/lib/agents/tools/registry';
 
 describe('toolGroups', () => {
   it('returns the three groups in a fixed order', () => {
@@ -33,7 +33,9 @@ describe('toolGroups', () => {
   });
 
   it('preserves registry order within a group', () => {
-    const reads = toolGroups().find((g) => g.key === 'reads')!.tools.map((t) => t.name);
+    const reads = toolGroups()
+      .find((g) => g.key === 'reads')!
+      .tools.map((t) => t.name);
     const expected = REGISTRY_NAMES.filter((n) => reads.includes(n));
     expect(reads).toEqual(expected);
   });

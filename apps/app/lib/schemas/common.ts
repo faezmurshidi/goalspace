@@ -57,10 +57,7 @@ export const slugSchema = z
   .string()
   .min(1)
   .max(64)
-  .regex(
-    /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u,
-    'Slugs are lowercase words separated by hyphens.'
-  );
+  .regex(/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u, 'Slugs are lowercase words separated by hyphens.');
 
 /**
  * Derive a slug from a title.

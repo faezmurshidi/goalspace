@@ -1,8 +1,8 @@
+import { locales } from '@goalspace/i18n';
 import { describe, expect, it } from 'vitest';
 
-import { locales } from '@goalspace/i18n';
-import { THEMES } from '@/lib/settings/preference-cookies';
 import { updateAccountSettingsSchema } from '@/lib/schemas/user-settings';
+import { THEMES } from '@/lib/settings/preference-cookies';
 
 const valid = {
   theme: 'dark',

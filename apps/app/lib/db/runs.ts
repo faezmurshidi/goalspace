@@ -23,11 +23,7 @@ const RUN_COLUMNS =
 const TOOL_CALL_COLUMNS =
   'id, run_id, project_id, owner_id, tool, args, result_summary, ok, duration_ms, created_at';
 
-export async function getRun(
-  supabase: Client,
-  projectId: string,
-  id: string
-): Promise<Run | null> {
+export async function getRun(supabase: Client, projectId: string, id: string): Promise<Run | null> {
   const { data, error } = await supabase
     .from('agent_runs')
     .select(RUN_COLUMNS)

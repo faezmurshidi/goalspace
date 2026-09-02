@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { getFixedT } from '@goalspace/i18n/server';
 
+import { CreateProjectForm } from '@/components/project/create-project-form';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getLocale } from '@/lib/format';
-import { CreateProjectForm } from '@/components/project/create-project-form';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = getFixedT(await getLocale());
@@ -24,8 +24,8 @@ export default async function NewProjectPage() {
 
   return (
     <div className="mx-auto max-w-xl py-16">
-      <h1 className="wdth-wide text-headline font-bold text-ink">{t('app.create.title')}</h1>
-      <p className="prose-measure mb-8 mt-3 text-ink-soft">{t('app.create.body')}</p>
+      <h1 className="wdth-wide text-headline text-ink font-bold">{t('app.create.title')}</h1>
+      <p className="prose-measure text-ink-soft mb-8 mt-3">{t('app.create.body')}</p>
       <CreateProjectForm />
     </div>
   );

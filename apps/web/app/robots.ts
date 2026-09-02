@@ -10,4 +10,4 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: 'https://goalspace.com/sitemap.xml',
     host: 'https://goalspace.com',
   };
-} 
+}

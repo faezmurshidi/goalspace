@@ -1,9 +1,10 @@
 'use client';
 
 import { ReactNode, useMemo } from 'react';
-import { I18nextProvider } from 'react-i18next';
-import type { i18n as I18nInstance } from 'i18next';
 import { useParams } from 'next/navigation';
+import type { i18n as I18nInstance } from 'i18next';
+import { I18nextProvider } from 'react-i18next';
+
 import i18n from './i18n';
 
 interface I18nProviderProps {

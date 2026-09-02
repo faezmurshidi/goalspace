@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 import { getRevision, listRevisions, updateDocument } from '@/lib/db/documents';
+import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 
 /**
  * Revision authorship and the compare-and-set, against a real database.

@@ -7,8 +7,10 @@
 // document itself.
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { archivo, azeret } from '@/lib/fonts';
 import { defaultLocale } from '@goalspace/i18n';
+
+import { archivo, azeret } from '@/lib/fonts';
+
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
@@ -38,16 +40,16 @@ export const metadata: Metadata = {
 export default function GlobalNotFound() {
   return (
     <html lang={defaultLocale} className={`${archivo.variable} ${azeret.variable}`}>
-      <body className="flex min-h-screen flex-col items-center justify-center bg-paper px-6 py-24 text-center text-ink">
-        <span className="label mb-6 block text-oxide">404</span>
+      <body className="bg-paper text-ink flex min-h-screen flex-col items-center justify-center px-6 py-24 text-center">
+        <span className="label text-oxide mb-6 block">404</span>
         <h1 className="text-display wdth-expanded">Nothing at this address</h1>
-        <p className="mt-6 max-w-[52ch] text-body text-ink-soft">
+        <p className="text-body text-ink-soft mt-6 max-w-[52ch]">
           The page you&apos;re looking for doesn&apos;t exist. It may have moved, or it was never
           here.
         </p>
         <Link
           href={`/${defaultLocale}`}
-          className="label mt-12 inline-flex items-center gap-2 bg-oxide-deep px-8 py-4 text-paper transition-colors duration-150 ease-out-expo hover:bg-ink"
+          className="label bg-oxide-deep text-paper ease-out-expo hover:bg-ink mt-12 inline-flex items-center gap-2 px-8 py-4 transition-colors duration-150"
         >
           <span aria-hidden="true">&larr;</span>
           Back to plate 00

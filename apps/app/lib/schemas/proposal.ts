@@ -1,12 +1,8 @@
 import { z } from 'zod';
 
+import { CHANGES_SOMETHING_MESSAGE, changesSomething, updateDocumentFields } from './document';
 import { createEntrySchema } from './entry';
 import { createWorkItemSchema } from './work-item';
-import {
-  CHANGES_SOMETHING_MESSAGE,
-  changesSomething,
-  updateDocumentFields,
-} from './document';
 
 export const proposalKinds = ['entry', 'work_item', 'document_edit'] as const;
 export const proposalKindSchema = z.enum(proposalKinds);

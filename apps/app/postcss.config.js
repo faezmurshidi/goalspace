@@ -4,7 +4,7 @@ module.exports = {
     'postcss-nesting': {
       // Configure nesting to ensure proper CSS nesting
       // See: https://tailwindcss.com/docs/using-with-preprocessors#nesting
-      nesting: true
+      nesting: true,
     },
     tailwindcss: {},
     autoprefixer: {},

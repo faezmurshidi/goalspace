@@ -44,11 +44,9 @@ describe('resolveCitations', () => {
   });
 
   it('passes when every cited id exists in the project', async () => {
-    const result = await resolveCitations(
-      stub({ entries: [A] }) as never,
-      'project-1',
-      [{ type: 'entry', id: A }]
-    );
+    const result = await resolveCitations(stub({ entries: [A] }) as never, 'project-1', [
+      { type: 'entry', id: A },
+    ]);
     expect(result.ok).toBe(true);
   });
 
@@ -56,11 +54,10 @@ describe('resolveCitations', () => {
     // A model that invents a citation must get an error it can act on, not a
     // stored proposal that cites nothing. Fabricated provenance is worse than
     // none, because it is trusted.
-    const result = await resolveCitations(
-      stub({ entries: [A] }) as never,
-      'project-1',
-      [{ type: 'entry', id: A }, { type: 'entry', id: B }]
-    );
+    const result = await resolveCitations(stub({ entries: [A] }) as never, 'project-1', [
+      { type: 'entry', id: A },
+      { type: 'entry', id: B },
+    ]);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.missing).toEqual([{ type: 'entry', id: B }]);
   });

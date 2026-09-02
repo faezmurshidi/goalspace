@@ -1,12 +1,12 @@
 'use client';
 
 import { useId, useState, useTransition } from 'react';
-import { Button, cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button, cn } from '@goalspace/ui';
 
-import { updateBudgetAction } from '@/app/(workspace)/actions';
-import { MAX_PER_RUN_TOKEN_CAP, MIN_PER_RUN_TOKEN_CAP } from '@/lib/schemas/budget';
 import type { Budget } from '@/lib/agents/caps';
+import { MAX_PER_RUN_TOKEN_CAP, MIN_PER_RUN_TOKEN_CAP } from '@/lib/schemas/budget';
+import { updateBudgetAction } from '@/app/(workspace)/actions';
 
 /**
  * The two spend caps. Follows the pattern in
@@ -77,13 +77,9 @@ export function BudgetForm({ slug, budget }: { slug: string; budget: Budget }) {
             onChange={(e) => setMonthlyCapUsd(e.target.valueAsNumber)}
             aria-invalid={fieldErrors.monthly_cap_usd ? true : undefined}
             aria-describedby={
-              fieldErrors.monthly_cap_usd
-                ? monthlyCapErrorId
-                : failed
-                  ? messageId
-                  : undefined
+              fieldErrors.monthly_cap_usd ? monthlyCapErrorId : failed ? messageId : undefined
             }
-            className="border border-rule-strong bg-paper px-3 py-2 text-title text-ink"
+            className="border-rule-strong bg-paper text-title text-ink border px-3 py-2"
           />
           {fieldErrors.monthly_cap_usd ? (
             <p id={monthlyCapErrorId} role="alert" className="label text-oxide">
@@ -106,10 +102,8 @@ export function BudgetForm({ slug, budget }: { slug: string; budget: Budget }) {
             value={Number.isNaN(perRunTokenCap) ? '' : perRunTokenCap}
             onChange={(e) => setPerRunTokenCap(e.target.valueAsNumber)}
             aria-invalid={fieldErrors.per_run_token_cap ? true : undefined}
-            aria-describedby={
-              fieldErrors.per_run_token_cap ? perRunTokenCapErrorId : undefined
-            }
-            className="border border-rule-strong bg-paper px-3 py-2 text-title text-ink"
+            aria-describedby={fieldErrors.per_run_token_cap ? perRunTokenCapErrorId : undefined}
+            className="border-rule-strong bg-paper text-title text-ink border px-3 py-2"
           />
           {fieldErrors.per_run_token_cap ? (
             <p id={perRunTokenCapErrorId} role="alert" className="label text-oxide">

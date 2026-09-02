@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center bg-paper px-6 py-16">
+    <main className="bg-paper flex min-h-svh flex-col items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm">
         <AuthMasthead />
         {children}
@@ -27,7 +27,7 @@ export default function LoginPage() {
           {/* A shaped skeleton rather than the word "Loading", so the plate
               holds its footprint and the page does not jump when the form
               arrives. */}
-          <div className="h-[34rem] border border-rule bg-paper-shade" />
+          <div className="border-rule bg-paper-shade h-[34rem] border" />
         </Frame>
       }
     >

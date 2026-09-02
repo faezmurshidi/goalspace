@@ -1,10 +1,10 @@
 'use client';
 
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import Backend from 'i18next-http-backend';
-import LanguageDetector from 'i18next-browser-languagedetector';
 import type { InitOptions } from 'i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+import Backend from 'i18next-http-backend';
+import { initReactI18next } from 'react-i18next';
 
 // Import translation files directly
 import enTranslation from './locales/en.json';
@@ -13,15 +13,15 @@ import zhTranslation from './locales/zh.json';
 
 // Define the resources with namespaces
 const resources = {
-  en: { 
-    translation: enTranslation 
+  en: {
+    translation: enTranslation,
   },
-  ms: { 
-    translation: msTranslation 
+  ms: {
+    translation: msTranslation,
   },
-  zh: { 
-    translation: zhTranslation 
-  }
+  zh: {
+    translation: zhTranslation,
+  },
 };
 
 // Set expiration date to 1 year from now
@@ -33,11 +33,11 @@ const i18nOptions: InitOptions = {
   resources,
   fallbackLng: 'en',
   debug: process.env.NODE_ENV === 'development',
-  
+
   interpolation: {
     escapeValue: false, // React already safes from XSS
   },
-  
+
   // Detection options - only used in browser
   detection: {
     order: ['path', 'cookie', 'navigator'],
@@ -47,10 +47,10 @@ const i18nOptions: InitOptions = {
     cookieOptions: {
       expires: expirationDate,
       path: '/',
-      sameSite: 'strict'
+      sameSite: 'strict',
     },
   },
-  
+
   // React options
   react: {
     useSuspense: false, // Set to false to avoid issues with SSR
@@ -60,23 +60,17 @@ const i18nOptions: InitOptions = {
 // Check if i18next has already been initialized
 if (!i18n.isInitialized) {
   console.log('[i18n] Initializing i18next');
-  
+
   // Only use browser-specific features in client environment
   if (typeof window !== 'undefined') {
-    i18n
-      .use(Backend)
-      .use(LanguageDetector)
-      .use(initReactI18next)
-      .init(i18nOptions);
+    i18n.use(Backend).use(LanguageDetector).use(initReactI18next).init(i18nOptions);
   } else {
     // Server-side initialization (simpler)
-    i18n
-      .use(initReactI18next)
-      .init({
-        ...i18nOptions,
-        detection: {}, // Empty detection for server
-      });
+    i18n.use(initReactI18next).init({
+      ...i18nOptions,
+      detection: {}, // Empty detection for server
+    });
   }
 }
 
-export default i18n; 
+export default i18n;

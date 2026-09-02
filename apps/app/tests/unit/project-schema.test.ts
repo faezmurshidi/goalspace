@@ -8,7 +8,12 @@ const id = '11111111-1111-4111-8111-111111111111';
 describe('updateProjectSchema', () => {
   // The schema already existed with no test. These pin the behaviour the
   // settings form depends on before that form is written against it.
-  const valid = { id, title: 'Desktop companion robot', brief: 'Sits on a desk.', status: 'active' };
+  const valid = {
+    id,
+    title: 'Desktop companion robot',
+    brief: 'Sits on a desk.',
+    status: 'active',
+  };
 
   it('accepts a well-formed update', () => {
     expect(updateProjectSchema.safeParse(valid).success).toBe(true);

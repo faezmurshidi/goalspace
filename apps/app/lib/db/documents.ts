@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database, Tables } from '@/types/supabase';
 import type { CreateDocumentValues, UpdateDocumentValues } from '@/lib/schemas/document';
+import type { Database, Tables } from '@/types/supabase';
 
 type Client = SupabaseClient<Database>;
 

@@ -1,12 +1,13 @@
 'use client';
 
 import { useAppTranslations } from '@goalspace/i18n';
-import { Plate } from '@/components/manual/plate';
+
 import { AnnotatedFigure } from '@/components/manual/annotated-figure';
 import { DrawOnView } from '@/components/manual/draw-on-view';
 import { AccrualMechanism } from '@/components/manual/figures/accrual-mechanism';
-import { record, AS_OF } from '@/content/record';
+import { Plate } from '@/components/manual/plate';
 import { formatDayMonth } from '@/lib/duration';
+import { AS_OF, record } from '@/content/record';
 
 export function Accrual() {
   const { t, currentLocale } = useAppTranslations();
@@ -27,7 +28,7 @@ export function Accrual() {
       meta={t('landing.hero.meta', { date: AS_OF })}
       className="bg-paper-shade"
     >
-      <p className="max-w-[68ch] text-body">{t('landing.accrual.lede')}</p>
+      <p className="text-body max-w-[68ch]">{t('landing.accrual.lede')}</p>
 
       <div className="mt-12">
         <DrawOnView>
@@ -46,14 +47,14 @@ export function Accrual() {
       </div>
 
       {closingEntry ? (
-        <div className="mt-10 border-t border-rule pt-6">
-          <h3 className="label mb-2 text-oxide">{t('landing.accrual.entryLabel')}</h3>
+        <div className="border-rule mt-10 border-t pt-6">
+          <h3 className="label text-oxide mb-2">{t('landing.accrual.entryLabel')}</h3>
           <p className="label text-ink-soft">{formatDayMonth(closingEntry.at, currentLocale)}</p>
-          <p className="mt-2 max-w-[68ch] text-body">{closingEntry.text}</p>
+          <p className="text-body mt-2 max-w-[68ch]">{closingEntry.text}</p>
         </div>
       ) : null}
 
-      <p className="mt-10 max-w-[68ch] text-title">{t('landing.accrual.closing')}</p>
+      <p className="text-title mt-10 max-w-[68ch]">{t('landing.accrual.closing')}</p>
     </Plate>
   );
 }

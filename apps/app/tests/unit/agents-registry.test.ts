@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { REGISTRY, REPO_READ, isAllowed, resolveTools } from '@/lib/agents/tools/registry';
+import { isAllowed, REGISTRY, REPO_READ, resolveTools } from '@/lib/agents/tools/registry';
 
 describe('resolveTools', () => {
   it('returns only the intersection of registry and allowlist', () => {

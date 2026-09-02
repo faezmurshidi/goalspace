@@ -3,8 +3,8 @@ import { getFixedT } from '@goalspace/i18n/server';
 
 import { requireSessionContext } from '@/lib/auth/session';
 import { getUserSettings } from '@/lib/db/user-settings';
-import { timeZoneOptions } from '@/lib/settings/time-zones';
 import { getLocale } from '@/lib/format';
+import { timeZoneOptions } from '@/lib/settings/time-zones';
 import { AccountForm } from './account-form';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -36,9 +36,7 @@ export default async function AccountSettingsPage() {
   return (
     <div className="mx-auto w-full max-w-4xl px-6">
       <div className="flex flex-col gap-10 pb-10 pt-8">
-        <h1 className="label border-b border-rule pb-2 text-ink-soft">
-          {t('app.account.title')}
-        </h1>
+        <h1 className="label border-rule text-ink-soft border-b pb-2">{t('app.account.title')}</h1>
 
         <AccountForm settings={settings} timeZones={timeZones} />
       </div>

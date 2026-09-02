@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-import { requiredText } from './common';
-import { REGISTRY_NAMES } from '@/lib/agents/tools/registry';
 import { RATES } from '@/lib/agents/cost';
+import { REGISTRY_NAMES } from '@/lib/agents/tools/registry';
+import { requiredText } from './common';
 
 /**
  * The models an agent may be set to.

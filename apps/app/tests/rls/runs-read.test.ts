@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
-import { getRun, listRunsForAgent, listToolCalls, runCostUsd } from '@/lib/db/runs';
 import { listRunProposals } from '@/lib/db/proposals';
+import { getRun, listRunsForAgent, listToolCalls, runCostUsd } from '@/lib/db/runs';
+import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 
 let alice: TestUser | undefined;
 let bob: TestUser | undefined;

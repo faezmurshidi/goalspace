@@ -1,14 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database } from '@/types/supabase';
-import { payloadSchemaFor } from '@/lib/schemas/proposal';
-import { claimProposal, releaseProposal, settleProposal, type Proposal } from '@/lib/db/proposals';
-import { createEntry } from '@/lib/db/entries';
-import { createWorkItem } from '@/lib/db/work-items';
 import { getDocument, updateDocument } from '@/lib/db/documents';
-import type { CreateEntryValues } from '@/lib/schemas/entry';
-import type { CreateWorkItemValues } from '@/lib/schemas/work-item';
+import { createEntry } from '@/lib/db/entries';
+import { claimProposal, releaseProposal, settleProposal, type Proposal } from '@/lib/db/proposals';
+import { createWorkItem } from '@/lib/db/work-items';
 import type { UpdateDocumentValues } from '@/lib/schemas/document';
+import type { CreateEntryValues } from '@/lib/schemas/entry';
+import { payloadSchemaFor } from '@/lib/schemas/proposal';
+import type { CreateWorkItemValues } from '@/lib/schemas/work-item';
+import type { Database } from '@/types/supabase';
 
 type Client = SupabaseClient<Database>;
 

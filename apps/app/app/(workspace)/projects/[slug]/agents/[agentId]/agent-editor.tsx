@@ -1,13 +1,13 @@
 'use client';
 
 import { useId, useState, useTransition } from 'react';
-import { Button, cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button, cn } from '@goalspace/ui';
 
-import { updateAgentAction } from '@/app/(workspace)/actions';
 import { toolGroups } from '@/lib/agents/tool-groups';
-import { MODEL_CHOICES } from '@/lib/schemas/agent';
 import type { Agent } from '@/lib/db/agents';
+import { MODEL_CHOICES } from '@/lib/schemas/agent';
+import { updateAgentAction } from '@/app/(workspace)/actions';
 
 /**
  * The editor is where the capability boundary is set, so it shows tools
@@ -36,9 +36,7 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
 
   function toggleTool(toolName: string) {
     setTools((current) =>
-      current.includes(toolName)
-        ? current.filter((n) => n !== toolName)
-        : [...current, toolName]
+      current.includes(toolName) ? current.filter((n) => n !== toolName) : [...current, toolName]
     );
   }
 
@@ -92,10 +90,8 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           aria-invalid={fieldErrors.name ? true : undefined}
-          aria-describedby={
-            fieldErrors.name ? nameErrorId : failed ? messageId : undefined
-          }
-          className="border border-rule-strong bg-paper px-3 py-2 text-title text-ink"
+          aria-describedby={fieldErrors.name ? nameErrorId : failed ? messageId : undefined}
+          className="border-rule-strong bg-paper text-title text-ink border px-3 py-2"
         />
         {fieldErrors.name ? (
           <p id={nameErrorId} role="alert" className="label text-oxide">
@@ -115,7 +111,7 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
           onChange={(e) => setRole(e.target.value)}
           aria-invalid={fieldErrors.role_description ? true : undefined}
           aria-describedby={fieldErrors.role_description ? roleErrorId : undefined}
-          className="border border-rule-strong bg-paper px-3 py-2 text-body text-ink"
+          className="border-rule-strong bg-paper text-body text-ink border px-3 py-2"
         />
         {fieldErrors.role_description ? (
           <p id={roleErrorId} role="alert" className="label text-oxide">
@@ -137,7 +133,7 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
           onChange={(e) => setPrompt(e.target.value)}
           aria-invalid={fieldErrors.system_prompt ? true : undefined}
           aria-describedby={fieldErrors.system_prompt ? promptErrorId : undefined}
-          className="w-full max-w-[70ch] border border-rule-strong bg-paper p-3 text-body text-ink"
+          className="border-rule-strong bg-paper text-body text-ink w-full max-w-[70ch] border p-3"
         />
         {fieldErrors.system_prompt ? (
           <p id={promptErrorId} role="alert" className="label text-oxide">
@@ -157,7 +153,7 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
             id="agent-model"
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            className="label border border-rule-strong bg-paper px-3 py-2 text-ink"
+            className="label border-rule-strong bg-paper text-ink border px-3 py-2"
           >
             {MODEL_CHOICES.map((choice) => (
               <option key={choice} value={choice}>
@@ -177,7 +173,7 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
         </label>
       </div>
 
-      <fieldset className="flex flex-col gap-4 border-t border-rule pt-4">
+      <fieldset className="border-rule flex flex-col gap-4 border-t pt-4">
         <legend className="label text-ink-soft">{t('app.agents.tools.heading')}</legend>
 
         {toolGroups().map((group) => (
@@ -203,8 +199,8 @@ export function AgentEditor({ slug, agent }: { slug: string; agent: Agent }) {
                         className="mt-1"
                       />
                       <span className="min-w-0">
-                        <span className="font-mono text-body text-ink">{tool.name}</span>
-                        <span className="block text-ink-soft">{tool.description}</span>
+                        <span className="text-body text-ink font-mono">{tool.name}</span>
+                        <span className="text-ink-soft block">{tool.description}</span>
                       </span>
                     </label>
                   </li>

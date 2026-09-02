@@ -30,11 +30,11 @@ export function getBlogPosts() {
 }
 
 export function getFeaturedPosts() {
-  return blogPosts.filter(post => post.featured);
+  return blogPosts.filter((post) => post.featured);
 }
 
 export function getPostBySlug(slug: string) {
-  return blogPosts.find(post => post.slug === slug);
+  return blogPosts.find((post) => post.slug === slug);
 }
 
 export function getRelatedPosts(slug: string, limit = 2) {
@@ -43,9 +43,6 @@ export function getRelatedPosts(slug: string, limit = 2) {
 
   // Find posts with matching tags, excluding the current post
   return blogPosts
-    .filter(post =>
-      post.slug !== slug &&
-      post.tags.some(tag => currentPost.tags.includes(tag))
-    )
+    .filter((post) => post.slug !== slug && post.tags.some((tag) => currentPost.tags.includes(tag)))
     .slice(0, limit);
 }

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { daysBetween, formatElapsed, formatDayMonth, formatFullDate, localeJoin } from '@/lib/duration';
+
+import {
+  daysBetween,
+  formatDayMonth,
+  formatElapsed,
+  formatFullDate,
+  localeJoin,
+} from '@/lib/duration';
 
 describe('daysBetween', () => {
   it('counts whole days between two dates', () => {

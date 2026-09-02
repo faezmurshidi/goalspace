@@ -2,11 +2,11 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useAppTranslations } from '@goalspace/i18n';
 import { Button } from '@goalspace/ui';
 
-import { useAppTranslations } from '@goalspace/i18n';
-import { acceptProposalAction, rejectProposalAction } from '@/app/(workspace)/actions';
 import type { Proposal } from '@/lib/db/proposals';
+import { acceptProposalAction, rejectProposalAction } from '@/app/(workspace)/actions';
 
 export function ProposalCard({ proposal, slug }: { proposal: Proposal; slug: string }) {
   const { t } = useAppTranslations();
@@ -54,24 +54,24 @@ export function ProposalCard({ proposal, slug }: { proposal: Proposal; slug: str
   }
 
   return (
-    <article className="flex flex-col gap-3 border border-rule p-4">
+    <article className="border-rule flex flex-col gap-3 border p-4">
       {/* Rationale first: it is what the owner reads to decide. */}
       <p>{proposal.rationale}</p>
 
       {draft === null ? (
-        <pre className="overflow-x-auto bg-paper-shade p-3 text-sm">{asText}</pre>
+        <pre className="bg-paper-shade overflow-x-auto p-3 text-sm">{asText}</pre>
       ) : (
         <textarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           rows={12}
           aria-label={t('app.inbox.editorLabel')}
-          className="w-full border border-rule-strong bg-paper p-3 font-mono text-sm"
+          className="border-rule-strong bg-paper w-full border p-3 font-mono text-sm"
         />
       )}
 
       {proposal.citations.length > 0 ? (
-        <p className="text-sm text-ink-soft">
+        <p className="text-ink-soft text-sm">
           {t('app.inbox.citations')}:{' '}
           {proposal.citations
             .map((citation) => `${citation.type} ${citation.id.slice(0, 8)}`)
@@ -86,7 +86,7 @@ export function ProposalCard({ proposal, slug }: { proposal: Proposal; slug: str
       ) : null}
 
       {error ? (
-        <p role="alert" className="text-sm text-oxide">
+        <p role="alert" className="text-oxide text-sm">
           {t(error)}
         </p>
       ) : null}

@@ -134,15 +134,7 @@ describe('the agents destination', () => {
 describe('the settings destination', () => {
   it('comes last, after the sections', () => {
     const keys = destinationsFor('robot', { inbox: 0 }).map((d) => d.key);
-    expect(keys).toEqual([
-      'resume',
-      'work',
-      'log',
-      'inbox',
-      'documents',
-      'agents',
-      'settings',
-    ]);
+    expect(keys).toEqual(['resume', 'work', 'log', 'inbox', 'documents', 'agents', 'settings']);
   });
 
   it('is marked trailing, so the sidebar can rule it off from the sections', () => {

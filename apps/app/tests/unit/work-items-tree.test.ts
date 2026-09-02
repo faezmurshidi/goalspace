@@ -44,11 +44,7 @@ describe('buildTree', () => {
   });
 
   it('records depth on each node', () => {
-    const { roots } = buildTree([
-      row('a'),
-      row('b', 'a'),
-      row('c', 'b'),
-    ]);
+    const { roots } = buildTree([row('a'), row('b', 'a'), row('c', 'b')]);
 
     expect(roots[0].depth).toBe(0);
     expect(roots[0].children[0].depth).toBe(1);
@@ -75,11 +71,7 @@ describe('buildTree', () => {
   });
 
   it('keeps healthy rows when part of the set is cyclic', () => {
-    const { roots, cyclic } = buildTree([
-      row('healthy'),
-      row('a', 'b'),
-      row('b', 'a'),
-    ]);
+    const { roots, cyclic } = buildTree([row('healthy'), row('a', 'b'), row('b', 'a')]);
 
     expect(roots.map((r) => r.id)).toEqual(['healthy']);
     expect(cyclic.sort()).toEqual(['a', 'b']);

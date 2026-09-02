@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { timeZoneOptions } from '@/lib/settings/time-zones';
 import { parseTimeZone } from '@/lib/settings/preference-cookies';
+import { timeZoneOptions } from '@/lib/settings/time-zones';
 
 describe('timeZoneOptions', () => {
   it('offers UTC, which Intl does not list', () => {

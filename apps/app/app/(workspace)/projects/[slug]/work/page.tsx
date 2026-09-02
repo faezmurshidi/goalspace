@@ -2,11 +2,11 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
+import { WorkTree } from '@/components/work/work-tree';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { listWorkItems } from '@/lib/db/work-items';
 import { getLocale } from '@/lib/format';
-import { WorkTree } from '@/components/work/work-tree';
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -29,7 +29,7 @@ export default async function WorkPage({ params }: Params) {
   return (
     <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pt-8">
-        <h1 className="label pb-2 text-ink-soft">{t('app.work.title')}</h1>
+        <h1 className="label text-ink-soft pb-2">{t('app.work.title')}</h1>
         <WorkTree slug={slug} items={items} />
       </div>
     </div>

@@ -1,9 +1,9 @@
 'use client';
 
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { useAppTranslations } from '@goalspace/i18n';
+import { ArrowLeft } from 'lucide-react';
 
 /**
  * The not-found route for the `[locale]` segment: any URL that doesn't
@@ -26,13 +26,13 @@ function NotFoundContent() {
   const locale = currentLocale || 'en';
 
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-24 text-center text-ink">
-      <span className="label mb-6 block text-oxide">{t('notFound.label')}</span>
+    <div className="text-ink flex flex-col items-center justify-center px-6 py-24 text-center">
+      <span className="label text-oxide mb-6 block">{t('notFound.label')}</span>
       <h1 className="text-display wdth-expanded">{t('notFound.title')}</h1>
-      <p className="mt-6 max-w-[52ch] text-body text-ink-soft">{t('notFound.description')}</p>
+      <p className="text-body text-ink-soft mt-6 max-w-[52ch]">{t('notFound.description')}</p>
       <Link
         href={`/${locale}`}
-        className="label mt-12 inline-flex items-center gap-2 bg-oxide-deep px-8 py-4 text-paper transition-colors duration-150 ease-out-expo hover:bg-ink"
+        className="label bg-oxide-deep text-paper ease-out-expo hover:bg-ink mt-12 inline-flex items-center gap-2 px-8 py-4 transition-colors duration-150"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         {t('notFound.cta')}
@@ -43,7 +43,7 @@ function NotFoundContent() {
 
 export default function NotFound() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-paper" />}>
+    <Suspense fallback={<div className="bg-paper min-h-screen" />}>
       <NotFoundContent />
     </Suspense>
   );

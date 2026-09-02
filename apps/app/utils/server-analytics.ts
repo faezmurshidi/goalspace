@@ -14,7 +14,7 @@ export function trackEvent(eventName: string, eventData: Record<string, any> = {
       timestamp: new Date().toISOString(),
     })
   );
-  
+
   // Example of how you would send to a PostHog server-side API:
   // if (process.env.POSTHOG_SERVER_KEY) {
   //   fetch('https://app.posthog.com/capture/', {

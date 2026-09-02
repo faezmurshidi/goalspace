@@ -1,13 +1,13 @@
-import { stepCountIs, streamText } from 'ai';
 import { NextResponse } from 'next/server';
+import { stepCountIs, streamText } from 'ai';
 
-import { createClient } from '@/utils/supabase/server';
-import { buildSkeleton, type SkeletonWorkItem } from '@/lib/agents/skeleton';
-import { buildToolSet, type RunContext } from '@/lib/agents/executor';
 import { checkCaps } from '@/lib/agents/caps';
+import { costUsd, gatewayCostFrom, worstCaseUsd } from '@/lib/agents/cost';
+import { buildToolSet, type RunContext } from '@/lib/agents/executor';
+import { buildSkeleton, type SkeletonWorkItem } from '@/lib/agents/skeleton';
 import { startAgentRun } from '@/lib/db/agents';
 import { getBudget } from '@/lib/db/budgets';
-import { costUsd, gatewayCostFrom, worstCaseUsd } from '@/lib/agents/cost';
+import { createClient } from '@/utils/supabase/server';
 
 /**
  * The loop runs inside the stream.
@@ -22,10 +22,7 @@ export const maxDuration = 300;
 
 const MAX_STEPS = 12;
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ agentId: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ agentId: string }> }) {
   const { agentId } = await params;
   const { prompt, workItemId } = (await request.json()) as {
     prompt?: string;
@@ -128,7 +125,8 @@ export async function POST(
       // different rates and adds both, so the two must be disjoint: record
       // the non-cached count as input_tokens, not the total.
       const cachedInput = step.usage.inputTokenDetails.cacheReadTokens ?? 0;
-      const nonCachedInput = step.usage.inputTokenDetails.noCacheTokens ?? step.usage.inputTokens ?? 0;
+      const nonCachedInput =
+        step.usage.inputTokenDetails.noCacheTokens ?? step.usage.inputTokens ?? 0;
       const outputTokens = step.usage.outputTokens ?? 0;
 
       await supabase.from('ai_usage').insert({

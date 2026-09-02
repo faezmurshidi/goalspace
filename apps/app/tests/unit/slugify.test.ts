@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { slugSchema, slugify } from '@/lib/schemas/common';
+import { slugify, slugSchema } from '@/lib/schemas/common';
 
 describe('slugify', () => {
   it('lowercases and hyphenates a plain title', () => {

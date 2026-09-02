@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { useParams, notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { useAppTranslations } from '@goalspace/i18n';
 
 import { Plate } from '@/components/manual/plate';
@@ -52,12 +52,12 @@ function ArticlePageContent() {
             minutes: post.readingTime,
           })}
         >
-          <Link href={`/${locale}/blog`} className="label mb-10 inline-block text-ink-soft">
+          <Link href={`/${locale}/blog`} className="label text-ink-soft mb-10 inline-block">
             {t('blog.backToBlog')}
           </Link>
 
-          <p className="max-w-[68ch] text-body text-ink-soft">{post.description}</p>
-          <p className="label mt-4 border-t border-rule pt-4 text-ink-soft">
+          <p className="text-body text-ink-soft max-w-[68ch]">{post.description}</p>
+          <p className="label border-rule text-ink-soft mt-4 border-t pt-4">
             {t('blog.byLine', { name: post.author.name, role: post.author.role })}
           </p>
 
@@ -67,18 +67,18 @@ function ArticlePageContent() {
           />
 
           {relatedPosts.length > 0 ? (
-            <div className="mt-16 border-t border-rule pt-10">
-              <h3 className="label mb-4 text-oxide">{t('blog.relatedLabel')}</h3>
-              <ul className="border-t border-rule">
+            <div className="border-rule mt-16 border-t pt-10">
+              <h3 className="label text-oxide mb-4">{t('blog.relatedLabel')}</h3>
+              <ul className="border-rule border-t">
                 {relatedPosts.map((relatedPost) => (
-                  <li key={relatedPost.id} className="border-b border-rule py-6">
+                  <li key={relatedPost.id} className="border-rule border-b py-6">
                     <Link
                       href={`/${locale}/blog/${relatedPost.slug}`}
-                      className="text-title block text-ink"
+                      className="text-title text-ink block"
                     >
                       {relatedPost.title}
                     </Link>
-                    <p className="mt-2 max-w-[68ch] text-body text-ink-soft">
+                    <p className="text-body text-ink-soft mt-2 max-w-[68ch]">
                       {relatedPost.description}
                     </p>
                   </li>
@@ -95,7 +95,7 @@ function ArticlePageContent() {
 // Wrapper component with Suspense
 export default function ArticlePage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-paper" />}>
+    <Suspense fallback={<div className="bg-paper flex min-h-screen items-center justify-center" />}>
       <ArticlePageContent />
     </Suspense>
   );

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Button } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button } from '@goalspace/ui';
 
 /**
  * Error boundary for every workspace surface.
@@ -29,23 +29,21 @@ export default function WorkspaceError({
 
   return (
     <div className="max-w-xl py-16">
-      <h1 className="wdth-wide text-headline font-bold text-ink">{t('app.error.title')}</h1>
+      <h1 className="wdth-wide text-headline text-ink font-bold">{t('app.error.title')}</h1>
       {/* Says plainly that nothing was lost. The product's whole promise is
           that the record survives, so an error screen that stays silent about
           it invites exactly the wrong conclusion. */}
-      <p className="prose-measure mt-3 text-ink-soft">{t('app.error.body')}</p>
+      <p className="prose-measure text-ink-soft mt-3">{t('app.error.body')}</p>
 
       <Button
         type="button"
         onClick={reset}
-        className="label mt-8 h-12 bg-primary px-6 text-primary-foreground hover:bg-ink hover:text-paper"
+        className="label bg-primary text-primary-foreground hover:bg-ink hover:text-paper mt-8 h-12 px-6"
       >
         {t('app.error.retry')}
       </Button>
 
-      {error.digest ? (
-        <p className="label mt-6 text-ink-soft">REF {error.digest}</p>
-      ) : null}
+      {error.digest ? <p className="label text-ink-soft mt-6">REF {error.digest}</p> : null}
     </div>
   );
 }

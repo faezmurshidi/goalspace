@@ -2,13 +2,13 @@
 
 import { useId, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { z } from 'zod';
-import { Button, Input, cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button, cn, Input } from '@goalspace/ui';
+import { z } from 'zod';
 
-import { identifyUser, trackError, trackEvent } from '@/app/_lib/analytics';
-import { safeInternalPath } from '@/lib/safe-redirect';
 import { authModeFromParam, type AuthMode } from '@/lib/auth-mode';
+import { safeInternalPath } from '@/lib/safe-redirect';
+import { identifyUser, trackError, trackEvent } from '@/app/_lib/analytics';
 import { createClient } from '@/utils/supabase/client';
 
 type OAuthProvider = 'google' | 'apple';
@@ -167,9 +167,7 @@ export function AuthForm() {
         mode,
         error_message: message,
       });
-      setError(
-        mode === 'signin' ? t('app.auth.errorBadCredentials') : t('app.auth.errorGeneric')
-      );
+      setError(mode === 'signin' ? t('app.auth.errorBadCredentials') : t('app.auth.errorGeneric'));
     } finally {
       setPending(null);
     }
@@ -210,9 +208,9 @@ export function AuthForm() {
 
   if (confirmationSentTo) {
     return (
-      <div className="border border-rule bg-paper p-8">
+      <div className="border-rule bg-paper border p-8">
         <h2 className="text-title text-ink">{t('app.auth.checkEmailTitle')}</h2>
-        <p className="mt-3 text-body text-ink-soft">
+        <p className="text-body text-ink-soft mt-3">
           {t('app.auth.checkEmailBody', { email: confirmationSentTo })}
         </p>
       </div>
@@ -220,7 +218,7 @@ export function AuthForm() {
   }
 
   return (
-    <div className="border border-rule bg-paper">
+    <div className="border-rule bg-paper border">
       {/* Mode switch. Two buttons rather than a tab widget: there is one form
           underneath, and duplicating the fields into two panels (as the
           previous version did) meant both panels shared a single form state
@@ -236,9 +234,7 @@ export function AuthForm() {
               onClick={() => switchMode(value)}
               className={cn(
                 'label border-b-2 px-4 py-4 transition-colors',
-                active
-                  ? 'border-oxide text-ink'
-                  : 'border-rule text-ink-soft hover:text-ink'
+                active ? 'border-oxide text-ink' : 'border-rule text-ink-soft hover:text-ink'
               )}
             >
               {value === 'signin' ? t('app.auth.signIn') : t('app.auth.createAccount')}
@@ -261,7 +257,7 @@ export function AuthForm() {
             onChange={(event) => setEmail(event.target.value)}
             aria-invalid={shownError ? true : undefined}
             aria-describedby={shownError ? errorId : undefined}
-            className="h-11 bg-paper text-body focus-visible:border-oxide"
+            className="bg-paper text-body focus-visible:border-oxide h-11"
           />
         </div>
 
@@ -278,7 +274,7 @@ export function AuthForm() {
             onChange={(event) => setPassword(event.target.value)}
             aria-invalid={shownError ? true : undefined}
             aria-describedby={cn(mode === 'signup' && hintId, shownError && errorId) || undefined}
-            className="h-11 bg-paper text-body focus-visible:border-oxide"
+            className="bg-paper text-body focus-visible:border-oxide h-11"
           />
           {mode === 'signup' ? (
             <p id={hintId} className="label text-ink-soft">
@@ -308,7 +304,7 @@ export function AuthForm() {
         <Button
           type="submit"
           disabled={busy}
-          className="label h-12 w-full bg-primary text-primary-foreground hover:bg-ink hover:text-paper disabled:opacity-60"
+          className="label bg-primary text-primary-foreground hover:bg-ink hover:text-paper h-12 w-full disabled:opacity-60"
         >
           {pending === 'email'
             ? mode === 'signin'
@@ -324,9 +320,9 @@ export function AuthForm() {
         {OAUTH_PROVIDERS.length > 0 ? (
           <>
             <div className="flex items-center gap-3" aria-hidden="true">
-              <span className="h-px flex-1 bg-rule" />
+              <span className="bg-rule h-px flex-1" />
               <span className="label text-ink-soft">{t('app.auth.dividerOr')}</span>
-              <span className="h-px flex-1 bg-rule" />
+              <span className="bg-rule h-px flex-1" />
             </div>
 
             <div className="flex flex-col gap-3">
@@ -337,7 +333,7 @@ export function AuthForm() {
                   variant="outline"
                   disabled={busy}
                   onClick={() => onOAuth(provider)}
-                  className="label h-12 w-full border-rule-strong bg-paper text-ink hover:bg-paper-shade hover:text-ink disabled:opacity-60"
+                  className="label border-rule-strong bg-paper text-ink hover:bg-paper-shade hover:text-ink h-12 w-full disabled:opacity-60"
                 >
                   {t(OAUTH_LABELS[provider])}
                 </Button>

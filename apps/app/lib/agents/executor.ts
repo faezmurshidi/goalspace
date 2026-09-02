@@ -1,9 +1,9 @@
-import { tool, type ToolSet } from 'ai';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { tool, type ToolSet } from 'ai';
 
-import type { Database } from '@/types/supabase';
 import { HANDLERS, type ToolContext } from '@/lib/agents/tools/handlers';
-import { REGISTRY, isAllowed, resolveTools } from '@/lib/agents/tools/registry';
+import { isAllowed, REGISTRY, resolveTools } from '@/lib/agents/tools/registry';
+import type { Database } from '@/types/supabase';
 
 /**
  * The executor is where "specialisation" stops being cosmetic.

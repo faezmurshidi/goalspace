@@ -2,10 +2,12 @@ import type { ReactNode } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { I18nProvider } from '@goalspace/i18n';
 import { Toaster } from '@goalspace/ui';
-import { SiteHeader } from '@/components/site-header';
+
 import { Colophon } from '@/components/manual/colophon';
-import AnalyticsProvider from '@/app/providers/analytics-provider';
+import { SiteHeader } from '@/components/site-header';
 import { archivo, azeret } from '@/lib/fonts';
+import AnalyticsProvider from '@/app/providers/analytics-provider';
+
 import '@/app/globals.css';
 
 export function generateStaticParams() {
@@ -154,7 +156,7 @@ export default async function LocaleLayout({
       <body>
         <AnalyticsProvider>
           <I18nProvider locale={locale}>
-            <div className="flex min-h-screen flex-col bg-paper">
+            <div className="bg-paper flex min-h-screen flex-col">
               <SiteHeader />
               <div className="flex-1">{children}</div>
               <Colophon />

@@ -31,22 +31,31 @@ describe('citationsSchema', () => {
 
 describe('payloadSchemaFor', () => {
   it('validates an entry payload with the schema the capture form uses', () => {
-    const parsed = payloadSchemaFor('entry').safeParse({ kind: 'note', body: 'Something happened' });
+    const parsed = payloadSchemaFor('entry').safeParse({
+      kind: 'note',
+      body: 'Something happened',
+    });
     expect(parsed.success).toBe(true);
   });
 
   it('rejects an entry payload with an unknown kind', () => {
-    expect(payloadSchemaFor('entry').safeParse({ kind: 'rambling', body: 'x' }).success).toBe(false);
+    expect(payloadSchemaFor('entry').safeParse({ kind: 'rambling', body: 'x' }).success).toBe(
+      false
+    );
   });
 
   it('validates a work item payload', () => {
-    expect(payloadSchemaFor('work_item').safeParse({ title: 'Order the servo' }).success).toBe(true);
+    expect(payloadSchemaFor('work_item').safeParse({ title: 'Order the servo' }).success).toBe(
+      true
+    );
   });
 
   it('requires base_updated_at on a document edit', () => {
     // Without it there is no way to tell that the document moved on since the
     // agent read it, and the proposal would apply stale content over newer work.
-    expect(payloadSchemaFor('document_edit').safeParse({ id: UUID, body: 'New' }).success).toBe(false);
+    expect(payloadSchemaFor('document_edit').safeParse({ id: UUID, body: 'New' }).success).toBe(
+      false
+    );
     const withBase = {
       id: UUID,
       body: 'New',

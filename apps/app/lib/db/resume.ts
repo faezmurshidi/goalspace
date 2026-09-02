@@ -1,13 +1,18 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database } from '@/types/supabase';
-import { buildTree, type TreeNode } from '@/lib/work-items/tree';
 import { computeProgress, type Progress } from '@/lib/work-items/progress';
-import { describeAbsence, wokenItems, type Absence, type WokenItem } from '@/lib/work-items/reentry';
+import {
+  describeAbsence,
+  wokenItems,
+  type Absence,
+  type WokenItem,
+} from '@/lib/work-items/reentry';
+import { buildTree, type TreeNode } from '@/lib/work-items/tree';
+import type { Database } from '@/types/supabase';
 import { getLatestEntryAt, listEntries, type Entry } from './entries';
-import { getLatestStatusChangeAt, listWorkItems, type WorkItem } from './work-items';
-import { countPendingProposals } from './proposals';
 import type { Project } from './projects';
+import { countPendingProposals } from './proposals';
+import { getLatestStatusChangeAt, listWorkItems, type WorkItem } from './work-items';
 
 type Client = SupabaseClient<Database>;
 
@@ -52,15 +57,21 @@ export async function getResumeData(
   // probes are separate one-row queries rather than being derived from the
   // lists above, because the lists are capped and the newest row is not
   // guaranteed to be inside the cap once filters are applied.
-  const [workItems, recentEntries, recentDecisions, latestEntryAt, latestStatusAt, undecidedProposals] =
-    await Promise.all([
-      listWorkItems(supabase, project.id),
-      listEntries(supabase, project.id, { limit: 8 }),
-      listEntries(supabase, project.id, { kinds: ['decision'], limit: 5 }),
-      getLatestEntryAt(supabase, project.id),
-      getLatestStatusChangeAt(supabase, project.id),
-      countPendingProposals(supabase, project.id),
-    ]);
+  const [
+    workItems,
+    recentEntries,
+    recentDecisions,
+    latestEntryAt,
+    latestStatusAt,
+    undecidedProposals,
+  ] = await Promise.all([
+    listWorkItems(supabase, project.id),
+    listEntries(supabase, project.id, { limit: 8 }),
+    listEntries(supabase, project.id, { kinds: ['decision'], limit: 5 }),
+    getLatestEntryAt(supabase, project.id),
+    getLatestStatusChangeAt(supabase, project.id),
+    countPendingProposals(supabase, project.id),
+  ]);
 
   const { roots, orphans, cyclic } = buildTree(workItems);
   const progress = computeProgress(workItems);

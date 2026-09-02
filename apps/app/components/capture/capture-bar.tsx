@@ -2,12 +2,12 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Textarea } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button, Textarea } from '@goalspace/ui';
 
-import { captureEntryAction } from '@/app/(workspace)/actions';
-import { entryKinds, type EntryKind } from '@/lib/schemas/common';
 import type { CaptureTarget } from '@/lib/capture/targets';
+import { entryKinds, type EntryKind } from '@/lib/schemas/common';
+import { captureEntryAction } from '@/app/(workspace)/actions';
 
 interface PendingEntry {
   tempId: string;
@@ -142,7 +142,7 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
   // column on both sides and put a horizontal scrollbar on every project route,
   // at every viewport width.
   return (
-    <div className="sticky bottom-0 z-20 border-t border-rule bg-paper px-5 pb-4 pt-3">
+    <div className="border-rule bg-paper sticky bottom-0 z-20 border-t px-5 pb-4 pt-3">
       {/* Optimistic rows sit directly above the composer, so what was just
           written is visible without looking anywhere else. */}
       {pending.length > 0 ? (
@@ -150,10 +150,10 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
           {pending.map((row) => (
             <li
               key={row.tempId}
-              className="flex items-baseline gap-3 border-b border-rule py-2 opacity-60"
+              className="border-rule flex items-baseline gap-3 border-b py-2 opacity-60"
             >
-              <span className="label shrink-0 text-ink-soft">{t(`app.entryKind.${row.kind}`)}</span>
-              <span className="min-w-0 flex-1 truncate text-body text-ink">{row.body}</span>
+              <span className="label text-ink-soft shrink-0">{t(`app.entryKind.${row.kind}`)}</span>
+              <span className="text-body text-ink min-w-0 flex-1 truncate">{row.body}</span>
             </li>
           ))}
         </ul>
@@ -178,7 +178,7 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
           placeholder={t('app.capture.placeholder')}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
-          className="min-h-[4.5rem] resize-y border-input bg-paper text-body text-ink placeholder:text-ink-soft"
+          className="border-input bg-paper text-body text-ink placeholder:text-ink-soft min-h-[4.5rem] resize-y"
         />
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -193,7 +193,7 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
               id={kindId}
               value={kind}
               onChange={(event) => setKind(event.target.value as EntryKind)}
-              className="label border border-input bg-paper px-2 py-1.5 text-ink"
+              className="label border-input bg-paper text-ink border px-2 py-1.5"
             >
               {entryKinds.map((value) => (
                 <option key={value} value={value}>
@@ -205,14 +205,14 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
 
           {targets.length > 0 ? (
             <div className="flex min-w-0 items-center gap-2">
-              <label htmlFor={targetId} className="label shrink-0 text-ink-soft">
+              <label htmlFor={targetId} className="label text-ink-soft shrink-0">
                 {t('app.capture.attachTo')}
               </label>
               <select
                 id={targetId}
                 value={workItemId}
                 onChange={(event) => setWorkItemId(event.target.value)}
-                className="label min-w-0 max-w-56 truncate border border-input bg-paper px-2 py-1.5 text-ink"
+                className="label border-input bg-paper text-ink min-w-0 max-w-56 truncate border px-2 py-1.5"
               >
                 <option value="">{t('app.capture.attachNone')}</option>
                 {targets.map((target) => (
@@ -229,14 +229,14 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
                 the platform-specific text arrives after mount. */}
             <span
               aria-hidden="true"
-              className="label hidden min-w-[7rem] text-right text-ink-soft sm:inline"
+              className="label text-ink-soft hidden min-w-[7rem] text-right sm:inline"
             >
               {modifierKey ? t('app.capture.hint', { keys: modifierKey }) : ''}
             </span>
             <Button
               type="submit"
               disabled={saving || body.trim().length === 0}
-              className="label h-10 bg-primary px-5 text-primary-foreground hover:bg-ink hover:text-paper disabled:opacity-50"
+              className="label bg-primary text-primary-foreground hover:bg-ink hover:text-paper h-10 px-5 disabled:opacity-50"
             >
               {saving ? t('app.capture.submitting') : t('app.capture.submit')}
             </Button>
@@ -244,7 +244,7 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
         </div>
 
         {error ? (
-          <p id={errorId} role="alert" className="label mt-3 text-oxide">
+          <p id={errorId} role="alert" className="label text-oxide mt-3">
             {error}
           </p>
         ) : null}
@@ -252,4 +252,3 @@ export function CaptureBar({ slug, targets }: { slug: string; targets: CaptureTa
     </div>
   );
 }
-

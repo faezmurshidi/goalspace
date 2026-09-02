@@ -5,10 +5,10 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { cn } from '@goalspace/ui';
 
 import { requireSessionContext } from '@/lib/auth/session';
-import { getProjectBySlug } from '@/lib/db/projects';
 import { listEntries } from '@/lib/db/entries';
-import { entryKinds, type EntryKind } from '@/lib/schemas/common';
+import { getProjectBySlug } from '@/lib/db/projects';
 import { formatDate, getLocale, getTimeZone } from '@/lib/format';
+import { entryKinds, type EntryKind } from '@/lib/schemas/common';
 
 type Params = {
   params: Promise<{ slug: string }>;
@@ -64,7 +64,7 @@ export default async function LogPage({ params, searchParams }: Params) {
   return (
     <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pb-10 pt-8">
-        <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-rule pb-2">
+        <div className="border-rule flex flex-wrap items-baseline justify-between gap-4 border-b pb-2">
           <h1 className="label text-ink-soft">{t('app.log.title')}</h1>
 
           <nav aria-label={t('app.log.filterLabel')} className="flex flex-wrap gap-4">
@@ -75,7 +75,7 @@ export default async function LogPage({ params, searchParams }: Params) {
                 'label border-b-2 pb-0.5 transition-colors',
                 activeKind === null
                   ? 'border-oxide text-ink'
-                  : 'border-transparent text-ink-soft hover:text-ink'
+                  : 'text-ink-soft hover:text-ink border-transparent'
               )}
             >
               {t('app.log.filterAll')}
@@ -89,7 +89,7 @@ export default async function LogPage({ params, searchParams }: Params) {
                   'label border-b-2 pb-0.5 transition-colors',
                   activeKind === kind
                     ? 'border-oxide text-ink'
-                    : 'border-transparent text-ink-soft hover:text-ink'
+                    : 'text-ink-soft hover:text-ink border-transparent'
                 )}
               >
                 {t(`app.entryKind.${kind}`)}
@@ -99,24 +99,24 @@ export default async function LogPage({ params, searchParams }: Params) {
         </div>
 
         {entries.length === 0 ? (
-          <p className="py-10 text-body text-ink-soft">{t('app.log.empty')}</p>
+          <p className="text-body text-ink-soft py-10">{t('app.log.empty')}</p>
         ) : (
           <ol>
             {entries.map((entry) => (
-              <li key={entry.id} className="border-b border-rule py-4">
+              <li key={entry.id} className="border-rule border-b py-4">
                 <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                  <time dateTime={entry.occurred_at} className="label shrink-0 text-ink-soft">
+                  <time dateTime={entry.occurred_at} className="label text-ink-soft shrink-0">
                     {formatDate(entry.occurred_at, locale, timeZone)}
                   </time>
-                  <span className="label shrink-0 text-ink-soft">
+                  <span className="label text-ink-soft shrink-0">
                     {t(`app.entryKind.${entry.kind}`)}
                   </span>
                   {entry.title ? (
-                    <span className="min-w-0 flex-1 text-title text-ink">{entry.title}</span>
+                    <span className="text-title text-ink min-w-0 flex-1">{entry.title}</span>
                   ) : null}
                 </div>
                 {entry.body ? (
-                  <p className="prose-measure mt-2 whitespace-pre-line text-ink">{entry.body}</p>
+                  <p className="prose-measure text-ink mt-2 whitespace-pre-line">{entry.body}</p>
                 ) : null}
               </li>
             ))}
@@ -135,7 +135,7 @@ export default async function LogPage({ params, searchParams }: Params) {
                 take: Math.min(take + PAGE, MAX_TAKE),
               },
             }}
-            className="label mt-6 inline-block border border-rule-strong px-5 py-3 text-ink transition-colors hover:bg-paper-shade"
+            className="label border-rule-strong text-ink hover:bg-paper-shade mt-6 inline-block border px-5 py-3 transition-colors"
           >
             {t('app.log.loadMore')}
           </Link>

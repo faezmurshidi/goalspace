@@ -2,12 +2,12 @@
 
 import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button, cn } from '@goalspace/ui';
 
-import { updateDocumentAction } from '@/app/(workspace)/actions';
-import type { Document } from '@/lib/db/documents';
 import { Markdown } from '@/components/docs/markdown';
+import type { Document } from '@/lib/db/documents';
+import { updateDocumentAction } from '@/app/(workspace)/actions';
 
 /**
  * Every save is a compare-and-set against the version this editor loaded.
@@ -88,7 +88,7 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           aria-describedby={failed ? messageId : undefined}
-          className="border border-rule-strong bg-paper px-3 py-2 text-title text-ink"
+          className="border-rule-strong bg-paper text-title text-ink border px-3 py-2"
         />
       </div>
 
@@ -109,7 +109,7 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
                 aria-pressed={mode === value}
                 onClick={() => setMode(value)}
                 className={cn(
-                  'label border border-rule px-3 py-1 transition-colors',
+                  'label border-rule border px-3 py-1 transition-colors',
                   value === 'preview' && '-ml-px',
                   mode === value
                     ? 'border-rule-strong bg-paper-shade text-ink'
@@ -133,7 +133,7 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
           rows={20}
           hidden={mode !== 'write'}
           aria-describedby={failed ? messageId : undefined}
-          className="w-full max-w-[70ch] border border-rule-strong bg-paper p-3 text-body text-ink"
+          className="border-rule-strong bg-paper text-body text-ink w-full max-w-[70ch] border p-3"
         />
 
         {/* Contents are gated on the mode, not just hidden. `hidden` stops the
@@ -147,7 +147,7 @@ export function DocumentEditor({ slug, document }: { slug: string; document: Doc
             x 1.55 line-height, plus p-3 either side, is a shade over 30rem. */}
         <div
           hidden={mode !== 'preview'}
-          className="min-h-[30.5rem] w-full max-w-[70ch] border border-rule-strong bg-paper p-3"
+          className="border-rule-strong bg-paper min-h-[30.5rem] w-full max-w-[70ch] border p-3"
         >
           {mode === 'preview' &&
             (body.trim() ? (

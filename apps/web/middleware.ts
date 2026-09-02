@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { NEXT_LOCALE_COOKIE } from '@goalspace/i18n/cookie-locale';
 // Imported from the package's `./locales` and `./cookie-locale` subpaths
 // (not its main barrel): the main barrel also re-exports `I18nProvider` and
 // `useAppTranslations`, which pull in `next/navigation`'s client-only
@@ -9,8 +10,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 // for this context. The brief's Step 9 shows a barrel import for
 // `NEXT_LOCALE_COOKIE`; that was adjusted here for the same reason Task 3
 // avoided the barrel in this file.
-import { locales, defaultLocale } from '@goalspace/i18n/locales';
-import { NEXT_LOCALE_COOKIE } from '@goalspace/i18n/cookie-locale';
+import { defaultLocale, locales } from '@goalspace/i18n/locales';
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 

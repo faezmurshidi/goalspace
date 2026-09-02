@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { cn } from '@goalspace/ui';
+
 import { appHref } from '@/lib/app-url';
 
 /**
@@ -36,7 +37,7 @@ export function MainNav({
         aria-current={isBlogActive ? 'page' : undefined}
         className={cn(
           navItemClass,
-          isBlogActive && 'underline decoration-oxide decoration-2 underline-offset-[6px]'
+          isBlogActive && 'decoration-oxide underline decoration-2 underline-offset-[6px]'
         )}
       >
         {t('navigation.blog')}
