@@ -259,7 +259,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  // originalMessages puts the stream in persistence mode. Without it the
+  // response starts a fresh assistant message, so a continuation after a tool
+  // approval cannot be stitched onto the assistant turn that requested it —
+  // and the approved call never executes.
+  return result.toUIMessageStreamResponse({ originalMessages: messages });
 }
 
 async function loadSkeleton(
