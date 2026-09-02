@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { RATES } from '@/lib/agents/cost';
 import { agentRowsFor, SEEDED_TEMPLATES } from '@/lib/agents/templates';
-import { REGISTRY } from '@/lib/agents/tools/registry';
+import { isAllowed, REGISTRY, REPO_READ } from '@/lib/agents/tools/registry';
 
 describe('SEEDED_TEMPLATES', () => {
   it('seeds only agents whose every tool exists in the registry', () => {
@@ -138,5 +138,32 @@ describe('the Tutor', () => {
     for (const name of critic.tools) {
       expect(REGISTRY[name as keyof typeof REGISTRY].writes).toBe(false);
     }
+  });
+});
+
+describe('the Interviewer', () => {
+  it('is seeded with no tools at all', () => {
+    const interviewer = SEEDED_TEMPLATES.find((t) => t.slug === 'interviewer');
+    expect(interviewer).toBeDefined();
+    expect(interviewer!.tools).toEqual([]);
+  });
+
+  it('is refused every tool in the registry', () => {
+    // Asserted through isAllowed rather than against the array's length,
+    // because isAllowed is the gate the executor re-checks on every call. A
+    // test of the data would still pass if the gate stopped consulting it.
+    const interviewer = SEEDED_TEMPLATES.find((t) => t.slug === 'interviewer')!;
+    for (const name of Object.keys(REGISTRY)) {
+      expect(isAllowed(interviewer.tools, name)).toBe(false);
+    }
+  });
+
+  it('does not claim a capability it has no tool for', () => {
+    // Same rule the Tutor is held to: a description that promises retrieval
+    // is a lie the model repeats to the owner.
+    const interviewer = SEEDED_TEMPLATES.find((t) => t.slug === 'interviewer')!;
+    const claims = `${interviewer.role_description} ${interviewer.system_prompt}`.toLowerCase();
+    expect(claims).not.toContain('search');
+    expect(claims).not.toContain('retrieve');
   });
 });

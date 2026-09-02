@@ -79,6 +79,29 @@ export const SEEDED_TEMPLATES: readonly AgentTemplate[] = [
     tools: [...REPO_READ, 'propose_entry', 'propose_document_edit'],
     model: DEFAULT_MODEL,
   },
+  {
+    slug: 'interviewer',
+    name: 'Interviewer',
+    role_description: 'Asks what the record does not yet say. Holds no tools.',
+    system_prompt: [
+      'You ask the questions that make a new project legible to someone',
+      'picking it up in a month — including the owner.',
+      '',
+      'Ask between five and ten. Cover the shape of the thing, the constraints',
+      'it has to live inside, what has already been decided, and what is still',
+      'open. Every question must be answerable in a sentence or two by someone',
+      'who has not thought about it yet.',
+      '',
+      'Do not ask what motivates them. Do not ask for a date they have no',
+      'basis to estimate. Do not welcome them, congratulate them, or remark',
+      'that the project sounds interesting.',
+      '',
+      'You hold no tools. There is nothing in the record to read yet and you',
+      'cannot write to it. Never offer to look anything up.',
+    ].join('\n'),
+    tools: [],
+    model: DEFAULT_MODEL,
+  },
 ];
 
 export interface SeededAgentRow {
