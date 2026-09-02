@@ -179,19 +179,46 @@ substance each must carry:
 
 **Interviewer.** Ask what a person picking this project up in a month would
 need to know and cannot infer from the title. Cover the shape of the thing,
-its constraints, what is already decided, and what is unresolved. Do not ask
-what motivates them, do not ask about timelines they have no basis to
-estimate, and do not congratulate them on starting. Every question must be
-answerable in a sentence or two by someone who has not thought about it
-before. You have no tools; do not offer to look anything up.
+its constraints, what is already decided, and what is unresolved. Every
+question must be answerable in a sentence or two by someone who has not
+thought about it before. You have no tools; do not offer to look anything up.
+
+Two exclusions, and they are not the same kind of thing. **Never ask who else
+is involved or how the work is divided** — this is one person's own project,
+there is no team, and asking reveals that the agent does not know what it is
+looking at. That is not a matter of taste the owner can skip past; it costs
+trust on the first screen they ever see. **Do not ask what motivates them**,
+and do not welcome or congratulate them: wrong register, per PRODUCT.md's
+anti-references.
+
+**A date is explicitly in scope**, and asking for one is encouraged. An
+earlier version of this section forbade it. That was wrong and is corrected
+here: nothing in PRODUCT.md excludes dates, and the data model is built around
+them — `work_items.wake_at`, blocked-since, and a resume view whose entire
+emotional register is elapsed time. What PRODUCT.md excludes is motivation,
+streaks and adherence, not a target. The framing that survives the objection
+is *what are you aiming for*, not *when will you be finished*: the first is an
+intention the owner can state on day one, the second is a number they would
+have to invent.
+
+The general rule this correction illustrates: an optional question costs the
+owner one skip. That is a low bar, and a prohibition needs a better reason
+than the author's taste to clear it.
 
 **Planner.** You read the owner's own answers and propose the work that
-follows from them. Read before you propose — a citation you invent is rejected
-and the proposal discarded. Propose work the answers support and nothing more;
+follows from them. Propose work the answers support and nothing more;
 inventing a plausible-sounding phase the owner never mentioned is worse than
 proposing fewer items. Write titles the owner would recognise as their own
 words. You cannot create anything: every item is a suggestion they accept or
 reject.
+
+Cite an id you were given or have seen in a tool result — those are the two
+honest sources, and an invented one is rejected. **Do not send it looking for
+material it already has.** An earlier version named the intake note's id and
+said "read that entry", which pointed at a `read_entry` tool that does not
+exist: `REPO_READ` fetches a work item or a document by id and nothing else.
+The Planner spent all twelve steps hunting for it and proposed nothing. The
+answers now travel inline in the prompt. See §15.
 
 ### 5.3 Flat breakdown, one level
 
@@ -482,7 +509,31 @@ RLS tests, and the documentation corrections in §9.5.
 6. **Unanswered questions written directly, with agent provenance.** §8.2 —
    including what would have to change if this is judged wrongly.
 
-## 15. Open questions
+## 15. Corrections after building
 
-None. Every question raised during design is resolved above; the two judgment
-calls are recorded in §5.3 and §8.2 with the reasoning and the reversal path.
+Recorded because a spec that quietly absorbs its own mistakes teaches nobody.
+
+1. **§2 and §9.1 claimed no migration was needed.** Wrong: `agent_runs.trigger`
+   is check-constrained and both intake runs are neither of its two values.
+   Found while writing the slice 2c-1 plan, before any code.
+2. **§5.2 forbade asking for a date.** Wrong, and it was the author's rule
+   rather than the product's — see §5.2. Found by the owner reading the
+   finished flow.
+3. **The note entry was specified as markdown.** Entry bodies render as plain
+   text with `whitespace-pre-line`; only documents pass through the `Markdown`
+   component. Emphasis reached the record as literal asterisks. Found by
+   looking at the resume view, not by any test.
+4. **The Planner was told to read the intake note by id.** There is no
+   `read_entry` tool — a real gap in the phase-2a surface that the Tutor and
+   Critic share, and worth its own work. Found in the run trace.
+5. **The Planner proposed the same item twice.** Deduped in code rather than by
+   asking it not to, because prompt instruction is not a control.
+
+Items 3, 4 and 5 were found by driving the flow against a live project. None
+was reachable by unit test, which is the argument for keeping a live pass in
+every slice that touches a model.
+
+## 16. Open questions
+
+None outstanding. The two judgment calls are recorded in §5.3 and §8.2 with
+their reasoning and reversal paths.
