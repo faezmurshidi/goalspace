@@ -34,6 +34,8 @@ export interface RunContext {
   documentVersions: Map<string, string>;
   /** See ToolContext.delegate. Present only on runs permitted to delegate. */
   delegate?: DelegateFn;
+  /** See ToolContext.conversationId. Present only on conversation runs. */
+  conversationId?: string;
 }
 
 export type ToolOutcome = { ok: true; result: unknown } | { ok: false; error: string };

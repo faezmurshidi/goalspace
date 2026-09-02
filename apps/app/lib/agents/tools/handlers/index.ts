@@ -1,7 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { ToolName } from '@/lib/agents/tools/registry';
+import { unresolvedSources } from '@/lib/agents/tools/sources';
+import { listUserMessageIds } from '@/lib/db/conversations';
+import { createEntry } from '@/lib/db/entries';
 import { resolveCitations } from '@/lib/proposals/citations';
+import { createEntrySchema } from '@/lib/schemas/entry';
 import { citationsSchema, payloadSchemaFor, type ProposalKind } from '@/lib/schemas/proposal';
 import type { Database } from '@/types/supabase';
 
@@ -57,6 +61,13 @@ export interface ToolContext {
    * Partner's. A handler reached without it is a wiring bug, not a refusal.
    */
   delegate?: DelegateFn;
+  /**
+   * The conversation this run belongs to. Present only on conversation runs.
+   *
+   * record_entry validates its sources against this conversation's user turns,
+   * so a run without one has nothing to validate against and must not record.
+   */
+  conversationId?: string;
 }
 
 /**
@@ -247,6 +258,59 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
     return outcome.ok
       ? { agent: args.agent_slug, answer: outcome.text }
       : { agent: args.agent_slug, refused: outcome.message };
+  },
+
+  async record_entry(
+    ctx,
+    args: {
+      payload: { kind: string; title?: string | null; body: string };
+      source_message_ids: string[];
+    }
+  ) {
+    if (!ctx.conversationId) {
+      // Loud, as with ask_agent: an agent holding record_entry outside a
+      // conversation is a wiring bug, and there is no conversation whose user
+      // turns could validate the sources.
+      throw new Error(
+        `record_entry was called on run ${ctx.runId} with no conversationId in the context.`
+      );
+    }
+
+    const allowed = await listUserMessageIds(ctx.supabase, ctx.conversationId);
+    const unresolved = unresolvedSources(args.source_message_ids, allowed);
+    if (unresolved.length > 0) {
+      // Returned rather than thrown: the model can correct itself, and the
+      // owner should not lose a run because an agent cited badly once.
+      return {
+        recorded: false,
+        error:
+          `These are not messages the owner wrote in this conversation: ${unresolved.join(', ')}. ` +
+          'Record only what they told you, citing the message ids you are recording from.',
+      };
+    }
+
+    // The one validation path, as everywhere else: the schema the human capture
+    // form posts through is the schema this passes through.
+    const parsed = createEntrySchema.safeParse({
+      kind: args.payload.kind,
+      title: args.payload.title ?? null,
+      body: args.payload.body,
+      work_item_id: null,
+    });
+    if (!parsed.success) {
+      return { recorded: false, error: 'That entry is not valid.' };
+    }
+
+    const entry = await createEntry(ctx.supabase, {
+      projectId: ctx.projectId,
+      ownerId: ctx.ownerId,
+      // Stamped, not laundered to null. The words are the owner's; the decision
+      // to write them down, and the kind and title, are the agent's.
+      agentId: ctx.agentId,
+      values: parsed.data,
+    });
+
+    return { recorded: true, id: entry.id, kind: entry.kind };
   },
 
   async propose_entry(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {

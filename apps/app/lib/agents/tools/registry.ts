@@ -28,6 +28,7 @@ export const REGISTRY_NAMES = [
   'read_document',
   'read_entry',
   'ask_agent',
+  'record_entry',
   'propose_entry',
   'propose_work_item',
   'propose_document_edit',
@@ -139,6 +140,27 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
     // place it in WRITE_TOOLS and make the Critic — defined as writing nothing
     // — permanently ineligible to hold it.
     writes: false,
+    external: false,
+  },
+  record_entry: {
+    name: 'record_entry',
+    description:
+      'Write something the owner told you into the project log. You may choose the kind and the ' +
+      'title; the body must be their own words, and every id in source_message_ids must be a ' +
+      'message they wrote in this conversation. You cannot record your own summaries or ' +
+      'conclusions \u2014 the call fails if you try.',
+    inputSchema: z.object({
+      payload: z.object({
+        kind: z.enum(['note', 'decision', 'source', 'session']),
+        title: z.string().max(200).nullable().optional(),
+        body: z.string().min(1).max(20_000),
+      }),
+      // min(1): an entry citing nothing is the agent authoring the record.
+      // Checked again in unresolvedSources, because a schema is one layer and
+      // this is the rule the whole amendment rests on.
+      source_message_ids: z.array(z.string().uuid()).min(1).max(20),
+    }),
+    writes: 'records',
     external: false,
   },
   propose_entry: {

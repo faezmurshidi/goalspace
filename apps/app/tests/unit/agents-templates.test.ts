@@ -219,7 +219,10 @@ describe('the Partner', () => {
     // their distinct allowlists distinguish nothing the owner can reach.
     const partner = SEEDED_TEMPLATES.find((t) => t.slug === 'partner')!;
     for (const name of partner.tools) {
-      expect(REGISTRY[name as keyof typeof REGISTRY].writes, name).toBe(false);
+      // 'records' is allowed — record_entry writes the owner's own words. What
+      // the Partner must never hold is a proposal tool, which is what would
+      // make it a superset of the other three.
+      expect(REGISTRY[name as keyof typeof REGISTRY].writes, name).not.toBe('proposes');
     }
   });
 

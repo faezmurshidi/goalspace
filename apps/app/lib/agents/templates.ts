@@ -169,9 +169,7 @@ export const SEEDED_TEMPLATES: readonly AgentTemplate[] = [
       'welcome them, congratulate them, or remark that the project is',
       'interesting. Be plain, specific and unsentimental.',
     ].join('\n'),
-    // record_entry arrives in slice 2d-2. Seeding it now would name a tool the
-    // registry does not hold, which the "every tool exists" test refuses.
-    tools: [...REPO_READ, 'ask_agent'],
+    tools: [...REPO_READ, 'ask_agent', 'record_entry'],
     // Not DEFAULT_MODEL. Every turn of a conversation is a run, so this is the
     // one template where the model is a cost decision rather than a capability
     // one. Verified against the live gateway before being written here.
