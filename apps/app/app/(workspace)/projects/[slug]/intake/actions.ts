@@ -10,6 +10,7 @@ import { createEntry } from '@/lib/db/entries';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { listRunProposals, settleProposal } from '@/lib/db/proposals';
 import { createWorkItem } from '@/lib/db/work-items';
+import { dedupeProposedItems } from '@/lib/intake/dedupe';
 import { intakeNoteBody } from '@/lib/intake/note';
 import { applyProposal } from '@/lib/proposals/apply';
 import {
@@ -159,10 +160,8 @@ export async function submitIntakeAction(
   // work this intake did not propose.
   const proposals = await listRunProposals(supabase, run.runId);
 
-  return ok({
-    entryId,
-    plannerFailed: false,
-    proposals: proposals
+  const { kept, dropped } = dedupeProposedItems(
+    proposals
       .filter((p) => p.kind === 'work_item')
       .map((p) => {
         const payload = p.payload as { title?: string; kind?: string };
@@ -172,8 +171,21 @@ export async function submitIntakeAction(
           kind: payload.kind ?? 'task',
           rationale: p.rationale,
         };
-      }),
-  });
+      })
+  );
+
+  // Settled here rather than left for the review step, which never shows them.
+  // A duplicate left `pending` would surface later in an inbox the owner never
+  // opened, as though awaiting a decision they were never offered.
+  for (const id of dropped) {
+    try {
+      await settleProposal(supabase, id, 'rejected', { from: 'pending' });
+    } catch (error) {
+      console.error('submitIntakeAction could not settle a duplicate proposal', id, error);
+    }
+  }
+
+  return ok({ entryId, plannerFailed: false, proposals: kept });
 }
 
 export async function applyIntakeAction(
