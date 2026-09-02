@@ -21,7 +21,9 @@ describe('tokensFromUsage', () => {
 
   it('falls back to inputTokens when the provider reports no detail', () => {
     const t = tokensFromUsage(
-      usage({ inputTokenDetails: { noCacheTokens: undefined, cacheReadTokens: undefined } }) as never
+      usage({
+        inputTokenDetails: { noCacheTokens: undefined, cacheReadTokens: undefined },
+      }) as never
     );
     expect(t.nonCachedInput).toBe(100);
     expect(t.cachedInput).toBe(0);
