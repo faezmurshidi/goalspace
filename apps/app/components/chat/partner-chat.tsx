@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useChat } from '@ai-sdk/react';
 import { useAppTranslations } from '@goalspace/i18n';
 import { Button, Textarea } from '@goalspace/ui';
-import { DefaultChatTransport, type UIMessage } from 'ai';
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithApprovalResponses,
+  type UIMessage,
+} from 'ai';
 
 import { Markdown } from '@/components/docs/markdown';
 import type { CaptureTarget } from '@/lib/capture/targets';
@@ -70,6 +74,18 @@ export function PartnerChat({
 
   const { messages, sendMessage, status, error, addToolApprovalResponse } = useChat({
     transport: new DefaultChatTransport({ api: `/api/chat/${slug}` }),
+    /**
+     * Resume the run once every pending approval has an answer.
+     *
+     * Without this, `addToolApprovalResponse` writes the decision into local
+     * state and stops: the send is guarded by `this.sendAutomaticallyWhen`
+     * inside the SDK, so with no predicate configured nothing is ever sent and
+     * the approved tool never executes. The owner sees the decision recorded in
+     * the transcript and no entry in the log — which is worse than the direct
+     * write it replaced, because the interface agrees with an outcome that did
+     * not happen.
+     */
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
     // The server-rendered transcript, so a reload does not start an empty
     // conversation over the top of a stored one.
     messages: initialMessages as UIMessage[],
