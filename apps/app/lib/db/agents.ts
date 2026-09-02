@@ -5,7 +5,7 @@ import type { Database, Tables } from '@/types/supabase';
 
 type Client = SupabaseClient<Database>;
 
-export type RunTrigger = 'conversation' | 'work_item_action';
+export type RunTrigger = 'conversation' | 'work_item_action' | 'intake';
 
 export interface StartRunInput {
   projectId: string;
