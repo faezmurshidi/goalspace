@@ -44,7 +44,7 @@ export default async function AgentsPage({ params }: Params) {
               <li key={agent.id} className="border-b border-rule">
                 <Link
                   href={`/projects/${slug}/agents/${agent.id}`}
-                  className="unstyled flex flex-col gap-1 py-3 transition-colors hover:bg-paper-shade"
+                  className="flex flex-col gap-1 py-3 transition-colors hover:bg-paper-shade"
                 >
                   <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                     <span className="min-w-0 flex-1 text-body text-ink">{agent.name}</span>

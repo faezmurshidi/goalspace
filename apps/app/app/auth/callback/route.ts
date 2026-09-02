@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 
+import { NEXT_LOCALE_COOKIE } from '@goalspace/i18n';
+
 import { trackEvent } from '@/utils/server-analytics';
 import { safeInternalPath } from '@/lib/safe-redirect';
 import { createClient } from '@/utils/supabase/server';
+import { getUserSettings } from '@/lib/db/user-settings';
+import {
+  THEME_COOKIE,
+  TIME_ZONE_COOKIE,
+  LOCALE_COOKIE_OPTIONS,
+  SERVER_PREFERENCE_COOKIE_OPTIONS,
+} from '@/lib/settings/preference-cookies';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -57,7 +66,39 @@ export async function GET(request: Request) {
       timestamp: new Date().toISOString(),
     });
 
-    return NextResponse.redirect(`${requestUrl.origin}${next}`);
+    const response = NextResponse.redirect(`${requestUrl.origin}${next}`);
+
+    /**
+     * Seed the preference cookies from the stored row. Without this the
+     * database column is write-only: a new browser has never set these
+     * cookies, so it would show defaults forever even for a returning user
+     * who chose a theme, language and time zone on another device.
+     *
+     * A failed lookup must never cost someone their login, so it is caught
+     * here rather than left to propagate to the outer catch, which would
+     * bounce the user back to `/login?error=verification_failed` despite a
+     * verified session. But leaving the cookies untouched on failure is not
+     * the safe fallback it looks like: on a shared browser they would still
+     * hold the *previous* account's theme, language and time zone, and the
+     * newly signed-in user would silently inherit them. Deleting them is the
+     * correct failure mode — it falls back to documented defaults instead.
+     */
+    try {
+      const settings = await getUserSettings(supabase, data.user.id);
+      // Shared option objects (see preference-cookies.ts) so this writer
+      // cannot drift from updateAccountSettingsAction or
+      // clearPreferenceCookiesAction.
+      response.cookies.set(NEXT_LOCALE_COOKIE, settings.locale, LOCALE_COOKIE_OPTIONS);
+      response.cookies.set(THEME_COOKIE, settings.theme, SERVER_PREFERENCE_COOKIE_OPTIONS);
+      response.cookies.set(TIME_ZONE_COOKIE, settings.time_zone, SERVER_PREFERENCE_COOKIE_OPTIONS);
+    } catch (settingsError) {
+      console.error('Failed to seed preference cookies at login:', settingsError);
+      response.cookies.delete(NEXT_LOCALE_COOKIE);
+      response.cookies.delete(THEME_COOKIE);
+      response.cookies.delete(TIME_ZONE_COOKIE);
+    }
+
+    return response;
   } catch (error) {
     console.error('Error in verification callback:', error);
 

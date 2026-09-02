@@ -6,7 +6,7 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { listDocuments } from '@/lib/db/documents';
-import { formatDate, getLocale } from '@/lib/format';
+import { formatDate, getLocale, getTimeZone } from '@/lib/format';
 import { NewDocumentForm } from './new-document-form';
 
 type Params = { params: Promise<{ slug: string }> };
@@ -31,6 +31,7 @@ export default async function DocumentsPage({ params }: Params) {
 
   const documents = await listDocuments(supabase, project.id);
   const locale = await getLocale();
+  const timeZone = await getTimeZone();
   const t = getFixedT(locale);
 
   return (
@@ -52,7 +53,7 @@ export default async function DocumentsPage({ params }: Params) {
               <li key={document.id} className="border-b border-rule">
                 <Link
                   href={`/projects/${slug}/documents/${document.id}`}
-                  className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+                  className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
                 >
                   <span className="min-w-0 flex-1 text-body text-ink">
                     {document.title || t('app.documents.untitled')}
@@ -63,7 +64,7 @@ export default async function DocumentsPage({ params }: Params) {
                     </span>
                   ) : null}
                   <span className="label shrink-0 tabular-nums text-ink-soft">
-                    {formatDate(document.updated_at, locale)}
+                    {formatDate(document.updated_at, locale, timeZone)}
                   </span>
                 </Link>
               </li>

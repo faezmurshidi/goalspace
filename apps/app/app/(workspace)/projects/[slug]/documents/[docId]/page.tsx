@@ -7,7 +7,7 @@ import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { getDocument, listRevisions } from '@/lib/db/documents';
 import { authorshipOf, AUTHOR_KEY } from '@/lib/documents/authorship';
-import { formatDateTime, getLocale } from '@/lib/format';
+import { formatDateTime, getLocale, getTimeZone } from '@/lib/format';
 import { DocumentEditor } from './document-editor';
 
 type Params = { params: Promise<{ slug: string; docId: string }> };
@@ -33,6 +33,7 @@ export default async function DocumentPage({ params }: Params) {
 
   const revisions = await listRevisions(supabase, project.id, document.id);
   const locale = await getLocale();
+  const timeZone = await getTimeZone();
   const t = getFixedT(locale);
 
   return (
@@ -53,10 +54,10 @@ export default async function DocumentPage({ params }: Params) {
                 <li key={revision.id} className="border-b border-rule">
                   <Link
                     href={`/projects/${slug}/documents/${document.id}/revisions/${revision.id}`}
-                    className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+                    className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
                   >
                     <span className="label shrink-0 tabular-nums text-ink-soft">
-                      {formatDateTime(revision.created_at, locale)}
+                      {formatDateTime(revision.created_at, locale, timeZone)}
                     </span>
                     <span className="min-w-0 flex-1 text-body text-ink">
                       {revision.title || t('app.documents.untitled')}

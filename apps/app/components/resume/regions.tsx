@@ -15,6 +15,7 @@ type T = (key: string, vars?: Record<string, unknown>) => string;
 interface Common {
   t: T;
   locale: string;
+  timeZone: string;
 }
 
 /**
@@ -83,7 +84,7 @@ function Ratio({ progress }: { progress?: Progress }) {
 
 /* ─────────────────────────── Masthead ─────────────────────────── */
 
-export function Masthead({ project, t, locale }: Common & { project: Project }) {
+export function Masthead({ project, t, locale, timeZone }: Common & { project: Project }) {
   const kindLabel = t(
     `app.project.kind${project.kind.charAt(0).toUpperCase()}${project.kind.slice(1)}`
   );
@@ -119,7 +120,7 @@ export function Masthead({ project, t, locale }: Common & { project: Project }) 
         </div>
         <div className="flex gap-2">
           <dt className="label text-ink-soft">{t('app.project.sheetUpdated')}</dt>
-          <dd className="label text-ink">{formatDate(project.updated_at, locale)}</dd>
+          <dd className="label text-ink">{formatDate(project.updated_at, locale, timeZone)}</dd>
         </div>
       </dl>
     </header>
@@ -133,6 +134,7 @@ export function ReEntry({
   lastActivityAt,
   t,
   locale,
+  timeZone,
 }: Common & { absence: Absence | null; lastActivityAt: string | null }) {
   // Nothing has happened yet, so there is no absence to narrate. The first-run
   // state below carries this case instead.
@@ -144,7 +146,9 @@ export function ReEntry({
     // case for anyone using the product daily, and it must not shout.
     return (
       <p className="label pt-8 text-ink-soft">
-        {t('app.resume.lastSession', { when: formatDateTime(lastActivityAt, locale) })}
+        {t('app.resume.lastSession', {
+          when: formatDateTime(lastActivityAt, locale, timeZone),
+        })}
       </p>
     );
   }
@@ -165,7 +169,7 @@ export function ReEntry({
         <span className="text-headline text-ink-soft">{t('app.resume.awayAfter')}</span>
       </p>
       <p className="label mt-3 text-ink-soft">
-        {t('app.resume.lastSession', { when: formatDate(lastActivityAt, locale) })}
+        {t('app.resume.lastSession', { when: formatDate(lastActivityAt, locale, timeZone) })}
       </p>
     </div>
   );
@@ -178,6 +182,7 @@ export function Waiting({
   slug,
   t,
   locale,
+  timeZone,
 }: Common & { items: WokenItem<WorkItem>[]; slug: string }) {
   // Placed above what's open, and absent entirely when empty. This is the
   // region that pays the product's thesis back, but an empty "nothing is
@@ -191,7 +196,7 @@ export function Waiting({
           <li key={item.id} className="border-b border-rule">
             <Link
               href={`/projects/${slug}/work#${item.id}`}
-              className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+              className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
             >
               <span className="label shrink-0 text-waiting">
                 {item.overdueDays === 0
@@ -203,7 +208,7 @@ export function Waiting({
               <span className="min-w-0 flex-1 text-body text-ink">{item.title}</span>
               <span className="label shrink-0 text-ink-soft">
                 {t('app.resume.blockedSince', {
-                  when: formatMonthYear(item.status_changed_at, locale),
+                  when: formatMonthYear(item.status_changed_at, locale, timeZone),
                 })}
               </span>
             </Link>
@@ -221,7 +226,7 @@ export function Open({
   progress,
   slug,
   t,
-}: Omit<Common, 'locale'> & {
+}: Omit<Common, 'locale' | 'timeZone'> & {
   items: WorkItem[];
   progress: Map<string, Progress>;
   slug: string;
@@ -236,7 +241,7 @@ export function Open({
             <li key={item.id} className="border-b border-rule">
               <Link
                 href={`/projects/${slug}/work#${item.id}`}
-                className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+                className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
               >
                 <StatusMark
                   status={item.status}
@@ -259,7 +264,7 @@ export function Open({
 
 /* ────────────────────── Where you left off ────────────────────── */
 
-export function LeftOff({ entries, t, locale }: Common & { entries: Entry[] }) {
+export function LeftOff({ entries, t, locale, timeZone }: Common & { entries: Entry[] }) {
   return (
     <Section title={t('app.resume.leftOffTitle')}>
       {entries.length === 0 ? (
@@ -270,7 +275,7 @@ export function LeftOff({ entries, t, locale }: Common & { entries: Entry[] }) {
             <li key={entry.id} className="border-b border-rule py-4">
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                 <time dateTime={entry.occurred_at} className="label shrink-0 text-ink-soft">
-                  {formatDate(entry.occurred_at, locale)}
+                  {formatDate(entry.occurred_at, locale, timeZone)}
                 </time>
                 <span className="label shrink-0 text-ink-soft">
                   {t(`app.entryKind.${entry.kind}`)}
@@ -292,7 +297,7 @@ export function LeftOff({ entries, t, locale }: Common & { entries: Entry[] }) {
 
 /* ────────────────────── What you decided ────────────────────── */
 
-export function Decided({ entries, t, locale }: Common & { entries: Entry[] }) {
+export function Decided({ entries, t, locale, timeZone }: Common & { entries: Entry[] }) {
   if (entries.length === 0) return null;
 
   return (
@@ -305,7 +310,7 @@ export function Decided({ entries, t, locale }: Common & { entries: Entry[] }) {
             <details className="group">
               <summary className="flex cursor-pointer flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade">
                 <time dateTime={entry.occurred_at} className="label shrink-0 text-ink-soft">
-                  {formatDate(entry.occurred_at, locale)}
+                  {formatDate(entry.occurred_at, locale, timeZone)}
                 </time>
                 <span className="min-w-0 flex-1 text-body text-ink">
                   {entry.title ?? previewText(entry.body, 80)}
@@ -330,7 +335,7 @@ export function Decided({ entries, t, locale }: Common & { entries: Entry[] }) {
 
 /* ────────────────────────── First run ────────────────────────── */
 
-export function FirstRun({ t }: Omit<Common, 'locale'>) {
+export function FirstRun({ t }: Omit<Common, 'locale' | 'timeZone'>) {
   return (
     <div className="border-b border-rule py-10">
       <h2 className="text-title text-ink">{t('app.resume.firstRunTitle')}</h2>
@@ -345,7 +350,7 @@ export function Anomalies({
   orphans,
   cyclic,
   t,
-}: Omit<Common, 'locale'> & { orphans: string[]; cyclic: string[] }) {
+}: Omit<Common, 'locale' | 'timeZone'> & { orphans: string[]; cyclic: string[] }) {
   const count = orphans.length + cyclic.length;
   // Surfaced rather than swallowed: buildTree reports corrupt structure
   // instead of silently dropping rows, and hiding it here would undo that.

@@ -8,7 +8,7 @@ import { getProjectBySlug } from '@/lib/db/projects';
 import { getAgent } from '@/lib/db/agents';
 import { getRun, listToolCalls, runCostUsd } from '@/lib/db/runs';
 import { listRunProposals } from '@/lib/db/proposals';
-import { formatDateTime, getLocale } from '@/lib/format';
+import { formatDateTime, getLocale, getTimeZone } from '@/lib/format';
 
 type Params = { params: Promise<{ slug: string; runId: string }> };
 
@@ -43,6 +43,7 @@ export default async function RunPage({ params }: Params) {
   ]);
 
   const locale = await getLocale();
+  const timeZone = await getTimeZone();
   const t = getFixedT(locale);
 
   const durationMs = run.ended_at
@@ -72,7 +73,7 @@ export default async function RunPage({ params }: Params) {
           <div>
             <dt className="label text-ink-soft">{t('app.runs.started')}</dt>
             <dd className="label tabular-nums text-ink">
-              {formatDateTime(run.started_at, locale)}
+              {formatDateTime(run.started_at, locale, timeZone)}
             </dd>
           </div>
           <div>

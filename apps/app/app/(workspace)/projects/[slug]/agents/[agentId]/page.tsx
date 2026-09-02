@@ -7,7 +7,7 @@ import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { getAgent } from '@/lib/db/agents';
 import { listRunsForAgent } from '@/lib/db/runs';
-import { formatDateTime, getLocale } from '@/lib/format';
+import { formatDateTime, getLocale, getTimeZone } from '@/lib/format';
 import { AgentEditor } from './agent-editor';
 
 type Params = { params: Promise<{ slug: string; agentId: string }> };
@@ -33,6 +33,7 @@ export default async function AgentPage({ params }: Params) {
 
   const runs = await listRunsForAgent(supabase, agent.id);
   const locale = await getLocale();
+  const timeZone = await getTimeZone();
   const t = getFixedT(locale);
 
   return (
@@ -55,10 +56,10 @@ export default async function AgentPage({ params }: Params) {
                 <li key={run.id} className="border-b border-rule">
                   <Link
                     href={`/projects/${slug}/runs/${run.id}`}
-                    className="unstyled flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+                    className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
                   >
                     <span className="label shrink-0 tabular-nums text-ink-soft">
-                      {formatDateTime(run.started_at, locale)}
+                      {formatDateTime(run.started_at, locale, timeZone)}
                     </span>
                     <span className="min-w-0 flex-1 text-body text-ink">
                       {t(`app.runs.status.${run.status}`)}

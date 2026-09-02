@@ -1,6 +1,9 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+
+import { NEXT_LOCALE_COOKIE } from '@goalspace/i18n';
 
 import { requireSessionContext } from '@/lib/auth/session';
 import { getProjectBySlug, createProject, updateProject, deleteProject } from '@/lib/db/projects';
@@ -8,6 +11,7 @@ import { createEntry } from '@/lib/db/entries';
 import { createDocument, getRevision, updateDocument } from '@/lib/db/documents';
 import { updateAgent } from '@/lib/db/agents';
 import { updateBudget } from '@/lib/db/budgets';
+import { updateUserSettings, updateTheme } from '@/lib/db/user-settings';
 import {
   changeWorkItemStatus,
   createWorkItem,
@@ -19,6 +23,7 @@ import { createDocumentSchema, updateDocumentSchema } from '@/lib/schemas/docume
 import { updateAgentSchema } from '@/lib/schemas/agent';
 import { createProjectSchema, updateProjectSchema, deleteProjectSchema } from '@/lib/schemas/project';
 import { updateBudgetSchema } from '@/lib/schemas/budget';
+import { updateAccountSettingsSchema, updateThemeSchema } from '@/lib/schemas/user-settings';
 import { applyProposal } from '@/lib/proposals/apply';
 import { settleProposal } from '@/lib/db/proposals';
 import {
@@ -27,6 +32,12 @@ import {
   moveWorkItemSchema,
   updateWorkItemSchema,
 } from '@/lib/schemas/work-item';
+import {
+  THEME_COOKIE,
+  TIME_ZONE_COOKIE,
+  LOCALE_COOKIE_OPTIONS,
+  SERVER_PREFERENCE_COOKIE_OPTIONS,
+} from '@/lib/settings/preference-cookies';
 import { fail, fromZodError, ok, type ActionResult } from '@/lib/actions/result';
 
 /**
@@ -421,6 +432,112 @@ export async function updateBudgetAction(
   } catch {
     return fail('app.errors.generic');
   }
+}
+
+/**
+ * Persist theme, language, time zone and email notification preferences, and
+ * carry the change into the current session.
+ *
+ * Two writes, one act: the database row is the durable copy read back at the
+ * next login (see the callback route), and the cookies are the request-time
+ * copy `app/layout.tsx` reads before there is any session to query. Writing
+ * only one half would leave either a new device or the current tab showing a
+ * stale preference.
+ *
+ * Unlike `updateProjectAction`, there is no slug — account settings belong to
+ * the caller, not to a project the caller must first be resolved into.
+ */
+export async function updateAccountSettingsAction(
+  input: unknown
+): Promise<ActionResult<{ locale: string }>> {
+  const parsed = updateAccountSettingsSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, userId } = await requireSessionContext();
+
+  try {
+    const updated = await updateUserSettings(supabase, { userId, values: parsed.data });
+    if (!updated) return fail('app.errors.generic');
+
+    const cookieStore = await cookies();
+    // Shared option objects (see preference-cookies.ts) so this writer cannot
+    // drift from the auth callback or clearPreferenceCookiesAction below.
+    cookieStore.set(NEXT_LOCALE_COOKIE, updated.locale, LOCALE_COOKIE_OPTIONS);
+    cookieStore.set(THEME_COOKIE, updated.theme, SERVER_PREFERENCE_COOKIE_OPTIONS);
+    cookieStore.set(TIME_ZONE_COOKIE, updated.time_zone, SERVER_PREFERENCE_COOKIE_OPTIONS);
+
+    // Locale and theme affect every rendered page, not just this one.
+    revalidatePath('/', 'layout');
+    return ok({ locale: updated.locale });
+  } catch (error) {
+    console.error('updateAccountSettingsAction failed', error);
+    return fail('app.errors.generic');
+  }
+}
+
+/**
+ * Persist only the theme, for the header-rail shortcut in `header-rail.tsx`.
+ *
+ * `updateAccountSettingsAction` validates against `updateAccountSettingsSchema`,
+ * which requires locale, time zone and email notifications alongside the
+ * theme — so a theme click from the menu had to resend those three from
+ * whatever the current render happened to hold. That render can be
+ * arbitrarily old (a second tab, a long-open tab, a change made elsewhere),
+ * so clicking a theme could silently revert preferences the account had
+ * actually changed. This action only ever writes `theme`, so there is
+ * nothing else to go stale or to revert.
+ */
+export async function updateThemeAction(
+  input: unknown
+): Promise<ActionResult<{ theme: string }>> {
+  const parsed = updateThemeSchema.safeParse(input);
+  if (!parsed.success) return fromZodError(parsed.error);
+
+  const { supabase, userId } = await requireSessionContext();
+
+  try {
+    const updated = await updateTheme(supabase, { userId, values: parsed.data });
+    if (!updated) return fail('app.errors.generic');
+
+    const cookieStore = await cookies();
+    cookieStore.set(THEME_COOKIE, updated.theme, SERVER_PREFERENCE_COOKIE_OPTIONS);
+
+    // Theme affects every rendered page, not just this one.
+    revalidatePath('/', 'layout');
+    return ok({ theme: updated.theme });
+  } catch (error) {
+    console.error('updateThemeAction failed', error);
+    return fail('app.errors.generic');
+  }
+}
+
+/**
+ * Clear the three preference cookies, so the next person on a shared browser
+ * does not inherit the previous user's theme, language and time zone.
+ *
+ * `THEME_COOKIE` and `TIME_ZONE_COOKIE` are `httpOnly` (see
+ * `SERVER_PREFERENCE_COOKIE_OPTIONS` in preference-cookies.ts), so client
+ * script cannot delete them — `document.cookie = 'name=; max-age=0'` on an
+ * httpOnly cookie is a silent no-op. `header-rail.tsx`'s `signOut` is
+ * otherwise entirely client-side
+ * (`createClient().auth.signOut()`), so it calls this action to do the part
+ * it no longer can. Clearing server-side is also simply more reliable than
+ * `document.cookie` manipulation: it cannot miss on a path or domain
+ * mismatch the way a client-side clear can.
+ *
+ * No session is required: sign-out is exactly the moment the session is
+ * ending, and this only ever touches cookies, never a row, so there is
+ * nothing here that needs to know who the caller is.
+ */
+export async function clearPreferenceCookiesAction(): Promise<void> {
+  const cookieStore = await cookies();
+  // maxAge: 0 rather than a past expiry date — matches the idiom `set(...,
+  // { maxAge })` already uses elsewhere in this file. path and httpOnly still
+  // come from the shared option objects, so a clear cannot disagree with the
+  // writer on either.
+  cookieStore.set(NEXT_LOCALE_COOKIE, '', { ...LOCALE_COOKIE_OPTIONS, maxAge: 0 });
+  cookieStore.set(THEME_COOKIE, '', { ...SERVER_PREFERENCE_COOKIE_OPTIONS, maxAge: 0 });
+  cookieStore.set(TIME_ZONE_COOKIE, '', { ...SERVER_PREFERENCE_COOKIE_OPTIONS, maxAge: 0 });
 }
 
 /**

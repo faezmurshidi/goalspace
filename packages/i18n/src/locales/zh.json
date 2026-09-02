@@ -341,10 +341,8 @@
       "log": "日志",
       "switchProject": "切换项目",
       "account": "账户",
+      "accountSettings": "账户设置",
       "theme": "主题",
-      "themeLight": "浅色",
-      "themeDark": "深色",
-      "themeSystem": "跟随系统",
       "language": "语言",
       "skipToContent": "跳到主要内容",
       "toggleSidebar": "切换侧边栏",
@@ -539,6 +537,26 @@
         "external": "离开本系统",
         "none": "暂无。"
       }
+    },
+    "account": {
+      "title": "账户设置",
+      "themeLabel": "主题",
+      "theme": {
+        "light": "浅色",
+        "dark": "深色",
+        "system": "跟随系统"
+      },
+      "languageLabel": "语言",
+      "localeNames": {
+        "en": "English",
+        "ms": "Bahasa Melayu",
+        "zh": "简体中文"
+      },
+      "timeZoneLabel": "时区",
+      "emailNotificationsLabel": "邮件通知",
+      "save": "保存",
+      "saving": "保存中",
+      "saved": "已保存"
     },
     "runs": {
       "title": "运行",

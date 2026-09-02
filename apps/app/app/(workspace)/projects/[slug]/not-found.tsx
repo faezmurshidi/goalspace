@@ -23,7 +23,7 @@ export default async function ProjectNotFound() {
 
       <Link
         href="/"
-        className="label unstyled mt-8 inline-block border border-rule-strong px-6 py-3 text-ink transition-colors hover:bg-paper-shade"
+        className="label mt-8 inline-block border border-rule-strong px-6 py-3 text-ink transition-colors hover:bg-paper-shade"
       >
         {t('app.notFound.back')}
       </Link>

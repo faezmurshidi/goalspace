@@ -341,10 +341,8 @@
       "log": "Log",
       "switchProject": "Tukar projek",
       "account": "Akaun",
+      "accountSettings": "Tetapan akaun",
       "theme": "Tema",
-      "themeLight": "Cerah",
-      "themeDark": "Gelap",
-      "themeSystem": "Sistem",
       "language": "Bahasa",
       "skipToContent": "Terus ke kandungan",
       "toggleSidebar": "Togol bar sisi",
@@ -539,6 +537,26 @@
         "external": "Keluar dari sistem",
         "none": "Belum ada."
       }
+    },
+    "account": {
+      "title": "Tetapan akaun",
+      "themeLabel": "Tema",
+      "theme": {
+        "light": "Cerah",
+        "dark": "Gelap",
+        "system": "Sistem"
+      },
+      "languageLabel": "Bahasa",
+      "localeNames": {
+        "en": "English",
+        "ms": "Bahasa Melayu",
+        "zh": "简体中文"
+      },
+      "timeZoneLabel": "Zon waktu",
+      "emailNotificationsLabel": "Pemberitahuan e-mel",
+      "save": "Simpan",
+      "saving": "Menyimpan",
+      "saved": "Disimpan"
     },
     "runs": {
       "title": "Larian",

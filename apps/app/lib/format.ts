@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { NEXT_LOCALE_COOKIE, localeFromCookie, type Locale } from '@goalspace/i18n';
+import { TIME_ZONE_COOKIE, parseTimeZone } from '@/lib/settings/preference-cookies';
 
 /**
  * The request's locale, from the same cookie the root layout reads.
@@ -15,29 +16,64 @@ export async function getLocale(): Promise<Locale> {
   return localeFromCookie(store.get(NEXT_LOCALE_COOKIE)?.value);
 }
 
-/** "23 Jul 2026". Unambiguous across locales in a way a numeric date is not. */
-export function formatDate(iso: string, locale: string): string {
+/**
+ * The request's time zone, from the same cookie the account settings form
+ * writes. Same shape as `getLocale`: read here, once, so every server-rendered
+ * date on the page agrees.
+ */
+export async function getTimeZone(): Promise<string> {
+  const store = await cookies();
+  return parseTimeZone(store.get(TIME_ZONE_COOKIE)?.value);
+}
+
+/**
+ * "23 Jul 2026". Unambiguous across locales in a way a numeric date is not.
+ *
+ * `timeZone` is required, not optional: `Intl.DateTimeFormat` with no
+ * `timeZone` uses the runtime's zone, so a server in one region would render
+ * every date in that region for every reader. `parseTimeZone` guards against
+ * an unrecognised zone name (a stale cookie) reaching `Intl` and throwing.
+ */
+export function formatDate(iso: string, locale: string, timeZone: string): string {
   return new Intl.DateTimeFormat(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: parseTimeZone(timeZone),
   }).format(new Date(iso));
 }
 
-/** Date plus time, for entries where the hour carries information. */
-export function formatDateTime(iso: string, locale: string): string {
+/**
+ * Date plus time, for entries where the hour carries information.
+ *
+ * `timeZone` is required, not optional: `Intl.DateTimeFormat` with no
+ * `timeZone` uses the runtime's zone, so a server in one region would render
+ * every date in that region for every reader. `parseTimeZone` guards against
+ * an unrecognised zone name (a stale cookie) reaching `Intl` and throwing.
+ */
+export function formatDateTime(iso: string, locale: string, timeZone: string): string {
   return new Intl.DateTimeFormat(locale, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: parseTimeZone(timeZone),
   }).format(new Date(iso));
 }
 
-/** "August 2026", for durations measured in months rather than days. */
-export function formatMonthYear(iso: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(
-    new Date(iso)
-  );
+/**
+ * "August 2026", for durations measured in months rather than days.
+ *
+ * `timeZone` is required, not optional: `Intl.DateTimeFormat` with no
+ * `timeZone` uses the runtime's zone, so a server in one region would render
+ * every date in that region for every reader. `parseTimeZone` guards against
+ * an unrecognised zone name (a stale cookie) reaching `Intl` and throwing.
+ */
+export function formatMonthYear(iso: string, locale: string, timeZone: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    month: 'long',
+    year: 'numeric',
+    timeZone: parseTimeZone(timeZone),
+  }).format(new Date(iso));
 }
