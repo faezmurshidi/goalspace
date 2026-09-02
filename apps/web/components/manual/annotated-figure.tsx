@@ -60,7 +60,7 @@ export function AnnotatedFigure({
             higher specificity (e.g. an arbitrary selector or a wrapping <g>
             deeper than this one) rather than relying on JSX order.
           */}
-          <g className="[&_*]:fill-none [&_*]:stroke-ink [&_*]:[stroke-width:1.5] [&_*]:[vector-effect:non-scaling-stroke]">
+          <g className="[&_*]:stroke-ink [&_*]:fill-none [&_*]:[stroke-width:1.5] [&_*]:[vector-effect:non-scaling-stroke]">
             {children}
           </g>
 
@@ -94,7 +94,7 @@ export function AnnotatedFigure({
           <li key={c.n} className="flex items-start gap-3">
             <span
               aria-hidden="true"
-              className="callout-num label mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-oxide text-paper"
+              className="callout-num label bg-oxide text-paper mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full"
             >
               {c.n}
             </span>

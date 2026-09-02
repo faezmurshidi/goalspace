@@ -1,6 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { useTranslation } from 'react-i18next';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // `I18nProvider` reads the route's locale segment through `useParams`, and
 // `useAppTranslations` (not under test here, but pulled in via the barrel)

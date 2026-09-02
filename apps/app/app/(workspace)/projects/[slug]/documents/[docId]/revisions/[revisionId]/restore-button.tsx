@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button } from '@goalspace/ui';
 
 import { restoreRevisionAction } from '@/app/(workspace)/actions';
 
@@ -35,12 +35,7 @@ export function RestoreButton({
     setError(null);
     startTransition(async () => {
       try {
-        const result = await restoreRevisionAction(
-          slug,
-          documentId,
-          revisionId,
-          expectedUpdatedAt
-        );
+        const result = await restoreRevisionAction(slug, documentId, revisionId, expectedUpdatedAt);
         if (!result.ok) {
           setError(result.message ?? 'app.errors.generic');
           return;

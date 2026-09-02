@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+
 import { Plate } from '@/components/manual/plate';
 
 describe('Plate', () => {
@@ -17,7 +18,11 @@ describe('Plate', () => {
   });
 
   it('labels the section by its title for assistive technology', () => {
-    render(<Plate number="02" title="How the record accrues">body</Plate>);
+    render(
+      <Plate number="02" title="How the record accrues">
+        body
+      </Plate>
+    );
     expect(screen.getByRole('region', { name: 'How the record accrues' })).toBeInTheDocument();
   });
 

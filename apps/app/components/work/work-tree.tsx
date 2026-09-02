@@ -2,14 +2,14 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Textarea, cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button, cn, Input, Textarea } from '@goalspace/ui';
 
-import { changeStatusAction, createWorkItemAction } from '@/app/(workspace)/actions';
-import { buildTree, flattenTree, type TreeNode } from '@/lib/work-items/tree';
-import { computeProgress } from '@/lib/work-items/progress';
-import { workItemStatuses, type WorkItemStatus } from '@/lib/schemas/common';
 import type { WorkItem } from '@/lib/db/work-items';
+import { workItemStatuses, type WorkItemStatus } from '@/lib/schemas/common';
+import { computeProgress } from '@/lib/work-items/progress';
+import { buildTree, flattenTree, type TreeNode } from '@/lib/work-items/tree';
+import { changeStatusAction, createWorkItemAction } from '@/app/(workspace)/actions';
 
 /**
  * Visual indent stops here. Beyond four levels the rows are narrower than the
@@ -79,7 +79,7 @@ export function WorkTree({ slug, items }: { slug: string; items: WorkItem[] }) {
   return (
     <div className="pb-10">
       {error ? (
-        <p role="alert" className="label mb-4 border border-oxide p-3 text-oxide">
+        <p role="alert" className="label border-oxide text-oxide mb-4 border p-3">
           {error}
         </p>
       ) : null}
@@ -87,10 +87,10 @@ export function WorkTree({ slug, items }: { slug: string; items: WorkItem[] }) {
       {ordered.length === 0 ? (
         <div className="py-10">
           <h2 className="text-title text-ink">{t('app.work.empty')}</h2>
-          <p className="prose-measure mt-2 text-ink-soft">{t('app.work.emptyBody')}</p>
+          <p className="prose-measure text-ink-soft mt-2">{t('app.work.emptyBody')}</p>
         </div>
       ) : (
-        <ul className="border-t border-rule">
+        <ul className="border-rule border-t">
           {ordered.map((node) => (
             <WorkRow
               key={node.id}
@@ -120,7 +120,7 @@ export function WorkTree({ slug, items }: { slug: string; items: WorkItem[] }) {
       <AddItem slug={slug} onAdded={() => startRefresh(() => router.refresh())} t={t} />
 
       {orphans.length + cyclic.length > 0 ? (
-        <p className="label mt-8 border border-oxide p-3 text-oxide">
+        <p className="label border-oxide text-oxide mt-8 border p-3">
           {t('app.resume.anomalyBody', { count: orphans.length + cyclic.length })}
         </p>
       ) : null}
@@ -149,7 +149,7 @@ function WorkRow({
   const closed = node.status === 'done' || node.status === 'dropped';
 
   return (
-    <li id={node.id} className="border-b border-rule">
+    <li id={node.id} className="border-rule border-b">
       <div
         className="flex flex-wrap items-baseline gap-x-4 gap-y-2 py-3"
         style={{ paddingLeft: indent }}
@@ -160,7 +160,7 @@ function WorkRow({
           disabled={busy}
           onChange={(event) => onPick(node, event.target.value as WorkItemStatus)}
           className={cn(
-            'label shrink-0 border border-input bg-paper px-2 py-1',
+            'label border-input bg-paper shrink-0 border px-2 py-1',
             node.status === 'blocked' && 'text-waiting',
             node.status === 'doing' && 'text-oxide',
             node.status !== 'blocked' && node.status !== 'doing' && 'text-ink-soft'
@@ -174,22 +174,22 @@ function WorkRow({
         </select>
 
         {node.kind === 'question' ? (
-          <span className="label shrink-0 text-oxide">{t('app.kind.question')}</span>
+          <span className="label text-oxide shrink-0">{t('app.kind.question')}</span>
         ) : null}
 
         <span
           className={cn(
-            'min-w-0 flex-1 text-body',
+            'text-body min-w-0 flex-1',
             // A closed item stays legible rather than being greyed into
             // illegibility: the record of what was finished is the point.
-            closed ? 'text-ink-soft line-through decoration-rule-strong' : 'text-ink'
+            closed ? 'text-ink-soft decoration-rule-strong line-through' : 'text-ink'
           )}
         >
           {node.title}
         </span>
 
         {done && done.total > 0 ? (
-          <span className="label shrink-0 tabular-nums text-ink-soft">
+          <span className="label text-ink-soft shrink-0 tabular-nums">
             {done.done}/{done.total}
           </span>
         ) : null}
@@ -215,16 +215,16 @@ function CloseWithEntry({
   const [body, setBody] = useState('');
 
   return (
-    <div className="mb-4 border border-rule-strong p-5">
+    <div className="border-rule-strong mb-4 border p-5">
       <p className="label text-ink-soft">{t('app.work.closeWithEntry')}</p>
-      <p className="mt-1 text-title text-ink">{title}</p>
+      <p className="text-title text-ink mt-1">{title}</p>
 
       <Textarea
         autoFocus
         rows={3}
         value={body}
         onChange={(event) => setBody(event.target.value)}
-        className="mt-4 border-input bg-paper text-body text-ink"
+        className="border-input bg-paper text-body text-ink mt-4"
       />
 
       <div className="mt-4 flex flex-wrap gap-3">
@@ -232,7 +232,7 @@ function CloseWithEntry({
           type="button"
           disabled={busy}
           onClick={() => onSubmit(body.trim())}
-          className="label h-10 bg-primary px-5 text-primary-foreground hover:bg-ink hover:text-paper"
+          className="label bg-primary text-primary-foreground hover:bg-ink hover:text-paper h-10 px-5"
         >
           {t('app.work.closeSubmit')}
         </Button>
@@ -244,7 +244,7 @@ function CloseWithEntry({
           variant="outline"
           disabled={busy}
           onClick={() => onSubmit('')}
-          className="label h-10 border-rule-strong bg-paper px-5 text-ink hover:bg-paper-shade"
+          className="label border-rule-strong bg-paper text-ink hover:bg-paper-shade h-10 px-5"
         >
           {t('app.work.closeSkip')}
         </Button>
@@ -253,7 +253,7 @@ function CloseWithEntry({
           variant="ghost"
           disabled={busy}
           onClick={onCancel}
-          className="label h-10 px-3 text-ink-soft hover:bg-paper-shade hover:text-ink"
+          className="label text-ink-soft hover:bg-paper-shade hover:text-ink h-10 px-3"
         >
           {t('app.common.cancel')}
         </Button>
@@ -301,13 +301,13 @@ function AddItem({ slug, onAdded, t }: { slug: string; onAdded: () => void; t: T
         onChange={(event) => setTitle(event.target.value)}
         placeholder={t('app.work.addItem')}
         aria-label={t('app.work.addItem')}
-        className="h-10 min-w-0 flex-1 border-input bg-paper text-body text-ink placeholder:text-ink-soft"
+        className="border-input bg-paper text-body text-ink placeholder:text-ink-soft h-10 min-w-0 flex-1"
       />
       <select
         aria-label={t('app.capture.kindLabel')}
         value={kind}
         onChange={(event) => setKind(event.target.value as 'task' | 'question')}
-        className="label border border-input bg-paper px-2 py-2 text-ink"
+        className="label border-input bg-paper text-ink border px-2 py-2"
       >
         <option value="task">{t('app.kind.task')}</option>
         <option value="question">{t('app.kind.question')}</option>
@@ -315,12 +315,12 @@ function AddItem({ slug, onAdded, t }: { slug: string; onAdded: () => void; t: T
       <Button
         type="submit"
         disabled={busy || title.trim().length === 0}
-        className="label h-10 bg-primary px-5 text-primary-foreground hover:bg-ink hover:text-paper disabled:opacity-50"
+        className="label bg-primary text-primary-foreground hover:bg-ink hover:text-paper h-10 px-5 disabled:opacity-50"
       >
         {t('app.work.addItem')}
       </Button>
       {error ? (
-        <p role="alert" className="label w-full text-oxide">
+        <p role="alert" className="label text-oxide w-full">
           {error}
         </p>
       ) : null}

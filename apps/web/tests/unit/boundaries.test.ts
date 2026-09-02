@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -27,7 +27,9 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
 describe('marketing site boundaries', () => {
   it('declares no supabase dependency', () => {
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-    const supabase = Object.keys(deps).filter((d) => d.startsWith('@supabase/') || d === 'supabase');
+    const supabase = Object.keys(deps).filter(
+      (d) => d.startsWith('@supabase/') || d === 'supabase'
+    );
     expect(supabase).toEqual([]);
   });
 
@@ -37,7 +39,9 @@ describe('marketing site boundaries', () => {
       ['@goalspace/i18n', i18nPkg],
     ] as const) {
       const deps = { ...sharedPkg.dependencies, ...sharedPkg.devDependencies };
-      const supabase = Object.keys(deps).filter((d) => d.startsWith('@supabase/') || d === 'supabase');
+      const supabase = Object.keys(deps).filter(
+        (d) => d.startsWith('@supabase/') || d === 'supabase'
+      );
       expect(supabase, `${name} declares a supabase dependency`).toEqual([]);
     }
   });
@@ -60,6 +64,9 @@ describe('marketing site boundaries', () => {
     const offenders = [...sourceFiles(uiRoot), ...sourceFiles(i18nRoot)].filter((file) =>
       /@supabase\/|utils\/supabase/.test(readFileSync(file, 'utf8'))
     );
-    expect(offenders, `supabase import found in shared package file(s): ${offenders.join(', ')}`).toEqual([]);
+    expect(
+      offenders,
+      `supabase import found in shared package file(s): ${offenders.join(', ')}`
+    ).toEqual([]);
   });
 });

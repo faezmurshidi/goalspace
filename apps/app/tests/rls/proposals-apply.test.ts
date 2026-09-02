@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
-import { applyProposal } from '@/lib/proposals/apply';
 import { releaseProposal, settleProposal } from '@/lib/db/proposals';
+import { applyProposal } from '@/lib/proposals/apply';
+import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 
 /**
  * The apply path against a real database.
@@ -229,7 +229,10 @@ describe('applying a document edit', () => {
     // The owner writes something after the agent read the document.
     await alice!.client
       .from('documents')
-      .update({ body: 'Version two, by the owner.', updated_at: new Date(Date.now() + 60_000).toISOString() })
+      .update({
+        body: 'Version two, by the owner.',
+        updated_at: new Date(Date.now() + 60_000).toISOString(),
+      })
       .eq('id', document.id);
 
     const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });

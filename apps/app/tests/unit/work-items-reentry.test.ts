@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import type { WorkItemStatus } from '@/lib/work-items/progress';
 import {
-  SIGNIFICANT_ABSENCE_DAYS,
   describeAbsence,
+  SIGNIFICANT_ABSENCE_DAYS,
   wokenItems,
   type ReentryRow,
 } from '@/lib/work-items/reentry';
-import type { WorkItemStatus } from '@/lib/work-items/progress';
 
 const NOW = new Date('2026-08-14T12:00:00.000Z');
 
@@ -16,11 +16,7 @@ function daysBefore(n: number): string {
 function daysAfter(n: number): string {
   return new Date(NOW.getTime() + n * 86_400_000).toISOString();
 }
-function row(
-  id: string,
-  status: WorkItemStatus,
-  wake_at: string | null = null
-): ReentryRow {
+function row(id: string, status: WorkItemStatus, wake_at: string | null = null): ReentryRow {
   return { id, status, wake_at };
 }
 
@@ -105,8 +101,10 @@ describe('describeAbsence', () => {
   });
 
   it('treats the threshold itself as significant', () => {
-    expect(describeAbsence(new Date(daysBefore(SIGNIFICANT_ABSENCE_DAYS)), NOW))
-      .toEqual({ days: SIGNIFICANT_ABSENCE_DAYS, significant: true });
+    expect(describeAbsence(new Date(daysBefore(SIGNIFICANT_ABSENCE_DAYS)), NOW)).toEqual({
+      days: SIGNIFICANT_ABSENCE_DAYS,
+      significant: true,
+    });
   });
 
   it('reports zero days for activity earlier today', () => {

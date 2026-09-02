@@ -1,9 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database } from '@/types/supabase';
 import type { ToolName } from '@/lib/agents/tools/registry';
-import { citationsSchema, payloadSchemaFor, type ProposalKind } from '@/lib/schemas/proposal';
 import { resolveCitations } from '@/lib/proposals/citations';
+import { citationsSchema, payloadSchemaFor, type ProposalKind } from '@/lib/schemas/proposal';
+import type { Database } from '@/types/supabase';
 
 /**
  * Every handler takes its project from the run context, never from the model.

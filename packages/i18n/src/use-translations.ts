@@ -1,8 +1,8 @@
 'use client';
 
-import { useTranslation } from 'react-i18next';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { setCookie } from 'cookies-next';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Custom hook for handling translations and language switching
@@ -69,11 +69,11 @@ export function useAppTranslations() {
   };
 
   return {
-    t,                 // Translation function
-    i18n,              // i18n instance
-    currentLocale,     // Current language
-    changeLanguage,    // Function to change language
-    formatDate,        // Function to format dates
-    formatNumber       // Function to format numbers
+    t, // Translation function
+    i18n, // i18n instance
+    currentLocale, // Current language
+    changeLanguage, // Function to change language
+    formatDate, // Function to format dates
+    formatNumber, // Function to format numbers
   };
 }

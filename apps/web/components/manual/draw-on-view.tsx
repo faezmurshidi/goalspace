@@ -27,7 +27,12 @@ const STAGGER_STEPS = 8;
  * in its final state immediately, exactly as PRODUCT.md's accessibility
  * section requires.
  */
-export function DrawOnView({ children, className, durationMs = 600, staggerMs = 60 }: DrawOnViewProps) {
+export function DrawOnView({
+  children,
+  className,
+  durationMs = 600,
+  staggerMs = 60,
+}: DrawOnViewProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [pending, setPending] = useState(false);
 

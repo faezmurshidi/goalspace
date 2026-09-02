@@ -59,11 +59,7 @@ export const changeStatusSchema = z
     // wake_at describes what is being waited on. Carrying one onto a done or
     // dropped item leaves a date that will later surface the item as overdue
     // on the resume view, long after it stopped mattering.
-    if (
-      value.wake_at !== undefined &&
-      value.wake_at !== null &&
-      value.status !== 'blocked'
-    ) {
+    if (value.wake_at !== undefined && value.wake_at !== null && value.status !== 'blocked') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['wake_at'],

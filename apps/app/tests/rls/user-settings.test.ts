@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 import { getUserSettings, updateUserSettings } from '@/lib/db/user-settings';
+import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 
 let alice: TestUser | undefined;
 let bob: TestUser | undefined;

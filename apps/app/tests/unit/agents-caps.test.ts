@@ -11,7 +11,8 @@ describe('checkCaps', () => {
 
   it('blocks when month-to-date spend has reached the monthly cap', () => {
     expect(checkCaps({ budget, monthToDateUsd: 10, runTokens: 0 })).toMatchObject({
-      allowed: false, cap: 'monthly',
+      allowed: false,
+      cap: 'monthly',
     });
   });
 
@@ -21,13 +22,15 @@ describe('checkCaps', () => {
 
   it('blocks when the run has burned its token cap', () => {
     expect(checkCaps({ budget, monthToDateUsd: 0, runTokens: 200_000 })).toMatchObject({
-      allowed: false, cap: 'per_run',
+      allowed: false,
+      cap: 'per_run',
     });
   });
 
   it('reports the monthly cap first when both are exceeded', () => {
     expect(checkCaps({ budget, monthToDateUsd: 99, runTokens: 999_999 })).toMatchObject({
-      allowed: false, cap: 'monthly',
+      allowed: false,
+      cap: 'monthly',
     });
   });
 

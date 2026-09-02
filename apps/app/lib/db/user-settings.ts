@@ -1,9 +1,9 @@
+import { defaultLocale } from '@goalspace/i18n';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { defaultLocale } from '@goalspace/i18n';
-import type { Database, Tables } from '@/types/supabase';
 import type { UpdateAccountSettingsValues, UpdateThemeValues } from '@/lib/schemas/user-settings';
 import { parseTheme, parseTimeZone } from '@/lib/settings/preference-cookies';
+import type { Database, Tables } from '@/types/supabase';
 
 type Client = SupabaseClient<Database>;
 

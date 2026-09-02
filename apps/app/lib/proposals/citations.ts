@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database } from '@/types/supabase';
 import type { Citation } from '@/lib/schemas/proposal';
+import type { Database } from '@/types/supabase';
 
 type Client = SupabaseClient<Database>;
 

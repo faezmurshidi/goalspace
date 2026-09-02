@@ -1,15 +1,16 @@
 'use client';
 
 import Link from 'next/link';
+import { useAppTranslations } from '@goalspace/i18n';
 import {
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  cn,
 } from '@goalspace/ui';
-import { useAppTranslations } from '@goalspace/i18n';
 
+import { destinationsFor, isActive, type ChromeProject } from '@/lib/shell/destinations';
 import {
   Sidebar,
   SidebarContent,
@@ -20,8 +21,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from './sidebar';
-
-import { destinationsFor, isActive, type ChromeProject } from '@/lib/shell/destinations';
 
 export function WorkspaceSidebar({
   projects,
@@ -76,7 +75,7 @@ export function WorkspaceSidebar({
               return (
                 <SidebarMenuItem
                   key={destination.key}
-                  className={cn(isFirstTrailing && 'border-t border-rule pt-1')}
+                  className={cn(isFirstTrailing && 'border-rule border-t pt-1')}
                 >
                   <SidebarMenuButton asChild isActive={active}>
                     <Link
@@ -90,9 +89,7 @@ export function WorkspaceSidebar({
                       <span aria-hidden="true" className={cn(!collapsed && 'hidden')}>
                         {Array.from(label)[0] ?? ''}
                       </span>
-                      <span className={cn('flex-1 truncate', collapsed && 'sr-only')}>
-                        {label}
-                      </span>
+                      <span className={cn('flex-1 truncate', collapsed && 'sr-only')}>{label}</span>
                       {destination.count !== undefined ? (
                         <span className={cn('text-ink-soft', collapsed && 'sr-only')}>
                           {destination.count}
@@ -141,14 +138,14 @@ function ProjectSwitcher({
   }
 
   if (projects.length < 2) {
-    return <span className="truncate text-title text-ink">{current.title}</span>;
+    return <span className="text-title text-ink truncate">{current.title}</span>;
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={t('app.nav.switchProject')}
-        className="flex w-full items-center gap-2 truncate text-title text-ink transition-colors hover:text-oxide"
+        className="text-title text-ink hover:text-oxide flex w-full items-center gap-2 truncate transition-colors"
       >
         <span className="truncate">{current.title}</span>
         <span aria-hidden="true" className="label text-ink-soft">
@@ -157,19 +154,19 @@ function ProjectSwitcher({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="min-w-64 rounded-none border border-rule-strong bg-paper p-0 shadow-none"
+        className="border-rule-strong bg-paper min-w-64 rounded-none border p-0 shadow-none"
       >
         {projects.map((project) => (
           <DropdownMenuItem
             key={project.slug}
             asChild
-            className="cursor-pointer rounded-none focus:bg-paper-shade"
+            className="focus:bg-paper-shade cursor-pointer rounded-none"
           >
             <Link
               href={`/projects/${project.slug}`}
               onClick={onNavigate}
               className={cn(
-                'block px-3 py-2 text-body',
+                'text-body block px-3 py-2',
                 project.slug === current.slug ? 'text-oxide' : 'text-ink'
               )}
             >

@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
+import { cn, Sheet, SheetContent, SheetTitle, useIsMobile } from '@goalspace/ui';
 import { Slot } from '@radix-ui/react-slot';
-import { Sheet, SheetContent, SheetTitle, cn, useIsMobile } from '@goalspace/ui';
 
 /**
  * shadcn's sidebar, trimmed to what this product uses and reskinned.
@@ -70,7 +70,7 @@ export function SidebarProvider({
 
   return (
     <SidebarContext.Provider value={value}>
-      <div className={cn('flex min-h-svh w-full bg-paper', className)}>{children}</div>
+      <div className={cn('bg-paper flex min-h-svh w-full', className)}>{children}</div>
     </SidebarContext.Provider>
   );
 }
@@ -92,7 +92,7 @@ export function Sidebar({
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>
         <SheetContent
           side="left"
-          className="w-72 border-r border-rule-strong bg-paper p-0 shadow-none"
+          className="border-rule-strong bg-paper w-72 border-r p-0 shadow-none"
         >
           {/* Radix requires a title for the dialog's accessible name. It is
               visually hidden because the sheet already shows the project. */}
@@ -110,7 +110,7 @@ export function Sidebar({
       aria-label={label}
       data-state={open ? 'open' : 'collapsed'}
       className={cn(
-        'sticky top-0 hidden h-svh shrink-0 flex-col border-r border-rule bg-paper md:flex',
+        'border-rule bg-paper sticky top-0 hidden h-svh shrink-0 flex-col border-r md:flex',
         open ? 'w-64' : 'w-14',
         className
       )}
@@ -122,7 +122,7 @@ export function Sidebar({
 
 export function SidebarHeader({ className, children }: React.ComponentProps<'div'>) {
   return (
-    <div className={cn('flex h-14 items-center border-b border-rule px-3', className)}>
+    <div className={cn('border-rule flex h-14 items-center border-b px-3', className)}>
       {children}
     </div>
   );
@@ -170,7 +170,7 @@ export const SidebarMenuButton = React.forwardRef<
         'label flex h-9 items-center gap-3 border-l-2 px-3 transition-colors',
         isActive
           ? 'border-oxide bg-paper-shade text-ink'
-          : 'border-transparent text-ink-soft hover:bg-paper-shade hover:text-ink',
+          : 'text-ink-soft hover:bg-paper-shade hover:text-ink border-transparent',
         className
       )}
       {...props}
@@ -196,7 +196,7 @@ export function SidebarTrigger({
       onClick={toggle}
       aria-label={label}
       className={cn(
-        'label flex h-9 w-9 items-center justify-center border border-rule text-ink-soft transition-colors hover:bg-paper-shade hover:text-ink',
+        'label border-rule text-ink-soft hover:bg-paper-shade hover:text-ink flex h-9 w-9 items-center justify-center border transition-colors',
         className
       )}
     >

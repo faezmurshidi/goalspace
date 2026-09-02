@@ -1,10 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database, Tables } from '@/types/supabase';
-import { slugSchema, slugify } from '@/lib/schemas/common';
 import { agentRowsFor } from '@/lib/agents/templates';
-import type { CreateProjectValues, UpdateProjectValues } from '@/lib/schemas/project';
+import { slugify, slugSchema } from '@/lib/schemas/common';
 import type { ProjectKind, ProjectStatus, ProjectVisibility } from '@/lib/schemas/common';
+import type { CreateProjectValues, UpdateProjectValues } from '@/lib/schemas/project';
+import type { Database, Tables } from '@/types/supabase';
 
 type Client = SupabaseClient<Database>;
 
@@ -19,7 +19,8 @@ export type Project = Omit<Tables<'projects'>, 'kind' | 'status' | 'visibility'>
   visibility: ProjectVisibility;
 };
 
-const PROJECT_COLUMNS = 'id, owner_id, slug, title, brief, kind, visibility, status, created_at, updated_at';
+const PROJECT_COLUMNS =
+  'id, owner_id, slug, title, brief, kind, visibility, status, created_at, updated_at';
 
 function asProject(row: Tables<'projects'>): Project {
   return row as Project;

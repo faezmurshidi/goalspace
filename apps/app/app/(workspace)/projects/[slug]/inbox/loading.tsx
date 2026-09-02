@@ -10,15 +10,15 @@ export default function InboxLoading() {
     <>
       <LoadingAnnouncement />
       <div aria-hidden="true" className="mx-auto w-full max-w-3xl px-4 py-8">
-        <div className="h-4 w-20 bg-paper-shade" />
+        <div className="bg-paper-shade h-4 w-20" />
         {[0, 1].map((card) => (
-          <div key={card} className="mt-6 border border-rule p-4">
-            <div className="h-3 w-3/4 max-w-md bg-paper-shade" />
-            <div className="mt-4 h-24 w-full bg-paper-shade" />
+          <div key={card} className="border-rule mt-6 border p-4">
+            <div className="bg-paper-shade h-3 w-3/4 max-w-md" />
+            <div className="bg-paper-shade mt-4 h-24 w-full" />
             <div className="mt-4 flex gap-2">
-              <div className="h-9 w-20 bg-paper-shade" />
-              <div className="h-9 w-20 bg-paper-shade" />
-              <div className="h-9 w-20 bg-paper-shade" />
+              <div className="bg-paper-shade h-9 w-20" />
+              <div className="bg-paper-shade h-9 w-20" />
+              <div className="bg-paper-shade h-9 w-20" />
             </div>
           </div>
         ))}

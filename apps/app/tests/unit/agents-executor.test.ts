@@ -26,7 +26,7 @@ function context(allowlist: readonly string[], client: never): RunContext {
     ownerId: 'owner-1',
     agentId: 'agent-1',
     runId: 'run-1',
-  documentVersions: new Map<string, string>(),
+    documentVersions: new Map<string, string>(),
     allowlist,
   };
 }
@@ -79,18 +79,28 @@ describe('dispatchToolCall — allowlist enforcement', () => {
   it('records a rejected call as a failed tool call', async () => {
     const s = recordingSupabase();
     await dispatchToolCall(
-      context(['search_repo'], s.client), 'read_document', { id: 'doc-1' }, asHandlers({})
+      context(['search_repo'], s.client),
+      'read_document',
+      { id: 'doc-1' },
+      asHandlers({})
     );
     expect(s.inserted).toHaveLength(1);
     expect(s.inserted[0]).toMatchObject({
-      run_id: 'run-1', project_id: 'proj-1', owner_id: 'owner-1', tool: 'read_document', ok: false,
+      run_id: 'run-1',
+      project_id: 'proj-1',
+      owner_id: 'owner-1',
+      tool: 'read_document',
+      ok: false,
     });
   });
 
   it('records the arguments of a rejected call, so the trace shows what was attempted', async () => {
     const s = recordingSupabase();
     await dispatchToolCall(
-      context(['search_repo'], s.client), 'read_document', { id: 'doc-42' }, asHandlers({})
+      context(['search_repo'], s.client),
+      'read_document',
+      { id: 'doc-42' },
+      asHandlers({})
     );
     expect(s.inserted[0].args).toEqual({ id: 'doc-42' });
   });
@@ -124,7 +134,10 @@ describe('dispatchToolCall — allowlist enforcement', () => {
     const s = recordingSupabase();
     const ghost = vi.fn();
     const outcome = await dispatchToolCall(
-      context(['ghost_tool'], s.client), 'ghost_tool', {}, asHandlers({ ghost_tool: ghost })
+      context(['ghost_tool'], s.client),
+      'ghost_tool',
+      {},
+      asHandlers({ ghost_tool: ghost })
     );
     expect(ghost).not.toHaveBeenCalled();
     expect(outcome.ok).toBe(false);

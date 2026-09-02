@@ -26,13 +26,19 @@ export function localeJoin(parts: string[], locale: string): string {
  * app's three supported locales are listed; anything else falls back to
  * English rather than producing an untranslated unit.
  */
-const ELAPSED_UNIT_WORDS: Record<string, { day: [string, string]; month: [string, string]; year: [string, string] }> = {
+const ELAPSED_UNIT_WORDS: Record<
+  string,
+  { day: [string, string]; month: [string, string]; year: [string, string] }
+> = {
   en: { day: ['day', 'days'], month: ['month', 'months'], year: ['year', 'years'] },
   ms: { day: ['hari', 'hari'], month: ['bulan', 'bulan'], year: ['tahun', 'tahun'] },
   zh: { day: ['天', '天'], month: ['个月', '个月'], year: ['年', '年'] },
 };
 
-export function formatElapsed(days: number, locale: string = 'en'): { value: string; unit: string } {
+export function formatElapsed(
+  days: number,
+  locale: string = 'en'
+): { value: string; unit: string } {
   const words = ELAPSED_UNIT_WORDS[locale] ?? ELAPSED_UNIT_WORDS.en;
 
   if (days >= 730) {

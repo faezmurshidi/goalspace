@@ -1,13 +1,13 @@
 'use client';
 
 import { useId, useState, useTransition } from 'react';
-import { useTheme } from 'next-themes';
+import { locales, useAppTranslations } from '@goalspace/i18n';
 import { Button, cn } from '@goalspace/ui';
-import { useAppTranslations, locales } from '@goalspace/i18n';
+import { useTheme } from 'next-themes';
 
-import { updateAccountSettingsAction } from '@/app/(workspace)/actions';
-import { THEMES, parseTheme, type ThemePreference } from '@/lib/settings/preference-cookies';
 import type { UserSettings } from '@/lib/db/user-settings';
+import { parseTheme, THEMES, type ThemePreference } from '@/lib/settings/preference-cookies';
+import { updateAccountSettingsAction } from '@/app/(workspace)/actions';
 
 /**
  * Theme, language, time zone and email notifications — the account-wide
@@ -95,7 +95,7 @@ export function AccountForm({
             id="account-theme"
             value={theme}
             onChange={(e) => setThemeValue(e.target.value as ThemePreference)}
-            className="label border border-rule-strong bg-paper px-3 py-2 text-ink"
+            className="label border-rule-strong bg-paper text-ink border px-3 py-2"
           >
             {THEMES.map((choice) => (
               <option key={choice} value={choice}>
@@ -113,7 +113,7 @@ export function AccountForm({
             id="account-locale"
             value={locale}
             onChange={(e) => setLocale(e.target.value)}
-            className="label border border-rule-strong bg-paper px-3 py-2 text-ink"
+            className="label border-rule-strong bg-paper text-ink border px-3 py-2"
           >
             {locales.map((choice) => (
               <option key={choice} value={choice}>
@@ -134,7 +134,7 @@ export function AccountForm({
           onChange={(e) => setTimeZone(e.target.value)}
           aria-invalid={fieldErrors.time_zone ? true : undefined}
           aria-describedby={fieldErrors.time_zone ? timeZoneErrorId : undefined}
-          className="label w-full max-w-md border border-rule-strong bg-paper px-3 py-2 text-ink"
+          className="label border-rule-strong bg-paper text-ink w-full max-w-md border px-3 py-2"
         >
           {/* Raw IANA identifiers, not translated strings — see this file's
               top comment and page.tsx. */}

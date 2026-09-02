@@ -44,8 +44,9 @@ export async function createTestUser(email: string): Promise<TestUser> {
     // caller's variable is never assigned, so afterAll has no id to delete,
     // and the rows accumulate silently across every later run.
     await admin.auth.admin.deleteUser(id);
-    throw profileError ?? new Error(
-      `Trigger on_auth_user_created did not provision public.users for ${email}`
+    throw (
+      profileError ??
+      new Error(`Trigger on_auth_user_created did not provision public.users for ${email}`)
     );
   }
 

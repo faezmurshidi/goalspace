@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { LanguageSelector, useAppTranslations } from '@goalspace/i18n';
+
+import { appHref } from '@/lib/app-url';
 import { AS_OF } from '@/content/record';
 import packageJson from '../../package.json';
-import { appHref } from '@/lib/app-url';
 
 /**
  * A colophon, not a four-column sitemap: the printed note that closes a
@@ -22,13 +23,13 @@ export function Colophon() {
   const { t, currentLocale } = useAppTranslations();
 
   return (
-    <footer className="border-t border-rule">
-      <div className="mx-auto flex max-w-[1400px] flex-col divide-y divide-rule px-4 md:flex-row md:items-center md:justify-between md:divide-x md:divide-y-0 md:px-8">
-        <p className="label py-6 text-ink-soft md:py-0 md:pr-8">
+    <footer className="border-rule border-t">
+      <div className="divide-rule mx-auto flex max-w-[1400px] flex-col divide-y px-4 md:flex-row md:items-center md:justify-between md:divide-x md:divide-y-0 md:px-8">
+        <p className="label text-ink-soft py-6 md:py-0 md:pr-8">
           {t('footer.revision', { version: packageJson.version, date: AS_OF })}
         </p>
 
-        <div className="py-6 md:py-0 md:px-8">
+        <div className="py-6 md:px-8 md:py-0">
           <LanguageSelector />
         </div>
 

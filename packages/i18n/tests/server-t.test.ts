@@ -20,9 +20,7 @@ describe('getFixedT', () => {
     // i18next allows a key to repeat a placeholder; a naive single replace
     // would leave the second one showing raw braces to the user.
     const t = getFixedT('en');
-    expect(
-      t('app.resume.progressOf', { done: 2, total: 2 }).includes('{{')
-    ).toBe(false);
+    expect(t('app.resume.progressOf', { done: 2, total: 2 }).includes('{{')).toBe(false);
   });
 
   it('leaves an unknown placeholder untouched rather than printing undefined', () => {

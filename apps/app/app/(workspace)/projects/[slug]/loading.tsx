@@ -18,26 +18,26 @@ export default function ResumeLoading() {
           reader heard silence between navigation and content. */}
       <LoadingAnnouncement />
       <div aria-hidden="true" className="pb-10">
-        <div className="border-b border-ink pb-5 pt-8">
-          <div className="h-7 w-72 max-w-full bg-paper-shade" />
-          <div className="mt-4 h-4 w-full max-w-lg bg-paper-shade" />
-          <div className="mt-5 h-3 w-64 max-w-full bg-paper-shade" />
+        <div className="border-ink border-b pb-5 pt-8">
+          <div className="bg-paper-shade h-7 w-72 max-w-full" />
+          <div className="bg-paper-shade mt-4 h-4 w-full max-w-lg" />
+          <div className="bg-paper-shade mt-5 h-3 w-64 max-w-full" />
         </div>
 
         <div className="pt-10">
-          <div className="h-12 w-80 max-w-full bg-paper-shade" />
-          <div className="mt-4 h-3 w-48 bg-paper-shade" />
+          <div className="bg-paper-shade h-12 w-80 max-w-full" />
+          <div className="bg-paper-shade mt-4 h-3 w-48" />
         </div>
 
         <div className="pt-10">
-          <div className="border-b border-rule pb-2">
-            <div className="h-3 w-32 bg-paper-shade" />
+          <div className="border-rule border-b pb-2">
+            <div className="bg-paper-shade h-3 w-32" />
           </div>
           {[0, 1, 2, 3].map((row) => (
-            <div key={row} className="flex items-center gap-4 border-b border-rule py-4">
-              <div className="h-3 w-16 shrink-0 bg-paper-shade" />
-              <div className="h-3 flex-1 bg-paper-shade" />
-              <div className="h-3 w-8 shrink-0 bg-paper-shade" />
+            <div key={row} className="border-rule flex items-center gap-4 border-b py-4">
+              <div className="bg-paper-shade h-3 w-16 shrink-0" />
+              <div className="bg-paper-shade h-3 flex-1" />
+              <div className="bg-paper-shade h-3 w-8 shrink-0" />
             </div>
           ))}
         </div>

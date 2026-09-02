@@ -1,7 +1,7 @@
+import { locales } from '@goalspace/i18n';
 import { z } from 'zod';
 
-import { locales } from '@goalspace/i18n';
-import { THEMES, isSupportedTimeZone } from '@/lib/settings/preference-cookies';
+import { isSupportedTimeZone, THEMES } from '@/lib/settings/preference-cookies';
 
 /**
  * Account-wide preferences: theme, language, time zone, email notifications.

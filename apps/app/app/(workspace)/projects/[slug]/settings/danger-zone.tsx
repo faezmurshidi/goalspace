@@ -2,8 +2,8 @@
 
 import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, cn } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button, cn } from '@goalspace/ui';
 
 import { deleteProjectAction } from '@/app/(workspace)/actions';
 
@@ -75,12 +75,12 @@ export function DangerZone({ slug }: { slug: string }) {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="label border-b border-rule pb-2 text-ink-soft">
+      <h2 className="label border-rule text-ink-soft border-b pb-2">
         {t('app.settings.dangerZone')}
       </h2>
 
       <form onSubmit={submit} className="flex flex-col gap-4">
-        <p className="max-w-[65ch] text-body text-ink-soft">{t('app.settings.deleteExplain')}</p>
+        <p className="text-body text-ink-soft max-w-[65ch]">{t('app.settings.deleteExplain')}</p>
 
         <div className="flex flex-col gap-1">
           <label htmlFor={confirmInputId} className="label text-ink-soft">
@@ -95,7 +95,7 @@ export function DangerZone({ slug }: { slug: string }) {
             aria-describedby={
               fieldErrors.confirmSlug ? confirmErrorId : failed ? messageId : undefined
             }
-            className="w-full max-w-sm border border-rule-strong bg-paper px-3 py-2 text-title text-ink"
+            className="border-rule-strong bg-paper text-title text-ink w-full max-w-sm border px-3 py-2"
           />
           {fieldErrors.confirmSlug ? (
             <p id={confirmErrorId} role="alert" className="label text-oxide">
@@ -119,7 +119,7 @@ export function DangerZone({ slug }: { slug: string }) {
           <Button
             type="submit"
             disabled={!matches || pending}
-            className="label shrink-0 rounded-none border border-rule-strong bg-oxide-deep text-destructive-foreground hover:bg-ink hover:text-paper disabled:opacity-60"
+            className="label border-rule-strong bg-oxide-deep text-destructive-foreground hover:bg-ink hover:text-paper shrink-0 rounded-none border disabled:opacity-60"
           >
             {t(pending ? 'app.settings.deleting' : 'app.settings.delete')}
           </Button>

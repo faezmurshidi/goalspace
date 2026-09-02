@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { SEEDED_TEMPLATES, agentRowsFor } from '@/lib/agents/templates';
-import { REGISTRY } from '@/lib/agents/tools/registry';
 import { RATES } from '@/lib/agents/cost';
+import { agentRowsFor, SEEDED_TEMPLATES } from '@/lib/agents/templates';
+import { REGISTRY } from '@/lib/agents/tools/registry';
 
 describe('SEEDED_TEMPLATES', () => {
   it('seeds only agents whose every tool exists in the registry', () => {

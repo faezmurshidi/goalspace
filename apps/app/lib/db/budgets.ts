@@ -1,9 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database } from '@/types/supabase';
-import type { UpdateBudgetValues } from '@/lib/schemas/budget';
 import type { Budget } from '@/lib/agents/caps';
 import { worstCaseUsd } from '@/lib/agents/cost';
+import type { UpdateBudgetValues } from '@/lib/schemas/budget';
+import type { Database } from '@/types/supabase';
 
 type Client = SupabaseClient<Database>;
 
@@ -80,11 +80,7 @@ export async function getBudget(
 
 export async function updateBudget(
   supabase: Client,
-  {
-    projectId,
-    ownerId,
-    values,
-  }: { projectId: string; ownerId: string; values: UpdateBudgetValues }
+  { projectId, ownerId, values }: { projectId: string; ownerId: string; values: UpdateBudgetValues }
 ): Promise<Budget | null> {
   const { data, error } = await supabase
     .from('project_budgets')

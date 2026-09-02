@@ -15,17 +15,17 @@ export default function WorkLoading() {
           reader heard silence between navigation and content. */}
       <LoadingAnnouncement />
       <div aria-hidden="true" className="pt-8">
-        <div className="h-3 w-16 bg-paper-shade" />
-        <div className="mt-4 border-t border-rule">
+        <div className="bg-paper-shade h-3 w-16" />
+        <div className="border-rule mt-4 border-t">
           {INDENTS.map((indent, row) => (
             <div
               key={row}
-              className="flex items-center gap-4 border-b border-rule py-4"
+              className="border-rule flex items-center gap-4 border-b py-4"
               style={{ paddingLeft: indent }}
             >
-              <div className="h-6 w-24 shrink-0 bg-paper-shade" />
-              <div className="h-3 flex-1 bg-paper-shade" />
-              <div className="h-3 w-8 shrink-0 bg-paper-shade" />
+              <div className="bg-paper-shade h-6 w-24 shrink-0" />
+              <div className="bg-paper-shade h-3 flex-1" />
+              <div className="bg-paper-shade h-3 w-8 shrink-0" />
             </div>
           ))}
         </div>

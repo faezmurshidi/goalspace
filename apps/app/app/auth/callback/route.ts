@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server';
-
 import { NEXT_LOCALE_COOKIE } from '@goalspace/i18n';
 
-import { trackEvent } from '@/utils/server-analytics';
-import { safeInternalPath } from '@/lib/safe-redirect';
-import { createClient } from '@/utils/supabase/server';
 import { getUserSettings } from '@/lib/db/user-settings';
+import { safeInternalPath } from '@/lib/safe-redirect';
 import {
-  THEME_COOKIE,
-  TIME_ZONE_COOKIE,
   LOCALE_COOKIE_OPTIONS,
   SERVER_PREFERENCE_COOKIE_OPTIONS,
+  THEME_COOKIE,
+  TIME_ZONE_COOKIE,
 } from '@/lib/settings/preference-cookies';
+import { trackEvent } from '@/utils/server-analytics';
+import { createClient } from '@/utils/supabase/server';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);

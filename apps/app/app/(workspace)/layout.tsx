@@ -1,10 +1,10 @@
 import { cookies } from 'next/headers';
 
+import { WorkspaceChrome } from '@/components/shell/workspace-chrome';
 import { requireSessionContext } from '@/lib/auth/session';
 import { listProjects } from '@/lib/db/projects';
 import { countPendingByProject } from '@/lib/db/proposals';
-import { SIDEBAR_COOKIE, parseSidebarState } from '@/lib/shell/sidebar-state';
-import { WorkspaceChrome } from '@/components/shell/workspace-chrome';
+import { parseSidebarState, SIDEBAR_COOKIE } from '@/lib/shell/sidebar-state';
 
 // The workspace is per-user and reads live rows on every request, so nothing
 // here can be prerendered or cached across users.

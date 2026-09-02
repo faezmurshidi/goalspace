@@ -16,16 +16,16 @@ export default function AccountSettingsLoading() {
       <LoadingAnnouncement />
       <div aria-hidden="true" className="mx-auto w-full max-w-4xl px-6">
         <div className="flex flex-col gap-10 pb-10 pt-8">
-          <div className="h-3 w-32 border-b border-rule pb-2 bg-paper-shade" />
+          <div className="border-rule bg-paper-shade h-3 w-32 border-b pb-2" />
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-6">
-              <div className="h-9 w-40 bg-paper-shade" />
-              <div className="h-9 w-40 bg-paper-shade" />
+              <div className="bg-paper-shade h-9 w-40" />
+              <div className="bg-paper-shade h-9 w-40" />
             </div>
-            <div className="h-9 w-full max-w-md bg-paper-shade" />
-            <div className="h-5 w-48 bg-paper-shade" />
-            <div className="h-9 w-40 bg-paper-shade" />
+            <div className="bg-paper-shade h-9 w-full max-w-md" />
+            <div className="bg-paper-shade h-5 w-48" />
+            <div className="bg-paper-shade h-9 w-40" />
           </div>
         </div>
       </div>

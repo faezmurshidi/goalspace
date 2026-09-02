@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { worstCaseReservationUsd } from '@/lib/db/budgets';
 import { worstCaseUsd } from '@/lib/agents/cost';
+import { worstCaseReservationUsd } from '@/lib/db/budgets';
 
 describe('worstCaseReservationUsd', () => {
   it('reports the largest single reservation, not the average or the sum', () => {
@@ -35,10 +35,7 @@ describe('worstCaseReservationUsd', () => {
   });
 
   it('still reports the priced maximum when one model among several is unpriced', () => {
-    const result = worstCaseReservationUsd(
-      ['openai/gpt-4o-mini', 'acme/unpriced'],
-      200_000
-    );
+    const result = worstCaseReservationUsd(['openai/gpt-4o-mini', 'acme/unpriced'], 200_000);
     expect(result.usd).toBeCloseTo(worstCaseUsd('openai/gpt-4o-mini', 200_000), 9);
     expect(result.unpriced).toEqual(['acme/unpriced']);
   });

@@ -1,5 +1,5 @@
-import type { Config } from 'tailwindcss';
 import preset from '@goalspace/config/tailwind/preset';
+import type { Config } from 'tailwindcss';
 
 /**
  * The preset defines the shadcn semantic colours as `hsl(var(--token))`, which

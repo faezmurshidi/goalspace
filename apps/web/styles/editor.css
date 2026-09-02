@@ -11,34 +11,34 @@
 
 /* Heading styles */
 .ProseMirror h1 {
-  @apply text-4xl font-bold mt-12 mb-6 text-gray-900 dark:text-gray-50 leading-tight;
+  @apply mb-6 mt-12 text-4xl font-bold leading-tight text-gray-900 dark:text-gray-50;
 }
 
 .ProseMirror h2 {
-  @apply text-3xl font-bold mt-8 mb-4 text-gray-800 dark:text-gray-100 leading-tight;
+  @apply mb-4 mt-8 text-3xl font-bold leading-tight text-gray-800 dark:text-gray-100;
 }
 
 .ProseMirror h3 {
-  @apply text-2xl font-bold mt-6 mb-3 text-gray-800 dark:text-gray-100 leading-tight;
+  @apply mb-3 mt-6 text-2xl font-bold leading-tight text-gray-800 dark:text-gray-100;
 }
 
 /* Paragraph styles */
 .ProseMirror p {
-  @apply text-lg leading-relaxed mb-6 text-gray-700 dark:text-gray-300;
+  @apply mb-6 text-lg leading-relaxed text-gray-700 dark:text-gray-300;
   line-height: 1.8;
 }
 
 /* List styles */
 .ProseMirror ul {
-  @apply list-disc pl-8 mb-6 space-y-3;
+  @apply mb-6 list-disc space-y-3 pl-8;
 }
 
 .ProseMirror ol {
-  @apply list-decimal pl-8 mb-6 space-y-3;
+  @apply mb-6 list-decimal space-y-3 pl-8;
 }
 
 .ProseMirror li {
-  @apply text-lg text-gray-700 dark:text-gray-300 leading-relaxed;
+  @apply text-lg leading-relaxed text-gray-700 dark:text-gray-300;
   line-height: 1.6;
 }
 
@@ -48,17 +48,17 @@
 
 /* Code block styles */
 .ProseMirror pre {
-  @apply bg-gray-100 dark:bg-gray-800/50 rounded-xl p-6 mb-6 overflow-x-auto border border-gray-200 dark:border-gray-700;
+  @apply mb-6 overflow-x-auto rounded-xl border border-gray-200 bg-gray-100 p-6 dark:border-gray-700 dark:bg-gray-800/50;
   font-size: 0.95em;
 }
 
 .ProseMirror code {
-  @apply font-mono text-sm bg-gray-100 dark:bg-gray-800/50 px-1.5 py-0.5 rounded;
+  @apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm dark:bg-gray-800/50;
 }
 
 /* Blockquote styles */
 .ProseMirror blockquote {
-  @apply border-l-4 border-gray-200 dark:border-gray-700 pl-6 py-1 my-6 text-gray-600 dark:text-gray-400;
+  @apply my-6 border-l-4 border-gray-200 py-1 pl-6 text-gray-600 dark:border-gray-700 dark:text-gray-400;
   margin-left: 1rem;
   margin-right: 1rem;
 }
@@ -69,23 +69,23 @@
 
 /* Link styles */
 .ProseMirror a {
-  @apply text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline decoration-blue-400/30 hover:decoration-blue-400 transition-colors;
+  @apply text-blue-600 underline decoration-blue-400/30 transition-colors hover:text-blue-700 hover:decoration-blue-400 dark:text-blue-400 dark:hover:text-blue-300;
 }
 
 /* Task list styles */
-.ProseMirror ul[data-type="taskList"] {
-  @apply list-none pl-2 space-y-3;
+.ProseMirror ul[data-type='taskList'] {
+  @apply list-none space-y-3 pl-2;
 }
 
-.ProseMirror ul[data-type="taskList"] li {
-  @apply flex items-start gap-3 my-2;
+.ProseMirror ul[data-type='taskList'] li {
+  @apply my-2 flex items-start gap-3;
 }
 
-.ProseMirror ul[data-type="taskList"] li > label {
+.ProseMirror ul[data-type='taskList'] li > label {
   @apply mr-3 mt-1;
 }
 
-.ProseMirror ul[data-type="taskList"] li > div {
+.ProseMirror ul[data-type='taskList'] li > div {
   @apply flex-1;
 }
 
@@ -101,20 +101,20 @@
 
 /* Table styles */
 .ProseMirror table {
-  @apply w-full border-collapse mb-6 text-base;
+  @apply mb-6 w-full border-collapse text-base;
 }
 
 .ProseMirror th {
-  @apply bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 px-6 py-3 text-left font-semibold;
+  @apply border border-gray-300 bg-gray-100 px-6 py-3 text-left font-semibold dark:border-gray-700 dark:bg-gray-800;
 }
 
 .ProseMirror td {
-  @apply border border-gray-300 dark:border-gray-700 px-6 py-3;
+  @apply border border-gray-300 px-6 py-3 dark:border-gray-700;
 }
 
 /* Image styles */
 .ProseMirror img {
-  @apply max-w-full h-auto rounded-xl my-6 shadow-lg;
+  @apply my-6 h-auto max-w-full rounded-xl shadow-lg;
 }
 
 /* Horizontal rule */
@@ -125,4 +125,4 @@
 /* Selection styles */
 .ProseMirror ::selection {
   @apply bg-blue-100 dark:bg-blue-900;
-} 
+}

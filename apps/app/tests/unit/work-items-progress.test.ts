@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  computeProgress,
-  type ProgressRow,
-  type WorkItemStatus,
-} from '@/lib/work-items/progress';
+import { computeProgress, type ProgressRow, type WorkItemStatus } from '@/lib/work-items/progress';
 
 function row(id: string, status: WorkItemStatus, parent_id: string | null = null): ProgressRow {
   return { id, status, parent_id };

@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
+import { CaptureBar } from '@/components/capture/capture-bar';
 import { requireSessionContext } from '@/lib/auth/session';
+import { captureTargetsFrom } from '@/lib/capture/targets';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { listWorkItems } from '@/lib/db/work-items';
 import { getLocale } from '@/lib/format';
-import { CaptureBar } from '@/components/capture/capture-bar';
-import { captureTargetsFrom } from '@/lib/capture/targets';
 
 /**
  * Project scope. Capture is mounted here rather than on each page so that it

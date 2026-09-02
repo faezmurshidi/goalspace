@@ -1,7 +1,8 @@
 'use client';
 
-import { I18nextProvider } from 'react-i18next';
 import { ReactNode, useEffect } from 'react';
+import { I18nextProvider } from 'react-i18next';
+
 import i18n from './i18n';
 
 interface LanguageProviderProps {
@@ -10,10 +11,7 @@ interface LanguageProviderProps {
   messages?: any; // Keep for backward compatibility during migration
 }
 
-export default function LanguageProvider({ 
-  locale, 
-  children,
-}: LanguageProviderProps) {
+export default function LanguageProvider({ locale, children }: LanguageProviderProps) {
   // Change language when locale prop changes
   useEffect(() => {
     if (locale && i18n.language !== locale) {
@@ -21,9 +19,5 @@ export default function LanguageProvider({
     }
   }, [locale]);
 
-  return (
-    <I18nextProvider i18n={i18n}>
-      {children}
-    </I18nextProvider>
-  );
-} 
+  return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
+}

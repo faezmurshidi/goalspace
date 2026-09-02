@@ -15,29 +15,29 @@ export default function SettingsLoading() {
       <LoadingAnnouncement />
       <div aria-hidden="true" className="mx-auto w-full max-w-4xl px-6">
         <div className="flex flex-col gap-10 pb-10 pt-8">
-          <div className="h-3 w-20 border-b border-rule pb-2 bg-paper-shade" />
+          <div className="border-rule bg-paper-shade h-3 w-20 border-b pb-2" />
 
           <div className="flex flex-col gap-4">
-            <div className="h-3 w-16 border-b border-rule pb-2 bg-paper-shade" />
-            <div className="h-9 w-full max-w-md bg-paper-shade" />
-            <div className="h-24 w-full max-w-2xl bg-paper-shade" />
-            <div className="h-9 w-40 bg-paper-shade" />
+            <div className="border-rule bg-paper-shade h-3 w-16 border-b pb-2" />
+            <div className="bg-paper-shade h-9 w-full max-w-md" />
+            <div className="bg-paper-shade h-24 w-full max-w-2xl" />
+            <div className="bg-paper-shade h-9 w-40" />
           </div>
 
-          <div className="flex flex-col gap-4 border-t border-rule pt-10">
-            <div className="h-3 w-28 border-b border-rule pb-2 bg-paper-shade" />
+          <div className="border-rule flex flex-col gap-4 border-t pt-10">
+            <div className="border-rule bg-paper-shade h-3 w-28 border-b pb-2" />
             {[0, 1, 2].map((row) => (
               <div key={row} className="flex items-baseline justify-between gap-4">
-                <div className="h-3 w-40 bg-paper-shade" />
-                <div className="h-4 w-20 bg-paper-shade" />
+                <div className="bg-paper-shade h-3 w-40" />
+                <div className="bg-paper-shade h-4 w-20" />
               </div>
             ))}
-            <div className="h-9 w-full max-w-md bg-paper-shade" />
+            <div className="bg-paper-shade h-9 w-full max-w-md" />
           </div>
 
-          <div className="border-t border-rule pt-10">
-            <div className="h-3 w-24 border-b border-rule pb-2 bg-paper-shade" />
-            <div className="mt-4 h-9 w-40 bg-paper-shade" />
+          <div className="border-rule border-t pt-10">
+            <div className="border-rule bg-paper-shade h-3 w-24 border-b pb-2" />
+            <div className="bg-paper-shade mt-4 h-9 w-40" />
           </div>
         </div>
       </div>

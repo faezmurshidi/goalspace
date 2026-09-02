@@ -2,8 +2,8 @@
 
 import { useId, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button } from '@goalspace/ui';
 
 import { createDocumentAction } from '@/app/(workspace)/actions';
 
@@ -57,7 +57,7 @@ export function NewDocumentForm({ slug }: { slug: string }) {
         aria-describedby={error ? errorId : undefined}
         // min-w-0 so the input can shrink inside the flex row rather than
         // holding its intrinsic size and pushing the button off-screen.
-        className="label min-w-0 flex-1 border border-rule bg-paper px-3 py-1.5 text-ink placeholder:text-ink-soft"
+        className="label border-rule bg-paper text-ink placeholder:text-ink-soft min-w-0 flex-1 border px-3 py-1.5"
       />
       <Button
         type="submit"

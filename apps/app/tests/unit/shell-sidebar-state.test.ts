@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  SIDEBAR_COOKIE,
   parseSidebarState,
   serializeSidebarState,
+  SIDEBAR_COOKIE,
 } from '@/lib/shell/sidebar-state';
 
 describe('parseSidebarState', () => {

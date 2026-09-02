@@ -18,12 +18,12 @@ export default async function ProjectNotFound() {
 
   return (
     <div className="max-w-xl py-16">
-      <h1 className="wdth-wide text-headline font-bold text-ink">{t('app.notFound.title')}</h1>
-      <p className="prose-measure mt-3 text-ink-soft">{t('app.notFound.body')}</p>
+      <h1 className="wdth-wide text-headline text-ink font-bold">{t('app.notFound.title')}</h1>
+      <p className="prose-measure text-ink-soft mt-3">{t('app.notFound.body')}</p>
 
       <Link
         href="/"
-        className="label mt-8 inline-block border border-rule-strong px-6 py-3 text-ink transition-colors hover:bg-paper-shade"
+        className="label border-rule-strong text-ink hover:bg-paper-shade mt-8 inline-block border px-6 py-3 transition-colors"
       >
         {t('app.notFound.back')}
       </Link>

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   isSupportedTimeZone,
+  LOCALE_COOKIE_OPTIONS,
   parseTheme,
   parseTimeZone,
-  LOCALE_COOKIE_OPTIONS,
   PREFERENCE_COOKIE_MAX_AGE,
   SERVER_PREFERENCE_COOKIE_OPTIONS,
   THEME_COOKIE,

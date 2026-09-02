@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
+import { I18nProvider, localeFromCookie, NEXT_LOCALE_COOKIE } from '@goalspace/i18n';
 import { ThemeProvider, Toaster } from '@goalspace/ui';
-import { I18nProvider, NEXT_LOCALE_COOKIE, localeFromCookie } from '@goalspace/i18n';
 
 import { archivo, azeret } from '@/lib/fonts';
-import { THEME_COOKIE, parseTheme } from '@/lib/settings/preference-cookies';
+import { parseTheme, THEME_COOKIE } from '@/lib/settings/preference-cookies';
 
 import './globals.css';
 

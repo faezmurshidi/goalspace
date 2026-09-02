@@ -1,13 +1,14 @@
 'use client';
 
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  Button,
 } from '@goalspace/ui';
 import { Globe } from 'lucide-react';
+
 import { useAppTranslations } from './use-translations';
 
 export default function LanguageSelector() {
@@ -22,19 +23,19 @@ export default function LanguageSelector() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => changeLanguage('en')}
           className={currentLocale === 'en' ? 'bg-accent' : ''}
         >
           English
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => changeLanguage('ms')}
           className={currentLocale === 'ms' ? 'bg-accent' : ''}
         >
           Bahasa Melayu
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => changeLanguage('zh')}
           className={currentLocale === 'zh' ? 'bg-accent' : ''}
         >
@@ -43,4 +44,4 @@ export default function LanguageSelector() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-} 
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useAppTranslations } from '@goalspace/i18n';
+
 import { Plate } from '@/components/manual/plate';
 import { AS_OF } from '@/content/record';
 
@@ -29,16 +30,18 @@ export function NotThis() {
       title={t('landing.notThis.title')}
       meta={t('landing.hero.meta', { date: AS_OF })}
     >
-      <div className="border-t border-rule">
+      <div className="border-rule border-t">
         {ITEM_KEYS.map((key) => {
           const { claim, qualifier } = splitClaim(t(`landing.notThis.items.${key}`));
           return (
             <div
               key={key}
-              className="grid gap-2 border-b border-rule py-6 md:grid-cols-[1fr_2fr] md:items-baseline md:gap-8"
+              className="border-rule grid gap-2 border-b py-6 md:grid-cols-[1fr_2fr] md:items-baseline md:gap-8"
             >
               <p className="text-title">{claim}</p>
-              {qualifier ? <p className="max-w-[68ch] text-body text-ink-soft">{qualifier}</p> : null}
+              {qualifier ? (
+                <p className="text-body text-ink-soft max-w-[68ch]">{qualifier}</p>
+              ) : null}
             </div>
           );
         })}

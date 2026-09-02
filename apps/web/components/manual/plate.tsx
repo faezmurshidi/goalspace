@@ -37,7 +37,7 @@ export function Plate({
       aria-label={title ? undefined : resolvedLabel}
       className={cn(
         'relative px-6 py-10 md:px-16 md:py-16',
-        drenched ? 'bg-oxide-deep text-paper' : 'border border-rule bg-paper text-ink',
+        drenched ? 'bg-oxide-deep text-paper' : 'border-rule bg-paper text-ink border',
         className
       )}
     >
@@ -48,7 +48,7 @@ export function Plate({
       {title ? (
         <h2
           id={headingId}
-          className={cn('mb-4 wdth-wide', drenched ? 'text-display' : 'text-headline')}
+          className={cn('wdth-wide mb-4', drenched ? 'text-display' : 'text-headline')}
         >
           {title}
         </h2>

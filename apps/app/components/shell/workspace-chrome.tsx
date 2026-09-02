@@ -4,17 +4,16 @@ import { useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAppTranslations } from '@goalspace/i18n';
 
-import { SidebarProvider } from './sidebar';
-
 import {
   destinationsFor,
   isActive,
   projectSlugFrom,
   type ChromeProject,
 } from '@/lib/shell/destinations';
-import { SIDEBAR_COOKIE, SIDEBAR_MAX_AGE, serializeSidebarState } from '@/lib/shell/sidebar-state';
-import { WorkspaceSidebar } from './workspace-sidebar';
+import { serializeSidebarState, SIDEBAR_COOKIE, SIDEBAR_MAX_AGE } from '@/lib/shell/sidebar-state';
 import { HeaderRail } from './header-rail';
+import { SidebarProvider } from './sidebar';
+import { WorkspaceSidebar } from './workspace-sidebar';
 
 export type { ChromeProject };
 
@@ -76,7 +75,7 @@ export function WorkspaceChrome({
       */}
       <a
         href="#workspace-main"
-        className="label absolute left-4 top-4 z-50 -translate-y-24 border border-rule-strong bg-paper px-4 py-3 text-ink transition-transform duration-150 ease-out-quart focus:translate-y-0"
+        className="label border-rule-strong bg-paper text-ink ease-out-quart absolute left-4 top-4 z-50 -translate-y-24 border px-4 py-3 transition-transform duration-150 focus:translate-y-0"
       >
         {t('app.nav.skipToContent')}
       </a>

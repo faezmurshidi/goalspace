@@ -3,11 +3,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
-import { requireSessionContext } from '@/lib/auth/session';
-import { getProjectBySlug } from '@/lib/db/projects';
-import { getDocument, getRevision } from '@/lib/db/documents';
-import { authorshipOf, AUTHOR_KEY } from '@/lib/documents/authorship';
 import { Markdown } from '@/components/docs/markdown';
+import { requireSessionContext } from '@/lib/auth/session';
+import { getDocument, getRevision } from '@/lib/db/documents';
+import { getProjectBySlug } from '@/lib/db/projects';
+import { AUTHOR_KEY, authorshipOf } from '@/lib/documents/authorship';
 import { formatDateTime, getLocale, getTimeZone } from '@/lib/format';
 import { RestoreButton } from './restore-button';
 
@@ -43,20 +43,18 @@ export default async function RevisionPage({ params }: Params) {
     <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pt-8">
         {/* Stated plainly and first, so this is never mistaken for the editor. */}
-        <p className="label border-b border-rule pb-2 text-ink-soft">
+        <p className="label border-rule text-ink-soft border-b pb-2">
           {t('app.documents.viewingRevision')}
         </p>
 
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3">
-          <span className="label tabular-nums text-ink-soft">
+          <span className="label text-ink-soft tabular-nums">
             {formatDateTime(revision.created_at, locale, timeZone)}
           </span>
-          <span className="label text-ink-soft">
-            {t(AUTHOR_KEY[authorshipOf(revision).by])}
-          </span>
+          <span className="label text-ink-soft">{t(AUTHOR_KEY[authorshipOf(revision).by])}</span>
         </div>
 
-        <h1 className="wdth-wide text-headline font-bold text-ink">
+        <h1 className="wdth-wide text-headline text-ink font-bold">
           {revision.title || t('app.documents.untitled')}
         </h1>
 
@@ -66,7 +64,7 @@ export default async function RevisionPage({ params }: Params) {
             client trees disagree. */}
         <Markdown className="mt-4 max-w-[70ch]">{revision.body}</Markdown>
 
-        <div className="mt-8 flex items-center gap-4 border-t border-rule pt-4">
+        <div className="border-rule mt-8 flex items-center gap-4 border-t pt-4">
           <RestoreButton
             slug={slug}
             documentId={document.id}
@@ -75,7 +73,7 @@ export default async function RevisionPage({ params }: Params) {
           />
           <Link
             href={`/projects/${slug}/documents/${document.id}`}
-            className="label text-ink-soft transition-colors hover:text-ink"
+            className="label text-ink-soft hover:text-ink transition-colors"
           >
             {t('app.documents.backToDocument')}
           </Link>

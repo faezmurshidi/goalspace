@@ -1,8 +1,7 @@
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeSanitize from 'rehype-sanitize';
-
 import { cn } from '@goalspace/ui';
+import ReactMarkdown from 'react-markdown';
+import rehypeSanitize from 'rehype-sanitize';
+import remarkGfm from 'remark-gfm';
 
 /**
  * The one place a document body becomes formatted output.

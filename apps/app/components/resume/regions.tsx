@@ -2,13 +2,13 @@ import Link from 'next/link';
 import { cn } from '@goalspace/ui';
 
 import type { Entry } from '@/lib/db/entries';
-import type { WorkItem } from '@/lib/db/work-items';
 import type { Project } from '@/lib/db/projects';
+import type { WorkItem } from '@/lib/db/work-items';
+import { formatDate, formatDateTime, formatMonthYear } from '@/lib/format';
+import type { WorkItemStatus } from '@/lib/schemas/common';
+import { previewText } from '@/lib/text';
 import type { Progress } from '@/lib/work-items/progress';
 import type { Absence, WokenItem } from '@/lib/work-items/reentry';
-import type { WorkItemStatus } from '@/lib/schemas/common';
-import { formatDate, formatDateTime, formatMonthYear } from '@/lib/format';
-import { previewText } from '@/lib/text';
 
 type T = (key: string, vars?: Record<string, unknown>) => string;
 
@@ -40,7 +40,7 @@ function Section({
       {/* Stacked below the sm breakpoint. Side by side, a long caption in a
           longer language (Malay runs ~40% over English here) collided with
           its own heading on a 375px screen. */}
-      <div className="flex flex-col gap-1 border-b border-rule pb-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+      <div className="border-rule flex flex-col gap-1 border-b pb-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
         <h2 className="label text-ink-soft">{title}</h2>
         {caption ? <p className="label text-ink-soft">{caption}</p> : null}
       </div>
@@ -76,7 +76,7 @@ function Ratio({ progress }: { progress?: Progress }) {
   if (!progress || progress.total === 0) return null;
 
   return (
-    <span className="label shrink-0 tabular-nums text-ink-soft">
+    <span className="label text-ink-soft shrink-0 tabular-nums">
       {progress.done}/{progress.total}
     </span>
   );
@@ -93,12 +93,10 @@ export function Masthead({ project, t, locale, timeZone }: Common & { project: P
   );
 
   return (
-    <header className="border-b border-ink pb-5 pt-8">
-      <h1 className="wdth-wide text-headline font-bold text-ink">{project.title}</h1>
+    <header className="border-ink border-b pb-5 pt-8">
+      <h1 className="wdth-wide text-headline text-ink font-bold">{project.title}</h1>
 
-      {project.brief ? (
-        <p className="prose-measure mt-3 text-ink-soft">{project.brief}</p>
-      ) : null}
+      {project.brief ? <p className="prose-measure text-ink-soft mt-3">{project.brief}</p> : null}
 
       {/* The one place the brand register's sheet metadata survives into the
           product: here the project genuinely is the sheet. */}
@@ -145,7 +143,7 @@ export function ReEntry({
     // degrades to a plain timestamp in annotation type. This is the common
     // case for anyone using the product daily, and it must not shout.
     return (
-      <p className="label pt-8 text-ink-soft">
+      <p className="label text-ink-soft pt-8">
         {t('app.resume.lastSession', {
           when: formatDateTime(lastActivityAt, locale, timeZone),
         })}
@@ -163,12 +161,12 @@ export function ReEntry({
       */}
       <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-headline text-ink-soft">{t('app.resume.awayBefore')}</span>
-        <span className="wdth-expanded text-display font-extrabold leading-none text-oxide">
+        <span className="wdth-expanded text-display text-oxide font-extrabold leading-none">
           {absence.days}
         </span>
         <span className="text-headline text-ink-soft">{t('app.resume.awayAfter')}</span>
       </p>
-      <p className="label mt-3 text-ink-soft">
+      <p className="label text-ink-soft mt-3">
         {t('app.resume.lastSession', { when: formatDate(lastActivityAt, locale, timeZone) })}
       </p>
     </div>
@@ -193,20 +191,20 @@ export function Waiting({
     <Section title={t('app.resume.waitingTitle')} caption={t('app.resume.waitingCaption')}>
       <ul>
         {items.map((item) => (
-          <li key={item.id} className="border-b border-rule">
+          <li key={item.id} className="border-rule border-b">
             <Link
               href={`/projects/${slug}/work#${item.id}`}
-              className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+              className="hover:bg-paper-shade flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors"
             >
-              <span className="label shrink-0 text-waiting">
+              <span className="label text-waiting shrink-0">
                 {item.overdueDays === 0
                   ? t('app.resume.overdueToday')
                   : item.overdueDays === 1
                     ? t('app.resume.overdueOne')
                     : t('app.resume.overdueDays', { count: item.overdueDays })}
               </span>
-              <span className="min-w-0 flex-1 text-body text-ink">{item.title}</span>
-              <span className="label shrink-0 text-ink-soft">
+              <span className="text-body text-ink min-w-0 flex-1">{item.title}</span>
+              <span className="label text-ink-soft shrink-0">
                 {t('app.resume.blockedSince', {
                   when: formatMonthYear(item.status_changed_at, locale, timeZone),
                 })}
@@ -234,14 +232,14 @@ export function Open({
   return (
     <Section title={t('app.resume.openTitle')}>
       {items.length === 0 ? (
-        <p className="py-3 text-body text-ink-soft">{t('app.resume.openEmpty')}</p>
+        <p className="text-body text-ink-soft py-3">{t('app.resume.openEmpty')}</p>
       ) : (
         <ul>
           {items.map((item) => (
-            <li key={item.id} className="border-b border-rule">
+            <li key={item.id} className="border-rule border-b">
               <Link
                 href={`/projects/${slug}/work#${item.id}`}
-                className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+                className="hover:bg-paper-shade flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors"
               >
                 <StatusMark
                   status={item.status}
@@ -251,7 +249,7 @@ export function Open({
                       : t(`app.status.${item.status}`)
                   }
                 />
-                <span className="min-w-0 flex-1 text-body text-ink">{item.title}</span>
+                <span className="text-body text-ink min-w-0 flex-1">{item.title}</span>
                 <Ratio progress={progress.get(item.id)} />
               </Link>
             </li>
@@ -268,24 +266,24 @@ export function LeftOff({ entries, t, locale, timeZone }: Common & { entries: En
   return (
     <Section title={t('app.resume.leftOffTitle')}>
       {entries.length === 0 ? (
-        <p className="py-3 text-body text-ink-soft">{t('app.resume.leftOffEmpty')}</p>
+        <p className="text-body text-ink-soft py-3">{t('app.resume.leftOffEmpty')}</p>
       ) : (
         <ol>
           {entries.map((entry) => (
-            <li key={entry.id} className="border-b border-rule py-4">
+            <li key={entry.id} className="border-rule border-b py-4">
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <time dateTime={entry.occurred_at} className="label shrink-0 text-ink-soft">
+                <time dateTime={entry.occurred_at} className="label text-ink-soft shrink-0">
                   {formatDate(entry.occurred_at, locale, timeZone)}
                 </time>
-                <span className="label shrink-0 text-ink-soft">
+                <span className="label text-ink-soft shrink-0">
                   {t(`app.entryKind.${entry.kind}`)}
                 </span>
                 {entry.title ? (
-                  <span className="min-w-0 flex-1 text-title text-ink">{entry.title}</span>
+                  <span className="text-title text-ink min-w-0 flex-1">{entry.title}</span>
                 ) : null}
               </div>
               {entry.body ? (
-                <p className="prose-measure mt-2 whitespace-pre-line text-ink">{entry.body}</p>
+                <p className="prose-measure text-ink mt-2 whitespace-pre-line">{entry.body}</p>
               ) : null}
             </li>
           ))}
@@ -306,24 +304,24 @@ export function Decided({ entries, t, locale, timeZone }: Common & { entries: En
           collapsible thing on the page, and it costs no JavaScript. */}
       <ul>
         {entries.map((entry) => (
-          <li key={entry.id} className="border-b border-rule">
+          <li key={entry.id} className="border-rule border-b">
             <details className="group">
-              <summary className="flex cursor-pointer flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade">
-                <time dateTime={entry.occurred_at} className="label shrink-0 text-ink-soft">
+              <summary className="hover:bg-paper-shade flex cursor-pointer flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors">
+                <time dateTime={entry.occurred_at} className="label text-ink-soft shrink-0">
                   {formatDate(entry.occurred_at, locale, timeZone)}
                 </time>
-                <span className="min-w-0 flex-1 text-body text-ink">
+                <span className="text-body text-ink min-w-0 flex-1">
                   {entry.title ?? previewText(entry.body, 80)}
                 </span>
                 <span
                   aria-hidden="true"
-                  className="label shrink-0 text-ink-soft transition-transform group-open:rotate-90"
+                  className="label text-ink-soft shrink-0 transition-transform group-open:rotate-90"
                 >
                   ›
                 </span>
               </summary>
               {entry.body ? (
-                <p className="prose-measure pb-4 whitespace-pre-line text-ink">{entry.body}</p>
+                <p className="prose-measure text-ink whitespace-pre-line pb-4">{entry.body}</p>
               ) : null}
             </details>
           </li>
@@ -337,9 +335,9 @@ export function Decided({ entries, t, locale, timeZone }: Common & { entries: En
 
 export function FirstRun({ t }: Omit<Common, 'locale' | 'timeZone'>) {
   return (
-    <div className="border-b border-rule py-10">
+    <div className="border-rule border-b py-10">
       <h2 className="text-title text-ink">{t('app.resume.firstRunTitle')}</h2>
-      <p className="prose-measure mt-2 text-ink-soft">{t('app.resume.firstRunBody')}</p>
+      <p className="prose-measure text-ink-soft mt-2">{t('app.resume.firstRunBody')}</p>
     </div>
   );
 }
@@ -357,9 +355,9 @@ export function Anomalies({
   if (count === 0) return null;
 
   return (
-    <div className="mt-8 border border-oxide p-4">
+    <div className="border-oxide mt-8 border p-4">
       <p className="label text-oxide">{t('app.resume.anomalyTitle')}</p>
-      <p className="prose-measure mt-2 text-body text-ink">
+      <p className="prose-measure text-body text-ink mt-2">
         {t('app.resume.anomalyBody', { count })}
       </p>
     </div>

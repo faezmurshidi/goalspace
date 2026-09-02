@@ -1,31 +1,35 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-
+import { cookies } from 'next/headers';
 import { NEXT_LOCALE_COOKIE } from '@goalspace/i18n';
 
+import { fail, fromZodError, ok, type ActionResult } from '@/lib/actions/result';
 import { requireSessionContext } from '@/lib/auth/session';
-import { getProjectBySlug, createProject, updateProject, deleteProject } from '@/lib/db/projects';
-import { createEntry } from '@/lib/db/entries';
-import { createDocument, getRevision, updateDocument } from '@/lib/db/documents';
 import { updateAgent } from '@/lib/db/agents';
 import { updateBudget } from '@/lib/db/budgets';
-import { updateUserSettings, updateTheme } from '@/lib/db/user-settings';
+import { createDocument, getRevision, updateDocument } from '@/lib/db/documents';
+import { createEntry } from '@/lib/db/entries';
+import { createProject, deleteProject, getProjectBySlug, updateProject } from '@/lib/db/projects';
+import { settleProposal } from '@/lib/db/proposals';
+import { updateTheme, updateUserSettings } from '@/lib/db/user-settings';
 import {
   changeWorkItemStatus,
   createWorkItem,
   moveWorkItem,
   updateWorkItem,
 } from '@/lib/db/work-items';
-import { createEntrySchema } from '@/lib/schemas/entry';
-import { createDocumentSchema, updateDocumentSchema } from '@/lib/schemas/document';
-import { updateAgentSchema } from '@/lib/schemas/agent';
-import { createProjectSchema, updateProjectSchema, deleteProjectSchema } from '@/lib/schemas/project';
-import { updateBudgetSchema } from '@/lib/schemas/budget';
-import { updateAccountSettingsSchema, updateThemeSchema } from '@/lib/schemas/user-settings';
 import { applyProposal } from '@/lib/proposals/apply';
-import { settleProposal } from '@/lib/db/proposals';
+import { updateAgentSchema } from '@/lib/schemas/agent';
+import { updateBudgetSchema } from '@/lib/schemas/budget';
+import { createDocumentSchema, updateDocumentSchema } from '@/lib/schemas/document';
+import { createEntrySchema } from '@/lib/schemas/entry';
+import {
+  createProjectSchema,
+  deleteProjectSchema,
+  updateProjectSchema,
+} from '@/lib/schemas/project';
+import { updateAccountSettingsSchema, updateThemeSchema } from '@/lib/schemas/user-settings';
 import {
   changeStatusSchema,
   createWorkItemSchema,
@@ -33,12 +37,11 @@ import {
   updateWorkItemSchema,
 } from '@/lib/schemas/work-item';
 import {
-  THEME_COOKIE,
-  TIME_ZONE_COOKIE,
   LOCALE_COOKIE_OPTIONS,
   SERVER_PREFERENCE_COOKIE_OPTIONS,
+  THEME_COOKIE,
+  TIME_ZONE_COOKIE,
 } from '@/lib/settings/preference-cookies';
-import { fail, fromZodError, ok, type ActionResult } from '@/lib/actions/result';
 
 /**
  * Resolve the project a mutation targets, from its slug.
@@ -487,9 +490,7 @@ export async function updateAccountSettingsAction(
  * actually changed. This action only ever writes `theme`, so there is
  * nothing else to go stale or to revert.
  */
-export async function updateThemeAction(
-  input: unknown
-): Promise<ActionResult<{ theme: string }>> {
+export async function updateThemeAction(input: unknown): Promise<ActionResult<{ theme: string }>> {
   const parsed = updateThemeSchema.safeParse(input);
   if (!parsed.success) return fromZodError(parsed.error);
 

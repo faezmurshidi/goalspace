@@ -42,7 +42,13 @@ export function StatusChip({ status, label, className }: StatusChipProps) {
   const { mark, tone } = MARKS[status];
 
   return (
-    <span className={cn('label inline-flex items-center gap-2 border border-rule px-2 py-1', tone, className)}>
+    <span
+      className={cn(
+        'label border-rule inline-flex items-center gap-2 border px-2 py-1',
+        tone,
+        className
+      )}
+    >
       <svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true" className="shrink-0">
         {mark}
       </svg>

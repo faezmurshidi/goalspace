@@ -1,13 +1,14 @@
 'use client';
 
 import { useAppTranslations } from '@goalspace/i18n';
-import { Plate } from '@/components/manual/plate';
+
 import { AnnotatedFigure } from '@/components/manual/annotated-figure';
 import { DrawOnView } from '@/components/manual/draw-on-view';
 import { ResumeView } from '@/components/manual/figures/resume-view';
+import { Plate } from '@/components/manual/plate';
 import { StatusChip } from '@/components/manual/status-chip';
-import { record, AS_OF } from '@/content/record';
-import { daysBetween, formatElapsed, formatDayMonth, localeJoin } from '@/lib/duration';
+import { daysBetween, formatDayMonth, formatElapsed, localeJoin } from '@/lib/duration';
+import { AS_OF, record } from '@/content/record';
 
 /** Lowercases the first character so a title reads as a clause mid sentence. */
 function asClause(text: string): string {
@@ -30,7 +31,7 @@ export function TheReturn() {
       title={t('landing.return.title')}
       meta={t('landing.hero.meta', { date: AS_OF })}
     >
-      <p className="max-w-[68ch] text-body">{t('landing.return.lede')}</p>
+      <p className="text-body max-w-[68ch]">{t('landing.return.lede')}</p>
 
       <div className="mt-12">
         <DrawOnView>
@@ -69,12 +70,12 @@ export function TheReturn() {
 
       <div className="mt-16 grid gap-12 md:grid-cols-2">
         <div>
-          <h3 className="label mb-4 text-oxide">{t('landing.return.openLabel')}</h3>
-          <ul className="border-t border-rule">
+          <h3 className="label text-oxide mb-4">{t('landing.return.openLabel')}</h3>
+          <ul className="border-rule border-t">
             {record.blockers.map((blocker) => {
               const elapsed = formatElapsed(daysBetween(blocker.since, AS_OF), currentLocale);
               return (
-                <li key={blocker.title} className="flex flex-col gap-2 border-b border-rule py-4">
+                <li key={blocker.title} className="border-rule flex flex-col gap-2 border-b py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="text-title">{blocker.title}</span>
                     <StatusChip
@@ -95,10 +96,10 @@ export function TheReturn() {
         </div>
 
         <div>
-          <h3 className="label mb-4 text-oxide">{t('landing.return.decidedLabel')}</h3>
-          <ul className="border-t border-rule">
+          <h3 className="label text-oxide mb-4">{t('landing.return.decidedLabel')}</h3>
+          <ul className="border-rule border-t">
             {record.decisions.map((decision) => (
-              <li key={decision.at} className="flex flex-col gap-2 border-b border-rule py-4">
+              <li key={decision.at} className="border-rule flex flex-col gap-2 border-b py-4">
                 <span className="label text-ink-soft">
                   {formatDayMonth(decision.at, currentLocale)}
                 </span>

@@ -6,8 +6,8 @@ import { useParams } from 'next/navigation';
 import { useAppTranslations } from '@goalspace/i18n';
 
 import { Plate } from '@/components/manual/plate';
-import { AS_OF } from '@/content/record';
 import { formatFullDate } from '@/lib/duration';
+import { AS_OF } from '@/content/record';
 import { getBlogPosts } from './mock-data';
 
 // Inner component that uses useParams
@@ -26,30 +26,27 @@ function BlogPageContent() {
           title={t('blog.title')}
           meta={t('blog.meta', { date: AS_OF })}
         >
-          <p className="max-w-[68ch] text-body">{t('blog.subtitle')}</p>
+          <p className="text-body max-w-[68ch]">{t('blog.subtitle')}</p>
 
-          <ul className="mt-12 border-t border-rule">
+          <ul className="border-rule mt-12 border-t">
             {posts.map((post) => (
               <li
                 key={post.id}
-                className="flex flex-col gap-3 border-b border-rule py-8 md:flex-row md:items-baseline md:justify-between md:gap-8"
+                className="border-rule flex flex-col gap-3 border-b py-8 md:flex-row md:items-baseline md:justify-between md:gap-8"
               >
                 <div className="md:max-w-[68ch]">
-                  <p className="label mb-2 text-ink-soft">
+                  <p className="label text-ink-soft mb-2">
                     {t('blog.postMeta', {
                       date: formatFullDate(post.publishedAt, currentLocale),
                       minutes: post.readingTime,
                     })}
                   </p>
-                  <Link href={`/${locale}/blog/${post.slug}`} className="text-title block text-ink">
+                  <Link href={`/${locale}/blog/${post.slug}`} className="text-title text-ink block">
                     {post.title}
                   </Link>
-                  <p className="mt-2 text-body text-ink-soft">{post.description}</p>
+                  <p className="text-body text-ink-soft mt-2">{post.description}</p>
                 </div>
-                <Link
-                  href={`/${locale}/blog/${post.slug}`}
-                  className="label shrink-0 text-oxide"
-                >
+                <Link href={`/${locale}/blog/${post.slug}`} className="label text-oxide shrink-0">
                   {t('blog.readMore')}
                 </Link>
               </li>
@@ -65,7 +62,7 @@ function BlogPageContent() {
 export default function BlogPage() {
   // We don't use setRequestLocale in client components as it's for server components only
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-paper" />}>
+    <Suspense fallback={<div className="bg-paper flex min-h-screen items-center justify-center" />}>
       <BlogPageContent />
     </Suspense>
   );

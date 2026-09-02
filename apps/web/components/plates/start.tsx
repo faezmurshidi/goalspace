@@ -1,9 +1,10 @@
 'use client';
 
 import { useAppTranslations } from '@goalspace/i18n';
+
 import { Plate } from '@/components/manual/plate';
-import { AS_OF } from '@/content/record';
 import { appHref } from '@/lib/app-url';
+import { AS_OF } from '@/content/record';
 
 export function Start() {
   const { t } = useAppTranslations();
@@ -16,16 +17,16 @@ export function Start() {
       meta={t('landing.hero.meta', { date: AS_OF })}
       drenched
     >
-      <p className="max-w-[68ch] text-body">{t('landing.start.lede')}</p>
+      <p className="text-body max-w-[68ch]">{t('landing.start.lede')}</p>
 
       <div className="mt-12">
         <a
           href={appHref('/login')}
-          className="label inline-block bg-paper px-8 py-4 text-ink transition-colors duration-150 ease-out-expo hover:bg-ink hover:text-paper"
+          className="label bg-paper text-ink ease-out-expo hover:bg-ink hover:text-paper inline-block px-8 py-4 transition-colors duration-150"
         >
           {t('landing.start.cta')}
         </a>
-        <p className="label mt-6 text-paper-soft">{t('landing.start.honesty')}</p>
+        <p className="label text-paper-soft mt-6">{t('landing.start.honesty')}</p>
       </div>
     </Plate>
   );

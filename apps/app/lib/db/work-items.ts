@@ -1,8 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Database, Tables } from '@/types/supabase';
 import type { WorkItemKind, WorkItemStatus } from '@/lib/schemas/common';
 import type { ChangeStatusValues, CreateWorkItemValues } from '@/lib/schemas/work-item';
+import type { Database, Tables } from '@/types/supabase';
 import { createEntry } from './entries';
 
 type Client = SupabaseClient<Database>;

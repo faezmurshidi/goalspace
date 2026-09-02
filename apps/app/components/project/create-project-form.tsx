@@ -2,11 +2,11 @@
 
 import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Textarea } from '@goalspace/ui';
 import { useAppTranslations } from '@goalspace/i18n';
+import { Button, Input, Textarea } from '@goalspace/ui';
 
-import { createProjectAction } from '@/app/(workspace)/actions';
 import { projectKinds, type ProjectKind } from '@/lib/schemas/common';
+import { createProjectAction } from '@/app/(workspace)/actions';
 
 export function CreateProjectForm() {
   const { t } = useAppTranslations();
@@ -50,7 +50,7 @@ export function CreateProjectForm() {
   }
 
   return (
-    <form onSubmit={submit} className="border border-rule bg-paper p-8">
+    <form onSubmit={submit} className="border-rule bg-paper border p-8">
       <div className="flex flex-col gap-2">
         <label htmlFor={titleId} className="label text-ink-soft">
           {t('app.create.titleLabel')}
@@ -64,7 +64,7 @@ export function CreateProjectForm() {
           placeholder={t('app.create.titlePlaceholder')}
           aria-invalid={fieldErrors.title ? true : undefined}
           aria-describedby={fieldErrors.title ? titleErrorId : error ? errorId : undefined}
-          className="h-11 bg-paper text-body text-ink placeholder:text-ink-soft"
+          className="bg-paper text-body text-ink placeholder:text-ink-soft h-11"
         />
         {/* Stored but never shown previously, so a per-field failure (a title
             over 120 characters, say) surfaced only as the generic message and
@@ -84,7 +84,7 @@ export function CreateProjectForm() {
           id={kindId}
           value={kind}
           onChange={(event) => setKind(event.target.value as ProjectKind)}
-          className="label h-11 border border-input bg-paper px-3 text-ink"
+          className="label border-input bg-paper text-ink h-11 border px-3"
         >
           {projectKinds.map((value) => (
             <option key={value} value={value}>
@@ -109,7 +109,7 @@ export function CreateProjectForm() {
       </div>
 
       {error ? (
-        <p id={errorId} role="alert" className="label mt-6 text-oxide">
+        <p id={errorId} role="alert" className="label text-oxide mt-6">
           {error}
         </p>
       ) : null}
@@ -117,7 +117,7 @@ export function CreateProjectForm() {
       <Button
         type="submit"
         disabled={busy || title.trim().length === 0}
-        className="label mt-8 h-12 w-full bg-primary text-primary-foreground hover:bg-ink hover:text-paper disabled:opacity-60"
+        className="label bg-primary text-primary-foreground hover:bg-ink hover:text-paper mt-8 h-12 w-full disabled:opacity-60"
       >
         {busy ? t('app.create.submitting') : t('app.create.submit')}
       </Button>

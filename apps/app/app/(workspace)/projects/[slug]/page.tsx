@@ -3,10 +3,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
-import { requireSessionContext } from '@/lib/auth/session';
-import { getProjectBySlug } from '@/lib/db/projects';
-import { getResumeData } from '@/lib/db/resume';
-import { getLocale, getTimeZone } from '@/lib/format';
 import {
   Anomalies,
   Decided,
@@ -17,6 +13,10 @@ import {
   ReEntry,
   Waiting,
 } from '@/components/resume/regions';
+import { requireSessionContext } from '@/lib/auth/session';
+import { getProjectBySlug } from '@/lib/db/projects';
+import { getResumeData } from '@/lib/db/resume';
+import { getLocale, getTimeZone } from '@/lib/format';
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -77,15 +77,15 @@ export default async function ResumePage({ params }: Params) {
         <Open items={data.open} progress={data.progress} slug={slug} t={t} />
 
         {data.undecidedProposals > 0 ? (
-          <div className="border-b border-rule">
+          <div className="border-rule border-b">
             <Link
               href={`/projects/${slug}/inbox`}
-              className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors hover:bg-paper-shade"
+              className="hover:bg-paper-shade flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors"
             >
-              <span className="min-w-0 flex-1 text-body text-ink">
+              <span className="text-body text-ink min-w-0 flex-1">
                 {t('app.resume.undecidedProposals')}
               </span>
-              <span className="label shrink-0 tabular-nums text-ink-soft">
+              <span className="label text-ink-soft shrink-0 tabular-nums">
                 {data.undecidedProposals}
               </span>
             </Link>

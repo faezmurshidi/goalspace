@@ -1,13 +1,14 @@
 'use client';
 
 import { useAppTranslations } from '@goalspace/i18n';
-import { Plate } from '@/components/manual/plate';
+
 import { AnnotatedFigure } from '@/components/manual/annotated-figure';
 import { DrawOnView } from '@/components/manual/draw-on-view';
 import { ExplodedProject } from '@/components/manual/figures/exploded-project';
-import { record, AS_OF } from '@/content/record';
-import { daysBetween, formatElapsed, formatDayMonth, localeJoin } from '@/lib/duration';
+import { Plate } from '@/components/manual/plate';
 import { appHref } from '@/lib/app-url';
+import { daysBetween, formatDayMonth, formatElapsed, localeJoin } from '@/lib/duration';
+import { AS_OF, record } from '@/content/record';
 
 /** Lowercases the first character so a title reads as a clause mid sentence. */
 function asClause(text: string): string {
@@ -40,18 +41,18 @@ export function Hero() {
     >
       <h1 className="text-display wdth-expanded max-w-[14ch]">{t('landing.hero.title')}</h1>
 
-      <p className="mt-8 max-w-[68ch] text-body">{t('landing.hero.lede')}</p>
+      <p className="text-body mt-8 max-w-[68ch]">{t('landing.hero.lede')}</p>
 
       <div className="mt-12 flex flex-wrap items-center gap-4">
         <a
           href={appHref('/login')}
-          className="label bg-paper px-8 py-4 text-ink transition-colors duration-150 ease-out-expo hover:bg-ink hover:text-paper"
+          className="label bg-paper text-ink ease-out-expo hover:bg-ink hover:text-paper px-8 py-4 transition-colors duration-150"
         >
           {t('landing.hero.cta')}
         </a>
         <a
           href="#plate-04"
-          className="label border border-paper/40 px-8 py-4 text-paper transition-colors duration-150 ease-out-expo hover:border-paper"
+          className="label border-paper/40 text-paper ease-out-expo hover:border-paper border px-8 py-4 transition-colors duration-150"
         >
           {t('landing.hero.ctaSecondary')}
         </a>

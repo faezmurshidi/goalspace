@@ -15,7 +15,7 @@ export function AuthMasthead() {
   return (
     <div className="mb-10 text-center">
       <Wordmark />
-      <p className="label mt-3 text-ink-soft">{t('app.auth.tagline')}</p>
+      <p className="label text-ink-soft mt-3">{t('app.auth.tagline')}</p>
     </div>
   );
 }

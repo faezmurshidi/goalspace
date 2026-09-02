@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+
 import { createClient } from './utils/supabase/middleware';
 
 const PUBLIC_PATHS = ['/login', '/auth/callback', '/auth'];

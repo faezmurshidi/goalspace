@@ -14,15 +14,15 @@ export default function DocumentsLoading() {
           reader heard silence between navigation and content. */}
       <LoadingAnnouncement />
       <div aria-hidden="true" className="mx-auto w-full max-w-4xl px-6 pt-8">
-        <div className="flex items-baseline justify-between border-b border-rule pb-2">
-          <div className="h-3 w-20 bg-paper-shade" />
-          <div className="h-8 w-40 bg-paper-shade" />
+        <div className="border-rule flex items-baseline justify-between border-b pb-2">
+          <div className="bg-paper-shade h-3 w-20" />
+          <div className="bg-paper-shade h-8 w-40" />
         </div>
 
         {[0, 1, 2, 3, 4].map((row) => (
-          <div key={row} className="flex items-baseline gap-4 border-b border-rule py-3">
-            <div className="h-3 flex-1 bg-paper-shade" />
-            <div className="h-3 w-12 shrink-0 bg-paper-shade" />
+          <div key={row} className="border-rule flex items-baseline gap-4 border-b py-3">
+            <div className="bg-paper-shade h-3 flex-1" />
+            <div className="bg-paper-shade h-3 w-12 shrink-0" />
           </div>
         ))}
       </div>

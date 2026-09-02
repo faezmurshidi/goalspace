@@ -13,8 +13,8 @@
  *   2. VERCEL_OIDC_TOKEN    — written by `vercel env pull`, ~24h lifetime
  */
 import { fileURLToPath } from 'node:url';
+import { gateway, streamText } from 'ai';
 import { config } from 'dotenv';
-import { streamText, gateway } from 'ai';
 
 config({ path: fileURLToPath(new URL('../.env.local', import.meta.url)) });
 
