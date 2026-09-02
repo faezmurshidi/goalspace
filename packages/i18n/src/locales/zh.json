@@ -451,7 +451,8 @@
       "confirmAccept": "记录",
       "confirmReject": "不要记录",
       "confirmRejected": "未记录。",
-      "confirmAccepted": "已记录。"
+      "confirmAccepted": "已记录。",
+      "region": "伙伴"
     },
     "create": {
       "title": "开始记录",

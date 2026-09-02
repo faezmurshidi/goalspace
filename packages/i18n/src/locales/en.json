@@ -451,7 +451,8 @@
       "confirmAccept": "Record it",
       "confirmReject": "Do not record",
       "confirmRejected": "Not recorded.",
-      "confirmAccepted": "Recorded."
+      "confirmAccepted": "Recorded.",
+      "region": "Partner"
     },
     "create": {
       "title": "Start the record",

@@ -130,7 +130,11 @@ export function PartnerChat({
   }
 
   return (
-    <div className="border-rule flex max-h-[60svh] flex-col border-t">
+    // Fills whatever it is given. The shell decides whether that is a column
+    // down the right or a band across the bottom; this only has to keep the
+    // transcript scrolling and the composer in view. min-h-0 is what lets the
+    // transcript shrink inside a flex parent rather than overflowing it.
+    <div className="flex min-h-0 flex-1 flex-col">
       {messages.length === 0 ? (
         <p className="text-ink-soft px-4 py-6">{t('app.chat.empty')}</p>
       ) : (

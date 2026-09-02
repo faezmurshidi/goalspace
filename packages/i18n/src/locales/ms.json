@@ -451,7 +451,8 @@
       "confirmAccept": "Rekodkan",
       "confirmReject": "Jangan rekod",
       "confirmRejected": "Tidak direkodkan.",
-      "confirmAccepted": "Direkodkan."
+      "confirmAccepted": "Direkodkan.",
+      "region": "Rakan"
     },
     "create": {
       "title": "Mulakan rekod",

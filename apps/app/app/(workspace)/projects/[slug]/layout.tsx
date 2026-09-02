@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
-import { ProjectComposer } from '@/components/chat/project-composer';
+import { ProjectShell } from '@/components/chat/project-shell';
 import { requireSessionContext } from '@/lib/auth/session';
 import { captureTargetsFrom } from '@/lib/capture/targets';
 import { getOrCreateConversation, listMessages } from '@/lib/db/conversations';
@@ -60,27 +60,23 @@ export default async function ProjectLayout({
     : [];
 
   return (
-    // The subtraction is the header rail: h-14 (3.5rem) plus its 1px bottom border.
-    <div className="flex min-h-[calc(100svh-3.5rem-1px)] flex-col">
-      <div className="flex-1">{children}</div>
-      <section aria-label={t('app.capture.region')}>
-        <ProjectComposer
-          slug={slug}
-          targets={captureTargetsFrom(workItems)}
-          hasPartner={hasPartner}
-          initialMessages={seed.map((m) => ({
-            id: m.ui_message_id ?? m.id,
-            role: m.role,
-            // The stored parts, so a reload restores the turn rather than a
-            // rendering of it. A turn written before this column existed has
-            // none, and falls back to its text.
-            parts:
-              Array.isArray(m.parts) && m.parts.length > 0
-                ? (m.parts as unknown[])
-                : [{ type: 'text', text: m.content }],
-          }))}
-        />
-      </section>
-    </div>
+    <ProjectShell
+      slug={slug}
+      targets={captureTargetsFrom(workItems)}
+      hasPartner={hasPartner}
+      initialMessages={seed.map((m) => ({
+        id: m.ui_message_id ?? m.id,
+        role: m.role,
+        // The stored parts, so a reload restores the turn rather than a
+        // rendering of it. A turn written before that column existed has none,
+        // and falls back to its text.
+        parts:
+          Array.isArray(m.parts) && m.parts.length > 0
+            ? (m.parts as unknown[])
+            : [{ type: 'text', text: m.content }],
+      }))}
+    >
+      {children}
+    </ProjectShell>
   );
 }
