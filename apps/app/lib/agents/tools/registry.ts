@@ -26,6 +26,7 @@ export const REGISTRY_NAMES = [
   'list_work_items',
   'get_work_item',
   'read_document',
+  'read_entry',
   'propose_entry',
   'propose_work_item',
   'propose_document_edit',
@@ -93,6 +94,15 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
   read_document: {
     name: 'read_document',
     description: "Read a document's current body.",
+    inputSchema: z.object({ id: z.string().uuid() }),
+    writes: false,
+    external: false,
+  },
+  read_entry: {
+    name: 'read_entry',
+    description:
+      'Read one log entry by id, including its full body. Use it when you have an id — from a ' +
+      'citation, a proposal, or a search result — rather than listing the log again to find it.',
     inputSchema: z.object({ id: z.string().uuid() }),
     writes: false,
     external: false,
@@ -186,6 +196,7 @@ export const REPO_READ = [
   'list_work_items',
   'get_work_item',
   'read_document',
+  'read_entry',
 ] as const satisfies readonly ToolName[];
 
 /**

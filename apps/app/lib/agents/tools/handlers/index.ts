@@ -195,6 +195,24 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
     return document;
   },
 
+  /**
+   * One entry by id.
+   *
+   * Unlike read_document this records nothing on the context. read_document
+   * remembers the version it saw because propose_document_edit needs the
+   * version the edit was written against; there is no entry-edit proposal, so
+   * there is no version to carry.
+   */
+  async read_entry(ctx, args: { id: string }) {
+    const { data, error } = await ctx.supabase
+      .from('entries')
+      .select(ENTRY_COLUMNS)
+      .eq('project_id', ctx.projectId)
+      .eq('id', args.id);
+    if (error) throw new Error(error.message);
+    return (data ?? [])[0] ?? null;
+  },
+
   async propose_entry(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {
     return storeProposal(ctx, 'entry', args.payload, args.rationale, args.citations, null);
   },

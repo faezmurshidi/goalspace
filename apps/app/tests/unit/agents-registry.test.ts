@@ -63,3 +63,27 @@ describe('REGISTRY', () => {
     }
   });
 });
+
+describe('read_entry', () => {
+  it('is a read, not a write, and stays inside the system', () => {
+    // REPO_READ and WRITE_TOOLS are disjoint by construction, which is what
+    // lets the Critic be described as writing nothing and have that be
+    // checkable. A read tool filed wrongly would quietly widen it.
+    expect(REGISTRY.read_entry.writes).toBe(false);
+    expect(REGISTRY.read_entry.external).toBe(false);
+  });
+
+  it('belongs to the repo-read group', () => {
+    // An id is worth having only if something takes one. Entries were already
+    // readable in bulk through list_entries, which returns full bodies — what
+    // was missing was any operation that accepts an id, so an agent handed one
+    // by a citation or a proposal had nowhere to spend it.
+    expect(REPO_READ).toContain('read_entry');
+  });
+
+  it('takes a uuid and nothing else', () => {
+    const schema = REGISTRY.read_entry.inputSchema;
+    expect(schema.safeParse({ id: '11111111-1111-4111-8111-111111111111' }).success).toBe(true);
+    expect(schema.safeParse({ id: 'not-a-uuid' }).success).toBe(false);
+  });
+});

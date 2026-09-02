@@ -74,4 +74,15 @@ describe('handlers are project-scoped by context', () => {
     expect(s.calls[0].filters.project_id).toBe('proj-1');
     expect(s.calls[0].filters.id).toBe('doc-1');
   });
+
+  it('read_entry scopes by project as well as id', async () => {
+    // Same rule as read_document: the model chooses what to ask for, never
+    // whose. RLS would refuse another project's row anyway; scoping here means
+    // a confused model gets nothing back instead of an error.
+    const s = stubSupabase([]);
+    await HANDLERS.read_entry(ctx(s.client), { id: 'entry-1' } as never);
+    expect(s.calls[0].table).toBe('entries');
+    expect(s.calls[0].filters.project_id).toBe('proj-1');
+    expect(s.calls[0].filters.id).toBe('entry-1');
+  });
 });
