@@ -73,9 +73,12 @@ questioning; a general ask surface; editing a proposed item's wording before
 accepting it (the inbox has that; the intake review step will not); nested
 breakdowns (§5.3); intake for projects that already exist (§4.4).
 
-**No migration.** Every table this needs — `agents`, `runs`, `proposals`,
-`entries`, `work_items` — was built in phases 1, 2a and 2b. The two new agents
-are rows inserted by application code at project creation, not schema.
+**One migration, and only one.** Every table this needs — `agents`,
+`agent_runs`, `proposals`, `entries`, `work_items` — was built in phases 1, 2a
+and 2b, and the two new agents are rows inserted by application code at
+project creation rather than schema. The exception is `agent_runs.trigger`,
+which is check-constrained to `('conversation','work_item_action')`. An intake
+run is neither, so the constraint gains `'intake'` (§9.1).
 
 ## 3. Success criteria
 
@@ -86,8 +89,9 @@ are rows inserted by application code at project creation, not schema.
    it. Provable by test, not by prompt wording.
 3. The Interviewer's tool allowlist is empty, and the executor refuses any
    tool call it makes. Provable by test.
-4. Both runs appear in the run trace with recorded token counts and cost, and
-   both reserve against the project's monthly cap like any other run.
+4. Both runs appear in the run trace with recorded token counts and cost,
+   carry `trigger = 'intake'`, and reserve against the project's monthly cap
+   like any other run.
 5. Skipping the intake at any step leaves a project indistinguishable from one
    created before this shipped.
 6. The intake never appears again on its own for a project that has seen it.
@@ -336,10 +340,21 @@ does today.
 
 ## 9. Data work required
 
-### 9.1 No migration
+### 9.1 One migration — `agent_runs.trigger` accepts `'intake'`
 
-Nothing new in the schema. Stated explicitly because the instinct on reading
-this spec is to reach for one.
+`agent_runs.trigger` is `text not null check (trigger in
+('conversation','work_item_action'))`. Both intake runs are neither: nobody
+asked a question and no work item was acted on.
+
+The constraint gains a third value. The alternative — filing intake runs as
+`'conversation'` — would make the cost of an intake unrecoverable from the
+trace the moment the Planner becomes reachable from a general ask surface,
+because the agent id would no longer discriminate. `start_agent_run` passes
+`p_trigger` straight through and needs no change; `RunTrigger` in
+`lib/db/agents.ts` gains the member.
+
+Nothing else in the schema changes. Stated explicitly because the instinct on
+reading this spec is to reach for a table.
 
 ### 9.2 Schemas — `lib/schemas/intake.ts`
 
