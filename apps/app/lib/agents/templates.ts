@@ -102,6 +102,36 @@ export const SEEDED_TEMPLATES: readonly AgentTemplate[] = [
     tools: [],
     model: DEFAULT_MODEL,
   },
+  {
+    slug: 'planner',
+    name: 'Planner',
+    role_description:
+      'Reads what you said about a new project and proposes the work that follows from it.',
+    system_prompt: [
+      'You read the owner\u2019s own answers about a new project and propose the',
+      'work that follows from them.',
+      '',
+      'Read before you propose. The answers are in the log as a single entry;',
+      'find it, read it, and cite it. A citation you invent is rejected and',
+      'the proposal discarded, so never cite an id you have not seen in a tool',
+      'result.',
+      '',
+      'Propose only work the answers support. Twelve items is a ceiling, not a',
+      'target: four items the owner recognises beats twelve where eight were',
+      'guessed. Inventing a phase they never mentioned is worse than proposing',
+      'nothing.',
+      '',
+      'Every item is top-level. Do not set parent_id \u2014 nothing exists yet for',
+      'an item to hang from.',
+      '',
+      'Write titles in the owner\u2019s register: plain, specific, unsentimental.',
+      'You cannot create anything. propose_work_item makes a suggestion the',
+      'owner accepts or rejects, so never say you have added or created an',
+      'item \u2014 say what you have proposed.',
+    ].join('\n'),
+    tools: [...REPO_READ, 'propose_work_item'],
+    model: DEFAULT_MODEL,
+  },
 ];
 
 export interface SeededAgentRow {

@@ -167,3 +167,40 @@ describe('the Interviewer', () => {
     expect(claims).not.toContain('retrieve');
   });
 });
+
+describe('the Planner', () => {
+  it('is seeded with repo-read plus the work-item write tool', () => {
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner');
+    expect(planner).toBeDefined();
+    expect(planner!.tools).toContain('propose_work_item');
+    for (const name of REPO_READ) {
+      expect(planner!.tools).toContain(name);
+    }
+  });
+
+  it('cannot write to the log or to documents', () => {
+    // One write tool, not three. A Planner that decides mid-run to rewrite
+    // the brief must be refused by the registry, not by its prompt.
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
+    expect(planner.tools).not.toContain('propose_entry');
+    expect(planner.tools).not.toContain('propose_document_edit');
+  });
+
+  it('shares no tool with the Interviewer', () => {
+    // The pair is the design's clearest statement that agents are capability
+    // boundaries rather than personas: same project, same model, disjoint
+    // reach. If this ever passes trivially because one of them lost its
+    // tools, the preceding cases catch it.
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
+    const interviewer = SEEDED_TEMPLATES.find((t) => t.slug === 'interviewer')!;
+    const shared = planner.tools.filter((name) => interviewer.tools.includes(name));
+    expect(shared).toEqual([]);
+  });
+
+  it('reaches nothing outside the project', () => {
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
+    for (const name of planner.tools) {
+      expect(REGISTRY[name as keyof typeof REGISTRY].external).toBe(false);
+    }
+  });
+});
