@@ -3,7 +3,8 @@ import { generateObject } from 'ai';
 import type { z } from 'zod';
 
 import { checkCaps } from '@/lib/agents/caps';
-import { costUsd, gatewayCostFrom, worstCaseUsd } from '@/lib/agents/cost';
+import { worstCaseUsd } from '@/lib/agents/cost';
+import { finishRun, recordRunUsage } from '@/lib/agents/usage';
 import { startAgentRun, type RunTrigger } from '@/lib/db/agents';
 import { getBudget } from '@/lib/db/budgets';
 import type { Database } from '@/types/supabase';
@@ -88,7 +89,6 @@ export async function runStructured<T>(
   }
 
   const runId = start.runId;
-  const endedAt = () => new Date().toISOString();
 
   try {
     const result = await generateObject({
@@ -99,39 +99,20 @@ export async function runStructured<T>(
       maxRetries: 1,
     });
 
-    // Same disjointness rule as the streaming route: costUsd prices input and
-    // cached input at different rates and adds both, so the non-cached count
-    // is what goes in input_tokens, never the total.
-    const cachedInput = result.usage.inputTokenDetails.cacheReadTokens ?? 0;
-    const nonCachedInput =
-      result.usage.inputTokenDetails.noCacheTokens ?? result.usage.inputTokens ?? 0;
-    const outputTokens = result.usage.outputTokens ?? 0;
-
-    await supabase.from('ai_usage').insert({
-      project_id: agent.project_id,
-      owner_id: ownerId,
-      agent_id: agent.id,
-      run_id: runId,
-      work_item_id: null,
+    await recordRunUsage(supabase, {
+      projectId: agent.project_id,
+      ownerId,
+      agentId: agent.id,
+      runId,
+      workItemId: null,
       model: agent.model,
-      input_tokens: nonCachedInput,
-      output_tokens: outputTokens,
-      cached_input_tokens: cachedInput,
-      cost_usd: costUsd({
-        model: agent.model,
-        inputTokens: nonCachedInput,
-        outputTokens,
-        cachedInputTokens: cachedInput,
-        gatewayCostUsd: gatewayCostFrom(result.providerMetadata),
-      }),
+      usage: result.usage,
+      providerMetadata: result.providerMetadata,
     });
 
     // One model call, so one step. Recorded rather than left at its default so
     // the trace does not imply the run did nothing.
-    await supabase
-      .from('agent_runs')
-      .update({ status: 'succeeded', step_count: 1, ended_at: endedAt() })
-      .eq('id', runId);
+    await finishRun(supabase, runId, { status: 'succeeded', stepCount: 1 });
 
     return { ok: true, runId, object: result.object };
   } catch (error) {
@@ -139,12 +120,7 @@ export async function runStructured<T>(
     // returns something the schema rejects, which is how the five-to-ten
     // question bound is enforced rather than requested.
     const message = error instanceof Error ? error.message : String(error);
-
-    await supabase
-      .from('agent_runs')
-      .update({ status: 'failed', error: message, ended_at: endedAt() })
-      .eq('id', runId);
-
+    await finishRun(supabase, runId, { status: 'failed', error: message });
     return { ok: false, reason: 'failed', message };
   }
 }

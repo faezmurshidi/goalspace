@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { stepCountIs, streamText } from 'ai';
 
 import { checkCaps } from '@/lib/agents/caps';
-import { costUsd, gatewayCostFrom, worstCaseUsd } from '@/lib/agents/cost';
+import { worstCaseUsd } from '@/lib/agents/cost';
 import { buildToolSet, type RunContext } from '@/lib/agents/executor';
+import { finishRun, recordRunUsage } from '@/lib/agents/usage';
 import { buildSkeleton, type SkeletonWorkItem } from '@/lib/agents/skeleton';
 import { startAgentRun } from '@/lib/db/agents';
 import { getBudget } from '@/lib/db/budgets';
@@ -120,55 +121,28 @@ export async function POST(request: Request, { params }: { params: Promise<{ age
     // onStepFinish/onFinish are deprecated in ai@7; onStepEnd receives the
     // same StepResult and onEnd carries the aggregated steps.
     onStepEnd: async (step) => {
-      // v7 moved cached tokens into inputTokenDetails — there is no
-      // usage.cachedInputTokens. costUsd prices input and cached input at
-      // different rates and adds both, so the two must be disjoint: record
-      // the non-cached count as input_tokens, not the total.
-      const cachedInput = step.usage.inputTokenDetails.cacheReadTokens ?? 0;
-      const nonCachedInput =
-        step.usage.inputTokenDetails.noCacheTokens ?? step.usage.inputTokens ?? 0;
-      const outputTokens = step.usage.outputTokens ?? 0;
-
-      await supabase.from('ai_usage').insert({
-        project_id: agent.project_id,
-        owner_id: auth.user.id,
-        agent_id: agent.id,
-        run_id: runId,
-        work_item_id: workItemId ?? null,
+      await recordRunUsage(supabase, {
+        projectId: agent.project_id,
+        ownerId: auth.user.id,
+        agentId: agent.id,
+        runId,
+        workItemId: workItemId ?? null,
         model: agent.model,
-        input_tokens: nonCachedInput,
-        output_tokens: outputTokens,
-        cached_input_tokens: cachedInput,
-        cost_usd: costUsd({
-          model: agent.model,
-          inputTokens: nonCachedInput,
-          outputTokens,
-          cachedInputTokens: cachedInput,
-          // What the gateway says it charged beats the local table, which
-          // drifts silently the moment a provider reprices.
-          gatewayCostUsd: gatewayCostFrom(step.providerMetadata),
-        }),
+        usage: step.usage,
+        providerMetadata: step.providerMetadata,
       });
     },
     onEnd: async ({ steps }) => {
-      await supabase
-        .from('agent_runs')
-        .update({
-          status: cappedByTokens ? 'capped' : 'succeeded',
-          step_count: steps.length,
-          ended_at: new Date().toISOString(),
-        })
-        .eq('id', runId);
+      await finishRun(supabase, runId, {
+        status: cappedByTokens ? 'capped' : 'succeeded',
+        stepCount: steps.length,
+      });
     },
     onError: async ({ error }) => {
-      await supabase
-        .from('agent_runs')
-        .update({
-          status: 'failed',
-          error: error instanceof Error ? error.message : String(error),
-          ended_at: new Date().toISOString(),
-        })
-        .eq('id', runId);
+      await finishRun(supabase, runId, {
+        status: 'failed',
+        error: error instanceof Error ? error.message : String(error),
+      });
     },
   });
 
