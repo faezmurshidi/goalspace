@@ -217,6 +217,39 @@ amendment is strictly narrower than "the Partner may write".
 from the template and the registry and give the Partner `propose_entry`
 instead. The conversation surface is unchanged; captures become inbox items.
 
+### 6.2 The tool taxonomy needs a third category
+
+Found while planning 2d-2, not during design. `toolGroups()` derives the agents
+page from the registry's `writes` boolean, and the writing group renders with
+the note *"you approve each"*. `record_entry` fits neither existing value:
+
+- `writes: true` puts it under **"Proposes changes — you approve each"**, which
+  is a false statement about the one tool in the system that does not work that
+  way.
+- `writes: false` puts it under **"Reads the record"**, hiding a write behind a
+  read label.
+
+The registry's own comment says the quiet part: *"a 'write' tool in this system
+writes to `proposals` and nowhere else."* `record_entry` is the first tool that
+is not true of, so the field stops being a boolean:
+
+```ts
+writes: false | 'proposes' | 'records'
+```
+
+`toolGroups()` gains a fourth group for `'records'`, with its own label and its
+own note — the log, directly, no approval step. The agents page is the
+capability model's only user-facing surface, and it must not tell the owner
+they approve something they do not.
+
+A union rather than a second `records: true` flag, because two booleans can
+disagree: `writes: true, records: true` would have no defined meaning and
+nothing would stop it being written. The union makes that state
+unrepresentable, and forces every existing consumer to re-state what it meant
+rather than defaulting silently — which is the point, since one of them
+(`agents-registry.test.ts`) currently asserts that anything writing is named
+`propose_*`.
+
 ## 7. The composer
 
 ### 7.1 Where it lives, and a constraint discovered while specifying
@@ -369,6 +402,9 @@ actually found.
 7. **The Partner runs on `zai/glm-5.3-flash`**, verified against the live
    gateway and priced from the gateway's own figures. Every other seeded agent
    keeps `DEFAULT_MODEL`.
+8. **`writes` becomes a union rather than a boolean** — §6.2. Found while
+   planning 2d-2; recorded here because it changes a user-facing label on the
+   agents page, not only a type.
 
 ## 15. Risks
 
