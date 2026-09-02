@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useChat } from '@ai-sdk/react';
 import { useAppTranslations } from '@goalspace/i18n';
@@ -14,6 +14,7 @@ import {
 import { Markdown } from '@/components/docs/markdown';
 import type { CaptureTarget } from '@/lib/capture/targets';
 import { approvalOutcomesFrom, approvalRequestsFrom } from '@/lib/chat/approvals';
+import { ASK_ABOUT_EVENT, askAboutDraft } from '@/lib/chat/ask-about';
 import { parseMention } from '@/lib/chat/mention';
 import { proposalNoticesFrom } from '@/lib/chat/proposal-notices';
 import { reasoningFrom } from '@/lib/chat/reasoning';
@@ -80,6 +81,26 @@ export function PartnerChat({
 }) {
   const { t } = useAppTranslations();
   const [draft, setDraft] = useState('');
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * A row on the resume view handing this an open question.
+   *
+   * Fills the draft and takes focus, and deliberately does not send: what to
+   * ask about an open question is the owner's to phrase, and a question fired
+   * off unread gets an answer to the wrong thing.
+   */
+  useEffect(() => {
+    function onAsk(event: Event) {
+      const title = (event as CustomEvent<{ title?: string }>).detail?.title;
+      if (!title) return;
+      setDraft(askAboutDraft(title));
+      composerRef.current?.focus();
+    }
+
+    window.addEventListener(ASK_ABOUT_EVENT, onAsk);
+    return () => window.removeEventListener(ASK_ABOUT_EVENT, onAsk);
+  }, []);
   const [kind, setKind] = useState<string>('note');
   const [workItemId, setWorkItemId] = useState<string>('');
   const [notice, setNotice] = useState<string | null>(null);
@@ -251,6 +272,7 @@ export function PartnerChat({
 
       <div className="flex flex-col gap-2 p-4 pt-2">
         <Textarea
+          ref={composerRef}
           rows={2}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}

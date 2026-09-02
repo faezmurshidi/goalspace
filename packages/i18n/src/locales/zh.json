@@ -399,7 +399,15 @@
       "decidedEmpty": "没有记录的决定。",
       "progressOf": "已完成 {{done}} / {{total}}",
       "anomalyTitle": "部分工作项无法归位",
-      "anomalyBody": "{{count}} 个工作项指向缺失或循环的父项，已列在顶层。"
+      "anomalyBody": "{{count}} 个工作项指向缺失或循环的父项，已列在顶层。",
+      "answer": "回答",
+      "finish": "完成",
+      "askAbout": "就此提问",
+      "answerPlaceholder": "答案是什么？",
+      "finishPlaceholder": "发生了什么？（可选）",
+      "answerSubmit": "记录答案",
+      "finishSubmit": "标记为完成",
+      "cancel": "取消"
     },
     "work": {
       "title": "工作",

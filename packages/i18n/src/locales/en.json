@@ -399,7 +399,15 @@
       "decidedEmpty": "No decisions recorded.",
       "progressOf": "{{done}} of {{total}} done",
       "anomalyTitle": "Some work items could not be placed",
-      "anomalyBody": "{{count}} items reference a parent that is missing or circular. They are listed at the top level."
+      "anomalyBody": "{{count}} items reference a parent that is missing or circular. They are listed at the top level.",
+      "answer": "Answer",
+      "finish": "Finish",
+      "askAbout": "Ask about it",
+      "answerPlaceholder": "What is the answer?",
+      "finishPlaceholder": "What happened? (optional)",
+      "answerSubmit": "Record the answer",
+      "finishSubmit": "Mark it finished",
+      "cancel": "Cancel"
     },
     "work": {
       "title": "Work",

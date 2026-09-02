@@ -399,7 +399,15 @@
       "decidedEmpty": "Tiada keputusan direkodkan.",
       "progressOf": "{{done}} daripada {{total}} selesai",
       "anomalyTitle": "Ada item kerja yang tidak dapat diletakkan",
-      "anomalyBody": "{{count}} item merujuk induk yang hilang atau berpusing. Item itu disenaraikan di peringkat atas."
+      "anomalyBody": "{{count}} item merujuk induk yang hilang atau berpusing. Item itu disenaraikan di peringkat atas.",
+      "answer": "Jawab",
+      "finish": "Selesai",
+      "askAbout": "Tanya mengenainya",
+      "answerPlaceholder": "Apakah jawapannya?",
+      "finishPlaceholder": "Apa yang berlaku? (pilihan)",
+      "answerSubmit": "Rekod jawapan",
+      "finishSubmit": "Tandakan selesai",
+      "cancel": "Batal"
     },
     "work": {
       "title": "Kerja",

@@ -9,6 +9,7 @@ import type { WorkItemStatus } from '@/lib/schemas/common';
 import { previewText } from '@/lib/text';
 import type { Progress } from '@/lib/work-items/progress';
 import type { Absence, WokenItem } from '@/lib/work-items/reentry';
+import { RowActions } from './row-actions';
 
 type T = (key: string, vars?: Record<string, unknown>) => string;
 
@@ -74,6 +75,11 @@ function Ratio({ progress }: { progress?: Progress }) {
   // measure. computeProgress reports that distinctly rather than as 0%, and
   // drawing "0/0" here would present abandoned work as unfinished work.
   if (!progress || progress.total === 0) return null;
+
+  // A leaf counts only itself, so its ratio is always 0/1 and says nothing
+  // about the work. On a question it says worse than nothing: a question is
+  // not nought per cent complete, it is unanswered.
+  if (progress.total === 1) return null;
 
   return (
     <span className="label text-ink-soft shrink-0 tabular-nums">
@@ -237,10 +243,7 @@ export function Open({
         <ul>
           {items.map((item) => (
             <li key={item.id} className="border-rule border-b">
-              <Link
-                href={`/projects/${slug}/work#${item.id}`}
-                className="hover:bg-paper-shade flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors"
-              >
+              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3">
                 <StatusMark
                   status={item.status}
                   label={
@@ -249,9 +252,23 @@ export function Open({
                       : t(`app.status.${item.status}`)
                   }
                 />
-                <span className="text-body text-ink min-w-0 flex-1">{item.title}</span>
+                {/* The title still goes to the work tree, where the item sits
+                    in its tree with its children and its history. What changed
+                    is that it is no longer the only thing you can do. */}
+                <Link
+                  href={`/projects/${slug}/work#${item.id}`}
+                  className="text-body text-ink hover:text-ink-soft min-w-0 flex-1 transition-colors"
+                >
+                  {item.title}
+                </Link>
                 <Ratio progress={progress.get(item.id)} />
-              </Link>
+                <RowActions
+                  slug={slug}
+                  itemId={item.id}
+                  title={item.title}
+                  isQuestion={item.kind === 'question'}
+                />
+              </div>
             </li>
           ))}
         </ul>
