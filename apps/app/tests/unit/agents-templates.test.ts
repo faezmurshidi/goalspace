@@ -204,3 +204,37 @@ describe('the Planner', () => {
     }
   });
 });
+
+describe('the Partner', () => {
+  it('reads the record, records what you said, and asks the specialists', () => {
+    const partner = SEEDED_TEMPLATES.find((t) => t.slug === 'partner');
+    expect(partner).toBeDefined();
+    for (const name of REPO_READ) expect(partner!.tools).toContain(name);
+    expect(partner!.tools).toContain('ask_agent');
+  });
+
+  it('holds no propose tool at all', () => {
+    // The choice the roster rests on. A Partner that could draft entries, work
+    // items and document edits would be a superset of the other three and make
+    // their distinct allowlists distinguish nothing the owner can reach.
+    const partner = SEEDED_TEMPLATES.find((t) => t.slug === 'partner')!;
+    for (const name of partner.tools) {
+      expect(REGISTRY[name as keyof typeof REGISTRY].writes, name).toBe(false);
+    }
+  });
+
+  it('runs on the cheap conversational model, and it is priced', () => {
+    // Every turn of a conversation is a run, so this is the one template where
+    // the model is a cost decision. An unpriced model reports every run as free
+    // and silently disables the monthly cap.
+    const partner = SEEDED_TEMPLATES.find((t) => t.slug === 'partner')!;
+    expect(partner.model).toBe('zai/glm-5.3-flash');
+    expect(Object.keys(RATES)).toContain(partner.model);
+  });
+
+  it('leaves the other templates on the default model', () => {
+    for (const t of SEEDED_TEMPLATES.filter((t) => t.slug !== 'partner')) {
+      expect(t.model, t.slug).toBe('openai/gpt-4o-mini');
+    }
+  });
+});
