@@ -27,6 +27,7 @@ export const REGISTRY_NAMES = [
   'get_work_item',
   'read_document',
   'read_entry',
+  'ask_agent',
   'propose_entry',
   'propose_work_item',
   'propose_document_edit',
@@ -104,6 +105,26 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
       'Read one log entry by id, including its full body. Use it when you have an id — from a ' +
       'citation, a proposal, or a search result — rather than listing the log again to find it.',
     inputSchema: z.object({ id: z.string().uuid() }),
+    writes: false,
+    external: false,
+  },
+  ask_agent: {
+    name: 'ask_agent',
+    description:
+      'Ask one of this project\u2019s specialist agents a question and return its answer. ' +
+      'The agent runs under its own tools, not yours — if it proposes something, the proposal ' +
+      'is its own and goes to the owner\u2019s inbox. Say that you asked it, never that you did it.',
+    // The enum is the guard, not a convenience. 'partner' is not a member, so a
+    // Partner naming itself fails validation before any handler runs — the
+    // allowlist alone would permit the self-call, since the Partner holds this
+    // tool. Do not widen to z.string().
+    inputSchema: z.object({
+      agent_slug: z.enum(['critic', 'tutor', 'planner']),
+      question: z.string().min(1).max(2_000),
+    }),
+    // The sub-agent may propose; this tool does not. Filing it as a write would
+    // place it in WRITE_TOOLS and make the Critic — defined as writing nothing
+    // — permanently ineligible to hold it.
     writes: false,
     external: false,
   },

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { tool, type ToolSet } from 'ai';
 
-import { HANDLERS, type ToolContext } from '@/lib/agents/tools/handlers';
+import { HANDLERS, type DelegateFn, type ToolContext } from '@/lib/agents/tools/handlers';
 import { isAllowed, REGISTRY, resolveTools } from '@/lib/agents/tools/registry';
 import type { Database } from '@/types/supabase';
 
@@ -32,6 +32,8 @@ export interface RunContext {
    * at proposal time.
    */
   documentVersions: Map<string, string>;
+  /** See ToolContext.delegate. Present only on runs permitted to delegate. */
+  delegate?: DelegateFn;
 }
 
 export type ToolOutcome = { ok: true; result: unknown } | { ok: false; error: string };

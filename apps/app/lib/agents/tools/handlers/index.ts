@@ -13,6 +13,11 @@ import type { Database } from '@/types/supabase';
  * confused model gets an empty result instead of an error, and it keeps the
  * rule readable in one place: the model chooses what to ask, never whose.
  */
+export type DelegateFn = (
+  agentSlug: string,
+  question: string
+) => Promise<{ ok: true; text: string } | { ok: false; message: string }>;
+
 export interface ToolContext {
   supabase: SupabaseClient<Database>;
   projectId: string;
@@ -40,6 +45,18 @@ export interface ToolContext {
    * defeat the check by claiming a newer one.
    */
   documentVersions: Map<string, string>;
+  /**
+   * Runs another agent, under that agent's own allowlist.
+   *
+   * Injected rather than imported. `ask_agent` needs `runTooled`, and importing
+   * it here would close the cycle handlers → tooled → executor → handlers.
+   * Injection also makes delegation testable without a model, which an import
+   * would not.
+   *
+   * Absent on runs that may not delegate — which is every run except the
+   * Partner's. A handler reached without it is a wiring bug, not a refusal.
+   */
+  delegate?: DelegateFn;
 }
 
 /**
@@ -211,6 +228,25 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
       .eq('id', args.id);
     if (error) throw new Error(error.message);
     return (data ?? [])[0] ?? null;
+  },
+
+  async ask_agent(ctx, args: { agent_slug: string; question: string }) {
+    if (!ctx.delegate) {
+      // Loud on purpose. An agent holding ask_agent in a run wired without a
+      // delegate is a bug in the caller; answering "I cannot" would let it ship
+      // looking like a model limitation.
+      throw new Error(
+        `ask_agent was called on run ${ctx.runId} with no delegate wired into the context.`
+      );
+    }
+
+    const outcome = await ctx.delegate(args.agent_slug, args.question);
+
+    // A refusal is data, not an exception. A delegated run stopped by the
+    // monthly cap should leave the Partner able to say so and carry on.
+    return outcome.ok
+      ? { agent: args.agent_slug, answer: outcome.text }
+      : { agent: args.agent_slug, refused: outcome.message };
   },
 
   async propose_entry(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {
