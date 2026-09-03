@@ -25,6 +25,11 @@ describe('SEEDED_TEMPLATES', () => {
     }
   });
 
+  it('cannot propose a document', () => {
+    const critic = SEEDED_TEMPLATES.find((t) => t.slug === 'critic')!;
+    expect(critic.tools).not.toContain('propose_document');
+  });
+
   it('uses dotted gateway model slugs', () => {
     // anthropic/claude-sonnet-5, never anthropic/claude-sonnet-4-6.
     for (const template of SEEDED_TEMPLATES) {
@@ -139,6 +144,17 @@ describe('the Tutor', () => {
       expect(REGISTRY[name as keyof typeof REGISTRY].writes).toBe(false);
     }
   });
+
+  it('can propose a whole document, not only an edit to one', () => {
+    const tutor = SEEDED_TEMPLATES.find((t) => t.slug === 'tutor')!;
+    expect(tutor.tools).toContain('propose_document');
+    expect(tutor.tools).toContain('propose_document_edit');
+  });
+
+  it('says so in its role description, so the agents page is not lying', () => {
+    const tutor = SEEDED_TEMPLATES.find((t) => t.slug === 'tutor')!;
+    expect(tutor.role_description.toLowerCase()).toContain('document');
+  });
 });
 
 describe('the Interviewer', () => {
@@ -184,6 +200,11 @@ describe('the Planner', () => {
     const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
     expect(planner.tools).not.toContain('propose_entry');
     expect(planner.tools).not.toContain('propose_document_edit');
+  });
+
+  it('proposes work items and no documents', () => {
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
+    expect(planner.tools).not.toContain('propose_document');
   });
 
   it('shares no tool with the Interviewer', () => {
