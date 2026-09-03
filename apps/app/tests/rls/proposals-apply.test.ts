@@ -58,7 +58,7 @@ beforeAll(async () => {
       slug: 'tutor',
       name: 'Tutor',
       system_prompt: 'Draft things.',
-      tools: ['propose_entry', 'propose_document_edit'],
+      tools: ['propose_entry', 'propose_document', 'propose_document_edit'],
     })
   ).id;
 

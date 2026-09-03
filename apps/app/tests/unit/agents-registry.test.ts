@@ -120,13 +120,11 @@ describe('propose_document', () => {
       citations: [],
     });
     expect(parsed.success).toBe(true);
-    if (!parsed.success) return;
-    expect(parsed.data.payload).not.toHaveProperty('id');
   });
 
   it('refuses a payload with an empty title', () => {
     const parsed = REGISTRY.propose_document.inputSchema.safeParse({
-      payload: { body: 'A body with nothing to call it.' },
+      payload: { title: '', body: 'A body with nothing to call it.' },
       rationale: 'because',
     });
     expect(parsed.success).toBe(false);

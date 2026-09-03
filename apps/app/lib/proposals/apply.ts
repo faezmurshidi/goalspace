@@ -91,62 +91,78 @@ async function applyByKind(
   payload: unknown,
   ownerId: string
 ): Promise<string | null> {
-  if (proposal.kind === 'entry') {
-    // agent_id is stamped on the insert, not by a follow-up update. It comes
-    // from the proposal, never from the payload — the owner edits content in
-    // the inbox, not authorship — and doing it in one statement means a failed
-    // second write cannot leave an accepted proposal whose entry claims to be
-    // human-authored.
-    const entry = await createEntry(supabase, {
-      projectId: proposal.project_id,
-      ownerId,
-      values: payload as CreateEntryValues,
-      agentId: proposal.agent_id,
-    });
-    return entry.id;
+  // A switch rather than an if-chain, so that adding a kind to ProposalKind
+  // without adding a case here fails to compile instead of silently falling
+  // into whichever branch happens to be last. payloadSchemaFor is exhaustive
+  // for the same reason; this keeps the two in lockstep.
+  switch (proposal.kind) {
+    case 'entry': {
+      // agent_id is stamped on the insert, not by a follow-up update. It comes
+      // from the proposal, never from the payload — the owner edits content in
+      // the inbox, not authorship — and doing it in one statement means a failed
+      // second write cannot leave an accepted proposal whose entry claims to be
+      // human-authored.
+      const entry = await createEntry(supabase, {
+        projectId: proposal.project_id,
+        ownerId,
+        values: payload as CreateEntryValues,
+        agentId: proposal.agent_id,
+      });
+      return entry.id;
+    }
+
+    case 'work_item': {
+      const item = await createWorkItem(supabase, {
+        projectId: proposal.project_id,
+        ownerId,
+        values: payload as CreateWorkItemValues,
+        agentId: proposal.agent_id,
+      });
+      return item.id;
+    }
+
+    case 'document': {
+      // A create cannot be superseded — there is no prior version to be stale
+      // against, which is the whole difference between this kind and
+      // document_edit. So no read, no version check, and no null return.
+      const document = await createDocument(supabase, {
+        projectId: proposal.project_id,
+        ownerId,
+        values: payload as CreateDocumentValues,
+        agentId: proposal.agent_id,
+      });
+      return document.id;
+    }
+
+    case 'document_edit': {
+      const edit = payload as { id: string; base_updated_at: string };
+      const current = await getDocument(supabase, proposal.project_id, edit.id);
+      if (!current) return null;
+      if (isSuperseded(edit.base_updated_at, current.updated_at)) return null;
+
+      // The read above answers "is this proposal stale"; expectedUpdatedAt answers
+      // "did it go stale while we were deciding". Both are needed: the first gives
+      // the owner a truthful superseded, the second stops two proposals built on
+      // one version from overwriting each other.
+      //
+      // updateDocument writes the revision before the update, so this is where
+      // phase 1's revision table gives every agent edit its undo path.
+      const updated = await updateDocument(supabase, {
+        projectId: proposal.project_id,
+        ownerId,
+        values: payload as UpdateDocumentValues,
+        agentId: proposal.agent_id,
+        expectedUpdatedAt: current.updated_at,
+      });
+      return updated?.id ?? null;
+    }
+
+    default: {
+      // Unreachable as long as ProposalKind and this switch agree. If they
+      // ever drift, this line — not a runtime uuid error three calls deep —
+      // is where the compiler stops the build.
+      const exhaustive: never = proposal.kind;
+      throw new Error(`Unhandled proposal kind: ${exhaustive}`);
+    }
   }
-
-  if (proposal.kind === 'work_item') {
-    const item = await createWorkItem(supabase, {
-      projectId: proposal.project_id,
-      ownerId,
-      values: payload as CreateWorkItemValues,
-      agentId: proposal.agent_id,
-    });
-    return item.id;
-  }
-
-  if (proposal.kind === 'document') {
-    // A create cannot be superseded — there is no prior version to be stale
-    // against, which is the whole difference between this kind and
-    // document_edit. So no read, no version check, and no null return.
-    const document = await createDocument(supabase, {
-      projectId: proposal.project_id,
-      ownerId,
-      values: payload as CreateDocumentValues,
-      agentId: proposal.agent_id,
-    });
-    return document.id;
-  }
-
-  const edit = payload as { id: string; base_updated_at: string };
-  const current = await getDocument(supabase, proposal.project_id, edit.id);
-  if (!current) return null;
-  if (isSuperseded(edit.base_updated_at, current.updated_at)) return null;
-
-  // The read above answers "is this proposal stale"; expectedUpdatedAt answers
-  // "did it go stale while we were deciding". Both are needed: the first gives
-  // the owner a truthful superseded, the second stops two proposals built on
-  // one version from overwriting each other.
-  //
-  // updateDocument writes the revision before the update, so this is where
-  // phase 1's revision table gives every agent edit its undo path.
-  const updated = await updateDocument(supabase, {
-    projectId: proposal.project_id,
-    ownerId,
-    values: payload as UpdateDocumentValues,
-    agentId: proposal.agent_id,
-    expectedUpdatedAt: current.updated_at,
-  });
-  return updated?.id ?? null;
 }
