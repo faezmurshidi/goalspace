@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { applyProposal } from '@/lib/proposals/apply';
+
 import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 
 let alice: TestUser | undefined;
@@ -165,5 +167,81 @@ describe('proposals RLS', () => {
     await bob!.client.from('proposals').delete().eq('id', aliceProposalId);
     const { data } = await alice!.client.from('proposals').select('id').eq('id', aliceProposalId);
     expect(data?.length).toBe(1);
+  });
+});
+
+describe('a document proposal is as private as any other', () => {
+  it('is invisible to a second user, as is the document accepting it creates', async () => {
+    const { agentId, runId } = await seedAgentAndRun(alice!, aliceProjectId);
+
+    const proposalId = (
+      await insert(alice!, 'proposals', {
+        project_id: aliceProjectId,
+        owner_id: alice!.id,
+        agent_id: agentId,
+        run_id: runId,
+        kind: 'document',
+        rationale: 'The decision is spread across four entries.',
+        payload: { title: 'Harmonic constituents', body: 'Five, for the Solent.' },
+      })
+    ).id;
+
+    const { data: seenProposal } = await bob!.client
+      .from('proposals')
+      .select('id')
+      .eq('id', proposalId);
+    expect(seenProposal ?? []).toHaveLength(0);
+
+    const outcome = await applyProposal(alice!.client as never, {
+      proposalId,
+      ownerId: alice!.id,
+    });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: seenDocument } = await bob!.client
+      .from('documents')
+      .select('id')
+      .eq('id', outcome.appliedId);
+    expect(seenDocument ?? []).toHaveLength(0);
+
+    // And the owner can still read it, so the assertion above is isolation
+    // rather than the row having failed to exist.
+    const { data: own } = await alice!.client
+      .from('documents')
+      .select('id')
+      .eq('id', outcome.appliedId);
+    expect(own ?? []).toHaveLength(1);
+  });
+
+  it('stays hidden on a PUBLIC project, payload and all', async () => {
+    const publicProjectId = (
+      await insert(alice!, 'projects', {
+        owner_id: alice!.id,
+        slug: 'open-notes-doc',
+        title: 'Open notes',
+        kind: 'learn',
+        visibility: 'public',
+      })
+    ).id;
+
+    const { agentId, runId } = await seedAgentAndRun(alice!, publicProjectId);
+    const proposalId = (
+      await insert(alice!, 'proposals', {
+        project_id: publicProjectId,
+        owner_id: alice!.id,
+        agent_id: agentId,
+        run_id: runId,
+        kind: 'document',
+        rationale: 'Secret rationale.',
+        payload: { title: 'Unpublished draft', body: 'Not for anyone else.' },
+      })
+    ).id;
+
+    const { data } = await bob!.client
+      .from('proposals')
+      .select('id, payload')
+      .eq('id', proposalId);
+    expect(data ?? []).toHaveLength(0);
   });
 });
