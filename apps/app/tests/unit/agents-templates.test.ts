@@ -152,8 +152,15 @@ describe('the Tutor', () => {
   });
 
   it('says so in its role description, so the agents page is not lying', () => {
+    // toContain('document') is not a real pin here: the pre-change text
+    // ("drafts entries and document edits...") already contains that
+    // substring without claiming the Tutor can originate a whole document.
+    // "documents" (plural) is the claim that only the new copy makes — the
+    // old text has "document edits", never "document" immediately
+    // followed by an s. Keep this check on the plural, not the stem, or it
+    // stops proving anything again.
     const tutor = SEEDED_TEMPLATES.find((t) => t.slug === 'tutor')!;
-    expect(tutor.role_description.toLowerCase()).toContain('document');
+    expect(tutor.role_description.toLowerCase()).toContain('documents');
   });
 });
 
