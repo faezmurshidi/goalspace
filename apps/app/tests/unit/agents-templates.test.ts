@@ -25,6 +25,11 @@ describe('SEEDED_TEMPLATES', () => {
     }
   });
 
+  it('cannot propose a document', () => {
+    const critic = SEEDED_TEMPLATES.find((t) => t.slug === 'critic')!;
+    expect(critic.tools).not.toContain('propose_document');
+  });
+
   it('uses dotted gateway model slugs', () => {
     // anthropic/claude-sonnet-5, never anthropic/claude-sonnet-4-6.
     for (const template of SEEDED_TEMPLATES) {
@@ -139,6 +144,24 @@ describe('the Tutor', () => {
       expect(REGISTRY[name as keyof typeof REGISTRY].writes).toBe(false);
     }
   });
+
+  it('can propose a whole document, not only an edit to one', () => {
+    const tutor = SEEDED_TEMPLATES.find((t) => t.slug === 'tutor')!;
+    expect(tutor.tools).toContain('propose_document');
+    expect(tutor.tools).toContain('propose_document_edit');
+  });
+
+  it('says so in its role description, so the agents page is not lying', () => {
+    // toContain('document') is not a real pin here: the pre-change text
+    // ("drafts entries and document edits...") already contains that
+    // substring without claiming the Tutor can originate a whole document.
+    // "documents" (plural) is the claim that only the new copy makes — the
+    // old text has "document edits", never "document" immediately
+    // followed by an s. Keep this check on the plural, not the stem, or it
+    // stops proving anything again.
+    const tutor = SEEDED_TEMPLATES.find((t) => t.slug === 'tutor')!;
+    expect(tutor.role_description.toLowerCase()).toContain('documents');
+  });
 });
 
 describe('the Interviewer', () => {
@@ -184,6 +207,11 @@ describe('the Planner', () => {
     const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
     expect(planner.tools).not.toContain('propose_entry');
     expect(planner.tools).not.toContain('propose_document_edit');
+  });
+
+  it('proposes work items and no documents', () => {
+    const planner = SEEDED_TEMPLATES.find((t) => t.slug === 'planner')!;
+    expect(planner.tools).not.toContain('propose_document');
   });
 
   it('shares no tool with the Interviewer', () => {

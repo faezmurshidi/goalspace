@@ -473,7 +473,10 @@
       "region": "Rakan",
       "hintAddress": "⌘↵ tanya · ⌘⇧↵ rekod · {{handles}} untuk tanya terus",
       "reasoning": "Penaakulan",
-      "reasoningLive": "Menaakul…"
+      "reasoningLive": "Menaakul…",
+      "silentTurn_one": "Ia tidak menjawab apa-apa selepas 1 panggilan alat. Tiada apa-apa ditulis — jejak larian menyimpan apa yang cubanya.",
+      "silentTurn_other": "Ia tidak menjawab apa-apa selepas {{count}} panggilan alat. Tiada apa-apa ditulis — jejak larian menyimpan apa yang cubanya.",
+      "silentTurnNoTools": "Ia tidak menjawab apa-apa, dan tidak memanggil sebarang alat. Tiada apa-apa ditulis."
     },
     "create": {
       "title": "Mulakan rekod",

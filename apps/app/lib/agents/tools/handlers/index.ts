@@ -146,28 +146,40 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
   },
 
   async list_entries(ctx, args: { kinds?: string[]; work_item_id?: string; limit?: number }) {
-    // An invented filter id is rejected, exactly as an invented citation is.
+    // An invented filter id drops the filter. It does not fail the call, and it
+    // does not quietly return nothing.
     //
-    // Without this the call succeeds and returns nothing, because a filter on a
-    // work item that does not exist is a legal query with an empty result. A
-    // model that guessed the id then reads "0 rows" as "the record is empty"
-    // and proposes from nothing — observed three times: the intake Planner,
-    // and again through delegation. A silent zero is the worst answer a tool
-    // can give, because it is indistinguishable from a true one.
+    // Both of the obvious answers are wrong, and each was tried. Returning the
+    // empty result is a legal query with a silent zero, and a model that
+    // guessed the id reads it as "the record is empty" and proposes from
+    // nothing — observed three times. Throwing was the fix for that, and it is
+    // worse in a way that only showed up live: the model has no entries to work
+    // from, so it guesses again. Twice observed, twelve rejected calls each,
+    // and the second time the refusal named the real ids and said outright that
+    // the project had none. It guessed twelve more times.
+    //
+    // A model that cannot be told cannot be fixed by better telling. So the
+    // call now succeeds with the whole log and says what it ignored: the entries
+    // are there to work from, and the note is there so the result can never be
+    // read as a filtered one. This is the rule the citation check follows from
+    // the other side — never demand an id the caller has no way to supply.
+    let droppedFilter: string | null = null;
+
     if (args.work_item_id) {
-      const { data: target } = await ctx.supabase
+      const { data: target, error: lookupError } = await ctx.supabase
         .from('work_items')
         .select('id')
         .eq('project_id', ctx.projectId)
         .eq('id', args.work_item_id)
         .maybeSingle();
 
-      if (!target) {
-        throw new Error(
-          `No work item ${args.work_item_id} in this project. Omit work_item_id to list the ` +
-            'whole log, or call list_work_items first to get a real id.'
-        );
-      }
+      // A failed lookup is not a missing work item. Swallowing the error would
+      // turn a transient database fault into "your filter was wrong", quietly
+      // widening the query to the whole log and telling the model something
+      // untrue about its own request.
+      if (lookupError) throw new Error(lookupError.message);
+
+      if (!target) droppedFilter = args.work_item_id;
     }
 
     let query = ctx.supabase
@@ -177,10 +189,22 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
       .order('occurred_at', { ascending: false })
       .limit(args.limit ?? 50);
     if (args.kinds?.length) query = query.in('kind', args.kinds);
-    if (args.work_item_id) query = query.eq('work_item_id', args.work_item_id);
+    if (args.work_item_id && !droppedFilter) query = query.eq('work_item_id', args.work_item_id);
     const { data, error } = await query;
     if (error) throw new Error(error.message);
-    return data ?? [];
+
+    const entries = data ?? [];
+    if (!droppedFilter) return entries;
+
+    // The shape changes only when something was ignored, which is the one case
+    // where the model must not read the result as a plain answer to what it
+    // asked. A note alongside an unchanged array would be easier to skim past.
+    return {
+      note:
+        `No work item ${droppedFilter} exists in this project, so that filter was ignored and ` +
+        'this is the whole log. Do not filter by work item again unless list_work_items gave you the id.',
+      entries,
+    };
   },
 
   async list_work_items(ctx, args: { status?: string[]; parent_id?: string | null }) {
@@ -348,6 +372,12 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
 
   async propose_work_item(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {
     return storeProposal(ctx, 'work_item', args.payload, args.rationale, args.citations, null);
+  },
+
+  async propose_document(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {
+    // No documentVersions lookup, unlike propose_document_edit. There is no
+    // prior version to be written against — that is what makes this a create.
+    return storeProposal(ctx, 'document', args.payload, args.rationale, args.citations, null);
   },
 
   async propose_document_edit(

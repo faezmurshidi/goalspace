@@ -176,3 +176,68 @@ describe('propose_document_edit', () => {
     expect(row.target_id).toBe(UUID);
   });
 });
+
+describe('propose_document', () => {
+  it('stores a proposal, never a document, with no target', async () => {
+    const inserted: unknown[] = [];
+    const result = await HANDLERS.propose_document(contextWith(inserted), {
+      payload: { title: 'Harmonic constituents', body: 'Five, for the Solent.' },
+      rationale: 'The decision is spread across four entries and nowhere summarised.',
+      citations: [],
+    } as never);
+
+    expect(inserted).toHaveLength(1);
+    const row = inserted[0] as Record<string, unknown>;
+    expect(row.kind).toBe('document');
+    // target_id names the document being edited. There is not one yet.
+    expect(row.target_id).toBeNull();
+    expect(row.owner_id).toBe('owner-1');
+    expect(row.agent_id).toBe('agent-1');
+    expect(row.run_id).toBe('run-1');
+    expect(result).toMatchObject({ proposal_id: UUID });
+  });
+
+  it('rejects a payload the create form would reject, storing nothing', async () => {
+    const inserted: unknown[] = [];
+    await expect(
+      HANDLERS.propose_document(contextWith(inserted), {
+        payload: { title: '', body: 'A document with no name.' },
+        rationale: 'because',
+        citations: [],
+      } as never)
+    ).rejects.toThrow();
+    expect(inserted).toHaveLength(0);
+  });
+
+  it('rejects a citation that does not resolve, storing nothing', async () => {
+    // The failure this catches is the one that recurred through phase 2c: an
+    // agent naming an id it never saw. A stored document citing invented
+    // entries looks better evidenced than one citing none.
+    const inserted: unknown[] = [];
+    await expect(
+      HANDLERS.propose_document(contextWith(inserted, []), {
+        payload: { title: 'Harmonic constituents', body: 'Five.' },
+        rationale: 'because',
+        citations: [{ type: 'entry', id: UUID }],
+      } as never)
+    ).rejects.toThrow(/citation/i);
+    expect(inserted).toHaveLength(0);
+  });
+
+  it('does not require the document to have been read first', async () => {
+    // propose_document_edit does, because an edit is written against a version.
+    // A create has no prior version, so demanding a read would be demanding an
+    // id that cannot exist — the shape of bug that cost phase 2c three rounds.
+    const inserted: unknown[] = [];
+    const ctx = contextWith(inserted);
+    expect(ctx.documentVersions.size).toBe(0);
+
+    await HANDLERS.propose_document(ctx, {
+      payload: { title: 'Bearing selection', body: 'Ceramic, for the salt.' },
+      rationale: 'Nothing records why ceramic.',
+      citations: [],
+    } as never);
+
+    expect(inserted).toHaveLength(1);
+  });
+});

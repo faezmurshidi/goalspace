@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { citationsSchema, payloadSchemaFor } from '@/lib/schemas/proposal';
+import { createDocumentSchema } from '@/lib/schemas/document';
+import { citationsSchema, payloadSchemaFor, proposalKindSchema } from '@/lib/schemas/proposal';
 
 const UUID = '11111111-1111-4111-8111-111111111111';
 
@@ -62,5 +63,37 @@ describe('payloadSchemaFor', () => {
       base_updated_at: '2026-08-21T00:00:00.000Z',
     };
     expect(payloadSchemaFor('document_edit').safeParse(withBase).success).toBe(true);
+  });
+});
+
+describe('the document kind', () => {
+  it('is a proposal kind', () => {
+    expect(proposalKindSchema.safeParse('document').success).toBe(true);
+  });
+
+  it('validates through the same schema the create form posts through', () => {
+    // One validation path. Not a schema that happens to agree with
+    // createDocumentSchema — the schema itself, so the two cannot drift.
+    expect(payloadSchemaFor('document')).toBe(createDocumentSchema);
+  });
+
+  it('rejects a payload the create form would reject', () => {
+    const parsed = payloadSchemaFor('document').safeParse({ title: '', body: 'Something' });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('defaults the body to empty, matching the not-null column default', () => {
+    const parsed = payloadSchemaFor('document').safeParse({ title: 'Tide clock state' });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data).toEqual({ title: 'Tide clock state', body: '' });
+  });
+
+  it('is distinct from document_edit, which still requires an id and a base version', () => {
+    // The two kinds share a noun and nothing else: one creates, one rewrites
+    // against a version the agent read. Mapping them to one schema would let a
+    // create proposal skip the staleness check.
+    const asEdit = payloadSchemaFor('document_edit').safeParse({ title: 'Tide clock state' });
+    expect(asEdit.success).toBe(false);
   });
 });

@@ -75,3 +75,35 @@ describe('getFixedT', () => {
     });
   });
 });
+
+describe('the silent-turn line', () => {
+  // It reports a count that is genuinely often zero — a model can decline
+  // before calling anything — and i18next only reaches a `_zero` key as a
+  // special case, since English has no zero plural category. Asserting it
+  // rather than trusting it: a missed `_zero` would render the key itself.
+  it('has a distinct key for no tool calls at all', () => {
+    // Not a `_zero` plural: English has no zero category, so i18next falls
+    // through to `_other` and renders "after 0 tool calls". Written as a
+    // test first, which is how that was found rather than shipped.
+    const line = getFixedT('en')('app.chat.silentTurnNoTools');
+    expect(line).toContain('no tools');
+    expect(line).not.toContain('{{');
+  });
+
+  it('reads as singular for one call and plural for several', () => {
+    const t = getFixedT('en');
+    expect(t('app.chat.silentTurn', { count: 1 })).toContain('1 tool call');
+    expect(t('app.chat.silentTurn', { count: 12 })).toContain('12 tool calls');
+  });
+
+  it('resolves in every locale rather than falling back to the key', () => {
+    for (const locale of ['en', 'ms', 'zh'] as const) {
+      expect(getFixedT(locale)('app.chat.silentTurnNoTools')).not.toContain('silentTurn');
+      for (const count of [1, 12]) {
+        const line = getFixedT(locale)('app.chat.silentTurn', { count });
+        expect(line).not.toContain('silentTurn');
+        expect(line).not.toContain('{{');
+      }
+    }
+  });
+});

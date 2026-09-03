@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { releaseProposal, settleProposal } from '@/lib/db/proposals';
+import { settleProposal } from '@/lib/db/proposals';
 import { applyProposal } from '@/lib/proposals/apply';
 import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 
@@ -58,7 +58,7 @@ beforeAll(async () => {
       slug: 'tutor',
       name: 'Tutor',
       system_prompt: 'Draft things.',
-      tools: ['propose_entry', 'propose_document_edit'],
+      tools: ['propose_entry', 'propose_document', 'propose_document_edit'],
     })
   ).id;
 
@@ -278,18 +278,163 @@ describe('state transitions are guarded by current status', () => {
     expect(proposal!.applied_id).not.toBeNull();
   });
 
-  it('refuses to release a proposal that is not currently claimed', async () => {
-    const id = await proposalOf({ kind: 'entry', payload: { kind: 'note', body: 'Pending.' } });
+  it('leaves nothing behind when the payload is refused', async () => {
+    // What the release path used to be for. There is no claim to put back now:
+    // validation happens before apply_proposal is called at all, so a bad
+    // payload never reaches the transaction and the proposal was never moved
+    // off 'pending' in the first place.
+    const id = await proposalOf({ kind: 'entry', payload: { kind: 'note', body: '' } });
 
-    // Nothing claimed it, so there is nothing to put back.
-    expect(await releaseProposal(client(), id)).toBe(false);
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('invalid');
 
     const { data: proposal } = await alice!.client
       .from('proposals')
-      .select('status')
+      .select('status, decided_at, applied_id')
       .eq('id', id)
       .single();
     expect(proposal!.status).toBe('pending');
+    // Untouched, not restored — the difference the transaction makes.
+    expect(proposal!.decided_at).toBeNull();
+    expect(proposal!.applied_id).toBeNull();
+  });
+
+  it('never settles a proposal without the row it claims to have produced', async () => {
+    // The invariant the transaction buys, stated directly: across every
+    // proposal in the project, an accepted one has an applied_id and that id
+    // resolves to a real row. Before, a failure between the insert and the
+    // settle could leave an accepted proposal with a null applied_id, or a
+    // pending one whose row already existed.
+    const entryId = await proposalOf({
+      kind: 'entry',
+      payload: { kind: 'note', body: 'Settled with its row.' },
+    });
+    const docId = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Settled with its row', body: 'Body.' },
+    });
+
+    for (const id of [entryId, docId]) {
+      const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+      expect(outcome.status).toBe('applied');
+    }
+
+    const { data: accepted } = await alice!.client
+      .from('proposals')
+      .select('id, kind, applied_id')
+      .eq('project_id', projectId)
+      .eq('status', 'accepted');
+
+    for (const proposal of accepted ?? []) {
+      expect(proposal.applied_id).not.toBeNull();
+
+      const table =
+        proposal.kind === 'entry'
+          ? 'entries'
+          : proposal.kind === 'work_item'
+            ? 'work_items'
+            : 'documents';
+
+      const { data: row } = await alice!.client
+        .from(table)
+        .select('id')
+        .eq('id', proposal.applied_id!)
+        .maybeSingle();
+      expect(row).not.toBeNull();
+    }
+  });
+});
+
+describe('guarantees that only hold inside the transaction', () => {
+  it('gives two work items accepted at once distinct positions', () => {
+    // The lost update: two accepts lock two *different* proposal rows, so they
+    // never contend, and both read the same max(order_index). Nothing in the
+    // schema catches the collision — there is no unique constraint on
+    // (project_id, order_index) — so the tree quietly orders them arbitrarily.
+    //
+    // The advisory lock keyed on the project is what serialises them. Without
+    // it this test can still pass by luck; with it, it cannot fail.
+    return (async () => {
+      const first = await proposalOf({
+        kind: 'work_item',
+        payload: { title: 'Order me first', kind: 'task' },
+      });
+      const second = await proposalOf({
+        kind: 'work_item',
+        payload: { title: 'Order me second', kind: 'task' },
+      });
+
+      const outcomes = await Promise.all([
+        applyProposal(client(), { proposalId: first, ownerId: alice!.id }),
+        applyProposal(client(), { proposalId: second, ownerId: alice!.id }),
+      ]);
+      expect(outcomes.every((o) => o.status === 'applied')).toBe(true);
+
+      const ids = outcomes.flatMap((o) => (o.status === 'applied' ? [o.appliedId] : []));
+      const { data: items } = await alice!.client
+        .from('work_items')
+        .select('id, order_index')
+        .in('id', ids);
+
+      const positions = (items ?? []).map((i) => i.order_index);
+      expect(new Set(positions).size).toBe(positions.length);
+    })();
+  });
+
+  it('records an edit even when the caller says there was none', async () => {
+    // `edited` is what lets the record say whose words landed. The RPC is
+    // granted to `authenticated`, so a client can call it directly with altered
+    // content and edited = false — marking its own writing as the agent's. The
+    // flag is derived by comparison as well as taken on trust, so the claim
+    // cannot be made falsely.
+    const id = await proposalOf({
+      kind: 'entry',
+      payload: { kind: 'note', body: 'What the agent proposed.' },
+    });
+
+    const { error } = await alice!.client.rpc('apply_proposal', {
+      p_proposal_id: id,
+      p_payload: { kind: 'note', body: 'What the caller substituted.' },
+      p_edited: false,
+    });
+    expect(error).toBeNull();
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('edited, applied_id, status')
+      .eq('id', id)
+      .single();
+
+    expect(proposal!.status).toBe('accepted');
+    expect(proposal!.edited).toBe(true);
+
+    const { data: entry } = await alice!.client
+      .from('entries')
+      .select('body')
+      .eq('id', proposal!.applied_id!)
+      .single();
+    expect(entry!.body).toBe('What the caller substituted.');
+  });
+
+  it('leaves edited false when the payload is untouched', async () => {
+    // The comparison must not fire on a proposal accepted as written, or the
+    // flag would mark everything edited and mean nothing. The payload stored at
+    // propose time is already the output of the same schema the caller parses
+    // through, so an unedited accept compares equal.
+    const id = await proposalOf({
+      kind: 'entry',
+      payload: { kind: 'note', body: 'Accepted exactly as proposed.' },
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('edited')
+      .eq('id', id)
+      .single();
+    expect(proposal!.edited).toBe(false);
   });
 });
 
@@ -334,5 +479,108 @@ describe('concurrent document edits based on one version', () => {
       .eq('document_id', document.id);
     expect(revisions).toHaveLength(1);
     expect(revisions![0].body).toBe('Base version.');
+  });
+});
+
+describe('applying a document proposal', () => {
+  it('creates the document with agent_id set to the proposing agent', async () => {
+    const id = await proposalOf({
+      kind: 'document',
+      payload: {
+        title: 'Harmonic constituents',
+        body: 'Five constituents, chosen for the Solent.',
+      },
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('title, body, agent_id')
+      .eq('id', outcome.appliedId)
+      .single();
+
+    expect(doc!.title).toBe('Harmonic constituents');
+    expect(doc!.body).toBe('Five constituents, chosen for the Solent.');
+    // Provenance. Null would mean the owner typed it.
+    expect(doc!.agent_id).toBe(agentId);
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('status, applied_id, target_id')
+      .eq('id', id)
+      .single();
+    expect(proposal!.status).toBe('accepted');
+    expect(proposal!.applied_id).toBe(outcome.appliedId);
+    // target_id names the document being edited. A proposal to create one has
+    // no document yet, so it stays null.
+    expect(proposal!.target_id).toBeNull();
+  });
+
+  it('produces one document when the same proposal is accepted twice', async () => {
+    // The claim is a conditional update from 'pending'. Two tabs racing must
+    // yield one document, not two — the same guarantee entries already have.
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Bearing selection', body: 'Ceramic, for the salt.' },
+    });
+
+    const first = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    const second = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+
+    expect(first.status).toBe('applied');
+    expect(second.status).toBe('gone');
+
+    const { data: docs } = await alice!.client
+      .from('documents')
+      .select('id')
+      .eq('project_id', projectId)
+      .eq('title', 'Bearing selection');
+    expect(docs).toHaveLength(1);
+  });
+
+  it('applies the owner’s edit rather than the agent’s title', async () => {
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'The agent’s title', body: 'Body as drafted.' },
+    });
+
+    const outcome = await applyProposal(client(), {
+      proposalId: id,
+      ownerId: alice!.id,
+      payloadOverride: { title: 'What the owner called it', body: 'Body as drafted.' },
+    });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('title')
+      .eq('id', outcome.appliedId)
+      .single();
+    expect(doc!.title).toBe('What the owner called it');
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('edited')
+      .eq('id', id)
+      .single();
+    expect(proposal!.edited).toBe(true);
+  });
+
+  it('returns the proposal to the inbox when the title is empty', async () => {
+    const id = await proposalOf({ kind: 'document', payload: { title: '', body: 'x' } });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('invalid');
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('status')
+      .eq('id', id)
+      .single();
+    expect(proposal!.status).toBe('pending');
   });
 });

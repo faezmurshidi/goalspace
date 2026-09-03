@@ -86,25 +86,88 @@ describe('handlers are project-scoped by context', () => {
     expect(s.calls[0].filters.id).toBe('entry-1');
   });
 
-  it('refuses a work_item_id that does not exist rather than returning nothing', async () => {
-    // The silent zero this closes: filtering on a work item that is not there
-    // is a legal query with an empty result, so a model that guessed the id
-    // reads "0 rows" as "the record is empty" and proposes from nothing.
-    // Observed three times before it was diagnosed — the intake Planner, and
-    // again through delegation.
+  it('drops a work_item_id that does not exist and returns the whole log', async () => {
+    // Three behaviours have been tried here and only this one survives contact
+    // with a model.
     //
-    // Its own stub rather than the shared one, because that one answers every
-    // maybeSingle with a row — which is exactly the lookup under test.
-    const absent = {
-      from: () => ({
-        select: () => ({
-          eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }),
-        }),
-      }),
-    } as never;
+    // Returning the empty result is a legal query with a silent zero: a model
+    // that guessed the id reads it as "the record is empty" and proposes from
+    // nothing. Observed three times.
+    //
+    // Throwing fixed that and introduced a worse failure, which only appeared
+    // live: with no entries to work from, the model guesses again. Twice
+    // observed, twelve rejected calls each — and on the second run the refusal
+    // named the real ids and stated outright that the project had none, and it
+    // guessed twelve more times.
+    //
+    // So the call succeeds, the filter is dropped, and the note says so. The
+    // model gets something to work from, and the result cannot be mistaken for
+    // a filtered one.
+    const result = (await HANDLERS.list_entries(
+      absentWorkItem([{ id: 'e-1', body: 'The tailstock lifts 4 thou.' }]),
+      { work_item_id: 'made-up', limit: 50 } as never
+    )) as { note: string; entries: unknown[] };
 
-    await expect(
-      HANDLERS.list_entries(ctx(absent), { work_item_id: 'made-up', limit: 50 } as never)
-    ).rejects.toThrow(/No work item/);
+    expect(result.entries).toHaveLength(1);
+    expect(result.note).toContain('made-up');
+    expect(result.note).toMatch(/ignored/i);
+  });
+
+  it('does not apply the invented filter to the query', async () => {
+    // The note would be a lie if the filter were still applied — the model
+    // would be told it has the whole log while holding a filtered subset, which
+    // is the silent zero wearing a different hat.
+    const ctxWithLog = absentWorkItem([{ id: 'e-1' }, { id: 'e-2' }]);
+    const result = (await HANDLERS.list_entries(ctxWithLog, {
+      work_item_id: 'made-up',
+      limit: 50,
+    } as never)) as { entries: unknown[] };
+
+    expect(result.entries).toHaveLength(2);
+    expect(ctxWithLog.appliedFilters).not.toContain('work_item_id');
+  });
+
+  it('returns a plain array when nothing was dropped', async () => {
+    // The shape changes only in the anomalous case. A caller reading a normal
+    // result must not have to unwrap it.
+    const s = stubSupabase([{ id: 'e-1' }]);
+    const result = await HANDLERS.list_entries(ctx(s.client), { limit: 50 } as never);
+    expect(Array.isArray(result)).toBe(true);
   });
 });
+
+/**
+ * A client whose work-item lookup finds nothing, and whose entries query
+ * returns `entries`. `appliedFilters` records which columns the entries query
+ * was actually filtered on, so a test can prove the invented filter was
+ * dropped rather than merely that the note claims it was.
+ */
+function absentWorkItem(entries: Record<string, unknown>[]) {
+  const appliedFilters: string[] = [];
+
+  const entriesQuery: Record<string, unknown> = {
+    eq: (column: string) => {
+      appliedFilters.push(column);
+      return entriesQuery;
+    },
+    in: () => entriesQuery,
+    order: () => entriesQuery,
+    limit: () => entriesQuery,
+    then: (resolve: (v: unknown) => unknown) => resolve({ data: entries, error: null }),
+  };
+
+  const client = {
+    from: (table: string) => {
+      if (table === 'work_items') {
+        return {
+          select: () => ({
+            eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }),
+          }),
+        };
+      }
+      return { select: () => entriesQuery };
+    },
+  } as never;
+
+  return Object.assign(ctx(client), { appliedFilters });
+}

@@ -31,6 +31,7 @@ export const REGISTRY_NAMES = [
   'record_entry',
   'propose_entry',
   'propose_work_item',
+  'propose_document',
   'propose_document_edit',
 ] as const;
 
@@ -219,6 +220,29 @@ export const REGISTRY: Record<ToolName, ToolDefinition> = {
     writes: 'proposes',
     external: false,
   },
+  propose_document: {
+    name: 'propose_document',
+    description:
+      'Propose a new document for the owner to accept or reject. This does NOT create it. ' +
+      'Use this for a standing answer the record does not yet hold in one place — what was ' +
+      'decided and why, or the current state of one part of the project. Cite the entries you ' +
+      'drew on: they are how the owner checks it. To change a document that already exists, ' +
+      'use propose_document_edit instead.',
+    inputSchema: z.object({
+      payload: z.object({
+        title: z.string().min(1).max(200),
+        body: z.string().max(200_000).default(''),
+      }),
+      rationale: z.string().min(1),
+      citations: z
+        .array(
+          z.object({ type: z.enum(['entry', 'work_item', 'document']), id: z.string().uuid() })
+        )
+        .default([]),
+    }),
+    writes: 'proposes',
+    external: false,
+  },
   propose_document_edit: {
     name: 'propose_document_edit',
     description:
@@ -272,6 +296,7 @@ export const REPO_READ = [
 export const WRITE_TOOLS = [
   'propose_entry',
   'propose_work_item',
+  'propose_document',
   'propose_document_edit',
 ] as const satisfies readonly ToolName[];
 

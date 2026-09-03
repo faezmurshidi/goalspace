@@ -1,10 +1,15 @@
 import { z } from 'zod';
 
-import { CHANGES_SOMETHING_MESSAGE, changesSomething, updateDocumentFields } from './document';
+import {
+  CHANGES_SOMETHING_MESSAGE,
+  changesSomething,
+  createDocumentSchema,
+  updateDocumentFields,
+} from './document';
 import { createEntrySchema } from './entry';
 import { createWorkItemSchema } from './work-item';
 
-export const proposalKinds = ['entry', 'work_item', 'document_edit'] as const;
+export const proposalKinds = ['entry', 'work_item', 'document', 'document_edit'] as const;
 export const proposalKindSchema = z.enum(proposalKinds);
 export type ProposalKind = z.infer<typeof proposalKindSchema>;
 
@@ -55,6 +60,11 @@ export function payloadSchemaFor(kind: ProposalKind): z.ZodTypeAny {
       return createEntrySchema;
     case 'work_item':
       return createWorkItemSchema;
+    // The create-form schema itself, not a copy. A document an agent proposes
+    // is a document a person could have typed, and the way to keep that true
+    // is to have one schema rather than two that agree today.
+    case 'document':
+      return createDocumentSchema;
     case 'document_edit':
       return documentEditPayloadSchema;
   }
