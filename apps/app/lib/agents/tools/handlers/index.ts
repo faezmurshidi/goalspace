@@ -350,6 +350,12 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
     return storeProposal(ctx, 'work_item', args.payload, args.rationale, args.citations, null);
   },
 
+  async propose_document(ctx, args: { payload: unknown; rationale: string; citations?: unknown }) {
+    // No documentVersions lookup, unlike propose_document_edit. There is no
+    // prior version to be written against — that is what makes this a create.
+    return storeProposal(ctx, 'document', args.payload, args.rationale, args.citations, null);
+  },
+
   async propose_document_edit(
     ctx,
     args: {

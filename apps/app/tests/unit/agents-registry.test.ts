@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { isAllowed, REGISTRY, REPO_READ, resolveTools } from '@/lib/agents/tools/registry';
+import {
+  isAllowed,
+  REGISTRY,
+  REPO_READ,
+  resolveTools,
+  WRITE_TOOLS,
+} from '@/lib/agents/tools/registry';
 
 describe('resolveTools', () => {
   it('returns only the intersection of registry and allowlist', () => {
@@ -89,5 +95,40 @@ describe('read_entry', () => {
     const schema = REGISTRY.read_entry.inputSchema;
     expect(schema.safeParse({ id: '11111111-1111-4111-8111-111111111111' }).success).toBe(true);
     expect(schema.safeParse({ id: 'not-a-uuid' }).success).toBe(false);
+  });
+});
+
+describe('propose_document', () => {
+  it('is a proposal tool, so the owner is asked before anything is created', () => {
+    // 'proposes' exactly, not merely truthy. record_entry is also a write and
+    // carries 'records', which is the distinction the union exists to make.
+    expect(REGISTRY.propose_document.writes).toBe('proposes');
+    expect(REGISTRY.propose_document.external).toBe(false);
+  });
+
+  it('is in WRITE_TOOLS, and therefore not in REPO_READ', () => {
+    expect(WRITE_TOOLS as readonly string[]).toContain('propose_document');
+    expect(REPO_READ as readonly string[]).not.toContain('propose_document');
+  });
+
+  it('takes a title and a body, and no document id', () => {
+    // An id would make it an edit. propose_document_edit is that tool, and it
+    // additionally requires a version the agent has read.
+    const parsed = REGISTRY.propose_document.inputSchema.safeParse({
+      payload: { title: 'Harmonic constituents', body: 'Five, for the Solent.' },
+      rationale: 'The decision is spread across four entries.',
+      citations: [],
+    });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.data.payload).not.toHaveProperty('id');
+  });
+
+  it('refuses a payload with an empty title', () => {
+    const parsed = REGISTRY.propose_document.inputSchema.safeParse({
+      payload: { body: 'A body with nothing to call it.' },
+      rationale: 'because',
+    });
+    expect(parsed.success).toBe(false);
   });
 });
