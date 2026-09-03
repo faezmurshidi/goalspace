@@ -473,7 +473,10 @@
       "region": "伙伴",
       "hintAddress": "⌘↵ 询问 · ⌘⇧↵ 记录 · {{handles}} 可直接询问",
       "reasoning": "推理过程",
-      "reasoningLive": "正在推理…"
+      "reasoningLive": "正在推理…",
+      "silentTurn_one": "经过 1 次工具调用后它没有作答。没有写入任何内容——运行记录里有它尝试过的操作。",
+      "silentTurn_other": "经过 {{count}} 次工具调用后它没有作答。没有写入任何内容——运行记录里有它尝试过的操作。",
+      "silentTurnNoTools": "它没有作答，也没有调用任何工具。没有写入任何内容。"
     },
     "create": {
       "title": "开始记录",

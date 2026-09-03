@@ -18,6 +18,7 @@ import { ASK_ABOUT_EVENT } from '@/lib/chat/ask-about';
 import { parseMention } from '@/lib/chat/mention';
 import { proposalNoticesFrom } from '@/lib/chat/proposal-notices';
 import { reasoningFrom } from '@/lib/chat/reasoning';
+import { silentTurnFrom } from '@/lib/chat/silent-turn';
 import { sendModeFor } from '@/lib/chat/send-mode';
 import { entryKinds } from '@/lib/schemas/common';
 import { captureEntryAction } from '@/app/(workspace)/actions';
@@ -213,6 +214,29 @@ export function PartnerChat({
                       streaming={status === 'streaming'}
                     />
                     <Markdown className="mt-1">{textOf(message)}</Markdown>
+                    {/* A run can end having said nothing — twelve steps of a
+                        tool call it never got right, then silence. Rendered as
+                        just the speaker label, that is indistinguishable from a
+                        turn still streaming or from the chat being broken, so
+                        it is said outright. Suppressed while streaming, when a
+                        turn with no text yet is only a turn that has not
+                        arrived. */}
+                    {status !== 'streaming' &&
+                      (() => {
+                        const silent = silentTurnFrom(message.parts);
+                        if (!silent) return null;
+                        return (
+                          <p className="label text-ink-soft mt-1">
+                            {/* A separate key rather than a _zero plural: for
+                                English i18next has no zero category and falls
+                                through to _other, which reads "after 0 tool
+                                calls". */}
+                            {silent.toolCalls === 0
+                              ? t('app.chat.silentTurnNoTools')
+                              : t('app.chat.silentTurn', { count: silent.toolCalls })}
+                          </p>
+                        );
+                      })()}
                     {/* Drawn from the delegated run's own rows, never from what
                         the Partner says about them. When it claims a proposal
                         and none was filed, nothing renders here and the claim

@@ -473,7 +473,10 @@
       "region": "Partner",
       "hintAddress": "⌘↵ ask · ⌘⇧↵ record · {{handles}} to ask one directly",
       "reasoning": "Reasoning",
-      "reasoningLive": "Reasoning…"
+      "reasoningLive": "Reasoning…",
+      "silentTurn_one": "It answered with nothing after 1 tool call. Nothing was written — the run trace has what it tried.",
+      "silentTurn_other": "It answered with nothing after {{count}} tool calls. Nothing was written — the run trace has what it tried.",
+      "silentTurnNoTools": "It answered with nothing, and called no tools. Nothing was written."
     },
     "create": {
       "title": "Start the record",
