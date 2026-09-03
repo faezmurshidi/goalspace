@@ -58,9 +58,20 @@ export async function applyProposal(
   const parsed = payloadSchemaFor(proposal.kind as never).safeParse(raw);
   if (!parsed.success) return { status: 'invalid', message: 'app.errors.validation' };
 
+  // An untouched accept sends back exactly what is stored, not the schema's
+  // normalisation of it. The function derives `edited` by comparing the two —
+  // so that a direct RPC call cannot substitute content and still claim the
+  // agent wrote it — and passing the normalised form here would differ from the
+  // stored payload on defaults alone, marking every accept as edited and
+  // draining the flag of meaning.
+  //
+  // Parsing still happens: it is what rejects an invalid payload before the
+  // transaction opens. Only the value sent differs.
+  const payload = edited ? parsed.data : proposal.payload;
+
   const { data, error } = await supabase.rpc('apply_proposal', {
     p_proposal_id: params.proposalId,
-    p_payload: parsed.data as never,
+    p_payload: payload as never,
     p_edited: edited,
   });
 

@@ -1,29 +1,53 @@
--- Accepting a proposal becomes one statement.
+-- Two corrections to apply_proposal, both raised in review on #28.
 --
--- It was four round trips: claim the proposal, insert the row, settle the
--- proposal, and release the claim if anything threw. Between the second and the
--- third there is a window with no transaction around it. A connection lost
--- there leaves the created row in place while the release puts the proposal
--- back in the inbox as pending, and the owner — who sees a suggestion that
--- looks undecided — accepts it again and gets a second entry. Nothing in the
--- schema links applied_id to the row it names, so nothing detects the
--- duplicate afterwards either.
+-- Replaced whole rather than patched: `create or replace` of a plpgsql body is
+-- all-or-nothing, and the same is true of reading one. The signature is
+-- unchanged, so nothing calling it has to move.
 --
--- The window is small and the damage is recoverable, which is why it survived
--- three phases. It is closed now because a fourth proposal kind was about to
--- inherit it, and because the fix removes code rather than adding it: the claim
--- guard, the release path, and the TypeScript staleness comparison all collapse
--- into the lock this function takes.
+-- 1. order_index allocation is now serialised per project.
 --
--- security invoker, like apply_document_edit: every statement here runs as the
--- caller and is checked by the same RLS policies their direct writes are. A
--- definer function would have to re-implement ownership checks that already
--- exist, which is the way that mistake usually gets made.
+-- The previous version computed `max(order_index) + 1` inside the transaction
+-- and its comment claimed that closed the lost update the TypeScript version
+-- had. It did not, and the comment was the worse half of the mistake. Two
+-- accepts lock two *different* proposal rows, so they never contend: both read
+-- the same maximum and both insert it. There is no unique constraint on
+-- (project_id, order_index) to catch it either, so the result is two work items
+-- claiming one position and a tree that orders them arbitrarily.
 --
--- The payload arrives already validated — the caller parses it through the same
--- zod schema the human form posts through, including the owner's inbox edits.
--- This function maps validated JSON onto columns and does not second-guess it.
-create function apply_proposal(
+-- An advisory lock keyed on the project is what actually serialises them. It is
+-- transaction-scoped, so it releases on commit or rollback with no unlock path
+-- to forget. Keyed by hashtext, so two projects can collide and serialise
+-- against each other unnecessarily — that costs a little concurrency on an
+-- operation a human performs by hand, and never costs correctness.
+--
+-- A unique constraint plus retry was the alternative. Rejected: it would need
+-- backfilling over rows that already collide, and it turns a routine accept
+-- into a loop that can fail.
+--
+-- 2. `edited` can no longer under-report.
+--
+-- It was taken from the caller. The application derives it honestly, but the
+-- grant is to `authenticated`, so a client can call this directly with an
+-- altered payload and edited = false — storing its own words in the record
+-- marked as the agent's. Whether an owner would deceive their own record is
+-- beside the point: `edited` exists so the record can say who wrote what, and a
+-- field that can be made to lie does not say anything.
+--
+-- Or-ed rather than replaced, so the flag is monotonic: a caller can still
+-- volunteer that it edited, and the comparison catches it when it does not.
+-- The payload stored at propose time is already the output of the same zod
+-- schema the caller parses through, so an untouched payload compares equal and
+-- this cannot fire spuriously — and if it ever did, it would over-report the
+-- owner's involvement, which is the harmless direction.
+--
+-- Deliberately not added: validation of p_payload's shape inside this function.
+-- A direct RPC call bypasses zod, but it grants nothing — RLS confines the
+-- caller to their own project, where they can already insert any row they like
+-- through PostgREST, and the column constraints (NOT NULL, the kind CHECKs)
+-- still reject anything the schema would have. Provenance is the part that
+-- would matter, and it is not taken from the payload: agent_id, owner_id and
+-- project_id all come from the locked proposal row.
+create or replace function apply_proposal(
   p_proposal_id uuid,
   p_payload     jsonb,
   p_edited      boolean
@@ -38,6 +62,7 @@ declare
   v_document public.documents%rowtype;
   v_base     timestamptz;
   v_applied  uuid;
+  v_edited   boolean;
 begin
   -- The lock is what replaces the conditional claim. A second tab accepting
   -- the same proposal waits here, then reads status = 'accepted' and leaves.
@@ -52,6 +77,11 @@ begin
   if not found or v_proposal.status <> 'pending' then
     return jsonb_build_object('status', 'gone');
   end if;
+
+  -- Trusted only to say "yes, I changed it". The comparison is what makes the
+  -- absence of that claim mean anything.
+  v_edited := coalesce(p_edited, false)
+              or p_payload is distinct from v_proposal.payload;
 
   if v_proposal.kind = 'entry' then
     insert into public.entries
@@ -73,6 +103,11 @@ begin
     returning id into v_applied;
 
   elsif v_proposal.kind = 'work_item' then
+    -- Serialises every accept in this project against every other, which is
+    -- what the max() below needs and what locking the proposal row does not
+    -- give: two accepts hold two different proposal locks.
+    perform pg_advisory_xact_lock(hashtext(v_proposal.project_id::text));
+
     insert into public.work_items
       (project_id, owner_id, agent_id, title, body, kind, parent_id, wake_at, order_index)
     values (
@@ -84,14 +119,8 @@ begin
       p_payload->>'kind',
       (p_payload->>'parent_id')::uuid,
       (p_payload->>'wake_at')::timestamptz,
-      -- New siblings go last.
-      --
-      -- NOTE: this claimed to close the lost update the TypeScript version had.
-      -- It does not — two accepts lock two different proposal rows, so they
-      -- never contend and both read the same maximum. Corrected in
-      -- 20260903000800, which serialises this per project. Left standing rather
-      -- than edited: the migration has run, and a comment rewritten after the
-      -- fact would hide that the reasoning was wrong at the time.
+      -- New siblings go last. Safe under the advisory lock above, and only
+      -- under it.
       (select coalesce(max(order_index), -1) + 1
          from public.work_items
         where project_id = v_proposal.project_id)
@@ -130,9 +159,7 @@ begin
 
     -- Compared as instants, not as text. Postgres renders timestamptz as
     -- `2026-08-21 00:00:00+00` while the payload carries an ISO string with a
-    -- `Z`; comparing those as strings marks every edit stale. Casting to
-    -- timestamptz is what makes the two comparable, and is the reason this
-    -- check is safe to move out of TypeScript.
+    -- `Z`; comparing those as strings marks every edit stale.
     if v_document.updated_at > v_base then
       update public.proposals
          set status = 'superseded', decided_at = now()
@@ -164,32 +191,10 @@ begin
   update public.proposals
      set status     = 'accepted',
          applied_id = v_applied,
-         edited     = p_edited,
+         edited     = v_edited,
          decided_at = now()
    where id = v_proposal.id;
 
   return jsonb_build_object('status', 'applied', 'applied_id', v_applied);
 end;
 $$;
-
-comment on function apply_proposal(uuid, jsonb, boolean) is
-  'Accept a proposal and produce the real row, in one transaction. Returns '
-  '{status: applied|superseded|gone} with applied_id when applied. The row it '
-  'creates and the proposal it settles can no longer disagree.';
-
--- anon is revoked explicitly, not just via PUBLIC. Supabase grants EXECUTE on
--- a newly created public function to anon and authenticated directly, and a
--- revoke from PUBLIC does not remove a direct grant — so the obvious two lines
--- leave anon still able to call it, which is what checking rather than assuming
--- turned up here.
---
--- Nothing was exposed either way: the function is security invoker, so an anon
--- caller runs under RLS with no visible proposal and gets 'gone'. The revoke is
--- for the reason every layer of this is: the boundary should be true, not
--- merely unreachable.
---
--- The project's other functions still carry the default anon grant. Same
--- reasoning applies to them and it is worth a sweep, but not inside a migration
--- named for one function.
-revoke all on function apply_proposal(uuid, jsonb, boolean) from public, anon;
-grant execute on function apply_proposal(uuid, jsonb, boolean) to authenticated;

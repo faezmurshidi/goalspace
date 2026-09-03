@@ -345,6 +345,99 @@ describe('state transitions are guarded by current status', () => {
   });
 });
 
+describe('guarantees that only hold inside the transaction', () => {
+  it('gives two work items accepted at once distinct positions', () => {
+    // The lost update: two accepts lock two *different* proposal rows, so they
+    // never contend, and both read the same max(order_index). Nothing in the
+    // schema catches the collision — there is no unique constraint on
+    // (project_id, order_index) — so the tree quietly orders them arbitrarily.
+    //
+    // The advisory lock keyed on the project is what serialises them. Without
+    // it this test can still pass by luck; with it, it cannot fail.
+    return (async () => {
+      const first = await proposalOf({
+        kind: 'work_item',
+        payload: { title: 'Order me first', kind: 'task' },
+      });
+      const second = await proposalOf({
+        kind: 'work_item',
+        payload: { title: 'Order me second', kind: 'task' },
+      });
+
+      const outcomes = await Promise.all([
+        applyProposal(client(), { proposalId: first, ownerId: alice!.id }),
+        applyProposal(client(), { proposalId: second, ownerId: alice!.id }),
+      ]);
+      expect(outcomes.every((o) => o.status === 'applied')).toBe(true);
+
+      const ids = outcomes.flatMap((o) => (o.status === 'applied' ? [o.appliedId] : []));
+      const { data: items } = await alice!.client
+        .from('work_items')
+        .select('id, order_index')
+        .in('id', ids);
+
+      const positions = (items ?? []).map((i) => i.order_index);
+      expect(new Set(positions).size).toBe(positions.length);
+    })();
+  });
+
+  it('records an edit even when the caller says there was none', async () => {
+    // `edited` is what lets the record say whose words landed. The RPC is
+    // granted to `authenticated`, so a client can call it directly with altered
+    // content and edited = false — marking its own writing as the agent's. The
+    // flag is derived by comparison as well as taken on trust, so the claim
+    // cannot be made falsely.
+    const id = await proposalOf({
+      kind: 'entry',
+      payload: { kind: 'note', body: 'What the agent proposed.' },
+    });
+
+    const { error } = await alice!.client.rpc('apply_proposal', {
+      p_proposal_id: id,
+      p_payload: { kind: 'note', body: 'What the caller substituted.' },
+      p_edited: false,
+    });
+    expect(error).toBeNull();
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('edited, applied_id, status')
+      .eq('id', id)
+      .single();
+
+    expect(proposal!.status).toBe('accepted');
+    expect(proposal!.edited).toBe(true);
+
+    const { data: entry } = await alice!.client
+      .from('entries')
+      .select('body')
+      .eq('id', proposal!.applied_id!)
+      .single();
+    expect(entry!.body).toBe('What the caller substituted.');
+  });
+
+  it('leaves edited false when the payload is untouched', async () => {
+    // The comparison must not fire on a proposal accepted as written, or the
+    // flag would mark everything edited and mean nothing. The payload stored at
+    // propose time is already the output of the same schema the caller parses
+    // through, so an unedited accept compares equal.
+    const id = await proposalOf({
+      kind: 'entry',
+      payload: { kind: 'note', body: 'Accepted exactly as proposed.' },
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('edited')
+      .eq('id', id)
+      .single();
+    expect(proposal!.edited).toBe(false);
+  });
+});
+
 describe('concurrent document edits based on one version', () => {
   it('applies the first and supersedes the second', async () => {
     // Both proposals were written against the same body. Whichever lands

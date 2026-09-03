@@ -166,12 +166,18 @@ export const HANDLERS: Record<ToolName, (ctx: ToolContext, args: never) => Promi
     let droppedFilter: string | null = null;
 
     if (args.work_item_id) {
-      const { data: target } = await ctx.supabase
+      const { data: target, error: lookupError } = await ctx.supabase
         .from('work_items')
         .select('id')
         .eq('project_id', ctx.projectId)
         .eq('id', args.work_item_id)
         .maybeSingle();
+
+      // A failed lookup is not a missing work item. Swallowing the error would
+      // turn a transient database fault into "your filter was wrong", quietly
+      // widening the query to the whole log and telling the model something
+      // untrue about its own request.
+      if (lookupError) throw new Error(lookupError.message);
 
       if (!target) droppedFilter = args.work_item_id;
     }
