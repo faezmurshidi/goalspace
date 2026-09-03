@@ -336,3 +336,106 @@ describe('concurrent document edits based on one version', () => {
     expect(revisions![0].body).toBe('Base version.');
   });
 });
+
+describe('applying a document proposal', () => {
+  it('creates the document with agent_id set to the proposing agent', async () => {
+    const id = await proposalOf({
+      kind: 'document',
+      payload: {
+        title: 'Harmonic constituents',
+        body: 'Five constituents, chosen for the Solent.',
+      },
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('title, body, agent_id')
+      .eq('id', outcome.appliedId)
+      .single();
+
+    expect(doc!.title).toBe('Harmonic constituents');
+    expect(doc!.body).toBe('Five constituents, chosen for the Solent.');
+    // Provenance. Null would mean the owner typed it.
+    expect(doc!.agent_id).toBe(agentId);
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('status, applied_id, target_id')
+      .eq('id', id)
+      .single();
+    expect(proposal!.status).toBe('accepted');
+    expect(proposal!.applied_id).toBe(outcome.appliedId);
+    // target_id names the document being edited. A proposal to create one has
+    // no document yet, so it stays null.
+    expect(proposal!.target_id).toBeNull();
+  });
+
+  it('produces one document when the same proposal is accepted twice', async () => {
+    // The claim is a conditional update from 'pending'. Two tabs racing must
+    // yield one document, not two — the same guarantee entries already have.
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Bearing selection', body: 'Ceramic, for the salt.' },
+    });
+
+    const first = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    const second = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+
+    expect(first.status).toBe('applied');
+    expect(second.status).toBe('gone');
+
+    const { data: docs } = await alice!.client
+      .from('documents')
+      .select('id')
+      .eq('project_id', projectId)
+      .eq('title', 'Bearing selection');
+    expect(docs).toHaveLength(1);
+  });
+
+  it('applies the owner’s edit rather than the agent’s title', async () => {
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'The agent’s title', body: 'Body as drafted.' },
+    });
+
+    const outcome = await applyProposal(client(), {
+      proposalId: id,
+      ownerId: alice!.id,
+      payloadOverride: { title: 'What the owner called it', body: 'Body as drafted.' },
+    });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('title')
+      .eq('id', outcome.appliedId)
+      .single();
+    expect(doc!.title).toBe('What the owner called it');
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('edited')
+      .eq('id', id)
+      .single();
+    expect(proposal!.edited).toBe(true);
+  });
+
+  it('returns the proposal to the inbox when the title is empty', async () => {
+    const id = await proposalOf({ kind: 'document', payload: { title: '', body: 'x' } });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('invalid');
+
+    const { data: proposal } = await alice!.client
+      .from('proposals')
+      .select('status')
+      .eq('id', id)
+      .single();
+    expect(proposal!.status).toBe('pending');
+  });
+});

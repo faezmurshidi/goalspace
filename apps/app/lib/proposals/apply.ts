@@ -1,10 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import { getDocument, updateDocument } from '@/lib/db/documents';
+import { createDocument, getDocument, updateDocument } from '@/lib/db/documents';
 import { createEntry } from '@/lib/db/entries';
 import { claimProposal, releaseProposal, settleProposal, type Proposal } from '@/lib/db/proposals';
 import { createWorkItem } from '@/lib/db/work-items';
-import type { UpdateDocumentValues } from '@/lib/schemas/document';
+import type { CreateDocumentValues, UpdateDocumentValues } from '@/lib/schemas/document';
 import type { CreateEntryValues } from '@/lib/schemas/entry';
 import { payloadSchemaFor } from '@/lib/schemas/proposal';
 import type { CreateWorkItemValues } from '@/lib/schemas/work-item';
@@ -114,6 +114,19 @@ async function applyByKind(
       agentId: proposal.agent_id,
     });
     return item.id;
+  }
+
+  if (proposal.kind === 'document') {
+    // A create cannot be superseded — there is no prior version to be stale
+    // against, which is the whole difference between this kind and
+    // document_edit. So no read, no version check, and no null return.
+    const document = await createDocument(supabase, {
+      projectId: proposal.project_id,
+      ownerId,
+      values: payload as CreateDocumentValues,
+      agentId: proposal.agent_id,
+    });
+    return document.id;
   }
 
   const edit = payload as { id: string; base_updated_at: string };
