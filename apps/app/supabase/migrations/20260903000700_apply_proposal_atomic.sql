@@ -173,5 +173,19 @@ comment on function apply_proposal(uuid, jsonb, boolean) is
   '{status: applied|superseded|gone} with applied_id when applied. The row it '
   'creates and the proposal it settles can no longer disagree.';
 
-revoke all on function apply_proposal(uuid, jsonb, boolean) from public;
+-- anon is revoked explicitly, not just via PUBLIC. Supabase grants EXECUTE on
+-- a newly created public function to anon and authenticated directly, and a
+-- revoke from PUBLIC does not remove a direct grant — so the obvious two lines
+-- leave anon still able to call it, which is what checking rather than assuming
+-- turned up here.
+--
+-- Nothing was exposed either way: the function is security invoker, so an anon
+-- caller runs under RLS with no visible proposal and gets 'gone'. The revoke is
+-- for the reason every layer of this is: the boundary should be true, not
+-- merely unreachable.
+--
+-- The project's other functions still carry the default anon grant. Same
+-- reasoning applies to them and it is worth a sweep, but not inside a migration
+-- named for one function.
+revoke all on function apply_proposal(uuid, jsonb, boolean) from public, anon;
 grant execute on function apply_proposal(uuid, jsonb, boolean) to authenticated;
