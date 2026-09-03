@@ -104,47 +104,6 @@ export async function getProposal(supabase: Client, id: string): Promise<Proposa
 }
 
 /**
- * Take a pending proposal off the board before applying it.
- *
- * The `eq('status', 'pending')` guard is the whole point: it makes the claim
- * conditional, so two tabs racing to accept the same proposal produce one
- * winner and one no-op instead of two entries. Returns null when the claim
- * lost, which the caller reports rather than treating as an error.
- */
-export async function claimProposal(supabase: Client, id: string): Promise<Proposal | null> {
-  const { data, error } = await supabase
-    .from('proposals')
-    .update({ status: 'accepted', decided_at: new Date().toISOString() })
-    .eq('id', id)
-    .eq('status', 'pending')
-    .select(PROPOSAL_COLUMNS)
-    .maybeSingle();
-
-  if (error) throw error;
-  return (data ?? null) as unknown as Proposal | null;
-}
-
-/**
- * Put a claimed proposal back, for when applying it failed.
- *
- * Guarded on 'accepted' — the state claimProposal leaves behind. Without the
- * guard a late release could resurrect a proposal that some other request had
- * already settled, putting a decided suggestion back in the inbox.
- */
-export async function releaseProposal(supabase: Client, id: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('proposals')
-    .update({ status: 'pending', decided_at: null })
-    .eq('id', id)
-    .eq('status', 'accepted')
-    .select('id')
-    .maybeSingle();
-
-  if (error) throw error;
-  return data !== null;
-}
-
-/**
  * Move a proposal to its final state.
  *
  * `from` is required rather than optional because every transition here has

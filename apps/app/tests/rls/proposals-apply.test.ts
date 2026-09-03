@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { releaseProposal, settleProposal } from '@/lib/db/proposals';
+import { settleProposal } from '@/lib/db/proposals';
 import { applyProposal } from '@/lib/proposals/apply';
 import { createTestUser, deleteTestUser, type TestUser } from '../helpers/supabase';
 
@@ -278,18 +278,70 @@ describe('state transitions are guarded by current status', () => {
     expect(proposal!.applied_id).not.toBeNull();
   });
 
-  it('refuses to release a proposal that is not currently claimed', async () => {
-    const id = await proposalOf({ kind: 'entry', payload: { kind: 'note', body: 'Pending.' } });
+  it('leaves nothing behind when the payload is refused', async () => {
+    // What the release path used to be for. There is no claim to put back now:
+    // validation happens before apply_proposal is called at all, so a bad
+    // payload never reaches the transaction and the proposal was never moved
+    // off 'pending' in the first place.
+    const id = await proposalOf({ kind: 'entry', payload: { kind: 'note', body: '' } });
 
-    // Nothing claimed it, so there is nothing to put back.
-    expect(await releaseProposal(client(), id)).toBe(false);
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('invalid');
 
     const { data: proposal } = await alice!.client
       .from('proposals')
-      .select('status')
+      .select('status, decided_at, applied_id')
       .eq('id', id)
       .single();
     expect(proposal!.status).toBe('pending');
+    // Untouched, not restored — the difference the transaction makes.
+    expect(proposal!.decided_at).toBeNull();
+    expect(proposal!.applied_id).toBeNull();
+  });
+
+  it('never settles a proposal without the row it claims to have produced', async () => {
+    // The invariant the transaction buys, stated directly: across every
+    // proposal in the project, an accepted one has an applied_id and that id
+    // resolves to a real row. Before, a failure between the insert and the
+    // settle could leave an accepted proposal with a null applied_id, or a
+    // pending one whose row already existed.
+    const entryId = await proposalOf({
+      kind: 'entry',
+      payload: { kind: 'note', body: 'Settled with its row.' },
+    });
+    const docId = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Settled with its row', body: 'Body.' },
+    });
+
+    for (const id of [entryId, docId]) {
+      const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+      expect(outcome.status).toBe('applied');
+    }
+
+    const { data: accepted } = await alice!.client
+      .from('proposals')
+      .select('id, kind, applied_id')
+      .eq('project_id', projectId)
+      .eq('status', 'accepted');
+
+    for (const proposal of accepted ?? []) {
+      expect(proposal.applied_id).not.toBeNull();
+
+      const table =
+        proposal.kind === 'entry'
+          ? 'entries'
+          : proposal.kind === 'work_item'
+            ? 'work_items'
+            : 'documents';
+
+      const { data: row } = await alice!.client
+        .from(table)
+        .select('id')
+        .eq('id', proposal.applied_id!)
+        .maybeSingle();
+      expect(row).not.toBeNull();
+    }
   });
 });
 
