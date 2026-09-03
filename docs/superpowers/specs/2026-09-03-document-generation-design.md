@@ -38,7 +38,10 @@ and on a document; locale strings for `en`, `ms`, `zh`; unit and RLS tests.
 **Out of scope:** a chat surface inside the documents tab; document types or
 templates; automatic regeneration; rich text. Each is argued in §7.
 
-**One migration**, adding a single nullable column.
+**Two migrations**, one per slice. 2e-1 widens the `proposals.kind` check
+constraint — it is `check (kind in ('entry','work_item','document_edit'))`, so
+the new kind is refused by the database until the constraint says otherwise.
+2e-2 adds a single nullable column.
 
 ## 3. Success criteria
 
@@ -63,6 +66,8 @@ could not type.
 
 `applyProposal` gains a `document` case creating the row through
 `createDocument` with `agentId` set, and recording the new id in `applied_id`.
+`target_id` stays null: it names the document being edited, and a proposal to
+create one has no document yet.
 Its existing `document_edit` case is untouched in this slice; §6.1 amends both
 to stamp the synthesis mark, and that belongs to the second slice.
 
