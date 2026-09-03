@@ -675,6 +675,16 @@
       "delete": "Delete this project",
       "deleting": "Deleting",
       "deleteMismatch": "That is not this project's slug."
+    },
+    "attachments": {
+      "title": "Files",
+      "empty": "Nothing attached.",
+      "add": "Attach a file",
+      "remove": "Remove",
+      "uploading": "Uploading",
+      "hint": "Drawings, schematics and CAD sources. Up to 50 MB.",
+      "typeRefused": "That file type is not accepted.",
+      "uploadFailed": "That did not upload. Try again."
     }
   }
 }

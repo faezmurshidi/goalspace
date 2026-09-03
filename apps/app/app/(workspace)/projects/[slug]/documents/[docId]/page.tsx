@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
+import { Attachments, type AttachmentView } from '@/components/docs/attachments';
 import { requireSessionContext } from '@/lib/auth/session';
+import { filenameFrom, listAttachments, signedUrlFor } from '@/lib/db/attachments';
 import { getDocument, listRevisions } from '@/lib/db/documents';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { AUTHOR_KEY, authorshipOf } from '@/lib/documents/authorship';
@@ -32,6 +34,20 @@ export default async function DocumentPage({ params }: Params) {
   if (!document) notFound();
 
   const revisions = await listRevisions(supabase, project.id, document.id);
+
+  // Signed here rather than in the browser: the bucket is private, so nothing
+  // can be linked to directly, and a signature minted per render expires with
+  // the page rather than sitting in client state.
+  const attachmentRows = await listAttachments(supabase, { documentId: document.id });
+  const attachments: AttachmentView[] = await Promise.all(
+    attachmentRows.map(async (row) => ({
+      id: row.id,
+      filename: filenameFrom(row.storage_path),
+      byteSize: row.byte_size,
+      url: await signedUrlFor(supabase, row.storage_path),
+    }))
+  );
+
   const locale = await getLocale();
   const timeZone = await getTimeZone();
   const t = getFixedT(locale);
@@ -40,6 +56,14 @@ export default async function DocumentPage({ params }: Params) {
     <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pt-8">
         <DocumentEditor slug={slug} document={document} />
+
+        <Attachments
+          slug={slug}
+          documentId={document.id}
+          projectId={project.id}
+          ownerId={userId}
+          attachments={attachments}
+        />
 
         <section className="pt-10">
           <h2 className="label border-rule text-ink-soft border-b pb-2">

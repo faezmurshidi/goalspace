@@ -675,6 +675,16 @@
       "delete": "Padam projek ini",
       "deleting": "Memadam",
       "deleteMismatch": "Itu bukan slug projek ini."
+    },
+    "attachments": {
+      "title": "Fail",
+      "empty": "Tiada lampiran.",
+      "add": "Lampirkan fail",
+      "remove": "Buang",
+      "uploading": "Memuat naik",
+      "hint": "Lukisan, skematik dan sumber CAD. Sehingga 50 MB.",
+      "typeRefused": "Jenis fail itu tidak diterima.",
+      "uploadFailed": "Muat naik gagal. Cuba lagi."
     }
   }
 }
