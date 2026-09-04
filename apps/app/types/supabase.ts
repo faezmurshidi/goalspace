@@ -508,6 +508,7 @@ export type Database = {
           owner_id: string
           project_id: string
           search_tsv: unknown | null
+          synthesised_at: string | null
           synthesised_through: string | null
           title: string
           updated_at: string
@@ -520,6 +521,7 @@ export type Database = {
           owner_id: string
           project_id: string
           search_tsv?: unknown | null
+          synthesised_at?: string | null
           synthesised_through?: string | null
           title: string
           updated_at?: string
@@ -532,6 +534,7 @@ export type Database = {
           owner_id?: string
           project_id?: string
           search_tsv?: unknown | null
+          synthesised_at?: string | null
           synthesised_through?: string | null
           title?: string
           updated_at?: string
@@ -1071,6 +1074,13 @@ export type Database = {
           title: string
           snippet: string
           rank: number
+        }[]
+      }
+      stale_entry_counts: {
+        Args: { p_project_id: string }
+        Returns: {
+          document_id: string
+          entries_since: number
         }[]
       }
       start_agent_run: {
