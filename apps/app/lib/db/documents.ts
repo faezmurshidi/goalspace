@@ -7,7 +7,8 @@ type Client = SupabaseClient<Database>;
 
 export type Document = Omit<Tables<'documents'>, 'search_tsv'>;
 
-const DOCUMENT_COLUMNS = 'id, project_id, owner_id, agent_id, title, body, created_at, updated_at';
+const DOCUMENT_COLUMNS =
+  'id, project_id, owner_id, agent_id, title, body, created_at, updated_at, synthesised_through';
 
 export async function listDocuments(supabase: Client, projectId: string): Promise<Document[]> {
   const { data, error } = await supabase

@@ -107,3 +107,30 @@ describe('the silent-turn line', () => {
     }
   });
 });
+
+describe('the staleness line', () => {
+  it('reads as a fact, not a judgement', () => {
+    // The count cannot know whether those entries matter to this document.
+    // Wording that implied they did — stale, outdated, needs attention —
+    // would be a claim the product cannot support.
+    expect(getFixedT('en')('app.documents.since', { count: 14 })).toBe(
+      '14 entries since this was written'
+    );
+  });
+
+  it('is singular for one', () => {
+    expect(getFixedT('en')('app.documents.since', { count: 1 })).toBe(
+      '1 entry since this was written'
+    );
+  });
+
+  it('resolves in ms and zh rather than falling back to the key', () => {
+    for (const locale of ['ms', 'zh'] as const) {
+      for (const count of [1, 14]) {
+        const line = getFixedT(locale)('app.documents.since', { count });
+        expect(line).not.toContain('documents.since');
+        expect(line).not.toContain('{{');
+      }
+    }
+  });
+});

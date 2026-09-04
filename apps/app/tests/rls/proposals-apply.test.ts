@@ -584,3 +584,294 @@ describe('applying a document proposal', () => {
     expect(proposal!.status).toBe('pending');
   });
 });
+
+describe('the synthesis mark', () => {
+  const OLDER = '2026-08-01T10:00:00.000Z';
+  const NEWER = '2026-08-20T10:00:00.000Z';
+
+  const entryAt = async (occurredAt: string, body: string) =>
+    (
+      await insert(alice!, 'entries', {
+        project_id: projectId,
+        owner_id: alice!.id,
+        kind: 'note',
+        body,
+        occurred_at: occurredAt,
+      })
+    ).id;
+
+  it('stamps the newest cited entry, not the newest entry', async () => {
+    // The mark says how far through the log this document has read. An entry
+    // it never cited has not been read, however recent it is.
+    const older = await entryAt(OLDER, 'Cited.');
+    await entryAt(NEWER, 'Not cited.');
+
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Synthesis mark', body: 'Body.' },
+      citations: [{ type: 'entry', id: older }],
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', outcome.appliedId)
+      .single();
+
+    expect(new Date(doc!.synthesised_through!).toISOString()).toBe(OLDER);
+  });
+
+  it('leaves the mark null when the proposal cited no entries', async () => {
+    // Allowed, per spec section 8: the document simply claims no currency.
+    // Null is also what a hand-written document carries, and both mean the
+    // same thing — this did not claim to synthesise anything.
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Uncited', body: 'Body.' },
+      citations: [],
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', outcome.appliedId)
+      .single();
+    expect(doc!.synthesised_through).toBeNull();
+  });
+
+  it('ignores citations that are not entries', async () => {
+    // A work item has no occurred_at, so it cannot move a mark that means
+    // "how far through the log". Citing one alone leaves the document
+    // claiming no currency rather than claiming a false one.
+    const workItem = (
+      await insert(alice!, 'work_items', {
+        project_id: projectId,
+        owner_id: alice!.id,
+        title: 'Cited work item',
+      })
+    ).id;
+
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Work item only', body: 'Body.' },
+      citations: [{ type: 'work_item', id: workItem }],
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', outcome.appliedId)
+      .single();
+    expect(doc!.synthesised_through).toBeNull();
+  });
+
+  it('moves the mark forward when a regeneration cites something newer', async () => {
+    // This is what makes a refresh mean anything: the count resets because the
+    // document has now read further.
+    const older = await entryAt(OLDER, 'First pass.');
+    const newer = await entryAt(NEWER, 'Second pass.');
+
+    const created = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Moves forward', body: 'First body.' },
+      citations: [{ type: 'entry', id: older }],
+    });
+    const first = await applyProposal(client(), { proposalId: created, ownerId: alice!.id });
+    expect(first.status).toBe('applied');
+    if (first.status !== 'applied') return;
+
+    const { data: before } = await alice!.client
+      .from('documents')
+      .select('updated_at')
+      .eq('id', first.appliedId)
+      .single();
+
+    const edit = await proposalOf({
+      kind: 'document_edit',
+      target_id: first.appliedId,
+      payload: {
+        id: first.appliedId,
+        body: 'Second body.',
+        base_updated_at: before!.updated_at,
+      },
+      citations: [{ type: 'entry', id: newer }],
+    });
+
+    const second = await applyProposal(client(), { proposalId: edit, ownerId: alice!.id });
+    expect(second.status).toBe('applied');
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', first.appliedId)
+      .single();
+    expect(new Date(doc!.synthesised_through!).toISOString()).toBe(NEWER);
+  });
+
+  it('never retreats the mark, and never erases it', async () => {
+    // A regeneration that cites only older entries has not un-read what a
+    // previous version already read. Erasing would make an agent-authored
+    // document claim to be hand-written; retreating would report entries as
+    // unread that were already synthesised.
+    const older = await entryAt(OLDER, 'Old citation.');
+    const newer = await entryAt(NEWER, 'New citation.');
+
+    const created = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Never retreats', body: 'First body.' },
+      citations: [{ type: 'entry', id: newer }],
+    });
+    const first = await applyProposal(client(), { proposalId: created, ownerId: alice!.id });
+    expect(first.status).toBe('applied');
+    if (first.status !== 'applied') return;
+
+    const { data: before } = await alice!.client
+      .from('documents')
+      .select('updated_at')
+      .eq('id', first.appliedId)
+      .single();
+
+    const edit = await proposalOf({
+      kind: 'document_edit',
+      target_id: first.appliedId,
+      payload: {
+        id: first.appliedId,
+        body: 'Second body.',
+        base_updated_at: before!.updated_at,
+      },
+      citations: [{ type: 'entry', id: older }],
+    });
+    expect((await applyProposal(client(), { proposalId: edit, ownerId: alice!.id })).status).toBe(
+      'applied'
+    );
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', first.appliedId)
+      .single();
+    // Still the newer mark, not the older one it just cited.
+    expect(new Date(doc!.synthesised_through!).toISOString()).toBe(NEWER);
+  });
+
+  it('keeps the mark when a regeneration cites nothing', async () => {
+    // This is the case that actually needs greatest() rather than a plain
+    // assignment: v_synth is null here, and plain assignment would null out a
+    // mark a previous version had already earned. A regeneration that read
+    // nothing new has not un-read what it already read.
+    const older = await entryAt(OLDER, 'First pass.');
+
+    const created = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Keeps its mark', body: 'First body.' },
+      citations: [{ type: 'entry', id: older }],
+    });
+    const first = await applyProposal(client(), { proposalId: created, ownerId: alice!.id });
+    expect(first.status).toBe('applied');
+    if (first.status !== 'applied') return;
+
+    const { data: before } = await alice!.client
+      .from('documents')
+      .select('updated_at')
+      .eq('id', first.appliedId)
+      .single();
+
+    const edit = await proposalOf({
+      kind: 'document_edit',
+      target_id: first.appliedId,
+      payload: {
+        id: first.appliedId,
+        body: 'Second body.',
+        base_updated_at: before!.updated_at,
+      },
+      citations: [],
+    });
+    expect((await applyProposal(client(), { proposalId: edit, ownerId: alice!.id })).status).toBe(
+      'applied'
+    );
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', first.appliedId)
+      .single();
+    expect(new Date(doc!.synthesised_through!).toISOString()).toBe(OLDER);
+  });
+
+  it('leaves a hand-written document unmarked', async () => {
+    // The reason the column is nullable rather than defaulted. This document
+    // never claimed to synthesise anything, so it has nothing to be behind and
+    // must never show a count.
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .insert({
+        project_id: projectId,
+        owner_id: alice!.id,
+        title: 'Typed by hand',
+        body: 'Mine.',
+      })
+      .select('synthesised_through')
+      .single();
+
+    expect(doc!.synthesised_through).toBeNull();
+  });
+
+  it('leaves the mark null when a citation names an id that is not a uuid', async () => {
+    // The join compares as text rather than casting to uuid precisely so this
+    // cannot raise. Reverting to a cast would abort the whole accept inside
+    // the transaction, bricking the proposal permanently — this pins the
+    // accept succeeding and the malformed citation simply not matching.
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Malformed citation', body: 'Body.' },
+      citations: [{ type: 'entry', id: 'not-a-uuid' }],
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', outcome.appliedId)
+      .single();
+    expect(doc!.synthesised_through).toBeNull();
+  });
+
+  it('leaves the mark null when citations is a JSON object rather than an array', async () => {
+    // jsonb_array_elements raises on anything that is not an array, including
+    // an object — and nothing stops a direct PostgREST insert from storing
+    // one, since citations is jsonb not null with no CHECK constraint. The
+    // guard on the container needs the same totality as the guard on each
+    // element already has.
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Object citations', body: 'Body.' },
+      citations: {},
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', outcome.appliedId)
+      .single();
+    expect(doc!.synthesised_through).toBeNull();
+  });
+});

@@ -5,7 +5,9 @@ import { getFixedT } from '@goalspace/i18n/server';
 
 import { requireSessionContext } from '@/lib/auth/session';
 import { listDocuments } from '@/lib/db/documents';
+import { listEntryTimes } from '@/lib/db/entries';
 import { getProjectBySlug } from '@/lib/db/projects';
+import { staleCounts } from '@/lib/documents/staleness';
 import { formatDate, getLocale, getTimeZone } from '@/lib/format';
 import { NewDocumentForm } from './new-document-form';
 
@@ -30,6 +32,14 @@ export default async function DocumentsPage({ params }: Params) {
   if (!project) notFound();
 
   const documents = await listDocuments(supabase, project.id);
+  // One query for the whole page. The counter is pure, so the per-row work is
+  // arithmetic rather than a round trip each. Only worth running when some
+  // document on the page carries a mark — today that is never, since no
+  // document in the database has been generated yet.
+  const entryTimes = documents.some((d) => d.synthesised_through !== null)
+    ? await listEntryTimes(supabase, project.id)
+    : [];
+  const stale = staleCounts(documents, entryTimes);
   const locale = await getLocale();
   const timeZone = await getTimeZone();
   const t = getFixedT(locale);
@@ -49,26 +59,38 @@ export default async function DocumentsPage({ params }: Params) {
           <p className="text-ink-soft py-6">{t('app.documents.empty')}</p>
         ) : (
           <ul>
-            {documents.map((document) => (
-              <li key={document.id} className="border-rule border-b">
-                <Link
-                  href={`/projects/${slug}/documents/${document.id}`}
-                  className="hover:bg-paper-shade flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors"
-                >
-                  <span className="text-body text-ink min-w-0 flex-1">
-                    {document.title || t('app.documents.untitled')}
-                  </span>
-                  {document.agent_id ? (
-                    <span className="label text-ink-soft shrink-0">
-                      {t('app.documents.byAgent')}
+            {documents.map((document) => {
+              const since = stale.get(document.id);
+              return (
+                <li key={document.id} className="border-rule border-b">
+                  <Link
+                    href={`/projects/${slug}/documents/${document.id}`}
+                    className="hover:bg-paper-shade flex flex-wrap items-baseline gap-x-4 gap-y-1 py-3 transition-colors"
+                  >
+                    <span className="text-body text-ink min-w-0 flex-1">
+                      {document.title || t('app.documents.untitled')}
                     </span>
-                  ) : null}
-                  <span className="label text-ink-soft shrink-0 tabular-nums">
-                    {formatDate(document.updated_at, locale, timeZone)}
-                  </span>
-                </Link>
-              </li>
-            ))}
+                    {document.agent_id ? (
+                      <span className="label text-ink-soft shrink-0">
+                        {t('app.documents.byAgent')}
+                      </span>
+                    ) : null}
+                    {/* Only for documents that claimed to synthesise the record,
+                        and only when the log has moved past them. A hand-written
+                        document is absent from the map; a current one is present
+                        with zero; neither has anything to say. */}
+                    {(since ?? 0) > 0 ? (
+                      <span className="label text-ink-soft shrink-0">
+                        {t('app.documents.since', { count: since })}
+                      </span>
+                    ) : null}
+                    <span className="label text-ink-soft shrink-0 tabular-nums">
+                      {formatDate(document.updated_at, locale, timeZone)}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
