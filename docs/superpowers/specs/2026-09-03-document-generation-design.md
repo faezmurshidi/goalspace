@@ -1,6 +1,6 @@
 # Document Generation Design
 
-**Status:** designed, not started. Phase 2e.
+**Status:** 2e-1 shipped 2026-09-03 (#28). 2e-2 shipped 2026-09-04, with §8's backdating row unmet — see §8.1.
 **Related:** [PRODUCT.md](../../../PRODUCT.md) · [grounded co-partner design](2026-07-30-goalspace-grounded-copartner-design.md) (§6) · [co-partner chat design](2026-09-02-copartner-chat-design.md) · [ROADMAP](../../ROADMAP.md)
 
 ---
@@ -163,9 +163,35 @@ working on. Staleness is a signal, and acting on it is the owner's.
 | Proposal cites an entry that does not resolve | Refused at propose time, as every citation already is |
 | Proposal cites nothing | Allowed; `synthesised_through` stays null, so the document claims no currency |
 | Document edited by hand after generation | `synthesised_through` unchanged — it still records what was synthesised, and the owner's edit is not a synthesis |
-| Entry backdated after the document was written | Counts as behind, correctly: the document did not see it |
+| Entry backdated after the document was written | **Not met as built — see §8.1.** Should count as behind, since the document did not see it |
 | Entry deleted | Count falls. Nothing to reconcile; the mark is a timestamp, not a list |
 | Tutor deleted by the owner | No document proposals. The editor and the create form are untouched |
+
+### 8.1 The backdating gap, unresolved
+
+Slice 2e-2 shipped the count as §6.2 defines it: entries whose `occurred_at` is
+later than `synthesised_through`. That and the backdating row above cannot both
+be true, and the row is the one that is right about what the feature is for.
+
+An entry written up on Monday and dated Saturday morning, against a document
+generated Sunday with a mark of Saturday 18:00, is invisible to the count. The
+document never saw that entry. The page says it is current.
+
+This is the direction that matters. A count that reads high is noise the owner
+can dismiss; a count that reads low tells them a document is more current than
+it is, which is precisely the rot §1 says this feature exists to reveal. And it
+is reachable through the ordinary workflow — backdating is why `occurred_at` is
+separate from `created_at` in the first place.
+
+The mark conflates two things that only look the same: how far through the log
+a document read, and when it did the reading. Closing the gap means storing both
+— `synthesised_at` alongside `synthesised_through` — and counting an entry when
+either `occurred_at > synthesised_through` or `created_at > synthesised_at`.
+
+Left open deliberately rather than patched, because it is a schema decision and
+because amending this row down to match the implementation would be softening a
+promise to fit what was built. The row stands as written; this section records
+that it is not yet kept.
 
 ## 9. Testing
 
