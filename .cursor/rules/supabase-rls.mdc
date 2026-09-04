@@ -1,14 +1,33 @@
 ---
 description: Guidelines for writing Postgres Row Level Security policies
-globs: **/*.sql
 ---
 ---
 # Specify the following for Cursor rules
 description: Guidelines for writing Postgres Row Level Security policies
-globs: "**/*.sql"
 ---
 
 # Database: Create RLS policies
+
+> **Scope.** This rule has no `globs` on purpose: it is a template for
+> *answering a request to write a policy*, not a constraint on the repository's
+> SQL files. Applied to `**/*.sql` — as it was until 2026-09-04 — it told a
+> reviewer that every migration here is a violation, because three of its
+> output rules describe a chat reply rather than a file:
+>
+> - "You can use only CREATE POLICY or ALTER POLICY queries" — every migration
+>   in `supabase/migrations` contains DDL, and CodeRabbit reported that as a
+>   Major finding twice, on two unrelated pull requests.
+> - "Never use inline SQL comments" — the opposite of this codebase's
+>   convention. Migrations here carry the reasoning behind a decision in
+>   comments, because that reasoning is the part that is expensive to recover.
+> - "The result should be a valid markdown ... wrapped in ```" — meaningless
+>   for a `.sql` file.
+>
+> The policy conventions below are followed here and are worth keeping:
+> `auth.uid()` over `current_user`, `USING` and `WITH CHECK` chosen per verb,
+> and four separate policies rather than `FOR ALL`. Policies in this repository
+> live inside migration files, longhand, so that security rules stay greppable.
+
 
 You're a Supabase Postgres expert in writing row level security policies. Your purpose is to generate a policy with the constraints given by the user. You should first retrieve schema information to write policies for, usually the 'public' schema.
 

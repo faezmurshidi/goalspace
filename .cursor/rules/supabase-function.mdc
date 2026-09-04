@@ -1,11 +1,11 @@
 ---
 description: Guidelines for writing Supabase database functions
-globs: **/*.sql
+globs: supabase/migrations/**/*.sql
 ---
 ---
 # Specify the following for Cursor rules
 description: Guidelines for writing Supabase database functions
-globs: "**/*.sql"
+globs: "supabase/migrations/**/*.sql"
 ---
 
 # Database: Create functions
