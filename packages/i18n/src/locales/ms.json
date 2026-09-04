@@ -577,7 +577,9 @@
       "backToDocument": "Kembali ke dokumen",
       "write": "Tulis",
       "preview": "Pratonton",
-      "previewEmpty": "Tiada apa-apa untuk dipratonton lagi."
+      "previewEmpty": "Tiada apa-apa untuk dipratonton lagi.",
+      "since_one": "1 catatan sejak ini ditulis",
+      "since_other": "{{count}} catatan sejak ini ditulis"
     },
     "agents": {
       "title": "Ejen",

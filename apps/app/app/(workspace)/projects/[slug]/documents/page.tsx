@@ -4,8 +4,9 @@ import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
 import { requireSessionContext } from '@/lib/auth/session';
-import { listDocuments } from '@/lib/db/documents';
+import { listDocuments, listEntryTimes } from '@/lib/db/documents';
 import { getProjectBySlug } from '@/lib/db/projects';
+import { staleCounts } from '@/lib/documents/staleness';
 import { formatDate, getLocale, getTimeZone } from '@/lib/format';
 import { NewDocumentForm } from './new-document-form';
 
@@ -30,6 +31,9 @@ export default async function DocumentsPage({ params }: Params) {
   if (!project) notFound();
 
   const documents = await listDocuments(supabase, project.id);
+  // One query for the whole page. The counter is pure, so the per-row work is
+  // arithmetic rather than a round trip each.
+  const stale = staleCounts(documents, await listEntryTimes(supabase, project.id));
   const locale = await getLocale();
   const timeZone = await getTimeZone();
   const t = getFixedT(locale);
@@ -61,6 +65,15 @@ export default async function DocumentsPage({ params }: Params) {
                   {document.agent_id ? (
                     <span className="label text-ink-soft shrink-0">
                       {t('app.documents.byAgent')}
+                    </span>
+                  ) : null}
+                  {/* Only for documents that claimed to synthesise the record,
+                      and only when the log has moved past them. A hand-written
+                      document is absent from the map; a current one is present
+                      with zero; neither has anything to say. */}
+                  {(stale.get(document.id) ?? 0) > 0 ? (
+                    <span className="label text-ink-soft shrink-0">
+                      {t('app.documents.since', { count: stale.get(document.id) })}
                     </span>
                   ) : null}
                   <span className="label text-ink-soft shrink-0 tabular-nums">

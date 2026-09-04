@@ -6,9 +6,10 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { Attachments, type AttachmentView } from '@/components/docs/attachments';
 import { requireSessionContext } from '@/lib/auth/session';
 import { filenameFrom, listAttachments, signedUrlFor } from '@/lib/db/attachments';
-import { getDocument, listRevisions } from '@/lib/db/documents';
+import { getDocument, listEntryTimes, listRevisions } from '@/lib/db/documents';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { AUTHOR_KEY, authorshipOf } from '@/lib/documents/authorship';
+import { staleCounts } from '@/lib/documents/staleness';
 import { formatDateTime, getLocale, getTimeZone } from '@/lib/format';
 import { DocumentEditor } from './document-editor';
 
@@ -35,6 +36,10 @@ export default async function DocumentPage({ params }: Params) {
 
   const revisions = await listRevisions(supabase, project.id, document.id);
 
+  const since = staleCounts([document], await listEntryTimes(supabase, project.id)).get(
+    document.id
+  );
+
   // Signed here rather than in the browser: the bucket is private, so nothing
   // can be linked to directly, and a signature minted per render expires with
   // the page rather than sitting in client state.
@@ -56,6 +61,14 @@ export default async function DocumentPage({ params }: Params) {
     <div className="mx-auto w-full max-w-4xl px-6">
       <div className="pt-8">
         <DocumentEditor slug={slug} document={document} />
+
+        {/* Below the document rather than above it: the document is what the
+            owner came for, and this is a note about it. */}
+        {(since ?? 0) > 0 ? (
+          <p className="label text-ink-soft pt-4">
+            {t('app.documents.since', { count: since })}
+          </p>
+        ) : null}
 
         <Attachments
           slug={slug}

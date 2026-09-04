@@ -577,7 +577,9 @@
       "backToDocument": "Back to the document",
       "write": "Write",
       "preview": "Preview",
-      "previewEmpty": "Nothing to preview yet."
+      "previewEmpty": "Nothing to preview yet.",
+      "since_one": "1 entry since this was written",
+      "since_other": "{{count}} entries since this was written"
     },
     "agents": {
       "title": "Agents",
