@@ -1,6 +1,6 @@
 # Document Generation Design
 
-**Status:** 2e-1 shipped 2026-09-03 (#28). 2e-2 shipped 2026-09-04, with §8's backdating row unmet — see §8.1.
+**Status:** 2e-1 shipped 2026-09-03 (#28). 2e-2 shipped 2026-09-04 (#29). 2e-3 closes §8.1 and the count's 1000-row ceiling.
 **Related:** [PRODUCT.md](../../../PRODUCT.md) · [grounded co-partner design](2026-07-30-goalspace-grounded-copartner-design.md) (§6) · [co-partner chat design](2026-09-02-copartner-chat-design.md) · [ROADMAP](../../ROADMAP.md)
 
 ---
@@ -98,6 +98,15 @@ The newest `occurred_at` among the entries the accepted proposal cited. Set on
 apply, for both a `document` and a `document_edit` — so regenerating moves the
 mark forward, which is what makes a refresh mean something.
 
+**Amended by 2e-3: there are two marks, not one.** `synthesised_through` is how
+far through the log the document read; `synthesised_at` is when it did the
+reading. One timestamp could not answer both, and §8.1 is the failure that came
+of conflating them. Both are written together and only when the proposal cited
+at least one entry — a proposal citing nothing did not synthesise, so it moves
+neither. A row stamped before 2e-3 has a `synthesised_through` and no
+`synthesised_at`; that is honest, since when it read is genuinely unknown, and
+it heals on the next regeneration.
+
 **Null means hand-written, and stays null.** A document typed by the owner never
 claimed to synthesise the record, so it has nothing to be behind. The staleness
 line appears only on documents that made the claim. This is the reason the
@@ -106,7 +115,12 @@ would be wrong.
 
 ### 6.2 What is shown
 
-The count of entries whose `occurred_at` is later than `synthesised_through`.
+The count of entries the document has not read.
+
+**Amended by 2e-3.** An entry counts when `occurred_at > synthesised_through`
+**or** `created_at > synthesised_at` — it happened after the document's reach,
+or it was written down after the document did its reading. The first condition
+alone was the original definition and it is the one §8.1 records as wrong.
 
 Stated as a fact — *"14 entries since this was written"* — and not as a
 judgement. The count cannot know whether those entries matter: a note about
@@ -117,15 +131,28 @@ without doing the reading themselves.
 
 ### 6.3 How it is counted
 
-One query for the project's entry timestamps, then a pure function:
+**Amended by 2e-3: in the database, not in a pure function.**
 
-```ts
-staleCounts(documents, entryTimes): Map<string, number>
-```
+It was one query for the project's entry timestamps and a pure `staleCounts`
+over them. That was right while the count was a single comparison over a small
+array, and it stopped being right for two reasons at once.
 
-Pure because it is the piece that can be wrong in a way nobody notices, and
-one query rather than one per row because the list page renders every document.
-Entry timestamps for a project are small and already indexed by `occurred_at`.
+Fetching rows in order to count them has a ceiling: PostgREST caps a response
+at 1000 rows, so a project further than 1000 entries past a mark rendered 1000
+as though it were exact. A count that reads low is the one failure this feature
+exists to prevent, and stating a truncated number as a precise one is a worse
+version of it than saying nothing.
+
+And the two-condition predicate needs both timestamps per entry, doubling a
+payload that was already the wrong shape.
+
+So the count is a `security invoker` function, `stale_entry_counts(project_id)`,
+returning one row per marked document. No ceiling, one round trip for the whole
+page, and the predicate sits beside the marks it reads. It is proven against a
+real database by the RLS suite rather than against fabricated arrays — which for
+a comparison whose whole difficulty is Postgres timestamp semantics is the
+stronger evidence, and is why the pure function is deleted rather than kept
+alongside.
 
 ### 6.4 Where
 
@@ -163,11 +190,11 @@ working on. Staleness is a signal, and acting on it is the owner's.
 | Proposal cites an entry that does not resolve | Refused at propose time, as every citation already is |
 | Proposal cites nothing | Allowed; `synthesised_through` stays null, so the document claims no currency |
 | Document edited by hand after generation | `synthesised_through` unchanged — it still records what was synthesised, and the owner's edit is not a synthesis |
-| Entry backdated after the document was written | **Not met as built — see §8.1.** Should count as behind, since the document did not see it |
+| Entry backdated after the document was written | Counts as behind, correctly: the document did not see it. **Met from 2e-3** — see §8.1 |
 | Entry deleted | Count falls. Nothing to reconcile; the mark is a timestamp, not a list |
 | Tutor deleted by the owner | No document proposals. The editor and the create form are untouched |
 
-### 8.1 The backdating gap, unresolved
+### 8.1 The backdating gap, and how it was closed
 
 Slice 2e-2 shipped the count as §6.2 defines it: entries whose `occurred_at` is
 later than `synthesised_through`. That and the backdating row above cannot both
@@ -188,10 +215,23 @@ a document read, and when it did the reading. Closing the gap means storing both
 — `synthesised_at` alongside `synthesised_through` — and counting an entry when
 either `occurred_at > synthesised_through` or `created_at > synthesised_at`.
 
-Left open deliberately rather than patched, because it is a schema decision and
-because amending this row down to match the implementation would be softening a
-promise to fit what was built. The row stands as written; this section records
-that it is not yet kept.
+Left open at 2e-2 rather than patched, because it is a schema decision and
+because amending the row down to match the implementation would have been
+softening a promise to fit what was built. The row stood as written and this
+section recorded that it was not yet kept.
+
+**Closed in 2e-3.** Two independent reviews — the branch's own final review and
+CodeRabbit on #29 — arrived at this gap separately and prescribed the same fix,
+which is about as much agreement as a design question gets. `synthesised_at`
+now records when the reading happened, and an entry counts when it is past
+either mark. §6.1, §6.2 and §6.3 carry the amended design.
+
+Kept here rather than rewritten away, because the useful part of this section is
+not the resolution. It is that a spec can promise one thing in §8 and define
+another in §6.2, that both halves were written in the same sitting by the same
+author, and that neither review of 2e-1 nor three reviews of 2e-2's code caught
+it — because every one of them was checking the code against §6.2, which the
+code matched.
 
 ## 9. Testing
 
