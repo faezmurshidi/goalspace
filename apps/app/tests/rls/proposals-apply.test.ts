@@ -827,4 +827,51 @@ describe('the synthesis mark', () => {
 
     expect(doc!.synthesised_through).toBeNull();
   });
+
+  it('leaves the mark null when a citation names an id that is not a uuid', async () => {
+    // The join compares as text rather than casting to uuid precisely so this
+    // cannot raise. Reverting to a cast would abort the whole accept inside
+    // the transaction, bricking the proposal permanently — this pins the
+    // accept succeeding and the malformed citation simply not matching.
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Malformed citation', body: 'Body.' },
+      citations: [{ type: 'entry', id: 'not-a-uuid' }],
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', outcome.appliedId)
+      .single();
+    expect(doc!.synthesised_through).toBeNull();
+  });
+
+  it('leaves the mark null when citations is a JSON object rather than an array', async () => {
+    // jsonb_array_elements raises on anything that is not an array, including
+    // an object — and nothing stops a direct PostgREST insert from storing
+    // one, since citations is jsonb not null with no CHECK constraint. The
+    // guard on the container needs the same totality as the guard on each
+    // element already has.
+    const id = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Object citations', body: 'Body.' },
+      citations: {},
+    });
+
+    const outcome = await applyProposal(client(), { proposalId: id, ownerId: alice!.id });
+    expect(outcome.status).toBe('applied');
+    if (outcome.status !== 'applied') return;
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', outcome.appliedId)
+      .single();
+    expect(doc!.synthesised_through).toBeNull();
+  });
 });

@@ -6,7 +6,8 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { Attachments, type AttachmentView } from '@/components/docs/attachments';
 import { requireSessionContext } from '@/lib/auth/session';
 import { filenameFrom, listAttachments, signedUrlFor } from '@/lib/db/attachments';
-import { getDocument, listEntryTimes, listRevisions } from '@/lib/db/documents';
+import { getDocument, listRevisions } from '@/lib/db/documents';
+import { listEntryTimes } from '@/lib/db/entries';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { AUTHOR_KEY, authorshipOf } from '@/lib/documents/authorship';
 import { staleCounts } from '@/lib/documents/staleness';
@@ -36,9 +37,11 @@ export default async function DocumentPage({ params }: Params) {
 
   const revisions = await listRevisions(supabase, project.id, document.id);
 
-  const since = staleCounts([document], await listEntryTimes(supabase, project.id)).get(
-    document.id
-  );
+  // Only worth the query when this document carries a mark — a hand-written
+  // one is absent from staleCounts' result regardless.
+  const entryTimes =
+    document.synthesised_through !== null ? await listEntryTimes(supabase, project.id) : [];
+  const since = staleCounts([document], entryTimes).get(document.id);
 
   // Signed here rather than in the browser: the bucket is private, so nothing
   // can be linked to directly, and a signature minted per render expires with
@@ -65,9 +68,7 @@ export default async function DocumentPage({ params }: Params) {
         {/* Below the document rather than above it: the document is what the
             owner came for, and this is a note about it. */}
         {(since ?? 0) > 0 ? (
-          <p className="label text-ink-soft pt-4">
-            {t('app.documents.since', { count: since })}
-          </p>
+          <p className="label text-ink-soft pt-4">{t('app.documents.since', { count: since })}</p>
         ) : null}
 
         <Attachments

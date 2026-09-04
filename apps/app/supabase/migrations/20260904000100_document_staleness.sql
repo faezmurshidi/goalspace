@@ -180,8 +180,18 @@ begin
     -- application's schema accepts uppercase hex; without it, a citation
     -- stored in uppercase would silently fail to match and the mark would
     -- come back null instead of stamped.
+    --
+    -- The same totality applies one level up: jsonb_array_elements raises on
+    -- anything that is not a JSON array, including '[]'::jsonb's neighbours
+    -- 'null'::jsonb and a bare object. citations is jsonb not null with no
+    -- CHECK constraint, so a malformed container is exactly as reachable as a
+    -- malformed element, and would abort the accept the same way a cast
+    -- would — the failure mode the guard on the element already exists to
+    -- prevent.
     select max(e.occurred_at) into v_synth
-      from jsonb_array_elements(v_proposal.citations) as c
+      from jsonb_array_elements(
+             case when jsonb_typeof(v_proposal.citations) = 'array'
+                  then v_proposal.citations else '[]'::jsonb end) as c
       join public.entries e
         on e.id::text = lower(c->>'id')
        and e.project_id = v_proposal.project_id

@@ -29,7 +29,14 @@ export function staleCounts(
   const counts = new Map<string, number>();
 
   for (const document of documents) {
-    if (document.synthesised_through === null) continue;
+    // A type check rather than a null check: PostgREST yields `undefined`,
+    // not `null`, if this column is ever dropped from the explicit column
+    // list a query selects. Today that distinction is invisible — Date.parse
+    // of either is NaN, and the guard below catches it — but this is the
+    // function this plan calls the piece that can be wrong in a way nobody
+    // notices, so it says what is meant instead of relying on the next guard
+    // to paper over a case this one should have named.
+    if (typeof document.synthesised_through !== 'string') continue;
 
     const mark = Date.parse(document.synthesised_through);
     // A mark that will not parse is not evidence that the whole log is unread.
