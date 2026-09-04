@@ -766,6 +766,50 @@ describe('the synthesis mark', () => {
     expect(new Date(doc!.synthesised_through!).toISOString()).toBe(NEWER);
   });
 
+  it('keeps the mark when a regeneration cites nothing', async () => {
+    // This is the case that actually needs greatest() rather than a plain
+    // assignment: v_synth is null here, and plain assignment would null out a
+    // mark a previous version had already earned. A regeneration that read
+    // nothing new has not un-read what it already read.
+    const older = await entryAt(OLDER, 'First pass.');
+
+    const created = await proposalOf({
+      kind: 'document',
+      payload: { title: 'Keeps its mark', body: 'First body.' },
+      citations: [{ type: 'entry', id: older }],
+    });
+    const first = await applyProposal(client(), { proposalId: created, ownerId: alice!.id });
+    expect(first.status).toBe('applied');
+    if (first.status !== 'applied') return;
+
+    const { data: before } = await alice!.client
+      .from('documents')
+      .select('updated_at')
+      .eq('id', first.appliedId)
+      .single();
+
+    const edit = await proposalOf({
+      kind: 'document_edit',
+      target_id: first.appliedId,
+      payload: {
+        id: first.appliedId,
+        body: 'Second body.',
+        base_updated_at: before!.updated_at,
+      },
+      citations: [],
+    });
+    expect((await applyProposal(client(), { proposalId: edit, ownerId: alice!.id })).status).toBe(
+      'applied'
+    );
+
+    const { data: doc } = await alice!.client
+      .from('documents')
+      .select('synthesised_through')
+      .eq('id', first.appliedId)
+      .single();
+    expect(new Date(doc!.synthesised_through!).toISOString()).toBe(OLDER);
+  });
+
   it('leaves a hand-written document unmarked', async () => {
     // The reason the column is nullable rather than defaulted. This document
     // never claimed to synthesise anything, so it has nothing to be behind and

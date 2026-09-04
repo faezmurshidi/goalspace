@@ -165,13 +165,25 @@ begin
     -- document and neither has an occurred_at; the mark means "how far through
     -- the log", so only the log can move it.
     --
-    -- Scoped to this project as well as to the id. RLS already confines the
-    -- read and the citations were resolved against the project before the
-    -- proposal was stored — this is the third layer, and it is the cheap one.
+    -- Scoped to this project as well as to the id. That scoping is a real
+    -- check, not a formality: nothing below the application enforces the
+    -- shape of a citation. `proposals.citations` is jsonb with no CHECK
+    -- constraint, and the insert policy verifies ownership, not content, so a
+    -- direct PostgREST insert can store a citation naming any id at all,
+    -- including one from another project.
+    --
+    -- Compared as text rather than cast to uuid, because a cast raises on a
+    -- non-uuid string, and that raise would abort the whole accept inside
+    -- this transaction — a proposal stored with a malformed id would become
+    -- permanently unacceptable rather than simply uncited. lower() matters
+    -- because Postgres renders uuid as lowercase canonical text while the
+    -- application's schema accepts uppercase hex; without it, a citation
+    -- stored in uppercase would silently fail to match and the mark would
+    -- come back null instead of stamped.
     select max(e.occurred_at) into v_synth
       from jsonb_array_elements(v_proposal.citations) as c
       join public.entries e
-        on e.id = (c->>'id')::uuid
+        on e.id::text = lower(c->>'id')
        and e.project_id = v_proposal.project_id
      where c->>'type' = 'entry';
 
