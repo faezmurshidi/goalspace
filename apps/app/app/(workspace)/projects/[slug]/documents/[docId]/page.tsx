@@ -6,11 +6,9 @@ import { getFixedT } from '@goalspace/i18n/server';
 import { Attachments, type AttachmentView } from '@/components/docs/attachments';
 import { requireSessionContext } from '@/lib/auth/session';
 import { filenameFrom, listAttachments, signedUrlFor } from '@/lib/db/attachments';
-import { getDocument, listRevisions } from '@/lib/db/documents';
-import { listEntryTimes } from '@/lib/db/entries';
+import { getDocument, listRevisions, staleCountsFor } from '@/lib/db/documents';
 import { getProjectBySlug } from '@/lib/db/projects';
 import { AUTHOR_KEY, authorshipOf } from '@/lib/documents/authorship';
-import { staleCounts } from '@/lib/documents/staleness';
 import { formatDateTime, getLocale, getTimeZone } from '@/lib/format';
 import { DocumentEditor } from './document-editor';
 
@@ -37,11 +35,7 @@ export default async function DocumentPage({ params }: Params) {
 
   const revisions = await listRevisions(supabase, project.id, document.id);
 
-  // Only worth the query when this document carries a mark — a hand-written
-  // one is absent from staleCounts' result regardless.
-  const entryTimes =
-    document.synthesised_through !== null ? await listEntryTimes(supabase, project.id) : [];
-  const since = staleCounts([document], entryTimes).get(document.id);
+  const since = (await staleCountsFor(supabase, project.id)).get(document.id);
 
   // Signed here rather than in the browser: the bucket is private, so nothing
   // can be linked to directly, and a signature minted per render expires with
