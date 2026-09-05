@@ -194,6 +194,31 @@ describe('the count', () => {
     expect(counts.get(id)).toBe(0);
   });
 
+  it('scores several documents against one log in a single call', async () => {
+    // The shape the documents list actually uses, and the one every other case
+    // here misses by scoring a single document. `group by d.id` makes a
+    // cross-document mix-up unlikely by construction, which is an argument for
+    // why this passes rather than for why it should go untested — a deleted
+    // unit case covered it and nothing replaced it.
+    //
+    // Both entries are created before both documents, so neither document's
+    // `synthesised_at` can catch one by the created_at half of the predicate.
+    // What separates the two counts is purely how far each one reached.
+    const early = await entryAt('2026-08-01T00:00:00.000Z');
+    const late = await entryAt('2026-08-20T00:00:00.000Z');
+
+    const behind = await generatedDocument('Read only the early one', [early]);
+    const current = await generatedDocument('Read the later one', [late]);
+
+    const counts = await staleCountsFor(alice!.client as never, projectId);
+
+    // Reached 2026-08-01, so the later entry is unread.
+    expect(counts.get(behind)).toBe(1);
+    // Reached 2026-08-20: the later entry is exactly on its mark and the
+    // earlier one precedes it, so both are read.
+    expect(counts.get(current)).toBe(0);
+  });
+
   it('omits a hand-written document rather than counting zero', async () => {
     // Null means it never claimed to synthesise. Absent and zero are different
     // claims and the pages render them the same way for different reasons.
