@@ -784,7 +784,7 @@ describe('the synthesis mark', () => {
 
     const { data: before } = await alice!.client
       .from('documents')
-      .select('updated_at')
+      .select('updated_at, synthesised_at')
       .eq('id', first.appliedId)
       .single();
 
@@ -804,10 +804,14 @@ describe('the synthesis mark', () => {
 
     const { data: doc } = await alice!.client
       .from('documents')
-      .select('synthesised_through')
+      .select('synthesised_through, synthesised_at')
       .eq('id', first.appliedId)
       .single();
     expect(new Date(doc!.synthesised_through!).toISOString()).toBe(OLDER);
+    // The guard's whole reason to exist: a regeneration citing nothing must not
+    // give an already-marked document a fresh synthesised_at either, or every
+    // entry written before this moment would become invisible to the count.
+    expect(doc!.synthesised_at).toBe(before!.synthesised_at);
   });
 
   it('leaves a hand-written document unmarked', async () => {

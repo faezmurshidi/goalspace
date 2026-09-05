@@ -4,10 +4,8 @@ import { notFound } from 'next/navigation';
 import { getFixedT } from '@goalspace/i18n/server';
 
 import { requireSessionContext } from '@/lib/auth/session';
-import { listDocuments } from '@/lib/db/documents';
-import { listEntryTimes } from '@/lib/db/entries';
+import { listDocuments, staleCountsFor } from '@/lib/db/documents';
 import { getProjectBySlug } from '@/lib/db/projects';
-import { staleCounts } from '@/lib/documents/staleness';
 import { formatDate, getLocale, getTimeZone } from '@/lib/format';
 import { NewDocumentForm } from './new-document-form';
 
@@ -32,14 +30,8 @@ export default async function DocumentsPage({ params }: Params) {
   if (!project) notFound();
 
   const documents = await listDocuments(supabase, project.id);
-  // One query for the whole page. The counter is pure, so the per-row work is
-  // arithmetic rather than a round trip each. Only worth running when some
-  // document on the page carries a mark — today that is never, since no
-  // document in the database has been generated yet.
-  const entryTimes = documents.some((d) => d.synthesised_through !== null)
-    ? await listEntryTimes(supabase, project.id)
-    : [];
-  const stale = staleCounts(documents, entryTimes);
+  // One round trip, no ceiling, and no fetch of rows in order to count them.
+  const stale = await staleCountsFor(supabase, project.id);
   const locale = await getLocale();
   const timeZone = await getTimeZone();
   const t = getFixedT(locale);

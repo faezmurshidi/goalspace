@@ -70,33 +70,6 @@ export async function getLatestEntryAt(
   return data?.occurred_at ?? null;
 }
 
-/**
- * Every entry's occurred_at for a project, newest first.
- *
- * One query rather than one per document, because the list page renders all of
- * them and a count-per-row would be a query-per-row. Timestamps only: the
- * counter needs nothing else, and pulling bodies to count them would make the
- * page cost grow with the size of the log rather than its length.
- *
- * Capped at PostgREST's own `api.max_rows` (1000) explicitly, so the bound is
- * deliberate rather than inherited from config. Descending order makes this
- * survivable — the newest entries, which are exactly the ones that can exceed
- * a document's mark, are the ones kept — but a project past 1000 entries
- * still under-reports its stale counts, which is the direction this feature
- * exists to prevent. A "1000+" display is a follow-up, not this fix.
- */
-export async function listEntryTimes(supabase: Client, projectId: string): Promise<string[]> {
-  const { data, error } = await supabase
-    .from('entries')
-    .select('occurred_at')
-    .eq('project_id', projectId)
-    .order('occurred_at', { ascending: false })
-    .limit(1000);
-
-  if (error) throw error;
-  return (data ?? []).map((row) => row.occurred_at);
-}
-
 export async function createEntry(
   supabase: Client,
   params: {

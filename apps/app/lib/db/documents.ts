@@ -8,7 +8,7 @@ type Client = SupabaseClient<Database>;
 export type Document = Omit<Tables<'documents'>, 'search_tsv'>;
 
 const DOCUMENT_COLUMNS =
-  'id, project_id, owner_id, agent_id, title, body, created_at, updated_at, synthesised_through';
+  'id, project_id, owner_id, agent_id, title, body, created_at, updated_at, synthesised_through, synthesised_at';
 
 export async function listDocuments(supabase: Client, projectId: string): Promise<Document[]> {
   const { data, error } = await supabase
@@ -162,4 +162,25 @@ export async function getRevision(
 
   if (error) throw error;
   return (data ?? null) as DocumentRevision | null;
+}
+
+/**
+ * How many entries each marked document has not read.
+ *
+ * One round trip for a whole page, with no row ceiling: the count is computed
+ * in `stale_entry_counts` rather than by fetching entries and counting them
+ * here. A document absent from the map never claimed to synthesise the record;
+ * one present with zero claimed it and is current. The pages render both as
+ * nothing, for different reasons.
+ */
+export async function staleCountsFor(
+  supabase: Client,
+  projectId: string
+): Promise<Map<string, number>> {
+  const { data, error } = await supabase.rpc('stale_entry_counts', {
+    p_project_id: projectId,
+  });
+
+  if (error) throw error;
+  return new Map((data ?? []).map((row) => [row.document_id, Number(row.entries_since)]));
 }
