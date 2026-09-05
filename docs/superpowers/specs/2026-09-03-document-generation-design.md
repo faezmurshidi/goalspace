@@ -236,8 +236,6 @@ code matched.
 ## 9. Testing
 
 **Unit**
-- `staleCounts`: a document with no mark yields no count; a document whose mark
-  predates *n* entries yields *n*; an entry exactly on the mark does not count.
 - `payloadSchemaFor('document')` is `createDocumentSchema`, so a payload the
   create-form would reject is rejected here.
 - `propose_document` is `writes: 'proposes'`, and the Tutor holds it while the
@@ -246,6 +244,14 @@ code matched.
 **RLS**
 - A second user can read neither the proposal nor the document it created.
 - An applied document carries the proposing agent's `agent_id`.
+- `tests/rls/document-staleness.test.ts` proves `stale_entry_counts` against a
+  real database rather than a pure function over fabricated arrays — the
+  replacement §6.3 argues for. It covers: both marks stamped together; an entry
+  counted after either mark and not double-counted past both; a backdated
+  entry written after the reading is counted even though it predates the
+  reach; the entries a document was generated from are not counted against it;
+  several documents scored in one call; a hand-written document omitted rather
+  than zeroed; and scoping to the caller's own project and rows under RLS.
 
 **Live** — one pass asking for a document and accepting it. Every model-facing
 thing in phase 2d was correct only after being run, and this spec assumes that
@@ -261,6 +267,17 @@ it in the inbox they already have.
 **2e-2 — Staleness.** The column; the stamp written on apply, for the
 `document` and `document_edit` cases alike; `staleCounts`; and the two places it
 shows.
+
+**2e-3 — The honest count.** §8.1's gap, closed: a second mark,
+`synthesised_at`, records when the reading happened, beside
+`synthesised_through`'s record of how far it reached. An entry now counts when
+it is past either mark, so a backdated entry written after the reading
+finished is no longer invisible to the count. And the count itself moves into
+the database — `stale_entry_counts`, a `security invoker` function proven
+against a real project under RLS — because a fetch of entry timestamps into a
+pure function had a ceiling PostgREST imposes at 1000 rows, and a count that
+reads low past that ceiling is the exact failure this feature exists to
+prevent.
 
 ## 11. Decisions taken during design
 

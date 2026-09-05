@@ -174,6 +174,45 @@ describe('the count', () => {
     expect(counts.get(id)).toBe(1);
   });
 
+  it('counts an entry written while the proposal sat pending, dated before the mark', async () => {
+    // synthesised_at used to record the accept transaction's clock, but the
+    // reading happened earlier, when the proposal was created — and the
+    // proposal can sit in the owner's inbox for days before it is accepted.
+    // An entry written in that window, even one dated before the mark the
+    // proposal is about to stamp, was never read by the document, and must
+    // count. Stamping with the accept's now() instead of the proposal's
+    // created_at would miss it: the entry's created_at falls before an
+    // accept-time mark, and its occurred_at falls before synthesised_through,
+    // so neither half of the predicate would fire.
+    const cited = await entryAt('2026-08-10T00:00:00.000Z');
+
+    const proposalId = (
+      await insert(alice!, 'proposals', {
+        project_id: projectId,
+        owner_id: alice!.id,
+        agent_id: agentId,
+        run_id: runId,
+        kind: 'document',
+        rationale: 'Because the log says so.',
+        payload: { title: 'Pending in the inbox', body: 'Body.' },
+        citations: [{ type: 'entry', id: cited }],
+      })
+    ).id;
+
+    // Written while the proposal is still pending, dated before the mark the
+    // proposal will stamp on accept.
+    await entryAt('2026-07-01T00:00:00.000Z');
+
+    const outcome = await applyProposal(alice!.client as never, {
+      proposalId,
+      ownerId: alice!.id,
+    });
+    if (outcome.status !== 'applied') throw new Error(`expected applied, got ${outcome.status}`);
+
+    const counts = await staleCountsFor(alice!.client as never, projectId);
+    expect(counts.get(outcome.appliedId)).toBe(1);
+  });
+
   it('does not count an entry twice when it is past both marks', async () => {
     // The predicate is an OR over two conditions on one row. A join written
     // carelessly would count such an entry once per condition.
@@ -257,7 +296,7 @@ describe('the count', () => {
     });
 
     const mine = await staleCountsFor(alice!.client as never, projectId);
-    expect(mine.has(id)).toBe(true);
+    expect(mine.get(id)).toBe(0);
 
     const theirs = await staleCountsFor(bob!.client as never, projectId);
     expect(theirs.size).toBe(0);
