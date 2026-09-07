@@ -151,6 +151,18 @@ describe('the Tutor', () => {
     expect(tutor.tools).toContain('propose_document_edit');
   });
 
+  it('tells the Tutor to keep citation ids out of the prose', () => {
+    // Observed live: asked for a document, it appended a "Cited Entries"
+    // section listing raw uuids. The instruction it was following said to
+    // cite what it drew on and never said where, so it did both — the
+    // argument and the body. The record already links a proposal to what it
+    // cited, so the ids in prose are only something the owner has to delete
+    // before putting their name to it.
+    const tutor = SEEDED_TEMPLATES.find((t) => t.slug === 'tutor')!;
+    expect(tutor.system_prompt).toContain('citations argument');
+    expect(tutor.system_prompt.toLowerCase()).toContain('never write ids into');
+  });
+
   it('says so in its role description, so the agents page is not lying', () => {
     // toContain('document') is not a real pin here: the pre-change text
     // ("drafts entries and document edits...") already contains that
