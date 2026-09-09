@@ -24,10 +24,15 @@ const nextConfig = {
   experimental: {
     globalNotFound: true,
   },
+  // NEXT_PUBLIC_APP_URL is deliberately absent. Next inlines every
+  // NEXT_PUBLIC_* variable on its own, so an entry here would add nothing but
+  // the `|| 'http://localhost:3001'` — and that default is the bug: it bakes a
+  // developer's own machine into a production bundle, silently, at the one
+  // point where no render can object. `lib/app-url.ts` is the single reader,
+  // and it fails the build instead. A test keeps this block honest.
   env: {
     NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development',
     NEXT_PUBLIC_WEB_URL: process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000',
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001',
   },
   async headers() {
     return [
